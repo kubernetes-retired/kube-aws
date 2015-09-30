@@ -1,0 +1,88 @@
+{
+	"ImportPath": "github.com/coreos/coreos-kubernetes/multi-node/aws",
+	"GoVersion": "go1.4",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/aws",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/endpoints",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/ec2query",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/query",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/rest",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/protocol/xml/xmlutil",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/internal/signer/v4",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/cloudformation",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/aws/aws-sdk-go/service/ec2",
+			"Comment": "v0.9.5-1-g34eb9e6",
+			"Rev": "34eb9e6629c9e23f3b602e7457def16ff10f4128"
+		},
+		{
+			"ImportPath": "github.com/cpuguy83/go-md2man/md2man",
+			"Comment": "v1.0.3-2-g71acacd",
+			"Rev": "71acacd42f85e5e82f70a55327789582a5200a90"
+		},
+		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
+			"ImportPath": "github.com/russross/blackfriday",
+			"Comment": "v1.2-80-g8cec3a8",
+			"Rev": "8cec3a854e68dba10faabbe31c089abf4a3e57a6"
+		},
+		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "244f5ac324cb97e1987ef901a0081a77bfd8e845"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "68f5a81a722d56241bd70faf6860ceb05eb27d64"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "8e7dc108ab3a1ab6ce6d922bbaff5657b88e8e49"
+		},
+		{
+			"ImportPath": "github.com/vaughan0/go-ini",
+			"Rev": "a98ad7ee00ec53921f08832bc06ecf7fd600e6a1"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
+		}
+	]
+}
