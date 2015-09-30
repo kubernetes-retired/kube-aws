@@ -1,0 +1,145 @@
+{
+  "apiVersion": "v1",
+  "kind": "ReplicationController",
+  "metadata": {
+    "labels": {
+      "k8s-app": "kube-dns",
+      "kubernetes.io/cluster-service": "true",
+      "version": "v9"
+    },
+    "name": "kube-dns-v9",
+    "namespace": "kube-system"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "k8s-app": "kube-dns",
+      "version": "v9"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "k8s-app": "kube-dns",
+          "kubernetes.io/cluster-service": "true",
+          "version": "v9"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "command": [
+              "/usr/local/bin/etcd",
+              "-data-dir",
+              "/var/etcd/data",
+              "-listen-client-urls",
+              "http://127.0.0.1:2379,http://127.0.0.1:4001",
+              "-advertise-client-urls",
+              "http://127.0.0.1:2379,http://127.0.0.1:4001",
+              "-initial-cluster-token",
+              "skydns-etcd"
+            ],
+            "image": "gcr.io/google_containers/etcd:2.0.9",
+            "name": "etcd",
+            "resources": {
+              "limits": {
+                "cpu": "100m",
+                "memory": "50Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/etcd/data",
+                "name": "etcd-storage"
+              }
+            ]
+          },
+          {
+            "args": [
+              "-domain=cluster.local"
+            ],
+            "image": "gcr.io/google_containers/kube2sky:1.11",
+            "name": "kube2sky",
+            "resources": {
+              "limits": {
+                "cpu": "100m",
+                "memory": "50Mi"
+              }
+            }
+          },
+          {
+            "args": [
+              "-machines=http://localhost:4001",
+              "-addr=0.0.0.0:53",
+              "-domain=cluster.local."
+            ],
+            "image": "gcr.io/google_containers/skydns:2015-03-11-001",
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 30,
+              "timeoutSeconds": 5
+            },
+            "name": "skydns",
+            "ports": [
+              {
+                "containerPort": 53,
+                "name": "dns",
+                "protocol": "UDP"
+              },
+              {
+                "containerPort": 53,
+                "name": "dns-tcp",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 1,
+              "timeoutSeconds": 5
+            },
+            "resources": {
+              "limits": {
+                "cpu": "100m",
+                "memory": "50Mi"
+              }
+            }
+          },
+          {
+            "args": [
+              "-cmd=nslookup kubernetes.default.svc.cluster.local localhost",
+              "-port=8080"
+            ],
+            "image": "gcr.io/google_containers/exechealthz:1.0",
+            "name": "healthz",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "10m",
+                "memory": "20Mi"
+              }
+            }
+          }
+        ],
+        "dnsPolicy": "Default",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "etcd-storage"
+          }
+        ]
+      }
+    }
+  }
+}

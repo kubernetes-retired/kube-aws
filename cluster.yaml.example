@@ -1,0 +1,29 @@
+# Unique name of Kubernetes cluster. In order to deploy
+# more than one cluster into the same AWS account, this
+# name must not conflict with an existing cluster.
+# clusterName: kubernetes
+
+# Name of the SSH keypair already loaded into the AWS
+# account being used to deploy this cluster.
+keyName:
+
+# Region to provision Kubernetes cluster
+region:
+
+# Availability Zone to provision Kubernetes cluster
+#availabilityZone:
+
+# DNS name routable to the Kubernetes controller nodes
+# from worker nodes and external clients. The deployer
+# is responsible for making this name routable
+externalDNSName:
+
+# Number of worker nodes to create
+#workerCount: 1
+
+# Location of kube-aws artifacts used to deploy a new
+# Kubernetes cluster. The necessary artifacts are already
+# available in a public S3 bucket matching the version
+# of the kube-aws tool. This parameter is typically
+# overwritten only for development purposes.
+#artifactURL: https://coreos-kubernetes.s3.amazonaws.com/<VERSION>
