@@ -41,13 +41,13 @@ write_files:
 
 - path: /etc/kubernetes/ssl/ca.pem
   encoding: base64
-  content: {{ CACert|base64 }}
+  content: {{ CACert }}
 
 - path: /etc/kubernetes/ssl/apiserver.pem
   encoding: base64
-  content: {{ APIServerCert|base64 }}
+  content: {{ APIServerCert }}
 
 - path: /etc/kubernetes/ssl/apiserver-key.pem
   encoding: base64
-  content: {{ APIServerKey|base64 }}
+  content: {{ APIServerKey }}
 `

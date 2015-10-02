@@ -32,13 +32,13 @@ write_files:
 
 - path: /etc/kubernetes/ssl/ca.pem
   encoding: base64
-  content: {{ CACert|base64 }}
+  content: {{ CACert }}
 
 - path: /etc/kubernetes/ssl/worker.pem
   encoding: base64
-  content: {{ WorkerCert|base64 }}
+  content: {{ WorkerCert }}
 
 - path: /etc/kubernetes/ssl/worker-key.pem
   encoding: base64
-  content: {{ WorkerKey|base64 }}
+  content: {{ WorkerKey }}
 `

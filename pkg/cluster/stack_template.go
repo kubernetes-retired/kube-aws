@@ -514,27 +514,27 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 
 	par[parCACert] = map[string]interface{}{
 		"Type":        "String",
-		"Description": "PEM-formattd CA certificate",
+		"Description": "PEM-formattd CA certificate, base64-encoded",
 	}
 
 	par[parAPIServerCert] = map[string]interface{}{
 		"Type":        "String",
-		"Description": "PEM-formatted kube-apiserver certificate",
+		"Description": "PEM-formatted kube-apiserver certificate, base64-encoded",
 	}
 
 	par[parAPIServerKey] = map[string]interface{}{
 		"Type":        "String",
-		"Description": "PEM-formatted kube-apiserver key",
+		"Description": "PEM-formatted kube-apiserver key, base64-encoded",
 	}
 
 	par[parWorkerCert] = map[string]interface{}{
 		"Type":        "String",
-		"Description": "PEM-formatted kubelet (worker) certificate",
+		"Description": "PEM-formatted kubelet (worker) certificate, base64-encoded",
 	}
 
 	par[parWorkerKey] = map[string]interface{}{
 		"Type":        "String",
-		"Description": "PEM-formatted kubelet (worker) key",
+		"Description": "PEM-formatted kubelet (worker) key, base64-encoded",
 	}
 
 	par[parWorkerCount] = map[string]interface{}{

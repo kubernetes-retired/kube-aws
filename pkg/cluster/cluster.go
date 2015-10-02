@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"text/tabwriter"
 
@@ -87,27 +88,27 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 		},
 		{
 			ParameterKey:     aws.String(parCACert),
-			ParameterValue:   aws.String(string(tlsConfig.CACert)),
+			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.CACert)),
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
 			ParameterKey:     aws.String(parAPIServerCert),
-			ParameterValue:   aws.String(string(tlsConfig.APIServerCert)),
+			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.APIServerCert)),
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
 			ParameterKey:     aws.String(parAPIServerKey),
-			ParameterValue:   aws.String(string(tlsConfig.APIServerKey)),
+			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.APIServerKey)),
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
 			ParameterKey:     aws.String(parWorkerCert),
-			ParameterValue:   aws.String(string(tlsConfig.WorkerCert)),
+			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.WorkerCert)),
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
 			ParameterKey:     aws.String(parWorkerKey),
-			ParameterValue:   aws.String(string(tlsConfig.WorkerKey)),
+			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.WorkerKey)),
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
