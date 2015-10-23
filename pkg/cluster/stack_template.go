@@ -366,7 +366,7 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 		"Properties": map[string]interface{}{
 			"Path": "/",
 			"Roles": []map[string]interface{}{
-				newRef(resNameIAMRoleController),
+				newRef(resNameIAMRoleWorker),
 			},
 		},
 	}
