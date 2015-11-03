@@ -18,8 +18,14 @@ region:
 # is responsible for making this name routable
 externalDNSName:
 
+# Disk size (GB) for controller node
+#controllerRootVolumeSize: 30
+
 # Number of worker nodes to create
 #workerCount: 1
+
+# Disk size (GB) for worker nodes
+#workerRootVolumeSize: 30
 
 # Location of kube-aws artifacts used to deploy a new
 # Kubernetes cluster. The necessary artifacts are already

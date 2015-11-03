@@ -102,6 +102,11 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
+			ParameterKey:     aws.String(parNameControllerRootVolumeSize),
+			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.ControllerRootVolumeSize)),
+			UsePreviousValue: aws.Bool(true),
+		},
+		{
 			ParameterKey:     aws.String(parWorkerCert),
 			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.WorkerCert)),
 			UsePreviousValue: aws.Bool(true),
@@ -114,6 +119,11 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 		{
 			ParameterKey:     aws.String(parWorkerCount),
 			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.WorkerCount)),
+			UsePreviousValue: aws.Bool(true),
+		},
+		{
+			ParameterKey:     aws.String(parNameWorkerRootVolumeSize),
+			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.WorkerRootVolumeSize)),
 			UsePreviousValue: aws.Bool(true),
 		},
 	}
