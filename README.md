@@ -22,7 +22,7 @@ $ kube-aws render --output=artifacts/template.json
 $ aws s3 cp --recursive --acl=public-read artifacts/ s3://<bucket>/
 ```
 
-Then, simply create a cluster using `artifactURL: https://s3.amazonaws.com/<bucket>`.
+Then, simply create a cluster using `artifactURL: https://<bucket>.s3.amazonaws.com`.
 
 ### Useful Resources
 
