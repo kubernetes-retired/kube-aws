@@ -17,5 +17,5 @@ fi
 
 
 echo "Building kube-aws ${VERSION}..."
-GOPATH=${GOPATH}:${PWD}/Godeps/_workspace CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
+GOPATH=${PWD}/Godeps/_workspace:${GOPATH} CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
 echo "done"
