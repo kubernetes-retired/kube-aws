@@ -46,7 +46,7 @@ const (
 )
 
 var (
-	supportedChannels    = []string{"alpha"}
+	supportedChannels    = []string{"alpha", "beta"}
 	tagKubernetesCluster = "KubernetesCluster"
 
 	sgProtoTCP = "tcp"

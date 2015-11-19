@@ -72,11 +72,6 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
-			ParameterKey:     aws.String(parNameReleaseChannel),
-			ParameterValue:   aws.String("alpha"),
-			UsePreviousValue: aws.Bool(true),
-		},
-		{
 			ParameterKey:     aws.String(parNameKeyName),
 			ParameterValue:   aws.String(c.cfg.KeyName),
 			UsePreviousValue: aws.Bool(true),
@@ -102,11 +97,6 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 			UsePreviousValue: aws.Bool(true),
 		},
 		{
-			ParameterKey:     aws.String(parNameControllerRootVolumeSize),
-			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.ControllerRootVolumeSize)),
-			UsePreviousValue: aws.Bool(true),
-		},
-		{
 			ParameterKey:     aws.String(parWorkerCert),
 			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.WorkerCert)),
 			UsePreviousValue: aws.Bool(true),
@@ -116,16 +106,54 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 			ParameterValue:   aws.String(base64.StdEncoding.EncodeToString(tlsConfig.WorkerKey)),
 			UsePreviousValue: aws.Bool(true),
 		},
-		{
+	}
+
+	if c.cfg.ReleaseChannel != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parNameReleaseChannel),
+			ParameterValue:   aws.String(c.cfg.ReleaseChannel),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.ControllerInstanceType != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parNameControllerInstanceType),
+			ParameterValue:   aws.String(c.cfg.ControllerInstanceType),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.ControllerRootVolumeSize > 0 {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parNameControllerRootVolumeSize),
+			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.ControllerRootVolumeSize)),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.WorkerCount > 0 {
+		parameters = append(parameters, &cloudformation.Parameter{
 			ParameterKey:     aws.String(parWorkerCount),
 			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.WorkerCount)),
 			UsePreviousValue: aws.Bool(true),
-		},
-		{
+		})
+	}
+
+	if c.cfg.WorkerInstanceType != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parNameWorkerInstanceType),
+			ParameterValue:   aws.String(c.cfg.WorkerInstanceType),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.WorkerRootVolumeSize > 0 {
+		parameters = append(parameters, &cloudformation.Parameter{
 			ParameterKey:     aws.String(parNameWorkerRootVolumeSize),
 			ParameterValue:   aws.String(fmt.Sprintf("%d", c.cfg.WorkerRootVolumeSize)),
 			UsePreviousValue: aws.Bool(true),
-		},
+		})
 	}
 
 	if c.cfg.AvailabilityZone != "" {
