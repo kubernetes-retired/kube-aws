@@ -101,8 +101,7 @@ ExecStart=/usr/bin/kubelet \
   --allow-privileged=true \
   --config=/etc/kubernetes/manifests \
   --cluster_dns=${DNS_SERVICE_IP} \
-  --cluster_domain=cluster.local \
-  --cadvisor-port=0
+  --cluster_domain=cluster.local
 Restart=always
 RestartSec=10
 
