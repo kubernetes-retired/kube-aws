@@ -586,7 +586,7 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 	par[parAvailabilityZone] = map[string]interface{}{
 		"Type":        "String",
 		"Default":     "",
-		"Description": "Specific availability zone",
+		"Description": "Specific availability zone (optional)",
 	}
 
 	regionMap, err := getRegionMap()
