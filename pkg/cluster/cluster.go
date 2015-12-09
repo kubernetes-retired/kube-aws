@@ -164,6 +164,62 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 		})
 	}
 
+	if c.cfg.VPCCIDR != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parVPCCIDR),
+			ParameterValue:   aws.String(c.cfg.VPCCIDR),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.InstanceCIDR != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parInstanceCIDR),
+			ParameterValue:   aws.String(c.cfg.InstanceCIDR),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.ControllerIP != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parControllerIP),
+			ParameterValue:   aws.String(c.cfg.ControllerIP),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.PodCIDR != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parPodCIDR),
+			ParameterValue:   aws.String(c.cfg.PodCIDR),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.ServiceCIDR != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parServiceCIDR),
+			ParameterValue:   aws.String(c.cfg.ServiceCIDR),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.KubernetesServiceIP != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parKubernetesServiceIP),
+			ParameterValue:   aws.String(c.cfg.KubernetesServiceIP),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
+	if c.cfg.DNSServiceIP != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parDNSServiceIP),
+			ParameterValue:   aws.String(c.cfg.DNSServiceIP),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
 	tmplURL := fmt.Sprintf("%s/template.json", c.cfg.ArtifactURL)
 	return createStackAndWait(cloudformation.New(c.aws), c.stackName(), tmplURL, parameters)
 }

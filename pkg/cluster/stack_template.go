@@ -43,6 +43,13 @@ const (
 	parWorkerCount                  = "WorkerCount"
 	parNameWorkerRootVolumeSize     = "WorkerRootVolumeSize"
 	parAvailabilityZone             = "AvailabilityZone"
+	parVPCCIDR                      = "VPCCIDR"
+	parInstanceCIDR                 = "InstanceCIDR"
+	parControllerIP                 = "ControllerIP"
+	parServiceCIDR                  = "ServiceCIDR"
+	parPodCIDR                      = "PodCIDR"
+	parKubernetesServiceIP          = "KubernetesServiceIP"
+	parDNSServiceIP                 = "DNSServiceIP"
 )
 
 var (
@@ -143,7 +150,7 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 	res[resNameVPC] = map[string]interface{}{
 		"Type": "AWS::EC2::VPC",
 		"Properties": map[string]interface{}{
-			"CidrBlock":          "10.0.0.0/16",
+			"CidrBlock":          newRef(parVPCCIDR),
 			"EnableDnsSupport":   true,
 			"EnableDnsHostnames": true,
 			"InstanceTenancy":    "default",
@@ -197,7 +204,7 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 		"Type": "AWS::EC2::Subnet",
 		"Properties": map[string]interface{}{
 			"AvailabilityZone":    availabilityZone,
-			"CidrBlock":           "10.0.0.0/24",
+			"CidrBlock":           newRef(parInstanceCIDR),
 			"MapPublicIpOnLaunch": true,
 			"VpcId":               newRef(resNameVPC),
 			"Tags": []map[string]interface{}{
@@ -416,7 +423,7 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 			"IamInstanceProfile": newRef(resNameIAMInstanceProfileController),
 			"NetworkInterfaces": []map[string]interface{}{
 				map[string]interface{}{
-					"PrivateIpAddress":         "10.0.0.50",
+					"PrivateIpAddress":         newRef(parControllerIP),
 					"AssociatePublicIpAddress": false,
 					"DeleteOnTermination":      true,
 					"DeviceIndex":              "0",
@@ -600,6 +607,48 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 		"Type":        "String",
 		"Default":     "",
 		"Description": "Specific availability zone (optional)",
+	}
+
+	par[parVPCCIDR] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultVPCCIDR,
+		"Description": "CIDR for Kubernetes vpc",
+	}
+
+	par[parInstanceCIDR] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultInstanceCIDR,
+		"Description": "CIDR for Kubernetes subnet",
+	}
+
+	par[parControllerIP] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultControllerIP,
+		"Description": "IP address for controller in Kubernetes subnet",
+	}
+
+	par[parServiceCIDR] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultServiceCIDR,
+		"Description": "CIDR for all service IP addresses",
+	}
+
+	par[parPodCIDR] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultPodCIDR,
+		"Description": "CIDR for all pod IP addresses",
+	}
+
+	par[parKubernetesServiceIP] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultKubernetesServiceIP,
+		"Description": "IP address for Kubernetes controller service (must be contained by serviceCIDR)",
+	}
+
+	par[parDNSServiceIP] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     DefaultDNSServiceIP,
+		"Description": "IP address of the Kubernetes DNS service (must be contained by serviceCIDR)",
 	}
 
 	regionMap, err := getRegionMap()

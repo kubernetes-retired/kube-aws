@@ -14,7 +14,7 @@ export K8S_VER=v1.1.2
 
 # The IP address of the cluster DNS service.
 # This must be the same DNS_SERVICE_IP used when configuring the controller nodes.
-export DNS_SERVICE_IP=10.3.0.10
+export DNS_SERVICE_IP=
 
 # The HTTP(S) host serving the necessary Kubernetes artifacts
 export ARTIFACT_URL=
