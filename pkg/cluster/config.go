@@ -37,6 +37,7 @@ type Config struct {
 	WorkerCount              int    `yaml:"workerCount"`
 	WorkerInstanceType       string `yaml:"workerInstanceType"`
 	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
+	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
 	VPCCIDR                  string `yaml:"vpcCIDR"`
 	InstanceCIDR             string `yaml:"instanceCIDR"`
 	ControllerIP             string `yaml:"controllerIP"`

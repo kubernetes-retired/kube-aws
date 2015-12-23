@@ -42,6 +42,7 @@ const (
 	parWorkerKey                    = "WorkerKey"
 	parWorkerCount                  = "WorkerCount"
 	parNameWorkerRootVolumeSize     = "WorkerRootVolumeSize"
+	parWorkerSpotPrice              = "WorkerSpotPrice"
 	parAvailabilityZone             = "AvailabilityZone"
 	parVPCCIDR                      = "VPCCIDR"
 	parInstanceCIDR                 = "InstanceCIDR"
@@ -500,6 +501,13 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 					},
 				},
 			},
+			"SpotPrice": map[string]interface{}{
+				"Fn::If": []interface{}{
+					"UseWorkerSpotInstances",
+					newRef(parWorkerSpotPrice),
+					newRef("AWS::NoValue"),
+				},
+			},
 		},
 	}
 
@@ -603,6 +611,12 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 		"Description": "Worker root volume size (GiB)",
 	}
 
+	par[parWorkerSpotPrice] = map[string]interface{}{
+		"Type":        "String",
+		"Default":     "",
+		"Description": "Spot instance price for workers (optional, omit for on-demand instances)",
+	}
+
 	par[parAvailabilityZone] = map[string]interface{}{
 		"Type":        "String",
 		"Default":     "",
@@ -666,6 +680,16 @@ func StackTemplateBody(defaultArtifactURL string) (string, error) {
 			"Fn::Equals": []interface{}{
 				newRef(parAvailabilityZone),
 				"",
+			},
+		},
+		"UseWorkerSpotInstances": map[string]interface{}{
+			"Fn::Not": []interface{}{
+				map[string]interface{}{
+					"Fn::Equals": []interface{}{
+						newRef(parWorkerSpotPrice),
+						"",
+					},
+				},
 			},
 		},
 	}

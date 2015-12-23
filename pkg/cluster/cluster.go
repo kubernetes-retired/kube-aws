@@ -156,6 +156,14 @@ func (c *Cluster) Create(tlsConfig *TLSConfig) error {
 		})
 	}
 
+	if c.cfg.WorkerSpotPrice != "" {
+		parameters = append(parameters, &cloudformation.Parameter{
+			ParameterKey:     aws.String(parWorkerSpotPrice),
+			ParameterValue:   aws.String(c.cfg.WorkerSpotPrice),
+			UsePreviousValue: aws.Bool(true),
+		})
+	}
+
 	if c.cfg.AvailabilityZone != "" {
 		parameters = append(parameters, &cloudformation.Parameter{
 			ParameterKey:     aws.String(parAvailabilityZone),
