@@ -63,94 +63,66 @@ func (cfg *Config) Valid() error {
 		return fmt.Errorf("invalid artifactURL: %v", err)
 	}
 
-	vpcCIDR := cfg.VPCCIDR
-	if vpcCIDR == "" {
-		vpcCIDR = DefaultVPCCIDR
-	}
-	_, vpcNet, err := net.ParseCIDR(vpcCIDR)
+	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	instanceCIDR := cfg.InstanceCIDR
-	if instanceCIDR == "" {
-		instanceCIDR = DefaultInstanceCIDR
-	}
-	instancesNetIP, instancesNet, err := net.ParseCIDR(instanceCIDR)
+	instancesNetIP, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid instanceCIDR: %v", err)
 	}
 	if !vpcNet.Contains(instancesNetIP) {
 		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
-			vpcCIDR,
-			instanceCIDR,
+			cfg.VPCCIDR,
+			cfg.InstanceCIDR,
 		)
 	}
 
-	controllerIP := cfg.ControllerIP
-	if controllerIP == "" {
-		controllerIP = DefaultControllerIP
-	}
-	controllerIPAddr := net.ParseIP(controllerIP)
+	controllerIPAddr := net.ParseIP(cfg.ControllerIP)
 	if controllerIPAddr == nil {
-		return fmt.Errorf("invalid controllerIP: %s", controllerIP)
+		return fmt.Errorf("invalid controllerIP: %s", cfg.ControllerIP)
 	}
 	if !instancesNet.Contains(controllerIPAddr) {
 		return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
-			instanceCIDR,
-			controllerIP,
+			cfg.InstanceCIDR,
+			cfg.ControllerIP,
 		)
 	}
 
-	podCIDR := cfg.PodCIDR
-	if podCIDR == "" {
-		podCIDR = DefaultPodCIDR
-	}
-	podNetIP, podNet, err := net.ParseCIDR(podCIDR)
+	podNetIP, podNet, err := net.ParseCIDR(cfg.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
 	}
 	if vpcNet.Contains(podNetIP) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", vpcCIDR, podCIDR)
+		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
 	}
 
-	serviceCIDR := cfg.ServiceCIDR
-	if serviceCIDR == "" {
-		serviceCIDR = DefaultServiceCIDR
-	}
-	serviceNetIP, serviceNet, err := net.ParseCIDR(serviceCIDR)
+	serviceNetIP, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
 	if vpcNet.Contains(serviceNetIP) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", vpcCIDR, serviceCIDR)
+		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", cfg.VPCCIDR, cfg.ServiceCIDR)
 	}
 	if podNet.Contains(serviceNetIP) || serviceNet.Contains(podNetIP) {
-		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", serviceCIDR, podCIDR)
+		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
 	}
 
-	kubernetesServiceIP := cfg.KubernetesServiceIP
-	if kubernetesServiceIP == "" {
-		kubernetesServiceIP = DefaultKubernetesServiceIP
-	}
-	kubernetesServiceIPAddr := net.ParseIP(kubernetesServiceIP)
+	kubernetesServiceIPAddr := net.ParseIP(cfg.KubernetesServiceIP)
 	if kubernetesServiceIPAddr == nil {
-		return fmt.Errorf("Invalid kubernetesServiceIP: %s", kubernetesServiceIP)
+		return fmt.Errorf("Invalid kubernetesServiceIP: %s", cfg.KubernetesServiceIP)
 	}
 	if !serviceNet.Contains(kubernetesServiceIPAddr) {
-		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", serviceCIDR, kubernetesServiceIP)
+		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, cfg.KubernetesServiceIP)
 	}
 
-	dnsServiceIP := cfg.DNSServiceIP
-	if dnsServiceIP == "" {
-		dnsServiceIP = DefaultDNSServiceIP
-	}
-	dnsServiceIPAddr := net.ParseIP(dnsServiceIP)
+	dnsServiceIPAddr := net.ParseIP(cfg.DNSServiceIP)
 	if dnsServiceIPAddr == nil {
-		return fmt.Errorf("Invalid dnsServiceIP: %s", dnsServiceIP)
+		return fmt.Errorf("Invalid dnsServiceIP: %s", cfg.DNSServiceIP)
 	}
 	if !serviceNet.Contains(dnsServiceIPAddr) {
-		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", serviceCIDR, dnsServiceIP)
+		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", cfg.ServiceCIDR, cfg.DNSServiceIP)
 	}
 
 	return nil
@@ -162,11 +134,15 @@ func DecodeConfigFromFile(out *Config, loc string) error {
 		return fmt.Errorf("failed reading config file: %v", err)
 	}
 
-	if err = yaml.Unmarshal(d, &out); err != nil {
+	return decodeConfigBytes(out, d)
+}
+
+func decodeConfigBytes(out *Config, d []byte) error {
+	if err := yaml.Unmarshal(d, &out); err != nil {
 		return fmt.Errorf("failed decoding config file: %v", err)
 	}
 
-	if err = out.Valid(); err != nil {
+	if err := out.Valid(); err != nil {
 		return fmt.Errorf("config file invalid: %v", err)
 	}
 
@@ -175,8 +151,15 @@ func DecodeConfigFromFile(out *Config, loc string) error {
 
 func NewDefaultConfig(ver string) *Config {
 	return &Config{
-		ClusterName: "kubernetes",
-		ArtifactURL: DefaultArtifactURL(ver),
+		ClusterName:         "kubernetes",
+		ArtifactURL:         DefaultArtifactURL(ver),
+		VPCCIDR:             DefaultVPCCIDR,
+		InstanceCIDR:        DefaultInstanceCIDR,
+		ControllerIP:        DefaultControllerIP,
+		PodCIDR:             DefaultPodCIDR,
+		ServiceCIDR:         DefaultServiceCIDR,
+		KubernetesServiceIP: DefaultKubernetesServiceIP,
+		DNSServiceIP:        DefaultDNSServiceIP,
 	}
 }
 
