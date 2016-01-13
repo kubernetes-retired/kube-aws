@@ -123,6 +123,11 @@ EOF
 	template manifests/cluster/kube-dns-rc.json /srv/kubernetes/manifests/kube-dns-rc.json
 	template manifests/cluster/kube-dns-svc.json /srv/kubernetes/manifests/kube-dns-svc.json
 
+	template manifests/cluster/heapster-rc.json /srv/kubernetes/manifests/heapster-rc.json
+	template manifests/cluster/heapster-svc.json /srv/kubernetes/manifests/heapster-svc.json
+	template manifests/cluster/influxdb-rc.json /srv/kubernetes/manifests/influxdb-rc.json
+	template manifests/cluster/influxdb-svc.json /srv/kubernetes/manifests/influxdb-svc.json
+
 	local TEMPLATE=/etc/flannel/options.env
 	[ -f $TEMPLATE ] || {
 		echo "TEMPLATE: $TEMPLATE"
@@ -167,6 +172,13 @@ function start_addons {
 	echo "K8S: DNS addon"
 	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dns-rc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers" > /dev/null
 	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/kube-dns-svc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
+
+	echo "K8S: Monitoring addon"
+	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/heapster-svc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
+	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/influxdb-svc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services" > /dev/null
+	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/heapster-rc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers" > /dev/null
+	curl --silent -XPOST -d"$(cat /srv/kubernetes/manifests/influxdb-rc.json)" "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers" > /dev/null
+
 }
 
 init_config
