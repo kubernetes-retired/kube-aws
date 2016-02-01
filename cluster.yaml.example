@@ -33,6 +33,9 @@ externalDNSName:
 # Disk size (GiB) for worker nodes
 #workerRootVolumeSize: 30
 
+# Price (Dollars) to bid for spot instances. Omit for on-demand instances.
+# workerSpotPrice: "0.05"
+
 # Location of kube-aws artifacts used to deploy a new
 # Kubernetes cluster. The necessary artifacts are already
 # available in a public S3 bucket matching the version
