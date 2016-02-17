@@ -85,6 +85,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
 
+# Use Calico for network policy. When set to "true" the kubernetesVersion (above)
+# must also be updated to include a version tagged with CNI e.g. v1.2.3_coreos.cni.1
+# useCalico: false
+
 # AWS Tags for cloudformation stack resources 
 #stackTags:
 #  Name: "Kubernetes" 

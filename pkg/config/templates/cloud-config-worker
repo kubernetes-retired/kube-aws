@@ -28,6 +28,8 @@ coreos:
         Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf --mount volume=dns,target=/etc/resolv.conf"
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers={{.SecureAPIServers}} \
+        --network-plugin-dir=/etc/kubernetes/cni/net.d \
+        --network-plugin={{.K8sNetworkPlugin}} \
         --register-node=true \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \
@@ -39,6 +41,35 @@ coreos:
         --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
         Restart=always
         RestartSec=10
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: calico-node.service
+      command: start
+      enable: {{.UseCalico}}
+      content: |
+        [Unit]
+        Description=Calico per-host agent
+        Requires=network-online.target
+        After=network-online.target
+
+        [Service]
+        Slice=machine.slice
+        Environment=CALICO_DISABLE_FILE_LOGGING=true
+        Environment=HOSTNAME=$private_ipv4
+        Environment=IP=$private_ipv4
+        Environment=FELIX_FELIXHOSTNAME=$private_ipv4
+        Environment=CALICO_NETWORKING=false
+        Environment=NO_DEFAULT_POOLS=true
+        Environment=ETCD_ENDPOINTS={{ .ETCDEndpoints }}
+        ExecStart=/usr/bin/rkt run --inherit-env --stage1-from-dir=stage1-fly.aci \
+        --volume=modules,kind=host,source=/lib/modules,readOnly=false \
+        --mount=volume=modules,target=/lib/modules \
+        --trust-keys-from-https quay.io/calico/node:v0.19.0
+        KillMode=mixed
+        Restart=always
+        TimeoutStartSec=0
+
         [Install]
         WantedBy=multi-user.target
 
@@ -143,4 +174,24 @@ write_files:
             user: kubelet
           name: kubelet-context
         current-context: kubelet-context
+
+  - path: /etc/kubernetes/cni/net.d/10-calico.conf
+    content: |
+        {
+            "name": "calico",
+            "type": "flannel",
+            "delegate": {
+                "type": "calico",
+                "etcd_endpoints": "{{ .ETCDEndpoints }}",
+                "log_level": "none",
+                "log_level_stderr": "info",
+                "hostname": "$private_ipv4",
+                "policy": {
+                    "type": "k8s",
+                    "k8s_api_root": "https://{{.ControllerIP}}:443/api/v1/",
+                    "k8s_client_key": "/etc/kubernetes/ssl/worker-key.pem",
+                    "k8s_client_certificate": "/etc/kubernetes/ssl/worker.pem"
+                }
+            }
+        }
 
