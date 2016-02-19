@@ -18,8 +18,9 @@ echo "Building kube-aws ${VERSION}..."
 rm -rf ./gopath
 link_path="${PWD}/gopath/src/github.com/coreos"
 mkdir -p $link_path
-
-ln -sf ${PWD}/../../ "${link_path}/coreos-kubernetes"
+ln -s ${PWD}/../../ "${link_path}/coreos-kubernetes"
 
 GOPATH=${PWD}/Godeps/_workspace:${PWD}/gopath CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
+rm -r ./gopath
+
 echo "done"
