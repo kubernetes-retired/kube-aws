@@ -4,21 +4,20 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"io"
 )
 
-func WritePrivateKeyPEMBlock(out io.Writer, key *rsa.PrivateKey) error {
+func EncodePrivateKeyPEM(key *rsa.PrivateKey) []byte {
 	block := pem.Block{
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}
-	return pem.Encode(out, &block)
+	return pem.EncodeToMemory(&block)
 }
 
-func WriteCertificatePEMBlock(out io.Writer, cert *x509.Certificate) error {
+func EncodeCertificatePEM(cert *x509.Certificate) []byte {
 	block := pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: cert.Raw,
 	}
-	return pem.Encode(out, &block)
+	return pem.EncodeToMemory(&block)
 }

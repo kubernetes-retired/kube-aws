@@ -14,13 +14,17 @@ if [ -n "$(git diff --shortstat 2> /dev/null | tail -n1)" ]; then
     VERSION="${VERSION}+dirty"
 fi
 
-echo "Building kube-aws ${VERSION}..."
-rm -rf ./gopath
-link_path="${PWD}/gopath/src/github.com/coreos"
-mkdir -p $link_path
-ln -s ${PWD}/../../ "${link_path}/coreos-kubernetes"
+GOPATH_VENDOR="$(pwd)/_gopath-vendor"
+GOPATH_KUBE_AWS="$(pwd)/_gopath-kube-aws"
+KUBE_AWS_DIR="${GOPATH_KUBE_AWS}/src/github.com/coreos/coreos-kubernetes/multi-node"
 
-GOPATH=${PWD}/Godeps/_workspace:${PWD}/gopath CGO_ENABLED=0 go build -ldflags "-X main.VERSION ${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
-rm -r ./gopath
+rm -rf $GOPATH_VENDOR $GOPATH_KUBE_AWS
 
-echo "done"
+mkdir -p $GOPATH_VENDOR
+mkdir -p $KUBE_AWS_DIR
+
+ln -s $(pwd)/vendor $GOPATH_VENDOR/src
+ln -s $(pwd) $KUBE_AWS_DIR/aws
+
+export GOPATH="${GOPATH_VENDOR}:${GOPATH_KUBE_AWS}"
+go build -ldflags "-X main.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws

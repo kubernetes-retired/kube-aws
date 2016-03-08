@@ -1,22 +1,26 @@
 # Unique name of Kubernetes cluster. In order to deploy
 # more than one cluster into the same AWS account, this
 # name must not conflict with an existing cluster.
-# clusterName: kubernetes
 
-# Name of the SSH keypair already loaded into the AWS
-# account being used to deploy this cluster.
-keyName:
-
-# Region to provision Kubernetes cluster
-region:
-
-# Availability Zone to provision Kubernetes cluster
-#availabilityZone:
+clusterName: {{.ClusterName}}
 
 # DNS name routable to the Kubernetes controller nodes
 # from worker nodes and external clients. The deployer
 # is responsible for making this name routable
-externalDNSName:
+externalDNSName: {{.ExternalDNSName}}
+
+# Name of the SSH keypair already loaded into the AWS
+# account being used to deploy this cluster.
+keyName: {{.KeyName}}
+
+# Region to provision Kubernetes cluster
+region: {{.Region}}
+
+# Availability Zone to provision Kubernetes cluster
+availabilityZone: {{.AvailabilityZone}}
+
+# ARN of the KMS key used to encrypt TLS assets.
+kmsKeyArn: "{{.KMSKeyARN}}"
 
 # Instance type for controller node
 #controllerInstanceType: m3.medium
@@ -35,13 +39,6 @@ externalDNSName:
 
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
-
-# Location of kube-aws artifacts used to deploy a new
-# Kubernetes cluster. The necessary artifacts are already
-# available in a public S3 bucket matching the version
-# of the kube-aws tool. This parameter is typically
-# overwritten only for development purposes.
-#artifactURL: https://coreos-kubernetes.s3.amazonaws.com/<VERSION>
 
 # CIDR for Kubernetes VPC
 # vpcCIDR: "10.0.0.0/16"
@@ -63,3 +60,9 @@ externalDNSName:
 
 # IP address of Kubernetes dns service (must be contained by serviceCIDR)
 # dnsServiceIP: 10.3.0.10
+
+# Version of hyperkube image to use. This is the tag for the hyperkube image repository.
+# kubernetesVersion: v1.1.8_coreos.0
+
+# Hyperkube image repository to use.
+# hyperkubeImageRepo: quay.io/coreos/hyperkube

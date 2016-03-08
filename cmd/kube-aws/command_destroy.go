@@ -2,47 +2,42 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path"
 
 	"github.com/spf13/cobra"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
+	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 )
 
 var (
 	cmdDestroy = &cobra.Command{
-		Use:   "destroy",
-		Short: "Destroy an existing Kubernetes cluster",
-		Long:  ``,
-		Run:   runCmdDestroy,
+		Use:          "destroy",
+		Short:        "Destroy an existing Kubernetes cluster",
+		Long:         ``,
+		RunE:         runCmdDestroy,
+		SilenceUsage: true,
 	}
+	destroyOpts = struct {
+		awsDebug bool
+	}{}
 )
 
 func init() {
 	cmdRoot.AddCommand(cmdDestroy)
+	cmdDestroy.Flags().BoolVar(&destroyOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
 }
 
-func runCmdDestroy(cmd *cobra.Command, args []string) {
-	cfg := cluster.NewDefaultConfig(VERSION)
-	err := cluster.DecodeConfigFromFile(cfg, rootOpts.ConfigPath)
+func runCmdDestroy(cmd *cobra.Command, args []string) error {
+	cfg, err := config.ClusterFromFile(configPath)
 	if err != nil {
-		stderr("Unable to load cluster config: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("Error parsing config: %v", err)
 	}
 
-	c := cluster.New(cfg, newAWSConfig(cfg))
-
+	c := cluster.New(cfg, destroyOpts.awsDebug)
 	if err := c.Destroy(); err != nil {
-		stderr("Failed destroying cluster: %v", err)
-		os.Exit(1)
-	}
-
-	clusterDir := path.Join("clusters", cfg.ClusterName)
-	if err := os.RemoveAll(clusterDir); err != nil {
-		stderr("Failed removing local cluster directory: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("Failed destroying cluster: %v", err)
 	}
 
 	fmt.Println("Destroyed cluster")
+	return nil
 }

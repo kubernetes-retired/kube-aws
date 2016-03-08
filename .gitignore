@@ -1,5 +1,6 @@
 /artifacts/template.json
 /bin
-/clusters
-/cluster.yaml
-/gopath
+/assets
+*~
+/_gopath-kube-aws
+/_gopath-vendor
