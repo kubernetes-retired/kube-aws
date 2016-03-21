@@ -26,7 +26,7 @@ coreos:
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
-        --api_servers={{.SecureAPIServers}} \
+        --api-servers={{.SecureAPIServers}} \
         --register-node=true \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \

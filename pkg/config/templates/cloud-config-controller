@@ -40,7 +40,7 @@ coreos:
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
-        --api_servers=http://localhost:8080 \
+        --api-servers=http://localhost:8080 \
         --register-node=false \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \
