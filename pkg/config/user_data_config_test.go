@@ -5,8 +5,18 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/coreos/coreos-cloudinit/config/validate"
 )
+
+type dummyEncryptService struct{}
+
+func (d *dummyEncryptService) Encrypt(input *kms.EncryptInput) (*kms.EncryptOutput, error) {
+	output := kms.EncryptOutput{
+		CiphertextBlob: input.Plaintext,
+	}
+	return &output, nil
+}
 
 func TestCloudConfigTemplating(t *testing.T) {
 	cluster, err := clusterFromBytes([]byte(MinimalConfigYaml))
@@ -23,7 +33,7 @@ func TestCloudConfigTemplating(t *testing.T) {
 		t.Fatalf("Failed to create config: %v", err)
 	}
 
-	compactAssets, err := assets.Compact(cfg)
+	compactAssets, err := assets.compact(cfg, &dummyEncryptService{})
 	if err != nil {
 		t.Fatalf("failed to compress TLS assets: %v", err)
 	}

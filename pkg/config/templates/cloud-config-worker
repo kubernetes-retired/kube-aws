@@ -42,7 +42,7 @@ coreos:
         WantedBy=multi-user.target
 
     - name: decrypt-tls-assets.service
-      enable: {{ne .KMSKeyARN ""}}
+      enable: true
       content: |
         [Unit]
         Description=decrypt kubelet tls assets using amazon kms

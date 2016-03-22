@@ -13,6 +13,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/kms"
+
 	"github.com/coreos/coreos-cloudinit/config/validate"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -152,7 +156,11 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		return nil, err
 	}
 
-	compactAssets, err := assets.Compact(stackConfig.Config)
+	awsConfig := aws.NewConfig()
+	awsConfig = awsConfig.WithRegion(stackConfig.Config.Region)
+	kmsSvc := kms.New(session.New(awsConfig))
+
+	compactAssets, err := assets.compact(stackConfig.Config, kmsSvc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compress TLS assets: %v", err)
 	}
@@ -262,6 +270,9 @@ func (cfg Cluster) valid() error {
 	}
 	if cfg.ClusterName == "" {
 		return errors.New("clusterName must be set")
+	}
+	if cfg.KMSKeyARN == "" {
+		return errors.New("kmsKeyArn must be set")
 	}
 
 	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
