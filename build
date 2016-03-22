@@ -29,4 +29,4 @@ ln -s $(pwd) $KUBE_AWS_DIR
 export GOPATH="${GOPATH_VENDOR}:${GOPATH_KUBE_AWS}"
 cd $KUBE_AWS_DIR
 go generate ./pkg/config
-go build -ldflags "-X main.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws ./cmd/kube-aws
+go build -ldflags "-X github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws ./cmd/kube-aws
