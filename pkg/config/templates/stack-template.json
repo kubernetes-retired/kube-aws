@@ -436,7 +436,7 @@
     },
     "SecurityGroupWorkerIngressFromControllerToFlannel": {
       "Properties": {
-        "FromPort": 8285,
+        "FromPort": 8472,
         "GroupId": {
           "Ref": "SecurityGroupWorker"
         },
@@ -444,7 +444,21 @@
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupController"
         },
-        "ToPort": 8285
+        "ToPort": 8472
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromFlannelToController": {
+      "Properties": {
+        "FromPort": 8472,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 8472
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
@@ -478,7 +492,7 @@
     },
     "SecurityGroupWorkerIngressFromWorkerToFlannel": {
       "Properties": {
-        "FromPort": 8285,
+        "FromPort": 8472,
         "GroupId": {
           "Ref": "SecurityGroupWorker"
         },
@@ -486,7 +500,7 @@
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupWorker"
         },
-        "ToPort": 8285
+        "ToPort": 8472
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
