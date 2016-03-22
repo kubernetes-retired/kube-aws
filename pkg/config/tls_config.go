@@ -5,7 +5,9 @@ import (
 	"compress/gzip"
 	"crypto/rsa"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
+	"net"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -59,6 +61,13 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 		return nil, err
 	}
 
+	//Compute kubernetesServiceIP from serviceCIDR
+	_, serviceNet, err := net.ParseCIDR(c.ServiceCIDR)
+	if err != nil {
+		return nil, fmt.Errorf("invalid serviceCIDR: %v", err)
+	}
+	kubernetesServiceIPAddr := incrementIP(serviceNet.IP)
+
 	apiServerConfig := tlsutil.ServerCertConfig{
 		CommonName: "kube-apiserver",
 		DNSNames: []string{
@@ -70,7 +79,7 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 		},
 		IPAddresses: []string{
 			c.ControllerIP,
-			c.KubernetesServiceIP,
+			kubernetesServiceIPAddr.String(),
 		},
 	}
 	apiServerCert, err := tlsutil.NewSignedServerCertificate(apiServerConfig, apiServerKey, caCert, caKey)

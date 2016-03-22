@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"testing"
 )
 
@@ -19,7 +20,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.5.100.101
 `, `
 vpcCIDR: 10.4.0.0/16
@@ -27,7 +27,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 10.6.0.0/16
 serviceCIDR: 10.5.0.0/16
-kubernetesServiceIP: 10.5.100.100
 dnsServiceIP: 10.5.100.101
 `,
 }
@@ -39,7 +38,6 @@ instanceCIDR: 10.5.3.0/24 #instanceCIDR not in vpcCIDR
 controllerIP: 10.5.3.5
 podCIDR: 10.6.0.0/16
 serviceCIDR: 10.5.0.0/16
-kubernetesServiceIP: 10.5.100.100
 dnsServiceIP: 10.5.100.101
 `, `
 vpcCIDR: 10.4.3.0/16
@@ -47,15 +45,13 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.10.100.100 #kubernetesServiceIP not in service CIDR
-dnsServiceIP: 172.5.100.101
+dnsServiceIP: 172.5.0.1 #dnsServiceIP conflicts with kubernetesServiceIP
 `, `
 vpcCIDR: 10.4.3.0/16
 instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 10.4.0.0/16 #vpcCIDR overlaps with podCIDR
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.5.100.101
 
 `, `
@@ -64,7 +60,6 @@ instanceCIDR: 10.4.3.0/24
 controllerIP: 10.4.3.5
 podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
-kubernetesServiceIP: 172.5.100.100
 dnsServiceIP: 172.6.100.101 #dnsServiceIP not in service CIDR
 `,
 }
@@ -82,6 +77,67 @@ func TestNetworkValidation(t *testing.T) {
 		configBody := MinimalConfigYaml + networkConfig
 		if _, err := clusterFromBytes([]byte(configBody)); err == nil {
 			t.Errorf("Incorrect config tested valid, expected error:\n%s", networkConfig)
+		}
+	}
+
+}
+
+func TestKubernetesServiceIPInference(t *testing.T) {
+
+	// We sill assert that after parsing the network configuration,
+	// KubernetesServiceIP is the correct pre-determined value
+	testConfigs := []struct {
+		NetworkConfig       string
+		KubernetesServiceIP string
+	}{
+		{
+			NetworkConfig: `
+serviceCIDR: 172.5.10.10/22
+dnsServiceIP: 172.5.10.10
+        `,
+			KubernetesServiceIP: "172.5.8.1",
+		},
+		{
+			NetworkConfig: `
+serviceCIDR: 10.5.70.10/18
+dnsServiceIP: 10.5.64.10
+        `,
+			KubernetesServiceIP: "10.5.64.1",
+		},
+		{
+			NetworkConfig: `
+serviceCIDR: 172.4.155.98/27
+dnsServiceIP: 172.4.155.100
+        `,
+			KubernetesServiceIP: "172.4.155.97",
+		},
+		{
+			NetworkConfig: `
+serviceCIDR: 10.6.142.100/28
+dnsServiceIP: 10.6.142.100
+        `,
+			KubernetesServiceIP: "10.6.142.97",
+		},
+	}
+
+	for _, testConfig := range testConfigs {
+
+		configBody := MinimalConfigYaml + testConfig.NetworkConfig
+		cluster, err := clusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("Unexpected error parsing config: %v\n %s", err, configBody)
+			continue
+		}
+
+		_, serviceNet, err := net.ParseCIDR(cluster.ServiceCIDR)
+		if err != nil {
+			t.Errorf("invalid serviceCIDR: %v", err)
+			continue
+		}
+
+		kubernetesServiceIP := incrementIP(serviceNet.IP)
+		if kubernetesServiceIP.String() != testConfig.KubernetesServiceIP {
+			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s", kubernetesServiceIP, testConfig.KubernetesServiceIP)
 		}
 	}
 

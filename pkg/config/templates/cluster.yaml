@@ -55,9 +55,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # CIDR for all pod IP addresses
 # podCIDR: "10.2.0.0/16"
 
-# IP address of Kubernetes controller service (must be contained by serviceCIDR)
-# kubernetesServiceIP: 10.3.0.1
-
 # IP address of Kubernetes dns service (must be contained by serviceCIDR)
 # dnsServiceIP: 10.3.0.10
 
