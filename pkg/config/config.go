@@ -273,7 +273,7 @@ func (cfg Cluster) valid() error {
 		return errors.New("kmsKeyArn must be set")
 	}
 
-	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
+	vpcNetIP, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
@@ -312,8 +312,11 @@ func (cfg Cluster) valid() error {
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
-	if vpcNet.Contains(serviceNetIP) {
+	if vpcNet.Contains(serviceNetIP) || serviceNet.Contains(vpcNetIP) {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", cfg.VPCCIDR, cfg.ServiceCIDR)
+	}
+	if vpcNet.Contains(podNetIP) || podNet.Contains(vpcNetIP) {
+		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
 	}
 	if podNet.Contains(serviceNetIP) || serviceNet.Contains(podNetIP) {
 		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)

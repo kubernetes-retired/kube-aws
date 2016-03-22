@@ -34,6 +34,21 @@ dnsServiceIP: 10.5.100.101
 
 var incorrectNetworkingConfigs []string = []string{
 	`
+vpcCIDR: 10.4.2.0/23
+instanceCIDR: 10.4.3.0/24
+controllerIP: 10.4.3.5
+podCIDR: 10.4.0.0/16 #podCIDR contains vpcCDIR.
+serviceCIDR: 10.5.0.0/16
+dnsServiceIP: 10.5.100.101
+`,
+	`
+vpcCIDR: 10.4.2.0/23
+instanceCIDR: 10.4.3.0/24
+controllerIP: 10.4.3.5
+podCIDR: 10.5.0.0/16
+serviceCIDR: 10.4.0.0/16 #serviceCIDR contains vpcCDIR.
+dnsServiceIP: 10.4.100.101
+`, `
 vpcCIDR: 10.4.0.0/16
 instanceCIDR: 10.5.3.0/24 #instanceCIDR not in vpcCIDR
 controllerIP: 10.5.3.5
