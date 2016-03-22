@@ -16,15 +16,17 @@ fi
 
 GOPATH_VENDOR="$(pwd)/_gopath-vendor"
 GOPATH_KUBE_AWS="$(pwd)/_gopath-kube-aws"
-KUBE_AWS_DIR="${GOPATH_KUBE_AWS}/src/github.com/coreos/coreos-kubernetes/multi-node"
+KUBE_AWS_DIR="${GOPATH_KUBE_AWS}/src/github.com/coreos/coreos-kubernetes/multi-node/aws"
 
 rm -rf $GOPATH_VENDOR $GOPATH_KUBE_AWS
 
 mkdir -p $GOPATH_VENDOR
-mkdir -p $KUBE_AWS_DIR
+mkdir -p $(dirname $KUBE_AWS_DIR)
 
 ln -s $(pwd)/vendor $GOPATH_VENDOR/src
-ln -s $(pwd) $KUBE_AWS_DIR/aws
+ln -s $(pwd) $KUBE_AWS_DIR
 
 export GOPATH="${GOPATH_VENDOR}:${GOPATH_KUBE_AWS}"
-go build -ldflags "-X main.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws github.com/coreos/coreos-kubernetes/multi-node/aws/cmd/kube-aws
+cd $KUBE_AWS_DIR
+go generate ./pkg/config
+go build -ldflags "-X main.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o bin/kube-aws ./cmd/kube-aws
