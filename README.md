@@ -16,6 +16,13 @@ chmod +x kube-aws
 # Add kube-aws binary to your PATH
 ```
 
+### AWS Credentials
+The supported way to provide AWS credentials to kube-aws is by exporting the following environment variables:
+```sh
+export AWS_ACCESS_KEY_ID=AKID1234567890
+export AWS_SECRET_ACCESS_KEY=MY-SECRET-KEY
+```
+
 ### Create a KMS Key
 
 [Amazon KMS](http://docs.aws.amazon.com/kms/latest/developerguide/overview.html) keys are used to encrypt and decrypt cluster TLS assets. If you already have a KMS Key that you would like to use, you can skip this step.
