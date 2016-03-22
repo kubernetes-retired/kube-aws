@@ -10,6 +10,7 @@ keyName: test-key-name
 region: us-west-1
 availabilityZone: us-west-1c
 clusterName: test-cluster-name
+kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 `
 
 var goodNetworkingConfigs []string = []string{
