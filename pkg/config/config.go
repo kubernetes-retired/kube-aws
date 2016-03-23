@@ -85,6 +85,8 @@ type Cluster struct {
 	WorkerInstanceType       string `yaml:"workerInstanceType"`
 	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
 	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
+	VPCID                    string `yaml:"vpcId"`
+	RouteTableID             string `yaml:"routeTableId"`
 	VPCCIDR                  string `yaml:"vpcCIDR"`
 	InstanceCIDR             string `yaml:"instanceCIDR"`
 	ControllerIP             string `yaml:"controllerIP"`
@@ -95,6 +97,10 @@ type Cluster struct {
 	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
 	KMSKeyARN                string `yaml:"kmsKeyArn"`
 }
+
+const (
+	vpcLogicalName = "VPC"
+)
 
 func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
@@ -108,7 +114,23 @@ func (c Cluster) Config() (*Config, error) {
 		return nil, fmt.Errorf("failed getting AMI for config: %v", err)
 	}
 
+	//Set logical name constants
+	config.VPCLogicalName = vpcLogicalName
+
+	//Set reference strings
+	config.VPCRef = dynamicResourceRef(vpcLogicalName, config.VPCID)
+
 	return &config, nil
+}
+
+func dynamicResourceRef(logicalName, resID string) string {
+	if resID == "" {
+		//This resource will be created by the stack. Will be referenced by it's logical name
+		return fmt.Sprintf(`{ "Ref" : "%s" }`, logicalName)
+	}
+
+	//External resource already exists outside of the stack. Will be referenced by id
+	return fmt.Sprintf(`"%s"`, resID)
 }
 
 type StackTemplateOptions struct {
@@ -251,6 +273,12 @@ type Config struct {
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
+
+	//Logical names of dynamic resources
+	VPCLogicalName string
+
+	//Reference strings for dynamic resources
+	VPCRef string
 }
 
 func (cfg Cluster) valid() error {
@@ -271,6 +299,10 @@ func (cfg Cluster) valid() error {
 	}
 	if cfg.KMSKeyARN == "" {
 		return errors.New("kmsKeyArn must be set")
+	}
+
+	if cfg.VPCID == "" && cfg.RouteTableID != "" {
+		return errors.New("vpcId must be specified if routeTableId is specified")
 	}
 
 	vpcNetIP, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)

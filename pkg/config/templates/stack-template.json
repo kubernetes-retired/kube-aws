@@ -70,16 +70,16 @@
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "UpdatePolicy" : {
-	    "AutoScalingRollingUpdate" : {
+	"AutoScalingRollingUpdate" : {
           "MinInstancesInService" :
           {{if .WorkerSpotPrice}}
-            "0"
+          "0"
           {{else}}
-            "{{.WorkerCount}}"
+          "{{.WorkerCount}}"
           {{end}},
           "MaxBatchSize" : "1",
           "PauseTime" : "PT2M"
-	    }
+	}
       }
     },
     "EIPController": {
@@ -259,17 +259,6 @@
       },
       "Type": "AWS::EC2::Instance"
     },
-    "InternetGateway": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
-          }
-        ]
-      },
-      "Type": "AWS::EC2::InternetGateway"
-    },
     "LaunchConfigurationWorker": {
       "Properties": {
         "BlockDeviceMappings": [
@@ -297,32 +286,6 @@
         "UserData": "{{ .UserDataWorker }}"
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
-    },
-    "RouteTable": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
-          }
-        ],
-        "VpcId": {
-          "Ref": "VPC"
-        }
-      },
-      "Type": "AWS::EC2::RouteTable"
-    },
-    "RouteToInternet": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": {
-          "Ref": "InternetGateway"
-        },
-        "RouteTableId": {
-          "Ref": "RouteTable"
-        }
-      },
-      "Type": "AWS::EC2::Route"
     },
     "SecurityGroupController": {
       "Properties": {
@@ -369,9 +332,7 @@
             "Value": "{{.ClusterName}}"
           }
         ],
-        "VpcId": {
-          "Ref": "VPC"
-        }
+        "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
@@ -428,9 +389,7 @@
             "Value": "{{.ClusterName}}"
           }
         ],
-        "VpcId": {
-          "Ref": "VPC"
-        }
+        "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
@@ -515,24 +474,13 @@
             "Value": "{{.ClusterName}}"
           }
         ],
-        "VpcId": {
-          "Ref": "VPC"
-        }
+        "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::Subnet"
-    },
-    "SubnetRouteTableAssociation": {
-      "Properties": {
-        "RouteTableId": {
-          "Ref": "RouteTable"
-        },
-        "SubnetId": {
-          "Ref": "Subnet"
-        }
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    },
-    "VPC": {
+    }
+    {{if not .VPCID}}
+    ,
+    "{{.VPCLogicalName}}": {
       "Properties": {
         "CidrBlock": "{{.VPCCIDR}}",
         "EnableDnsHostnames": true,
@@ -551,16 +499,71 @@
       },
       "Type": "AWS::EC2::VPC"
     },
+    "RouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ],
+        "VpcId": {{.VPCRef}}
+      },
+      "Type": "AWS::EC2::RouteTable"
+    },
+    "RouteToInternet": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        },
+        "RouteTableId": { "Ref" : "RouteTable" }
+      },
+      "Type": "AWS::EC2::Route"
+    },
+    "InternetGateway": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ]
+      },
+      "Type": "AWS::EC2::InternetGateway"
+    },
     "VPCGatewayAttachment": {
       "Properties": {
         "InternetGatewayId": {
           "Ref": "InternetGateway"
         },
-        "VpcId": {
-          "Ref": "VPC"
-        }
+        "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::VPCGatewayAttachment"
+    },
+    "SubnetRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": { "Ref" : "RouteTable"},
+        "SubnetId": {
+          "Ref": "Subnet"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
+    {{else}}
+    {{if .RouteTableID}}
+    ,
+    "SubnetRouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": "{{.RouteTableID}}",
+        "SubnetId": {
+          "Ref": "Subnet"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{end}}
+
   }
 }
