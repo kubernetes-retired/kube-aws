@@ -80,6 +80,6 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("Edit %s and/or any of the cluster assets. Then use the \"kube-aws up\" command to create the stack\n", configPath)
+	fmt.Printf("Edit %s and/or any of the cluster assets. Then use the \"kube-aws up\" command to create the stack.\n", configPath)
 	return nil
 }
