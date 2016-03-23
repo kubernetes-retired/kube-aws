@@ -232,12 +232,46 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	//Use unmarshal function to do syntax validation
+	renderedBytes := []byte(rendered)
+	var jsonHolder map[string]interface{}
+	if err := json.Unmarshal(renderedBytes, &jsonHolder); err != nil {
+		syntaxError, ok := err.(*json.SyntaxError)
+		if ok {
+			contextString := getContextString(renderedBytes, int(syntaxError.Offset), 3)
+			return nil, fmt.Errorf("%v:\njson syntax error (offset=%d), in this region:\n-------\n%s\n-------\n", err, syntaxError.Offset, contextString)
+		}
+		return nil, err
+	}
+
 	// minify JSON
 	var buff bytes.Buffer
-	if err := json.Compact(&buff, []byte(rendered)); err != nil {
+	if err := json.Compact(&buff, renderedBytes); err != nil {
 		return nil, err
 	}
 	return buff.Bytes(), nil
+}
+
+func getContextString(buf []byte, offset, lineCount int) string {
+
+	linesSeen := 0
+	var leftLimit int
+	for leftLimit = offset; leftLimit > 0 && linesSeen <= lineCount; leftLimit-- {
+		if buf[leftLimit] == '\n' {
+			linesSeen++
+		}
+	}
+
+	linesSeen = 0
+	var rightLimit int
+	for rightLimit = offset + 1; rightLimit < len(buf) && linesSeen <= lineCount; rightLimit++ {
+		if buf[rightLimit] == '\n' {
+			linesSeen++
+		}
+	}
+
+	return string(buf[leftLimit:rightLimit])
 }
 
 type Config struct {
