@@ -326,23 +326,23 @@ write_files:
             "labels": {
               "k8s-app": "kube-dns",
               "kubernetes.io/cluster-service": "true",
-              "version": "v9"
+              "version": "v11"
             },
-            "name": "kube-dns-v9",
+            "name": "kube-dns-v11",
             "namespace": "kube-system"
           },
           "spec": {
             "replicas": 1,
             "selector": {
               "k8s-app": "kube-dns",
-              "version": "v9"
+              "version": "v11"
             },
             "template": {
               "metadata": {
                 "labels": {
                   "k8s-app": "kube-dns",
                   "kubernetes.io/cluster-service": "true",
-                  "version": "v9"
+                  "version": "v11"
                 }
               },
               "spec": {
@@ -359,9 +359,13 @@ write_files:
                       "-initial-cluster-token",
                       "skydns-etcd"
                     ],
-                    "image": "gcr.io/google_containers/etcd:2.0.9",
+                    "image": "gcr.io/google_containers/etcd-amd64:2.2.1",
                     "name": "etcd",
                     "resources": {
+                      "requests": {
+                        "cpu": "100m", 
+                        "memory": "50Mi"
+                      }, 
                       "limits": {
                         "cpu": "100m",
                         "memory": "50Mi"
@@ -376,14 +380,38 @@ write_files:
                   },
                   {
                     "args": [
-                      "-domain=cluster.local"
+                      "--domain=cluster.local"
                     ],
-                    "image": "gcr.io/google_containers/kube2sky:1.11",
+                    "image": "gcr.io/google_containers/kube2sky:1.14",
                     "name": "kube2sky",
+                    "livenessProbe": {
+                      "successThreshold": 1, 
+                      "initialDelaySeconds": 60, 
+                      "httpGet": {
+                        "path": "/healthz", 
+                        "scheme": "HTTP", 
+                        "port": 8080
+                      }, 
+                      "timeoutSeconds": 5, 
+                      "failureThreshold": 5
+                    }, 
+                    "readinessProbe": {
+                      "initialDelaySeconds": 30, 
+                      "httpGet": {
+                        "path": "/readiness", 
+                        "scheme": "HTTP", 
+                        "port": 8081
+                      }, 
+                      "timeoutSeconds": 5
+                    }, 
                     "resources": {
+                      "requests": {
+                        "cpu": "100m", 
+                        "memory": "50Mi"
+                      }, 
                       "limits": {
                         "cpu": "100m",
-                        "memory": "50Mi"
+                        "memory": "200Mi"
                       }
                     }
                   },
@@ -391,9 +419,10 @@ write_files:
                     "args": [
                       "-machines=http://localhost:4001",
                       "-addr=0.0.0.0:53",
+                      "-ns-rotate=false", 
                       "-domain=cluster.local."
                     ],
-                    "image": "gcr.io/google_containers/skydns:2015-03-11-001",
+                    "image": "gcr.io/google_containers/skydns:2015-10-13-8c72f8c",
                     "livenessProbe": {
                       "httpGet": {
                         "path": "/healthz",
@@ -416,19 +445,14 @@ write_files:
                         "protocol": "TCP"
                       }
                     ],
-                    "readinessProbe": {
-                      "httpGet": {
-                        "path": "/healthz",
-                        "port": 8080,
-                        "scheme": "HTTP"
-                      },
-                      "initialDelaySeconds": 1,
-                      "timeoutSeconds": 5
-                    },
                     "resources": {
+                      "requests": {
+                        "cpu": "100m", 
+                        "memory": "50Mi"
+                      }, 
                       "limits": {
                         "cpu": "100m",
-                        "memory": "50Mi"
+                        "memory": "200Mi"
                       }
                     }
                   },
@@ -446,6 +470,10 @@ write_files:
                       }
                     ],
                     "resources": {
+                      "requests": {
+                        "cpu": "10m", 
+                        "memory": "20Mi"
+                      }, 
                       "limits": {
                         "cpu": "10m",
                         "memory": "20Mi"
