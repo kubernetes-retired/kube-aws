@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
@@ -27,7 +26,6 @@ var stackTemplateOptions = config.StackTemplateOptions{
 
 func main() {
 	if err := cmdRoot.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 }
