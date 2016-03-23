@@ -52,7 +52,7 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 		return nil, err
 	}
 
-	c, err := clusterFromBytes(data)
+	c, err := ClusterFromBytes(data)
 	if err != nil {
 		return nil, fmt.Errorf("file %s: %v", filename, err)
 	}
@@ -61,7 +61,7 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 }
 
 //Necessary for unit tests, which store configs as hardcoded strings
-func clusterFromBytes(data []byte) (*Cluster, error) {
+func ClusterFromBytes(data []byte) (*Cluster, error) {
 	c := newDefaultCluster()
 	if err := yaml.Unmarshal(data, c); err != nil {
 		return nil, fmt.Errorf("failed to parse cluster: %v", err)
@@ -118,19 +118,15 @@ func (c Cluster) Config() (*Config, error) {
 	config.VPCLogicalName = vpcLogicalName
 
 	//Set reference strings
-	config.VPCRef = dynamicResourceRef(vpcLogicalName, config.VPCID)
 
-	return &config, nil
-}
-
-func dynamicResourceRef(logicalName, resID string) string {
-	if resID == "" {
-		//This resource will be created by the stack. Will be referenced by it's logical name
-		return fmt.Sprintf(`{ "Ref" : "%s" }`, logicalName)
+	//Assume VPC does not exist, reference by logical name
+	config.VPCRef = fmt.Sprintf(`{ "Ref" : %q }`, config.VPCLogicalName)
+	if config.VPCID != "" {
+		//This means this VPC already exists, and we can reference it directly by ID
+		config.VPCRef = fmt.Sprintf("%q", config.VPCID)
 	}
 
-	//External resource already exists outside of the stack. Will be referenced by id
-	return fmt.Sprintf(`"%s"`, resID)
+	return &config, nil
 }
 
 type StackTemplateOptions struct {
@@ -305,16 +301,16 @@ func (cfg Cluster) valid() error {
 		return errors.New("vpcId must be specified if routeTableId is specified")
 	}
 
-	vpcNetIP, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
+	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	instancesNetIP, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
+	_, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid instanceCIDR: %v", err)
 	}
-	if !vpcNet.Contains(instancesNetIP) {
+	if !vpcNet.Contains(instancesNet.IP) {
 		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
 			cfg.VPCCIDR,
 			cfg.InstanceCIDR,
@@ -332,25 +328,22 @@ func (cfg Cluster) valid() error {
 		)
 	}
 
-	podNetIP, podNet, err := net.ParseCIDR(cfg.PodCIDR)
+	_, podNet, err := net.ParseCIDR(cfg.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
 	}
-	if vpcNet.Contains(podNetIP) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
-	}
 
-	serviceNetIP, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
+	_, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
-	if vpcNet.Contains(serviceNetIP) || serviceNet.Contains(vpcNetIP) {
+	if cidrOverlap(serviceNet, vpcNet) {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", cfg.VPCCIDR, cfg.ServiceCIDR)
 	}
-	if vpcNet.Contains(podNetIP) || podNet.Contains(vpcNetIP) {
+	if cidrOverlap(podNet, vpcNet) {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
 	}
-	if podNet.Contains(serviceNetIP) || serviceNet.Contains(podNetIP) {
+	if cidrOverlap(serviceNet, podNet) {
 		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
 	}
 
@@ -374,6 +367,60 @@ func (cfg Cluster) valid() error {
 	return nil
 }
 
+/*
+Validates the an existing VPC and it's existing subnets do not conflict with this
+cluster configuration
+*/
+func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDRS []string) error {
+
+	_, existingVPC, err := net.ParseCIDR(existingVPCCIDR)
+	if err != nil {
+		return fmt.Errorf("error parsing existing vpc cidr %s : %v", existingVPCCIDR, err)
+	}
+
+	existingSubnets := make([]*net.IPNet, len(existingSubnetCIDRS))
+	for i, existingSubnetCIDR := range existingSubnetCIDRS {
+		_, existingSubnets[i], err = net.ParseCIDR(existingSubnetCIDR)
+		if err != nil {
+			return fmt.Errorf(
+				"error parsing existing subnet cidr %s : %v",
+				existingSubnetCIDR,
+				err,
+			)
+		}
+	}
+	_, instanceNet, err := net.ParseCIDR(c.InstanceCIDR)
+	if err != nil {
+		return fmt.Errorf("error parsing instances cidr %s : %v", c.InstanceCIDR, err)
+	}
+	_, vpcNet, err := net.ParseCIDR(c.VPCCIDR)
+	if err != nil {
+		return fmt.Errorf("error parsing vpc cidr %s: %v", c.VPCCIDR, err)
+	}
+
+	//Verify that existing vpc CIDR matches declared vpc CIDR
+	if vpcNet.String() != existingVPC.String() {
+		return fmt.Errorf(
+			"declared vpcCidr %s does not match existing vpc cidr %s",
+			vpcNet,
+			existingVPC,
+		)
+	}
+
+	//Loop through all existing subnets in the VPC and look for conflicting CIDRS
+	for _, existingSubnet := range existingSubnets {
+		if cidrOverlap(instanceNet, existingSubnet) {
+			return fmt.Errorf(
+				"instance cidr (%s) conflicts with existing subnet cidr=%s",
+				instanceNet,
+				existingSubnet,
+			)
+		}
+	}
+
+	return nil
+}
+
 //Return next IP address in network range
 func incrementIP(netIP net.IP) net.IP {
 	ip := make(net.IP, len(netIP))
@@ -387,4 +434,9 @@ func incrementIP(netIP net.IP) net.IP {
 	}
 
 	return ip
+}
+
+//Does the address space of these networks "a" and "b" overlap?
+func cidrOverlap(a, b *net.IPNet) bool {
+	return a.Contains(b.IP) || b.Contains(a.IP)
 }

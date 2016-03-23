@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const MinimalConfigYaml = `externalDNSName: test-external-dns-name
+const minimalConfigYaml = `externalDNSName: test-external-dns-name
 keyName: test-key-name
 region: us-west-1
 availabilityZone: us-west-1c
@@ -90,15 +90,15 @@ routeTableId: rtb-xxxxxx # routeTableId specified without vpcId
 func TestNetworkValidation(t *testing.T) {
 
 	for _, networkConfig := range goodNetworkingConfigs {
-		configBody := MinimalConfigYaml + networkConfig
-		if _, err := clusterFromBytes([]byte(configBody)); err != nil {
+		configBody := minimalConfigYaml + networkConfig
+		if _, err := ClusterFromBytes([]byte(configBody)); err != nil {
 			t.Errorf("Correct config tested invalid: %s\n%s", err, networkConfig)
 		}
 	}
 
 	for _, networkConfig := range incorrectNetworkingConfigs {
-		configBody := MinimalConfigYaml + networkConfig
-		if _, err := clusterFromBytes([]byte(configBody)); err == nil {
+		configBody := minimalConfigYaml + networkConfig
+		if _, err := ClusterFromBytes([]byte(configBody)); err == nil {
 			t.Errorf("Incorrect config tested valid, expected error:\n%s", networkConfig)
 		}
 	}
@@ -145,8 +145,8 @@ dnsServiceIP: 10.6.142.100
 
 	for _, testConfig := range testConfigs {
 
-		configBody := MinimalConfigYaml + testConfig.NetworkConfig
-		cluster, err := clusterFromBytes([]byte(configBody))
+		configBody := minimalConfigYaml + testConfig.NetworkConfig
+		cluster, err := ClusterFromBytes([]byte(configBody))
 		if err != nil {
 			t.Errorf("Unexpected error parsing config: %v\n %s", err, configBody)
 			continue
