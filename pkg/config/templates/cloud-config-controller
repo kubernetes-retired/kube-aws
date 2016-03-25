@@ -41,7 +41,7 @@ coreos:
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=http://localhost:8080 \
-        --register-node=false \
+        --register-schedulable=false \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \
         --cluster_dns={{.DNSServiceIP}} \
