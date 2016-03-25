@@ -59,7 +59,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # dnsServiceIP: 10.3.0.10
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.1.8_coreos.0
+# kubernetesVersion: v1.2.0_coreos.1
 
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
