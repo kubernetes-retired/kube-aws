@@ -25,7 +25,12 @@ var (
 
 func init() {
 	cmdRoot.AddCommand(cmdValidate)
-	cmdValidate.Flags().BoolVar(&validateOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
+	cmdValidate.Flags().BoolVar(
+		&validateOpts.awsDebug,
+		"aws-debug",
+		false,
+		"Log debug information from aws-sdk-go library",
+	)
 }
 
 func runCmdValidate(cmd *cobra.Command, args []string) error {

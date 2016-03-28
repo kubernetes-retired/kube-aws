@@ -232,6 +232,7 @@ func (c *Cluster) Info() (*ClusterInfo, error) {
 	}
 
 	var info ClusterInfo
+	info.Name = *c.clusterName
 	for _, r := range resources {
 		switch aws.StringValue(r.LogicalResourceId) {
 		case "EIPController":
