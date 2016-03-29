@@ -212,38 +212,20 @@ func (c *Cluster) Update(stackBody string) (string, error) {
 }
 
 func (c *Cluster) Info() (*ClusterInfo, error) {
-	resources := make([]cloudformation.StackResourceSummary, 0)
-	req := cloudformation.ListStackResourcesInput{
-		StackName: aws.String(c.ClusterName),
-	}
 	cfSvc := cloudformation.New(c.session)
-	for {
-		resp, err := cfSvc.ListStackResources(&req)
-		if err != nil {
-			return nil, err
-		}
-		for _, s := range resp.StackResourceSummaries {
-			resources = append(resources, *s)
-		}
-		req.NextToken = resp.NextToken
-		if aws.StringValue(req.NextToken) == "" {
-			break
-		}
+	resp, err := cfSvc.DescribeStackResource(
+		&cloudformation.DescribeStackResourceInput{
+			LogicalResourceId: aws.String("EIPController"),
+			StackName:         aws.String(c.ClusterName),
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get public IP of controller instance")
 	}
 
 	var info ClusterInfo
-	info.Name = *c.clusterName
-	for _, r := range resources {
-		switch aws.StringValue(r.LogicalResourceId) {
-		case "EIPController":
-			if r.PhysicalResourceId != nil {
-				info.ControllerIP = *r.PhysicalResourceId
-			} else {
-				return nil, fmt.Errorf("unable to get public IP of controller instance")
-			}
-		}
-	}
-
+	info.ControllerIP = *resp.StackResourceDetail.PhysicalResourceId
+	info.Name = c.ClusterName
 	return &info, nil
 }
 
