@@ -80,6 +80,13 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("Edit %s and/or any of the cluster assets. Then use the \"kube-aws up\" command to create the stack.\n", configPath)
+	successMsg := "Success! Stack rendered to stack-template.json.\n" +
+		"\n" +
+		"Next steps:\n" +
+		"1. (Optional) Validate your changes to %s with \"kube-aws validate\".\n" +
+		"2. (Optional) Further customize the cluster by modifying stack-template.json or files in ./userdata.\n" +
+		"3. Start the cluster with \"kube-aws up\".\n"
+
+	fmt.Printf(successMsg, configPath)
 	return nil
 }
