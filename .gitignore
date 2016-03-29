@@ -3,4 +3,5 @@
 /assets
 *~
 /_gopath-kube-aws
+/_gopath-vendor
 /pkg/config/templates.go
