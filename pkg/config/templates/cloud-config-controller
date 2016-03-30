@@ -30,7 +30,7 @@ coreos:
           content: |
             [Service]
             ExecStartPre=/usr/bin/curl --silent -X PUT -d \
-            "value={\"Network\" : \"{{.PodCIDR}}\"}" \
+            "value={\"Network\" : \"{{.PodCIDR}}\", \"Backend\" : {\"Type\" : \"vxlan\"}}" \
             http://localhost:2379/v2/keys/coreos.com/network/config?prevExist=false
     - name: kubelet.service
       command: start
