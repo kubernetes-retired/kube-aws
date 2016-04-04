@@ -40,7 +40,13 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
 
-# CIDR for Kubernetes VPC
+# ID of existing VPC to create subnet in. Leave blank to create a new VPC
+# vpcId:
+
+# ID of existing route table in existing VPC to attach subnet to. Leave blank to use the VPC's main route table.
+# routeTableId:
+
+# CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
 # vpcCIDR: "10.0.0.0/16"
 
 # CIDR for Kubernetes subnet

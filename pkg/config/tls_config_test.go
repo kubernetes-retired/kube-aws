@@ -9,7 +9,7 @@ import (
 )
 
 func genTLSAssets(t *testing.T) *RawTLSAssets {
-	cluster, err := clusterFromBytes([]byte(MinimalConfigYaml))
+	cluster, err := ClusterFromBytes([]byte(minimalConfigYaml))
 	if err != nil {
 		t.Fatalf("failed generating config: %v", err)
 	}
