@@ -25,6 +25,7 @@ coreos:
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
+        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf --mount volume=dns,target=/etc/resolv.conf"
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers={{.SecureAPIServers}} \
         --register-node=true \
