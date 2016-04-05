@@ -71,11 +71,12 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 	}
 
 	successMsg :=
-		"Success! Created %s\n" +
-			"\n" +
-			"Next steps:\n" +
-			"1. (Optional) Edit %s to parameterize the cluster.\n" +
-			"2. Use the \"kube-aws render\" command to render the stack template.\n"
+		`Success! Created %s
+
+Next steps:
+1. (Optional) Edit %s to parameterize the cluster.
+2. Use the "kube-aws render" command to render the stack template.
+`
 
 	fmt.Printf(successMsg, configPath, configPath)
 	return nil

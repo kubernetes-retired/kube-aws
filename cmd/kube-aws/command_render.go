@@ -80,12 +80,14 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	successMsg := "Success! Stack rendered to stack-template.json.\n" +
-		"\n" +
-		"Next steps:\n" +
-		"1. (Optional) Validate your changes to %s with \"kube-aws validate\".\n" +
-		"2. (Optional) Further customize the cluster by modifying stack-template.json or files in ./userdata.\n" +
-		"3. Start the cluster with \"kube-aws up\".\n"
+	successMsg :=
+		`Success! Stack rendered to stack-template.json.
+
+Next steps:
+1. (Optional) Validate your changes to %s with "kube-aws validate"
+2. (Optional) Further customize the cluster by modifying stack-template.json or files in ./userdata.
+3. Start the cluster with "kube-aws up".
+`
 
 	fmt.Printf(successMsg, configPath)
 	return nil

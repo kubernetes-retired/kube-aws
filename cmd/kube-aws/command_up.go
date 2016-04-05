@@ -74,12 +74,14 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed fetching cluster info: %v", err)
 	}
 
-	successMsg := "Success! Your AWS resources have been created: \n" +
-		info.String() + "\n" +
-		"The containers that power your cluster are now being dowloaded.\n\n" +
-		"You should be able to access the Kubernetes API once the containers " +
-		"finish downloading.\n"
-	fmt.Print(successMsg)
+	successMsg :=
+		`Success! Your AWS resources have been created:
+%s
+The containers that power your cluster are now being dowloaded.
+
+You should be able to access the Kubernetes API once the containers finish downloading.
+`
+	fmt.Printf(successMsg, info.String())
 
 	return nil
 }
