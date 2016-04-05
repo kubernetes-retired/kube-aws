@@ -220,7 +220,8 @@ func (c *Cluster) Info() (*ClusterInfo, error) {
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get public IP of controller instance")
+		errmsg := "unable to get public IP of controller instance:\n" + err.Error()
+		return nil, fmt.Errorf(errmsg)
 	}
 
 	var info ClusterInfo
