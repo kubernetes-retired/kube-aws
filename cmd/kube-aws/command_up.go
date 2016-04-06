@@ -36,6 +36,10 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to read cluster config: %v", err)
 	}
 
+	if err := conf.ValidateUserData(stackTemplateOptions); err != nil {
+		return err
+	}
+
 	data, err := conf.RenderStackTemplate(stackTemplateOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to render stack template: %v", err)
