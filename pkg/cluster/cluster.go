@@ -36,8 +36,10 @@ func (c *ClusterInfo) String() string {
 }
 
 func New(cfg *config.Cluster, awsDebug bool) *Cluster {
-	awsConfig := aws.NewConfig()
-	awsConfig = awsConfig.WithRegion(cfg.Region)
+	awsConfig := aws.NewConfig().
+		WithRegion(cfg.Region).
+		WithCredentialsChainVerboseErrors(true)
+
 	if awsDebug {
 		awsConfig = awsConfig.WithLogLevel(aws.LogDebug)
 	}
