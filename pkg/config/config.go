@@ -172,8 +172,10 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		return nil, err
 	}
 
-	awsConfig := aws.NewConfig()
-	awsConfig = awsConfig.WithRegion(stackConfig.Config.Region)
+	awsConfig := aws.NewConfig().
+		WithRegion(stackConfig.Config.Region).
+		WithCredentialsChainVerboseErrors(true)
+
 	kmsSvc := kms.New(session.New(awsConfig))
 
 	compactAssets, err := assets.compact(stackConfig.Config, kmsSvc)
