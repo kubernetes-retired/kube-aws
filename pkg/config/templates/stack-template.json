@@ -91,6 +91,18 @@
       },
       "Type": "AWS::EC2::EIP"
     },
+    {{ if .CreateRecordSet }}
+    "ExternalDNS": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneName": "{{.HostedZone}}",
+        "Name": "{{.ExternalDNSName}}",
+        "TTL": {{.RecordSetTTL}},
+        "ResourceRecords": [{ "Ref": "EIPController"}],
+        "Type": "A"
+      }
+    },
+    {{ end }}
     "IAMInstanceProfileController": {
       "Properties": {
         "Path": "/",
@@ -198,11 +210,11 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-		{
-		  "Action" : "kms:Decrypt",
-		  "Effect" : "Allow",
-		  "Resource" : "{{.KMSKeyARN}}"
-		}
+                {
+                  "Action" : "kms:Decrypt",
+                  "Effect" : "Allow",
+                  "Resource" : "{{.KMSKeyARN}}"
+                }
               ],
               "Version": "2012-10-17"
             },

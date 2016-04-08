@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/route53"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 )
@@ -131,6 +132,11 @@ func (c *Cluster) validateExistingVPCState(ec2Svc ec2Service) error {
 }
 
 func (c *Cluster) Create(stackBody string) error {
+	r53Svc := route53.New(c.session)
+	if err := c.validateDNSConfig(r53Svc); err != nil {
+		return err
+	}
+
 	ec2Svc := ec2.New(c.session)
 
 	if err := c.validateKeyPair(ec2Svc); err != nil {
@@ -264,6 +270,59 @@ func (c *Cluster) validateKeyPair(ec2Svc ec2Service) error {
 			}
 		}
 		return err
+	}
+	return nil
+}
+
+type r53Service interface {
+	ListHostedZonesByName(*route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error)
+	ListResourceRecordSets(*route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error)
+}
+
+func (c *Cluster) validateDNSConfig(r53 r53Service) error {
+	if !c.CreateRecordSet {
+		return nil
+	}
+
+	if c.RecordSetTTL < 1 {
+		return fmt.Errorf("TTL must be at least 1 second")
+	}
+
+	if c.HostedZone == "" {
+		return fmt.Errorf("hostName cannot be blank when createRecordSet is true")
+	}
+
+	zonesResp, err := r53.ListHostedZonesByName(&route53.ListHostedZonesByNameInput{
+		DNSName: aws.String(c.HostedZone),
+	})
+	if err != nil {
+		return fmt.Errorf("Error validating HostedZone: %s", err)
+	}
+
+	zones := zonesResp.HostedZones
+	if len(zones) == 0 || (*zones[0].Name != c.HostedZone) {
+		return fmt.Errorf(
+			"HostedZone %s does not exist.  You'll need to create it manually",
+			c.HostedZone,
+		)
+	}
+
+	recordSetsResp, err := r53.ListResourceRecordSets(
+		&route53.ListResourceRecordSetsInput{
+			HostedZoneId: zones[0].Id,
+		},
+	)
+
+	if len(recordSetsResp.ResourceRecordSets) > 0 {
+		for _, recordSet := range recordSetsResp.ResourceRecordSets {
+			if *recordSet.Name == c.ExternalDNSName {
+				return fmt.Errorf(
+					"RecordSet for \"%s\" already exists in Hosted Zone \"%s.\"",
+					c.ExternalDNSName,
+					c.HostedZone,
+				)
+			}
+		}
 	}
 
 	return nil

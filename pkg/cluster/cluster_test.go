@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 )
 
@@ -201,5 +202,93 @@ func TestValidateKeyPair(t *testing.T) {
 	c.KeyName = "invalidKeyName"
 	if err := c.validateKeyPair(ec2Svc); err == nil {
 		t.Errorf("failed to catch invalid key \"%s\"", c.KeyName)
+	}
+}
+
+type Zone struct {
+	Id  string
+	DNS string
+}
+
+type dummyR53Service struct {
+	HostedZones        []Zone
+	ResourceRecordSets map[string]string
+}
+
+func (r53 dummyR53Service) ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error) {
+	output := &route53.ListHostedZonesByNameOutput{}
+	for _, zone := range r53.HostedZones {
+		if zone.DNS == *input.DNSName {
+			output.HostedZones = append(output.HostedZones, &route53.HostedZone{
+				Name: aws.String(zone.DNS),
+				Id:   aws.String(zone.Id),
+			})
+		}
+	}
+	return output, nil
+}
+
+func (r53 dummyR53Service) ListResourceRecordSets(input *route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error) {
+	output := &route53.ListResourceRecordSetsOutput{}
+	if name, ok := r53.ResourceRecordSets[*input.HostedZoneId]; ok {
+		output.ResourceRecordSets = []*route53.ResourceRecordSet{
+			&route53.ResourceRecordSet{
+				Name: aws.String(name),
+			},
+		}
+	}
+	return output, nil
+}
+
+func TestValidateDNSConfig(t *testing.T) {
+	dnsConfig := `
+createRecordSet: true
+recordSetTTL: 60
+hostedZone: staging.core-os.net
+`
+
+	configBody := minimalConfigYaml + dnsConfig
+	clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+	if err != nil {
+		t.Errorf("could not get valid cluster config: %v", err)
+	}
+	c := &Cluster{Cluster: *clusterConfig}
+
+	r53 := dummyR53Service{
+		HostedZones: []Zone{
+			Zone{
+				Id:  "staging_id",
+				DNS: "staging.core-os.net",
+			},
+		},
+		ResourceRecordSets: map[string]string{
+			"staging_id": "existing-record.staging.core-os.net",
+		},
+	}
+
+	if err := c.validateDNSConfig(r53); err != nil {
+		t.Errorf("returned error for valid config: %v", err)
+	}
+
+	c.RecordSetTTL = 0
+	if err := c.validateDNSConfig(r53); err == nil {
+		t.Errorf("failed to reject invalid TTL")
+	}
+
+	c.RecordSetTTL = 300
+	c.HostedZone = ""
+	if err := c.validateDNSConfig(r53); err == nil {
+		t.Errorf("failed to reject empty HostName")
+	}
+
+	c.HostedZone = "non-existant-zone"
+	if err := c.validateDNSConfig(r53); err == nil {
+		t.Errorf("failed to catch non-existent hosted zone")
+	}
+
+	c.HostedZone = "staging.core-os.net"
+	c.ExternalDNSName = "existing-record.staging.core-os.net"
+	if err := c.validateDNSConfig(r53); err == nil {
+		t.Errorf("failed to catch already existing ExternalDNSName")
 	}
 }

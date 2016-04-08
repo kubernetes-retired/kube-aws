@@ -12,6 +12,7 @@ import (
 	"net"
 	"strings"
 	"text/template"
+	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -43,6 +44,7 @@ func newDefaultCluster() *Cluster {
 		WorkerCount:              1,
 		WorkerInstanceType:       "m3.medium",
 		WorkerRootVolumeSize:     30,
+		CreateRecordSet:          false,
 	}
 }
 
@@ -56,6 +58,13 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 	if err != nil {
 		return nil, fmt.Errorf("file %s: %v", filename, err)
 	}
+
+	// HostedZone needs to end with a '.'
+	c.HostedZone = withTrailingDot(c.HostedZone)
+
+	// ExternalDNSName doesn't require '.' to be created,
+	// but adding it here makes validations easier
+	c.ExternalDNSName = withTrailingDot(c.ExternalDNSName)
 
 	return c, nil
 }
@@ -96,6 +105,10 @@ type Cluster struct {
 	K8sVer                   string `yaml:"kubernetesVersion"`
 	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
 	KMSKeyARN                string `yaml:"kmsKeyArn"`
+
+	CreateRecordSet bool   `yaml:"createRecordSet"`
+	RecordSetTTL    int    `yaml:"recordSetTTL"`
+	HostedZone      string `yaml:"hostedZone"`
 }
 
 const (
@@ -475,4 +488,12 @@ func incrementIP(netIP net.IP) net.IP {
 //Does the address space of these networks "a" and "b" overlap?
 func cidrOverlap(a, b *net.IPNet) bool {
 	return a.Contains(b.IP) || b.Contains(a.IP)
+}
+
+func withTrailingDot(s string) string {
+	lastRune, _ := utf8.DecodeLastRuneInString(s)
+	if lastRune != rune('.') {
+		return s + "."
+	}
+	return s
 }

@@ -5,9 +5,21 @@
 clusterName: {{.ClusterName}}
 
 # DNS name routable to the Kubernetes controller nodes
-# from worker nodes and external clients. The deployer
-# is responsible for making this name routable
+# from worker nodes and external clients. Configure the options
+# below if you'd like kube-aws to create a Route53 record sets/hosted zones
+# for you.  Otherwise the deployer is responsible for making this name routable
 externalDNSName: {{.ExternalDNSName}}
+
+# Set to true if you want kube-aws to create a Route53 A Record for you.
+#createRecordSet: false
+
+# TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+#recordSetTTL: 300
+
+# The name of the hosted zone to add the externalDNSName to, 
+# E.g: "google.com".  This needs to already exist, kube-aws will not create
+# it for you.
+#hostedZone: ""
 
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.
