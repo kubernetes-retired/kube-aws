@@ -52,6 +52,7 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	}
+
 	cluster := cluster.New(conf, upOpts.awsDebug)
 	if upOpts.update {
 		report, err := cluster.Update(string(data))
@@ -62,6 +63,7 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Update stack: %s\n", report)
 		}
 	} else {
+		fmt.Printf("Creating AWS resources. This make take several minutes.\n")
 		if err := cluster.Create(string(data)); err != nil {
 			return fmt.Errorf("Error creating cluster: %v", err)
 		}
@@ -72,7 +74,14 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed fetching cluster info: %v", err)
 	}
 
-	fmt.Print(info.String())
+	successMsg :=
+		`Success! Your AWS resources have been created:
+%s
+The containers that power your cluster are now being dowloaded.
+
+You should be able to access the Kubernetes API once the containers finish downloading.
+`
+	fmt.Printf(successMsg, info.String())
 
 	return nil
 }
