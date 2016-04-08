@@ -21,6 +21,7 @@ var regions = []string{
 
 var supportedChannels = []string{
 	"alpha",
+	"beta",
 }
 
 func getAMI(region, channel string) (string, error) {
