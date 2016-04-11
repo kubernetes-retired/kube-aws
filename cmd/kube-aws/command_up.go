@@ -63,7 +63,7 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Update stack: %s\n", report)
 		}
 	} else {
-		fmt.Printf("Creating AWS resources. This make take several minutes.\n")
+		fmt.Printf("Creating AWS resources. This should take around 5 minutes.\n")
 		if err := cluster.Create(string(data)); err != nil {
 			return fmt.Errorf("Error creating cluster: %v", err)
 		}
