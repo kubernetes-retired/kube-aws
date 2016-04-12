@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -72,6 +73,7 @@ func (c *Cluster) ValidateStack(stackBody string) (string, error) {
 type ec2Service interface {
 	DescribeVpcs(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
 	DescribeSubnets(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
+	DescribeKeyPairs(*ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
 }
 
 func (c *Cluster) validateExistingVPCState(ec2Svc ec2Service) error {
@@ -130,6 +132,11 @@ func (c *Cluster) validateExistingVPCState(ec2Svc ec2Service) error {
 
 func (c *Cluster) Create(stackBody string) error {
 	ec2Svc := ec2.New(c.session)
+
+	if err := c.validateKeyPair(ec2Svc); err != nil {
+		return err
+	}
+
 	if err := c.validateExistingVPCState(ec2Svc); err != nil {
 		return err
 	}
@@ -163,7 +170,11 @@ func (c *Cluster) Create(stackBody string) error {
 		case cloudformation.ResourceStatusCreateComplete:
 			return nil
 		case cloudformation.ResourceStatusCreateFailed:
-			errMsg := fmt.Sprintf("Stack creation failed: %s : %s", statusString, aws.StringValue(resp.Stacks[0].StackStatusReason))
+			errMsg := fmt.Sprintf(
+				"Stack creation failed: %s : %s",
+				statusString,
+				aws.StringValue(resp.Stacks[0].StackStatusReason),
+			)
 			return errors.New(errMsg)
 		case cloudformation.ResourceStatusCreateInProgress:
 			time.Sleep(3 * time.Second)
@@ -255,4 +266,21 @@ func (c *Cluster) Destroy() error {
 	}
 	_, err := cfSvc.DeleteStack(dreq)
 	return err
+}
+
+func (c *Cluster) validateKeyPair(ec2Svc ec2Service) error {
+	_, err := ec2Svc.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		KeyNames: []*string{aws.String(c.KeyName)},
+	})
+
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "InvalidKeyPair.NotFound" {
+				return fmt.Errorf("Key %s does not exist.", c.KeyName)
+			}
+		}
+		return err
+	}
+
+	return nil
 }

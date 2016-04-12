@@ -1,24 +1,40 @@
 package cluster
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 )
 
-type dummyEC2Service map[string]struct {
+const minimalConfigYaml = `
+externalDNSName: test-external-dns-name
+keyName: test-key-name
+region: us-west-1
+availabilityZone: us-west-1c
+clusterName: test-cluster-name
+kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
+`
+
+type VPC struct {
 	cidr        string
 	subnetCidrs []string
 }
 
+type dummyEC2Service struct {
+	VPCs     map[string]VPC
+	KeyPairs map[string]bool
+}
+
 func (svc dummyEC2Service) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
 	output := ec2.DescribeVpcsOutput{}
-	for _, vpcId := range input.VpcIds {
-		if vpc, ok := svc[*vpcId]; ok {
+	for _, vpcID := range input.VpcIds {
+		if vpc, ok := svc.VPCs[*vpcID]; ok {
 			output.Vpcs = append(output.Vpcs, &ec2.Vpc{
-				VpcId:     vpcId,
+				VpcId:     vpcID,
 				CidrBlock: aws.String(vpc.cidr),
 			})
 		}
@@ -39,8 +55,8 @@ func (svc dummyEC2Service) DescribeSubnets(input *ec2.DescribeSubnetsInput) (*ec
 		}
 	}
 
-	for _, vpcId := range vpcIds {
-		if vpc, ok := svc[vpcId]; ok {
+	for _, vpcID := range vpcIds {
+		if vpc, ok := svc.VPCs[vpcID]; ok {
 			for _, subnetCidr := range vpc.subnetCidrs {
 				output.Subnets = append(
 					output.Subnets,
@@ -53,15 +69,23 @@ func (svc dummyEC2Service) DescribeSubnets(input *ec2.DescribeSubnetsInput) (*ec
 	return &output, nil
 }
 
+func (svc dummyEC2Service) DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error) {
+	output := &ec2.DescribeKeyPairsOutput{}
+
+	for _, keyName := range input.KeyNames {
+		if _, ok := svc.KeyPairs[*keyName]; ok {
+			output.KeyPairs = append(output.KeyPairs, &ec2.KeyPairInfo{
+				KeyName: keyName,
+			})
+		} else {
+			return nil, awserr.New("InvalidKeyPair.NotFound", "", errors.New(""))
+		}
+	}
+
+	return output, nil
+}
+
 func TestExistingVPCValidation(t *testing.T) {
-	minimalConfigYaml := `
-externalDNSName: test-external-dns-name
-keyName: test-key-name
-region: us-west-1
-availabilityZone: us-west-1c
-clusterName: test-cluster-name
-kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
-`
 
 	goodExistingVPCConfigs := []string{
 		``, //Tests default create VPC mode, which bypasses existing VPC validation
@@ -108,20 +132,22 @@ routeTableId: rtb-xxxxxx
 	}
 
 	ec2Service := dummyEC2Service{
-		"vpc-xxx1": {
-			cidr: "10.5.0.0/16",
-			subnetCidrs: []string{
-				"10.5.1.0/24",
-				"10.5.2.0/24",
-				"10.5.10.100/29",
+		VPCs: map[string]VPC{
+			"vpc-xxx1": {
+				cidr: "10.5.0.0/16",
+				subnetCidrs: []string{
+					"10.5.1.0/24",
+					"10.5.2.0/24",
+					"10.5.10.100/29",
+				},
 			},
-		},
-		"vpc-xxx2": {
-			cidr: "192.168.1.0/24",
-			subnetCidrs: []string{
-				"192.168.1.100/28",
-				"192.168.1.150/28",
-				"192.168.1.200/28",
+			"vpc-xxx2": {
+				cidr: "192.168.1.0/24",
+				subnetCidrs: []string{
+					"192.168.1.100/28",
+					"192.168.1.150/28",
+					"192.168.1.200/28",
+				},
 			},
 		},
 	}
@@ -152,5 +178,28 @@ routeTableId: rtb-xxxxxx
 			t.Errorf("Incorrect config tested valid, expected error:\n%s", networkConfig)
 		}
 	}
+}
 
+func TestValidateKeyPair(t *testing.T) {
+
+	clusterConfig, err := config.ClusterFromBytes([]byte(minimalConfigYaml))
+	if err != nil {
+		t.Errorf("could not get valid cluster config: %v", err)
+	}
+
+	c := &Cluster{Cluster: *clusterConfig}
+
+	ec2Svc := dummyEC2Service{}
+	ec2Svc.KeyPairs = map[string]bool{
+		c.KeyName: true,
+	}
+
+	if err := c.validateKeyPair(ec2Svc); err != nil {
+		t.Errorf("returned an error for valid key")
+	}
+
+	c.KeyName = "invalidKeyName"
+	if err := c.validateKeyPair(ec2Svc); err == nil {
+		t.Errorf("failed to catch invalid key \"%s\"", c.KeyName)
+	}
 }
