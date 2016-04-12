@@ -118,6 +118,20 @@ You can now customize your cluster by editing asset files:
 
 You can also now check the `my-cluster` asset directory into version control if you desire. The contents of this directory are your reproducible cluster assets. Please take care not to commit the `my-cluster/credentials` directory, as it contains your TLS secrets. If you're using git, the `credentials` directory will already be ignored for you.
 
+## Route53 Host Record (optional)
+
+`kube-aws` can optionally create an A record for the controller IP in an existing hosted zone.
+
+Edit the `cluster.yaml` file:
+
+```yaml
+externalDNSName: my-cluster.staging.core-os.net
+createRecordSet: true
+hostedZone: staging.core-os.net
+```
+
+If `createRecordSet` is not set to true, the deployer will be responsible for making externalDNSName routable to the controller IP after the cluster is created.
+
 ## Validate your cluster assets
 
 The `validate` command check the validity of the cloud-config userdata files and the cloudformation stack description:
