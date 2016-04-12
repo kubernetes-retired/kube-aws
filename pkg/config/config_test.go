@@ -34,6 +34,13 @@ vpcId: vpc-xxxxx
 routeTableId: rtb-xxxxxx
 `, `
 vpcId: vpc-xxxxx
+`, `
+createRecordSet: false
+hostedZone: ""
+`, `
+createRecordSet: true
+recordSetTTL: 400
+hostedZone: core-os.net
 `,
 }
 
@@ -84,6 +91,17 @@ serviceCIDR: 172.5.0.0/16
 dnsServiceIP: 172.6.100.101 #dnsServiceIP not in service CIDR
 `, `
 routeTableId: rtb-xxxxxx # routeTableId specified without vpcId
+`, `
+# invalid TTL
+recordSetTTL: 0
+`, `
+# hostedZone shouldn't be blank when createRecordSet is true
+createRecordSet: true
+hostedZone: ""
+`, `
+# recordSetTTL shouldn't be modified when createRecordSet is false
+createRecordSet: false
+recordSetTTL: 400
 `,
 }
 
@@ -144,7 +162,6 @@ dnsServiceIP: 10.6.142.100
 	}
 
 	for _, testConfig := range testConfigs {
-
 		configBody := minimalConfigYaml + testConfig.NetworkConfig
 		cluster, err := ClusterFromBytes([]byte(configBody))
 		if err != nil {
@@ -160,7 +177,9 @@ dnsServiceIP: 10.6.142.100
 
 		kubernetesServiceIP := incrementIP(serviceNet.IP)
 		if kubernetesServiceIP.String() != testConfig.KubernetesServiceIP {
-			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s", kubernetesServiceIP, testConfig.KubernetesServiceIP)
+			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s",
+				kubernetesServiceIP,
+				testConfig.KubernetesServiceIP)
 		}
 	}
 

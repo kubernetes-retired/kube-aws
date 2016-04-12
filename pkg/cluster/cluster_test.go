@@ -270,17 +270,6 @@ hostedZone: staging.core-os.net
 		t.Errorf("returned error for valid config: %v", err)
 	}
 
-	c.RecordSetTTL = 0
-	if err := c.validateDNSConfig(r53); err == nil {
-		t.Errorf("failed to reject invalid TTL")
-	}
-
-	c.RecordSetTTL = 300
-	c.HostedZone = ""
-	if err := c.validateDNSConfig(r53); err == nil {
-		t.Errorf("failed to reject empty HostName")
-	}
-
 	c.HostedZone = "non-existant-zone"
 	if err := c.validateDNSConfig(r53); err == nil {
 		t.Errorf("failed to catch non-existent hosted zone")

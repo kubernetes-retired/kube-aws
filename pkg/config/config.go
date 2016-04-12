@@ -45,6 +45,7 @@ func newDefaultCluster() *Cluster {
 		WorkerInstanceType:       "m3.medium",
 		WorkerRootVolumeSize:     30,
 		CreateRecordSet:          false,
+		RecordSetTTL:             300,
 	}
 }
 
@@ -329,6 +330,20 @@ type Config struct {
 func (cfg Cluster) valid() error {
 	if cfg.ExternalDNSName == "" {
 		return errors.New("externalDNSName must be set")
+	}
+	if cfg.CreateRecordSet {
+		if cfg.HostedZone == "" {
+			return errors.New("hostedZone cannot be blank when createRecordSet is true")
+		}
+		if cfg.RecordSetTTL < 1 {
+			return errors.New("TTL must be at least 1 second")
+		}
+	} else {
+		if cfg.RecordSetTTL != newDefaultCluster().RecordSetTTL {
+			return errors.New(
+				"recordSetTTL should not be modified when createRecordSet is false",
+			)
+		}
 	}
 	if cfg.KeyName == "" {
 		return errors.New("keyName must be set")

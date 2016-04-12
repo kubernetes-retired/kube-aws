@@ -284,14 +284,6 @@ func (c *Cluster) validateDNSConfig(r53 r53Service) error {
 		return nil
 	}
 
-	if c.RecordSetTTL < 1 {
-		return fmt.Errorf("TTL must be at least 1 second")
-	}
-
-	if c.HostedZone == "" {
-		return fmt.Errorf("hostName cannot be blank when createRecordSet is true")
-	}
-
 	zonesResp, err := r53.ListHostedZonesByName(&route53.ListHostedZonesByNameInput{
 		DNSName: aws.String(c.HostedZone),
 	})
