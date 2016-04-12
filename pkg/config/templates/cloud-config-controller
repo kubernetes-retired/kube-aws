@@ -510,7 +510,7 @@ write_files:
                     "resources": {
                       "limits": {
                         "cpu": "100m",
-                        "memory": "208Mi"
+                        "memory": "650Mi"
                       },
                       "requests": {
                         "cpu": "100m",
