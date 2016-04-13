@@ -60,6 +60,16 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 		return nil, fmt.Errorf("file %s: %v", filename, err)
 	}
 
+	return c, nil
+}
+
+// ClusterFromBytes Necessary for unit tests, which store configs as hardcoded strings
+func ClusterFromBytes(data []byte) (*Cluster, error) {
+	c := newDefaultCluster()
+	if err := yaml.Unmarshal(data, c); err != nil {
+		return nil, fmt.Errorf("failed to parse cluster: %v", err)
+	}
+
 	// HostedZone needs to end with a '.'
 	c.HostedZone = withTrailingDot(c.HostedZone)
 
@@ -67,15 +77,6 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 	// but adding it here makes validations easier
 	c.ExternalDNSName = withTrailingDot(c.ExternalDNSName)
 
-	return c, nil
-}
-
-//Necessary for unit tests, which store configs as hardcoded strings
-func ClusterFromBytes(data []byte) (*Cluster, error) {
-	c := newDefaultCluster()
-	if err := yaml.Unmarshal(data, c); err != nil {
-		return nil, fmt.Errorf("failed to parse cluster: %v", err)
-	}
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
 	}
@@ -506,6 +507,9 @@ func cidrOverlap(a, b *net.IPNet) bool {
 }
 
 func withTrailingDot(s string) string {
+	if s == "" {
+		return s
+	}
 	lastRune, _ := utf8.DecodeLastRuneInString(s)
 	if lastRune != rune('.') {
 		return s + "."

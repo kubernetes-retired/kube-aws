@@ -258,11 +258,11 @@ hostedZone: staging.core-os.net
 		HostedZones: []Zone{
 			Zone{
 				Id:  "staging_id",
-				DNS: "staging.core-os.net",
+				DNS: "staging.core-os.net.",
 			},
 		},
 		ResourceRecordSets: map[string]string{
-			"staging_id": "existing-record.staging.core-os.net",
+			"staging_id": "existing-record.staging.core-os.net.",
 		},
 	}
 
