@@ -339,6 +339,11 @@ func (cfg Cluster) valid() error {
 		if cfg.RecordSetTTL < 1 {
 			return errors.New("TTL must be at least 1 second")
 		}
+		if !isSubdomain(cfg.ExternalDNSName, cfg.HostedZone) {
+			return fmt.Errorf("%s is not a subdomain of %s",
+				cfg.ExternalDNSName,
+				cfg.HostedZone)
+		}
 	} else {
 		if cfg.RecordSetTTL != newDefaultCluster().RecordSetTTL {
 			return errors.New(
@@ -515,4 +520,25 @@ func withTrailingDot(s string) string {
 		return s + "."
 	}
 	return s
+}
+
+func isSubdomain(sub, parent string) bool {
+	sub, parent = withTrailingDot(sub), withTrailingDot(parent)
+	subParts, parentParts := strings.Split(sub, "."), strings.Split(parent, ".")
+
+	if len(parentParts) > len(subParts) {
+		return false
+	}
+
+	subSuffixes := subParts[len(subParts)-len(parentParts):]
+
+	if len(subSuffixes) != len(parentParts) {
+		return false
+	}
+	for i := range subSuffixes {
+		if subSuffixes[i] != parentParts[i] {
+			return false
+		}
+	}
+	return true
 }

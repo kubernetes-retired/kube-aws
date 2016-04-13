@@ -12,7 +12,7 @@ import (
 )
 
 const minimalConfigYaml = `
-externalDNSName: test-external-dns-name
+externalDNSName: test.staging.core-os.net
 keyName: test-key-name
 region: us-west-1
 availabilityZone: us-west-1c
