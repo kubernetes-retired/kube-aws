@@ -1,7 +1,6 @@
 # Unique name of Kubernetes cluster. In order to deploy
 # more than one cluster into the same AWS account, this
 # name must not conflict with an existing cluster.
-
 clusterName: {{.ClusterName}}
 
 # DNS name routable to the Kubernetes controller nodes
@@ -81,3 +80,8 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
+
+# AWS Tags for cloudformation stack resources 
+#stackTags:
+#  Name: "Kubernetes" 
+#  Environment: "Production"

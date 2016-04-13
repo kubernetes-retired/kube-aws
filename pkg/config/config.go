@@ -82,33 +82,33 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 }
 
 type Cluster struct {
-	ClusterName              string `yaml:"clusterName"`
-	ExternalDNSName          string `yaml:"externalDNSName"`
-	KeyName                  string `yaml:"keyName"`
-	Region                   string `yaml:"region"`
-	AvailabilityZone         string `yaml:"availabilityZone"`
-	ReleaseChannel           string `yaml:"releaseChannel"`
-	ControllerInstanceType   string `yaml:"controllerInstanceType"`
-	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize"`
-	WorkerCount              int    `yaml:"workerCount"`
-	WorkerInstanceType       string `yaml:"workerInstanceType"`
-	WorkerRootVolumeSize     int    `yaml:"workerRootVolumeSize"`
-	WorkerSpotPrice          string `yaml:"workerSpotPrice"`
-	VPCID                    string `yaml:"vpcId"`
-	RouteTableID             string `yaml:"routeTableId"`
-	VPCCIDR                  string `yaml:"vpcCIDR"`
-	InstanceCIDR             string `yaml:"instanceCIDR"`
-	ControllerIP             string `yaml:"controllerIP"`
-	PodCIDR                  string `yaml:"podCIDR"`
-	ServiceCIDR              string `yaml:"serviceCIDR"`
-	DNSServiceIP             string `yaml:"dnsServiceIP"`
-	K8sVer                   string `yaml:"kubernetesVersion"`
-	HyperkubeImageRepo       string `yaml:"hyperkubeImageRepo"`
-	KMSKeyARN                string `yaml:"kmsKeyArn"`
-
-	CreateRecordSet bool   `yaml:"createRecordSet"`
-	RecordSetTTL    int    `yaml:"recordSetTTL"`
-	HostedZone      string `yaml:"hostedZone"`
+	ClusterName              string            `yaml:"clusterName"`
+	ExternalDNSName          string            `yaml:"externalDNSName"`
+	KeyName                  string            `yaml:"keyName"`
+	Region                   string            `yaml:"region"`
+	AvailabilityZone         string            `yaml:"availabilityZone"`
+	ReleaseChannel           string            `yaml:"releaseChannel"`
+	ControllerInstanceType   string            `yaml:"controllerInstanceType"`
+	ControllerRootVolumeSize int               `yaml:"controllerRootVolumeSize"`
+	WorkerCount              int               `yaml:"workerCount"`
+	WorkerInstanceType       string            `yaml:"workerInstanceType"`
+	WorkerRootVolumeSize     int               `yaml:"workerRootVolumeSize"`
+	WorkerSpotPrice          string            `yaml:"workerSpotPrice"`
+	VPCID                    string            `yaml:"vpcId"`
+	RouteTableID             string            `yaml:"routeTableId"`
+	VPCCIDR                  string            `yaml:"vpcCIDR"`
+	InstanceCIDR             string            `yaml:"instanceCIDR"`
+	ControllerIP             string            `yaml:"controllerIP"`
+	PodCIDR                  string            `yaml:"podCIDR"`
+	ServiceCIDR              string            `yaml:"serviceCIDR"`
+	DNSServiceIP             string            `yaml:"dnsServiceIP"`
+	K8sVer                   string            `yaml:"kubernetesVersion"`
+	HyperkubeImageRepo       string            `yaml:"hyperkubeImageRepo"`
+	KMSKeyARN                string            `yaml:"kmsKeyArn"`
+	CreateRecordSet          bool              `yaml:"createRecordSet"`
+	RecordSetTTL             int               `yaml:"recordSetTTL"`
+	HostedZone               string            `yaml:"hostedZone"`
+	StackTags                map[string]string `yaml:"stackTags"`
 }
 
 const (
