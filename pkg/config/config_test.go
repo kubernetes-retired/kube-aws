@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const minimalConfigYaml = `externalDNSName: test-external-dns-name
+const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
 keyName: test-key-name
 region: us-west-1
 availabilityZone: us-west-1c
@@ -13,7 +13,7 @@ clusterName: test-cluster-name
 kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 `
 
-var goodNetworkingConfigs []string = []string{
+var goodNetworkingConfigs = []string{
 	``, //Tests validity of default network config values
 	`
 vpcCIDR: 10.4.3.0/24
@@ -41,10 +41,13 @@ hostedZone: ""
 createRecordSet: true
 recordSetTTL: 400
 hostedZone: core-os.net
+`, `
+createRecordSet: true
+hostedZone: "staging.core-os.net"
 `,
 }
 
-var incorrectNetworkingConfigs []string = []string{
+var incorrectNetworkingConfigs = []string{
 	`
 vpcCIDR: 10.4.2.0/23
 instanceCIDR: 10.4.3.0/24
@@ -102,6 +105,10 @@ hostedZone: ""
 # recordSetTTL shouldn't be modified when createRecordSet is false
 createRecordSet: false
 recordSetTTL: 400
+`, `
+# whatever.com is not a superdomain of test.staging.core-os.net
+createRecordSet: true
+hostedZone: "whatever.com"
 `,
 }
 
@@ -180,6 +187,68 @@ dnsServiceIP: 10.6.142.100
 			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s",
 				kubernetesServiceIP,
 				testConfig.KubernetesServiceIP)
+		}
+	}
+
+}
+
+func TestIsSubdomain(t *testing.T) {
+	validData := []struct {
+		sub    string
+		parent string
+	}{
+		{
+			// single level
+			sub:    "test.coreos.com",
+			parent: "coreos.com",
+		},
+		{
+			// multiple levels
+			sub:    "cgag.staging.coreos.com",
+			parent: "coreos.com",
+		},
+		{
+			// trailing dots shouldn't matter
+			sub:    "staging.coreos.com.",
+			parent: "coreos.com.",
+		},
+		{
+			// trailing dots shouldn't matter
+			sub:    "a.b.c.",
+			parent: "b.c",
+		},
+		{
+			// multiple level parent domain
+			sub:    "a.b.c.staging.core-os.net",
+			parent: "staging.core-os.net",
+		},
+	}
+
+	invalidData := []struct {
+		sub    string
+		parent string
+	}{
+		{
+			// mismatch
+			sub:    "staging.coreos.com",
+			parent: "example.com",
+		},
+		{
+			// superdomain is longer than subdomain
+			sub:    "staging.coreos.com",
+			parent: "cgag.staging.coreos.com",
+		},
+	}
+
+	for _, valid := range validData {
+		if !isSubdomain(valid.sub, valid.parent) {
+			t.Errorf("%s should be a valid subdomain of %s", valid.sub, valid.parent)
+		}
+	}
+
+	for _, invalid := range invalidData {
+		if isSubdomain(invalid.sub, invalid.parent) {
+			t.Errorf("%s should not be a valid subdomain of %s", invalid.sub, invalid.parent)
 		}
 	}
 
