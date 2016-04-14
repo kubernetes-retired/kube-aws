@@ -218,7 +218,7 @@ type dummyR53Service struct {
 func (r53 dummyR53Service) ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error) {
 	output := &route53.ListHostedZonesByNameOutput{}
 	for _, zone := range r53.HostedZones {
-		if zone.DNS == *input.DNSName {
+		if zone.DNS == config.WithTrailingDot(*input.DNSName) {
 			output.HostedZones = append(output.HostedZones, &route53.HostedZone{
 				Name: aws.String(zone.DNS),
 				Id:   aws.String(zone.Id),

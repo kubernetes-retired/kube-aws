@@ -307,7 +307,7 @@ func (c *Cluster) validateDNSConfig(r53 r53Service) error {
 
 	if len(recordSetsResp.ResourceRecordSets) > 0 {
 		for _, recordSet := range recordSetsResp.ResourceRecordSets {
-			if *recordSet.Name == c.ExternalDNSName {
+			if *recordSet.Name == config.WithTrailingDot(c.ExternalDNSName) {
 				return fmt.Errorf(
 					"RecordSet for \"%s\" already exists in Hosted Zone \"%s.\"",
 					c.ExternalDNSName,

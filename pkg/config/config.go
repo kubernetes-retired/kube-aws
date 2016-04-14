@@ -70,12 +70,9 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 		return nil, fmt.Errorf("failed to parse cluster: %v", err)
 	}
 
-	// HostedZone needs to end with a '.'
-	c.HostedZone = withTrailingDot(c.HostedZone)
-
-	// ExternalDNSName doesn't require '.' to be created,
-	// but adding it here makes validations easier
-	c.ExternalDNSName = withTrailingDot(c.ExternalDNSName)
+	// HostedZone needs to end with a '.', amazon will not append it for you.
+	// as it will with RecordSets
+	c.HostedZone = WithTrailingDot(c.HostedZone)
 
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
@@ -511,7 +508,7 @@ func cidrOverlap(a, b *net.IPNet) bool {
 	return a.Contains(b.IP) || b.Contains(a.IP)
 }
 
-func withTrailingDot(s string) string {
+func WithTrailingDot(s string) string {
 	if s == "" {
 		return s
 	}
@@ -523,7 +520,7 @@ func withTrailingDot(s string) string {
 }
 
 func isSubdomain(sub, parent string) bool {
-	sub, parent = withTrailingDot(sub), withTrailingDot(parent)
+	sub, parent = WithTrailingDot(sub), WithTrailingDot(parent)
 	subParts, parentParts := strings.Split(sub, "."), strings.Split(parent, ".")
 
 	if len(parentParts) > len(subParts) {
