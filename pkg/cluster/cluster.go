@@ -147,23 +147,9 @@ func (c *Cluster) Create(stackBody string) error {
 		return err
 	}
 
-	var tags []*cloudformation.Tag
-	for k, v := range c.StackTags {
-		key := k
-		value := v
-		tags = append(tags, &cloudformation.Tag{Key: &key, Value: &value})
-	}
-
 	cfSvc := cloudformation.New(c.session)
-	creq := &cloudformation.CreateStackInput{
-		StackName:    aws.String(c.ClusterName),
-		OnFailure:    aws.String("DO_NOTHING"),
-		Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
-		TemplateBody: &stackBody,
-		Tags:         tags,
-	}
 
-	resp, err := cfSvc.CreateStack(creq)
+	resp, err := c.createStack(cfSvc, stackBody)
 	if err != nil {
 		return err
 	}
@@ -197,6 +183,30 @@ func (c *Cluster) Create(stackBody string) error {
 			return fmt.Errorf("unexpected stack status: %s", statusString)
 		}
 	}
+}
+
+type cloudformationService interface {
+	CreateStack(*cloudformation.CreateStackInput) (*cloudformation.CreateStackOutput, error)
+}
+
+func (c *Cluster) createStack(cfSvc cloudformationService, stackBody string) (*cloudformation.CreateStackOutput, error) {
+
+	var tags []*cloudformation.Tag
+	for k, v := range c.StackTags {
+		key := k
+		value := v
+		tags = append(tags, &cloudformation.Tag{Key: &key, Value: &value})
+	}
+
+	creq := &cloudformation.CreateStackInput{
+		StackName:    aws.String(c.ClusterName),
+		OnFailure:    aws.String("DO_NOTHING"),
+		Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
+		TemplateBody: &stackBody,
+		Tags:         tags,
+	}
+
+	return cfSvc.CreateStack(creq)
 }
 
 func (c *Cluster) Update(stackBody string) (string, error) {
