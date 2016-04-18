@@ -2,10 +2,12 @@ package cluster
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
@@ -280,4 +282,103 @@ hostedZone: staging.core-os.net
 	if err := c.validateDNSConfig(r53); err == nil {
 		t.Errorf("failed to catch already existing ExternalDNSName")
 	}
+}
+
+func TestStackTags(t *testing.T) {
+	testCases := []struct {
+		expectedTags []*cloudformation.Tag
+		clusterYaml  string
+	}{
+		{
+			expectedTags: []*cloudformation.Tag{},
+			clusterYaml: `
+#no stackTags set
+`,
+		},
+		{
+			expectedTags: []*cloudformation.Tag{
+				&cloudformation.Tag{
+					Key:   aws.String("KeyA"),
+					Value: aws.String("ValueA"),
+				},
+				&cloudformation.Tag{
+					Key:   aws.String("KeyB"),
+					Value: aws.String("ValueB"),
+				},
+				&cloudformation.Tag{
+					Key:   aws.String("KeyC"),
+					Value: aws.String("ValueC"),
+				},
+			},
+			clusterYaml: `
+stackTags:
+  KeyA: ValueA
+  KeyB: ValueB
+  KeyC: ValueC
+`,
+		},
+	}
+
+	for _, testCase := range testCases {
+
+		configBody := minimalConfigYaml + testCase.clusterYaml
+		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("could not get valid cluster config: %v", err)
+			continue
+		}
+
+		cluster := &Cluster{
+			Cluster: *clusterConfig,
+		}
+
+		cfSvc := &dummyCloudformationService{
+			ExpectedTags: testCase.expectedTags,
+		}
+
+		_, err = cluster.createStack(cfSvc, "")
+
+		if err != nil {
+			t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
+		}
+	}
+}
+
+type dummyCloudformationService struct {
+	ExpectedTags []*cloudformation.Tag
+}
+
+func (cfSvc *dummyCloudformationService) CreateStack(req *cloudformation.CreateStackInput) (*cloudformation.CreateStackOutput, error) {
+
+	if len(cfSvc.ExpectedTags) != len(req.Tags) {
+		return nil, fmt.Errorf(
+			"expected tag count does not match supplied tag count\nexpected=%v, supplied=%v",
+			cfSvc.ExpectedTags,
+			req.Tags,
+		)
+	}
+
+	matchCnt := 0
+	for _, eTag := range cfSvc.ExpectedTags {
+		for _, tag := range req.Tags {
+			if *tag.Key == *eTag.Key && *tag.Value == *eTag.Value {
+				matchCnt++
+				break
+			}
+		}
+	}
+
+	if matchCnt != len(cfSvc.ExpectedTags) {
+		return nil, fmt.Errorf(
+			"not all tags matched\nexpected=%v, observed=%v",
+			cfSvc.ExpectedTags,
+			req.Tags,
+		)
+	}
+
+	resp := &cloudformation.CreateStackOutput{
+		StackId: req.StackName,
+	}
+
+	return resp, nil
 }
