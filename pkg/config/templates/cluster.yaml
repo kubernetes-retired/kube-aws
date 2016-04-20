@@ -9,13 +9,17 @@ clusterName: {{.ClusterName}}
 # for you.  Otherwise the deployer is responsible for making this name routable
 externalDNSName: {{.ExternalDNSName}}
 
+# CoreOS release channel to use. Currently supported options: [ alpha, beta ]
+# See coreos.com/releases for more information
+#releaseChannel: alpha
+
 # Set to true if you want kube-aws to create a Route53 A Record for you.
 #createRecordSet: false
 
 # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
 #recordSetTTL: 300
 
-# The name of the hosted zone to add the externalDNSName to, 
+# The name of the hosted zone to add the externalDNSName to,
 # E.g: "google.com".  This needs to already exist, kube-aws will not create
 # it for you.
 #hostedZone: ""
