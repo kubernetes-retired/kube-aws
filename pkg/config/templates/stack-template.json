@@ -475,11 +475,25 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "SecurityGroupWorkerIngressFromWorkerToKubeletReadOnly": {
+    "SecurityGroupWorkerIngressFromWorkerToWorkerKubeletReadOnly": {
       "Properties": {
         "FromPort": 10255,
         "GroupId": {
           "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 10255
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromWorkerToControllerKubeletReadOnly": {
+      "Properties": {
+        "FromPort": 10255,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
         },
         "IpProtocol": "tcp",
         "SourceSecurityGroupId": {
