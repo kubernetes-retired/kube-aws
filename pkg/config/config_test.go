@@ -253,3 +253,59 @@ func TestIsSubdomain(t *testing.T) {
 	}
 
 }
+
+func TestReleaseChannel(t *testing.T) {
+
+	validConfigs := []struct {
+		conf    string
+		channel string
+	}{
+		{
+			conf: `
+releaseChannel: alpha
+`,
+			channel: "alpha",
+		},
+		{
+			conf: `
+releaseChannel: beta
+`,
+			channel: "beta",
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+#TODO(chom): move this to validConfigs when stable is supported
+releaseChannel: stable # stable is not supported (yet).
+`,
+		`
+releaseChannel: non-existant #this release channel will never exist
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := minimalConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if c.ReleaseChannel != conf.channel {
+			t.Errorf(
+				"parsed release channel %s does not match config: %s",
+				c.ReleaseChannel,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := minimalConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
+
+}
