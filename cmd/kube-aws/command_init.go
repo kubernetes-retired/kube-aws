@@ -61,7 +61,7 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Error parsing default config template: %v", err)
 	}
 
-	out, err := os.OpenFile(configPath, os.O_CREATE|os.O_WRONLY, 0600)
+	out, err := os.OpenFile(configPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
 	if err != nil {
 		return fmt.Errorf("Error opening %s : %v", configPath, err)
 	}
