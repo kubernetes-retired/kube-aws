@@ -32,7 +32,6 @@ func newDefaultCluster() *Cluster {
 		ClusterName:              "kubernetes",
 		ReleaseChannel:           "alpha",
 		VPCCIDR:                  "10.0.0.0/16",
-		InstanceCIDR:             "10.0.0.0/24",
 		ControllerIP:             "10.0.0.50",
 		PodCIDR:                  "10.2.0.0/16",
 		ServiceCIDR:              "10.3.0.0/24",
@@ -46,6 +45,7 @@ func newDefaultCluster() *Cluster {
 		WorkerRootVolumeSize:     30,
 		CreateRecordSet:          false,
 		RecordSetTTL:             300,
+		Subnets:                  []Subnet{},
 	}
 }
 
@@ -74,8 +74,23 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 	// as it will with RecordSets
 	c.HostedZone = WithTrailingDot(c.HostedZone)
 
+	// If the user specified no subnets, we assume that a single AZ configuration with the default instanceCIDR is demanded
+	if len(c.Subnets) == 0 && c.InstanceCIDR == "" {
+		c.InstanceCIDR = "10.0.0.0/24"
+	}
+
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
+	}
+
+	// For backward-compatibility
+	if len(c.Subnets) == 0 {
+		c.Subnets = []Subnet{
+			{
+				AvailabilityZone: c.AvailabilityZone,
+				InstanceCIDR:     c.InstanceCIDR,
+			},
+		}
 	}
 	return c, nil
 }
@@ -109,6 +124,12 @@ type Cluster struct {
 	HostedZone               string            `yaml:"hostedZone"`
 	StackTags                map[string]string `yaml:"stackTags"`
 	UseCalico                bool              `yaml:"useCalico"`
+	Subnets                  []Subnet          `yaml:"subnets"`
+}
+
+type Subnet struct {
+	AvailabilityZone string `yaml:"availabilityZone"`
+	InstanceCIDR     string `yaml:"instanceCIDR"`
 }
 
 const (
@@ -160,8 +181,9 @@ type StackTemplateOptions struct {
 
 type stackConfig struct {
 	*Config
-	UserDataWorker     string
-	UserDataController string
+	UserDataWorker        string
+	UserDataController    string
+	ControllerSubnetIndex int
 }
 
 func execute(filename string, data interface{}, compress bool) (string, error) {
@@ -206,6 +228,25 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 	}
 
 	stackConfig.Config.TLSConfig = compactAssets
+
+	controllerIPAddr := net.ParseIP(stackConfig.ControllerIP)
+	if controllerIPAddr == nil {
+		return nil, fmt.Errorf("invalid controllerIP: %s", stackConfig.ControllerIP)
+	}
+	controllerSubnetFound := false
+	for i, subnet := range stackConfig.Subnets {
+		_, instanceCIDR, err := net.ParseCIDR(subnet.InstanceCIDR)
+		if err != nil {
+			return nil, fmt.Errorf("invalid instanceCIDR: %v", err)
+		}
+		if instanceCIDR.Contains(controllerIPAddr) {
+			stackConfig.ControllerSubnetIndex = i
+			controllerSubnetFound = true
+		}
+	}
+	if !controllerSubnetFound {
+		return nil, fmt.Errorf("Fail-fast occurred possibly because of a bug: ControllerSubnetIndex couldn't be determined for subnets (%v) and controllerIP (%v)", stackConfig.Subnets, stackConfig.ControllerIP)
+	}
 
 	if stackConfig.UserDataWorker, err = execute(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
@@ -372,9 +413,6 @@ func (c Cluster) valid() error {
 	if c.Region == "" {
 		return errors.New("region must be set")
 	}
-	if c.AvailabilityZone == "" {
-		return errors.New("availabilityZone must be set")
-	}
 	if c.ClusterName == "" {
 		return errors.New("clusterName must be set")
 	}
@@ -391,26 +429,78 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	_, instancesNet, err := net.ParseCIDR(c.InstanceCIDR)
-	if err != nil {
-		return fmt.Errorf("invalid instanceCIDR: %v", err)
-	}
-	if !vpcNet.Contains(instancesNet.IP) {
-		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
-			c.VPCCIDR,
-			c.InstanceCIDR,
-		)
-	}
-
 	controllerIPAddr := net.ParseIP(c.ControllerIP)
 	if controllerIPAddr == nil {
 		return fmt.Errorf("invalid controllerIP: %s", c.ControllerIP)
 	}
-	if !instancesNet.Contains(controllerIPAddr) {
-		return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
-			c.InstanceCIDR,
-			c.ControllerIP,
-		)
+
+	if len(c.Subnets) == 0 {
+		if c.AvailabilityZone == "" {
+			return fmt.Errorf("availabilityZone must be set")
+		}
+		_, instanceCIDR, err := net.ParseCIDR(c.InstanceCIDR)
+		if err != nil {
+			return fmt.Errorf("invalid instanceCIDR: %v", err)
+		}
+		if !vpcNet.Contains(instanceCIDR.IP) {
+			return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
+				c.VPCCIDR,
+				c.InstanceCIDR,
+			)
+		}
+		if !instanceCIDR.Contains(controllerIPAddr) {
+			return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
+				c.InstanceCIDR,
+				c.ControllerIP,
+			)
+		}
+	} else {
+		if c.InstanceCIDR != "" {
+			return fmt.Errorf("The top-level instanceCIDR(%s) must be empty when subnets are specified", c.InstanceCIDR)
+		}
+		if c.AvailabilityZone != "" {
+			return fmt.Errorf("The top-level availabilityZone(%s) must be empty when subnets are specified", c.AvailabilityZone)
+		}
+
+		var instanceCIDRs = make([]*net.IPNet, 0)
+		for i, subnet := range c.Subnets {
+			if subnet.AvailabilityZone == "" {
+				return fmt.Errorf("availabilityZone must be set for subnet #%d", i)
+			}
+			_, instanceCIDR, err := net.ParseCIDR(subnet.InstanceCIDR)
+			if err != nil {
+				return fmt.Errorf("invalid instanceCIDR for subnet #%d: %v", i, err)
+			}
+			instanceCIDRs = append(instanceCIDRs, instanceCIDR)
+			if !vpcNet.Contains(instanceCIDR.IP) {
+				return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s) for subnet #%d",
+					c.VPCCIDR,
+					c.InstanceCIDR,
+					i,
+				)
+			}
+		}
+
+		controllerInstanceCidrExists := false
+		for _, a := range instanceCIDRs {
+			if a.Contains(controllerIPAddr) {
+				controllerInstanceCidrExists = true
+			}
+		}
+		if !controllerInstanceCidrExists {
+			return fmt.Errorf("No instanceCIDRs in Subnets (%v) contain controllerIP (%s)",
+				instanceCIDRs,
+				c.ControllerIP,
+			)
+		}
+
+		for i, a := range instanceCIDRs {
+			for j, b := range instanceCIDRs[i+1:] {
+				if i > 0 && cidrOverlap(a, b) {
+					return fmt.Errorf("CIDR of subnet %d (%s) overlaps with CIDR of subnet %d (%s)", i, a, j, b)
+				}
+			}
+		}
 	}
 
 	_, podNet, err := net.ParseCIDR(c.PodCIDR)

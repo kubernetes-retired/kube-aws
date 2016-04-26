@@ -19,7 +19,7 @@ func (d *dummyEncryptService) Encrypt(input *kms.EncryptInput) (*kms.EncryptOutp
 }
 
 func TestCloudConfigTemplating(t *testing.T) {
-	cluster, err := ClusterFromBytes([]byte(minimalConfigYaml))
+	cluster, err := ClusterFromBytes([]byte(singleAzConfigYaml))
 	if err != nil {
 		t.Fatalf("Unable to load cluster config: %v", err)
 	}

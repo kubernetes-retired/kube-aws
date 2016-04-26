@@ -31,7 +31,7 @@ keyName: {{.KeyName}}
 # Region to provision Kubernetes cluster
 region: {{.Region}}
 
-# Availability Zone to provision Kubernetes cluster
+# Availability Zone to provision Kubernetes cluster when placing nodes in a single availability zone (not highly-available) Comment out for multi availability zone setting and use the below `subnets` section instead.
 availabilityZone: {{.AvailabilityZone}}
 
 # ARN of the KMS key used to encrypt TLS assets.
@@ -64,10 +64,17 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
 # vpcCIDR: "10.0.0.0/16"
 
-# CIDR for Kubernetes subnet
+# CIDR for Kubernetes subnet when placing nodes in a single availability zone (not highly-available) Leave commented out for multi availability zone setting and use the below `subnets` section instead.
 # instanceCIDR: "10.0.0.0/24"
 
-# IP Address for controller in Kubernetes subnet
+# Kubernetes subnets with their CIDRs and availability zones. Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
+# subnets:
+#   - availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.0.0/24"
+#   - availabilityZone: us-west-1b
+#     instanceCIDR: "10.0.1.0/24"
+
+# IP Address for the controller in Kubernetes subnet. When we have 2 or more subnets, the controller is placed in the first subnet and controllerIP must be included in the instanceCIDR of the first subnet. This convention will change once we have H/A controllers
 # controllerIP: 10.0.0.50
 
 # CIDR for all service IP addresses

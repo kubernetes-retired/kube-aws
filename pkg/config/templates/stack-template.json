@@ -40,7 +40,10 @@
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
-          "{{.AvailabilityZone}}"
+          {{range $index, $subnet := .Subnets}}
+          {{if gt $index 0}},{{end}}
+          "{{$subnet.AvailabilityZone}}"
+          {{end}}
         ],
         "DesiredCapacity": "{{.WorkerCount}}",
         "HealthCheckGracePeriod": 600,
@@ -63,9 +66,14 @@
           }
         ],
         "VPCZoneIdentifier": [
+          {{range $index, $subnet := .Subnets}}
+          {{with $subnetLogicalName := printf "Subnet%d" $index}}
+          {{if gt $index 0}},{{end}}
           {
-            "Ref": "Subnet"
+            "Ref": "{{$subnetLogicalName}}"
           }
+          {{end}}
+          {{end}}
         ]
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
@@ -226,7 +234,7 @@
     },
     "InstanceController": {
       "Properties": {
-        "AvailabilityZone": "{{.AvailabilityZone}}",
+        "AvailabilityZone": "{{(index .Subnets .ControllerSubnetIndex).AvailabilityZone}}",
         "BlockDeviceMappings": [
           {
             "DeviceName": "/dev/xvda",
@@ -253,7 +261,7 @@
             ],
             "PrivateIpAddress": "{{.ControllerIP}}",
             "SubnetId": {
-              "Ref": "Subnet"
+              "Ref": "Subnet{{.ControllerSubnetIndex}}"
             }
           }
         ],
@@ -502,22 +510,27 @@
         "ToPort": 10255
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
-    },
-    "Subnet": {
+    }
+    {{range $index, $subnet := .Subnets}}
+    {{with $subnetLogicalName := printf "Subnet%d" $index}}
+    ,
+    "{{$subnetLogicalName}}": {
       "Properties": {
-        "AvailabilityZone": "{{.AvailabilityZone}}",
-        "CidrBlock": "{{.InstanceCIDR}}",
+        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$subnet.InstanceCIDR}}",
         "MapPublicIpOnLaunch": true,
         "Tags": [
           {
             "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
+            "Value": "{{$.ClusterName}}"
           }
         ],
-        "VpcId": {{.VPCRef}}
+        "VpcId": {{$.VPCRef}}
       },
       "Type": "AWS::EC2::Subnet"
     }
+    {{end}}
+    {{end}}
     {{if not .VPCID}}
     ,
     "{{.VPCLogicalName}}": {
@@ -580,28 +593,37 @@
         "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::VPCGatewayAttachment"
-    },
-    "SubnetRouteTableAssociation": {
+    }
+    {{range $index, $subnet := .Subnets}}
+    {{with $subnetLogicalName := printf "Subnet%d" $index}}
+    ,
+    "{{$subnetLogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId": { "Ref" : "RouteTable"},
         "SubnetId": {
-          "Ref": "Subnet"
+          "Ref": "{{$subnetLogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
+    {{end}}
+    {{end}}
     {{else}}
     {{if .RouteTableID}}
+    {{range $index, $subnet := .Subnets}}
+    {{with $subnetLogicalName := printf "Subnet%d" $index}}
     ,
-    "SubnetRouteTableAssociation": {
+    "{{$subnetLogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId": "{{.RouteTableID}}",
         "SubnetId": {
-          "Ref": "Subnet"
+          "Ref": "{{$subnetLogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
+    {{end}}
+    {{end}}
     {{end}}
     {{end}}
 
