@@ -59,7 +59,7 @@
           {
             "Key": "Name",
             "PropagateAtLaunch": "true",
-            "Value": "kube-aws-worker"
+            "Value": "{{.ClusterName}}-kube-aws-worker"
           }
         ],
         "VPCZoneIdentifier": [
@@ -264,7 +264,7 @@
           },
           {
             "Key": "Name",
-            "Value": "kube-aws-controller"
+            "Value": "{{.ClusterName}}-kube-aws-controller"
           }
         ],
         "UserData": "{{ .UserDataController }}"
