@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -102,7 +103,11 @@ func (c *Cluster) validateExistingVPCState(ec2Svc ec2Service) error {
 
 	if *existingVPC.CidrBlock != c.VPCCIDR {
 		//If this is the case, our network config validation cannot be trusted and we must abort
-		return fmt.Errorf("configured vpcCidr (%s) does not match actual existing vpc cidr (%s)", c.VPCCIDR, *existingVPC.CidrBlock)
+		return fmt.Errorf(
+			"configured vpcCidr (%s) does not match actual existing vpc cidr (%s)",
+			c.VPCCIDR,
+			*existingVPC.CidrBlock,
+		)
 	}
 
 	describeSubnetsInput := ec2.DescribeSubnetsInput{
@@ -138,7 +143,6 @@ func (c *Cluster) Create(stackBody string) error {
 	}
 
 	ec2Svc := ec2.New(c.session)
-
 	if err := c.validateKeyPair(ec2Svc); err != nil {
 		return err
 	}
@@ -148,7 +152,6 @@ func (c *Cluster) Create(stackBody string) error {
 	}
 
 	cfSvc := cloudformation.New(c.session)
-
 	resp, err := c.createStack(cfSvc, stackBody)
 	if err != nil {
 		return err
@@ -157,6 +160,7 @@ func (c *Cluster) Create(stackBody string) error {
 	req := cloudformation.DescribeStacksInput{
 		StackName: resp.StackId,
 	}
+
 	for {
 		resp, err := cfSvc.DescribeStacks(&req)
 		if err != nil {
@@ -175,6 +179,16 @@ func (c *Cluster) Create(stackBody string) error {
 				statusString,
 				aws.StringValue(resp.Stacks[0].StackStatusReason),
 			)
+			errMsg = errMsg + "\n\nPrinting the most recent failed stack events:\n"
+
+			stackEventsOutput, err := cfSvc.DescribeStackEvents(
+				&cloudformation.DescribeStackEventsInput{
+					StackName: resp.Stacks[0].StackName,
+				})
+			if err != nil {
+				return err
+			}
+			errMsg = errMsg + strings.Join(stackEventErrMsgs(stackEventsOutput.StackEvents), "\n")
 			return errors.New(errMsg)
 		case cloudformation.ResourceStatusCreateInProgress:
 			time.Sleep(3 * time.Second)
@@ -200,7 +214,7 @@ func (c *Cluster) createStack(cfSvc cloudformationService, stackBody string) (*c
 
 	creq := &cloudformation.CreateStackInput{
 		StackName:    aws.String(c.ClusterName),
-		OnFailure:    aws.String("DO_NOTHING"),
+		OnFailure:    aws.String(cloudformation.OnFailureDoNothing),
 		Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
 		TemplateBody: &stackBody,
 		Tags:         tags,
@@ -336,4 +350,26 @@ func (c *Cluster) validateDNSConfig(r53 r53Service) error {
 	}
 
 	return nil
+}
+
+func stackEventErrMsgs(events []*cloudformation.StackEvent) []string {
+	var errMsgs []string
+
+	for _, event := range events {
+		if aws.StringValue(event.ResourceStatus) == cloudformation.ResourceStatusCreateFailed {
+			// Only show actual failures, not cancelled dependent resources.
+			if aws.StringValue(event.ResourceStatusReason) != "Resource creation cancelled" {
+				errMsgs = append(errMsgs,
+					strings.TrimSpace(
+						strings.Join([]string{
+							aws.StringValue(event.ResourceStatus),
+							aws.StringValue(event.ResourceType),
+							aws.StringValue(event.LogicalResourceId),
+							aws.StringValue(event.ResourceStatusReason),
+						}, " ")))
+			}
+		}
+	}
+
+	return errMsgs
 }
