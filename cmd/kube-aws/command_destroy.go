@@ -38,6 +38,6 @@ func runCmdDestroy(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed destroying cluster: %v", err)
 	}
 
-	fmt.Println("Destroyed cluster")
+	fmt.Println("CloudFormation stack is being destroyed. This will take several minutes")
 	return nil
 }
