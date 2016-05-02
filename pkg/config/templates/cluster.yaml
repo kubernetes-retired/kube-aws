@@ -19,10 +19,15 @@ externalDNSName: {{.ExternalDNSName}}
 # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
 #recordSetTTL: 300
 
+# DEPRECATED: use hostedZoneId instead
 # The name of the hosted zone to add the externalDNSName to,
 # E.g: "google.com".  This needs to already exist, kube-aws will not create
 # it for you.
 #hostedZone: ""
+
+# The ID of hosted zone to add the externalDNSName to.
+# Either specify hostedZoneId or hostedZone, but not both
+#hostedZoneId: ""
 
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.

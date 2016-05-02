@@ -220,7 +220,7 @@ type dummyR53Service struct {
 func (r53 dummyR53Service) ListHostedZonesByName(input *route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error) {
 	output := &route53.ListHostedZonesByNameOutput{}
 	for _, zone := range r53.HostedZones {
-		if zone.DNS == config.WithTrailingDot(*input.DNSName) {
+		if zone.DNS == config.WithTrailingDot(aws.StringValue(input.DNSName)) {
 			output.HostedZones = append(output.HostedZones, &route53.HostedZone{
 				Name: aws.String(zone.DNS),
 				Id:   aws.String(zone.Id),
@@ -232,7 +232,7 @@ func (r53 dummyR53Service) ListHostedZonesByName(input *route53.ListHostedZonesB
 
 func (r53 dummyR53Service) ListResourceRecordSets(input *route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error) {
 	output := &route53.ListResourceRecordSetsOutput{}
-	if name, ok := r53.ResourceRecordSets[*input.HostedZoneId]; ok {
+	if name, ok := r53.ResourceRecordSets[aws.StringValue(input.HostedZoneId)]; ok {
 		output.ResourceRecordSets = []*route53.ResourceRecordSet{
 			&route53.ResourceRecordSet{
 				Name: aws.String(name),
@@ -241,47 +241,113 @@ func (r53 dummyR53Service) ListResourceRecordSets(input *route53.ListResourceRec
 	}
 	return output, nil
 }
-
-func TestValidateDNSConfig(t *testing.T) {
-	dnsConfig := `
-createRecordSet: true
-recordSetTTL: 60
-hostedZone: staging.core-os.net
-`
-
-	configBody := minimalConfigYaml + dnsConfig
-	clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
-	if err != nil {
-		t.Errorf("could not get valid cluster config: %v", err)
+func (r53 dummyR53Service) GetHostedZone(input *route53.GetHostedZoneInput) (*route53.GetHostedZoneOutput, error) {
+	for _, zone := range r53.HostedZones {
+		if zone.Id == aws.StringValue(input.Id) {
+			return &route53.GetHostedZoneOutput{
+				HostedZone: &route53.HostedZone{
+					Id:   aws.String(zone.Id),
+					Name: aws.String(zone.DNS),
+				},
+			}, nil
+		}
 	}
-	c := &Cluster{Cluster: *clusterConfig}
 
+	return nil, fmt.Errorf("dummy route53 service: no hosted zone with id '%s'", aws.StringValue(input.Id))
+}
+func TestValidateDNSConfig(t *testing.T) {
 	r53 := dummyR53Service{
 		HostedZones: []Zone{
-			Zone{
-				Id:  "staging_id",
+			{
+				Id:  "/hostedzone/staging_id_1",
 				DNS: "staging.core-os.net.",
+			},
+			{
+				Id:  "/hostedzone/staging_id_2",
+				DNS: "staging.core-os.net.",
+			},
+			{
+				Id:  "/hostedzone/staging_id_3",
+				DNS: "zebras.coreos.com.",
+			},
+			{
+				Id:  "/hostedzone/staging_id_4",
+				DNS: "core-os.net.",
 			},
 		},
 		ResourceRecordSets: map[string]string{
-			"staging_id": "existing-record.staging.core-os.net.",
+			"staging_id_1": "existing-record.staging.core-os.net.",
 		},
 	}
 
-	if err := c.validateDNSConfig(r53); err != nil {
-		t.Errorf("returned error for valid config: %v", err)
+	validDNSConfigs := []string{
+		`
+createRecordSet: true
+recordSetTTL: 60
+hostedZone: core-os.net
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZoneId: staging_id_1
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZoneId: /hostedzone/staging_id_2
+`,
 	}
 
-	c.HostedZone = "non-existant-zone"
-	if err := c.validateDNSConfig(r53); err == nil {
-		t.Errorf("failed to catch non-existent hosted zone")
+	invalidDNSConfigs := []string{
+		`
+createRecordSet: true
+recordSetTTL: 60
+hostedZone: staging.core-os.net # hostedZone is ambiguous
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZoneId: /hostedzone/staging_id_3 # <staging_id_id> is not a super-domain
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZone: zebras.coreos.com # zebras.coreos.com is not a super-domain
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZoneId: /hostedzone/staging_id_5 #non-existant hostedZoneId
+`, `
+createRecordSet: true
+recordSetTTL: 60
+hostedZone: unicorns.core-os.net  #non-existant hostedZone DNS name
+`,
 	}
 
-	c.HostedZone = "staging.core-os.net"
-	c.ExternalDNSName = "existing-record.staging.core-os.net"
-	if err := c.validateDNSConfig(r53); err == nil {
-		t.Errorf("failed to catch already existing ExternalDNSName")
+	for _, validConfig := range validDNSConfigs {
+		configBody := minimalConfigYaml + validConfig
+		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("could not get valid cluster config: %v", err)
+			continue
+		}
+		c := &Cluster{Cluster: *clusterConfig}
+
+		if err := c.validateDNSConfig(r53); err != nil {
+			t.Errorf("returned error for valid config: %v", err)
+		}
 	}
+
+	for _, invalidConfig := range invalidDNSConfigs {
+		configBody := minimalConfigYaml + invalidConfig
+		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("could not get valid cluster config: %v", err)
+			continue
+		}
+		c := &Cluster{Cluster: *clusterConfig}
+
+		if err := c.validateDNSConfig(r53); err == nil {
+			t.Errorf("failed to produce error for invalid config: %s", configBody)
+		}
+	}
+
 }
 
 type dummyCloudformationService struct {
@@ -428,4 +494,66 @@ func TestStackCreationErrorMessaging(t *testing.T) {
 			t.Errorf("Expected `%s`, got `%s`\n", expectedMsgs[i], outputMsgs[i])
 		}
 	}
+}
+
+func TestIsSubdomain(t *testing.T) {
+	validData := []struct {
+		sub    string
+		parent string
+	}{
+		{
+			// single level
+			sub:    "test.coreos.com",
+			parent: "coreos.com",
+		},
+		{
+			// multiple levels
+			sub:    "cgag.staging.coreos.com",
+			parent: "coreos.com",
+		},
+		{
+			// trailing dots shouldn't matter
+			sub:    "staging.coreos.com.",
+			parent: "coreos.com.",
+		},
+		{
+			// trailing dots shouldn't matter
+			sub:    "a.b.c.",
+			parent: "b.c",
+		},
+		{
+			// multiple level parent domain
+			sub:    "a.b.c.staging.core-os.net",
+			parent: "staging.core-os.net",
+		},
+	}
+
+	invalidData := []struct {
+		sub    string
+		parent string
+	}{
+		{
+			// mismatch
+			sub:    "staging.coreos.com",
+			parent: "example.com",
+		},
+		{
+			// superdomain is longer than subdomain
+			sub:    "staging.coreos.com",
+			parent: "cgag.staging.coreos.com",
+		},
+	}
+
+	for _, valid := range validData {
+		if !isSubdomain(valid.sub, valid.parent) {
+			t.Errorf("%s should be a valid subdomain of %s", valid.sub, valid.parent)
+		}
+	}
+
+	for _, invalid := range invalidData {
+		if isSubdomain(invalid.sub, invalid.parent) {
+			t.Errorf("%s should not be a valid subdomain of %s", invalid.sub, invalid.parent)
+		}
+	}
+
 }
