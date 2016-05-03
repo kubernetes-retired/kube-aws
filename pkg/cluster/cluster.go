@@ -17,15 +17,15 @@ import (
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 )
 
-// set by build script
+// VERSION set by build script
 var VERSION = "UNKNOWN"
 
-type ClusterInfo struct {
+type Info struct {
 	Name         string
 	ControllerIP string
 }
 
-func (c *ClusterInfo) String() string {
+func (c *Info) String() string {
 	buf := new(bytes.Buffer)
 	w := new(tabwriter.Writer)
 	w.Init(buf, 0, 8, 0, '\t', 0)
@@ -95,7 +95,7 @@ func (c *Cluster) validateExistingVPCState(ec2Svc ec2Service) error {
 	}
 	if len(vpcOutput.Vpcs) > 1 {
 		//Theoretically this should never happen. If it does, we probably want to know.
-		return fmt.Errorf("found more than one vpc with id %s. this is NOT NORMAL.", c.VPCID)
+		return fmt.Errorf("found more than one vpc with id %s. this is NOT NORMAL", c.VPCID)
 	}
 
 	existingVPC := vpcOutput.Vpcs[0]
@@ -248,7 +248,7 @@ func (c *Cluster) Update(stackBody string) (string, error) {
 	}
 }
 
-func (c *Cluster) Info() (*ClusterInfo, error) {
+func (c *Cluster) Info() (*Info, error) {
 	cfSvc := cloudformation.New(c.session)
 	resp, err := cfSvc.DescribeStackResource(
 		&cloudformation.DescribeStackResourceInput{
@@ -261,7 +261,7 @@ func (c *Cluster) Info() (*ClusterInfo, error) {
 		return nil, fmt.Errorf(errmsg)
 	}
 
-	var info ClusterInfo
+	var info Info
 	info.ControllerIP = *resp.StackResourceDetail.PhysicalResourceId
 	info.Name = c.ClusterName
 	return &info, nil
