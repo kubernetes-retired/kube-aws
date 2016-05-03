@@ -1,0 +1,4 @@
+#!/bin/bash
+set -euo pipefail
+
+go test $(go list ./... | grep -v '/vendor/')
