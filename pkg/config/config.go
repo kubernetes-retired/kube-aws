@@ -331,112 +331,112 @@ type Config struct {
 	VPCRef string
 }
 
-func (cfg Cluster) valid() error {
-	if cfg.ExternalDNSName == "" {
+func (c Cluster) valid() error {
+	if c.ExternalDNSName == "" {
 		return errors.New("externalDNSName must be set")
 	}
 
-	releaseChannelSupported := supportedReleaseChannels[cfg.ReleaseChannel]
+	releaseChannelSupported := supportedReleaseChannels[c.ReleaseChannel]
 	if !releaseChannelSupported {
-		return fmt.Errorf("releaseChannel %s is not supported", cfg.ReleaseChannel)
+		return fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
 	}
 
-	if cfg.CreateRecordSet {
-		if cfg.HostedZone == "" {
+	if c.CreateRecordSet {
+		if c.HostedZone == "" {
 			return errors.New("hostedZone cannot be blank when createRecordSet is true")
 		}
-		if cfg.RecordSetTTL < 1 {
+		if c.RecordSetTTL < 1 {
 			return errors.New("TTL must be at least 1 second")
 		}
-		if !isSubdomain(cfg.ExternalDNSName, cfg.HostedZone) {
+		if !isSubdomain(c.ExternalDNSName, c.HostedZone) {
 			return fmt.Errorf("%s is not a subdomain of %s",
-				cfg.ExternalDNSName,
-				cfg.HostedZone)
+				c.ExternalDNSName,
+				c.HostedZone)
 		}
 	} else {
-		if cfg.RecordSetTTL != newDefaultCluster().RecordSetTTL {
+		if c.RecordSetTTL != newDefaultCluster().RecordSetTTL {
 			return errors.New(
 				"recordSetTTL should not be modified when createRecordSet is false",
 			)
 		}
 	}
-	if cfg.KeyName == "" {
+	if c.KeyName == "" {
 		return errors.New("keyName must be set")
 	}
-	if cfg.Region == "" {
+	if c.Region == "" {
 		return errors.New("region must be set")
 	}
-	if cfg.AvailabilityZone == "" {
+	if c.AvailabilityZone == "" {
 		return errors.New("availabilityZone must be set")
 	}
-	if cfg.ClusterName == "" {
+	if c.ClusterName == "" {
 		return errors.New("clusterName must be set")
 	}
-	if cfg.KMSKeyARN == "" {
+	if c.KMSKeyARN == "" {
 		return errors.New("kmsKeyArn must be set")
 	}
 
-	if cfg.VPCID == "" && cfg.RouteTableID != "" {
+	if c.VPCID == "" && c.RouteTableID != "" {
 		return errors.New("vpcId must be specified if routeTableId is specified")
 	}
 
-	_, vpcNet, err := net.ParseCIDR(cfg.VPCCIDR)
+	_, vpcNet, err := net.ParseCIDR(c.VPCCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid vpcCIDR: %v", err)
 	}
 
-	_, instancesNet, err := net.ParseCIDR(cfg.InstanceCIDR)
+	_, instancesNet, err := net.ParseCIDR(c.InstanceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid instanceCIDR: %v", err)
 	}
 	if !vpcNet.Contains(instancesNet.IP) {
 		return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
-			cfg.VPCCIDR,
-			cfg.InstanceCIDR,
+			c.VPCCIDR,
+			c.InstanceCIDR,
 		)
 	}
 
-	controllerIPAddr := net.ParseIP(cfg.ControllerIP)
+	controllerIPAddr := net.ParseIP(c.ControllerIP)
 	if controllerIPAddr == nil {
-		return fmt.Errorf("invalid controllerIP: %s", cfg.ControllerIP)
+		return fmt.Errorf("invalid controllerIP: %s", c.ControllerIP)
 	}
 	if !instancesNet.Contains(controllerIPAddr) {
 		return fmt.Errorf("instanceCIDR (%s) does not contain controllerIP (%s)",
-			cfg.InstanceCIDR,
-			cfg.ControllerIP,
+			c.InstanceCIDR,
+			c.ControllerIP,
 		)
 	}
 
-	_, podNet, err := net.ParseCIDR(cfg.PodCIDR)
+	_, podNet, err := net.ParseCIDR(c.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
 	}
 
-	_, serviceNet, err := net.ParseCIDR(cfg.ServiceCIDR)
+	_, serviceNet, err := net.ParseCIDR(c.ServiceCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
 	if cidrOverlap(serviceNet, vpcNet) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", cfg.VPCCIDR, cfg.ServiceCIDR)
+		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", c.VPCCIDR, c.ServiceCIDR)
 	}
 	if cidrOverlap(podNet, vpcNet) {
-		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", cfg.VPCCIDR, cfg.PodCIDR)
+		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", c.VPCCIDR, c.PodCIDR)
 	}
 	if cidrOverlap(serviceNet, podNet) {
-		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", cfg.ServiceCIDR, cfg.PodCIDR)
+		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", c.ServiceCIDR, c.PodCIDR)
 	}
 
 	kubernetesServiceIPAddr := incrementIP(serviceNet.IP)
 	if !serviceNet.Contains(kubernetesServiceIPAddr) {
-		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", cfg.ServiceCIDR, kubernetesServiceIPAddr)
+		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", c.ServiceCIDR, kubernetesServiceIPAddr)
 	}
 
-	dnsServiceIPAddr := net.ParseIP(cfg.DNSServiceIP)
+	dnsServiceIPAddr := net.ParseIP(c.DNSServiceIP)
 	if dnsServiceIPAddr == nil {
-		return fmt.Errorf("Invalid dnsServiceIP: %s", cfg.DNSServiceIP)
+		return fmt.Errorf("Invalid dnsServiceIP: %s", c.DNSServiceIP)
 	}
 	if !serviceNet.Contains(dnsServiceIPAddr) {
-		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", cfg.ServiceCIDR, cfg.DNSServiceIP)
+		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", c.ServiceCIDR, c.DNSServiceIP)
 	}
 
 	if dnsServiceIPAddr.Equal(kubernetesServiceIPAddr) {
