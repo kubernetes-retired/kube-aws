@@ -187,6 +187,8 @@ The various templates are located in the `pkg/config/templates/` folder of the s
 go generate ./pkg/config
 ```
 
+This command is run automatically as part of the `build` script.
+
 ### Useful Resources
 
 The following links can be useful for development:
