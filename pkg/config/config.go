@@ -37,7 +37,7 @@ func newDefaultCluster() *Cluster {
 		PodCIDR:                  "10.2.0.0/16",
 		ServiceCIDR:              "10.3.0.0/24",
 		DNSServiceIP:             "10.3.0.10",
-		K8sVer:                   "v1.2.4_coreos.0",
+		K8sVer:                   "v1.2.4_coreos.1",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
 		ControllerInstanceType:   "m3.medium",
 		ControllerRootVolumeSize: 30,
