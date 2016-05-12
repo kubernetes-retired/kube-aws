@@ -80,13 +80,13 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # dnsServiceIP: 10.3.0.10
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.2.3_coreos.0
+# kubernetesVersion: v1.2.4_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
 
 # Use Calico for network policy. When set to "true" the kubernetesVersion (above)
-# must also be updated to include a version tagged with CNI e.g. v1.2.3_coreos.cni.1
+# must also be updated to include a version tagged with CNI e.g. v1.2.4_coreos.cni.0
 # useCalico: false
 
 # AWS Tags for cloudformation stack resources 
