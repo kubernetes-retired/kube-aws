@@ -78,7 +78,7 @@
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "UpdatePolicy" : {
-	"AutoScalingRollingUpdate" : {
+        "AutoScalingRollingUpdate" : {
           "MinInstancesInService" :
           {{if .WorkerSpotPrice}}
           "0"
@@ -87,7 +87,7 @@
           {{end}},
           "MaxBatchSize" : "1",
           "PauseTime" : "PT2M"
-	}
+        }
       }
     },
     "EIPController": {
@@ -166,11 +166,11 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-		{
-		  "Action" : "kms:Decrypt",
-		  "Effect" : "Allow",
-		  "Resource" : "{{.KMSKeyARN}}"
-		}
+                {
+                  "Action" : "kms:Decrypt",
+                  "Effect" : "Allow",
+                  "Resource" : "{{.KMSKeyARN}}"
+                }
               ],
               "Version": "2012-10-17"
             },
