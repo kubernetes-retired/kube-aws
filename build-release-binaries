@@ -1,0 +1,24 @@
+#!/bin/bash -e
+
+
+# Creates kubernetes-aws-$os-$arch.tar.gz in the current directory
+# for every combination of $os and $arch
+
+# Add OS support here
+for os in linux darwin;do
+    # Add architecture support here
+    for arch in amd64;do
+	output_folder="${os}-${arch}"
+	rm -rf "$output_folder"
+	mkdir "$output_folder"
+	echo "Building kube-aws for GOOS=${os} GOARCH=${arch}"
+	OUTPUT_PATH="$output_folder/kube-aws" GOOS=$os GOARCH=$arch ./build
+
+	releaseTar=kube-aws-"${os}-${arch}".tar.gz
+	rm -rf "$releaseTar"
+	tar czvf $releaseTar "$output_folder"
+	rm -rf "$output_folder"
+	echo "${os}-${arch} --> ${releaseTar}"
+    done
+done
+echo "Done!"
