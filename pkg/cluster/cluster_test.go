@@ -11,16 +11,44 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
+	yaml "gopkg.in/yaml.v2"
 )
 
-const minimalConfigYaml = `
+/*
+TODO(colhom): when we fully deprecate instanceCIDR/availabilityZone, this block of
+logic will go away and be replaced by a single constant string
+*/
+func defaultConfigValues(t *testing.T, configYaml string) string {
+	defaultYaml := `
 externalDNSName: test.staging.core-os.net
 keyName: test-key-name
 region: us-west-1
-availabilityZone: us-west-1c
 clusterName: test-cluster-name
 kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 `
+	yamlStr := defaultYaml + configYaml
+
+	c := config.Cluster{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &c); err != nil {
+		t.Errorf("failed umarshalling config yaml: %v :\n%s", err, yamlStr)
+	}
+
+	if len(c.Subnets) > 0 {
+		for i := range c.Subnets {
+			c.Subnets[i].AvailabilityZone = fmt.Sprintf("dummy-az-%d", i)
+		}
+	} else {
+		//Legacy behavior
+		c.AvailabilityZone = "dummy-az-0"
+	}
+
+	out, err := yaml.Marshal(&c)
+	if err != nil {
+		t.Errorf("error marshalling cluster: %v", err)
+	}
+
+	return string(out)
+}
 
 type VPC struct {
 	cidr        string
@@ -103,6 +131,14 @@ vpcCIDR: 192.168.1.0/24
 vpcId: vpc-xxx2
 instanceCIDR: 192.168.1.50/28
 controllerIP: 192.168.1.50
+`, `
+vpcCIDR: 192.168.1.0/24
+vpcId: vpc-xxx2
+controllerIP: 192.168.1.5
+subnets:
+  - instanceCIDR: 192.168.1.0/28
+  - instanceCIDR: 192.168.1.32/28
+  - instanceCIDR: 192.168.1.64/28
 `,
 	}
 
@@ -131,6 +167,14 @@ instanceCIDR: 192.168.1.100/26 #instance cidr conflicts with existing subnet
 controllerIP: 192.168.1.80
 vpcId: vpc-xxx2
 routeTableId: rtb-xxxxxx
+`, `
+vpcCIDR: 192.168.1.0/24
+controllerIP: 192.168.1.80
+vpcId: vpc-xxx2
+routeTableId: rtb-xxxxxx
+subnets:
+  - instanceCIDR: 192.168.1.100/26  #instance cidr conflicts with existing subnet
+  - instanceCIDR: 192.168.1.0/26
 `,
 	}
 
@@ -156,7 +200,7 @@ routeTableId: rtb-xxxxxx
 	}
 
 	validateCluster := func(networkConfig string) error {
-		configBody := minimalConfigYaml + networkConfig
+		configBody := defaultConfigValues(t, networkConfig)
 		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
 		if err != nil {
 			t.Errorf("could not get valid cluster config: %v", err)
@@ -185,7 +229,7 @@ routeTableId: rtb-xxxxxx
 
 func TestValidateKeyPair(t *testing.T) {
 
-	clusterConfig, err := config.ClusterFromBytes([]byte(minimalConfigYaml))
+	clusterConfig, err := config.ClusterFromBytes([]byte(defaultConfigValues(t, "")))
 	if err != nil {
 		t.Errorf("could not get valid cluster config: %v", err)
 	}
@@ -241,6 +285,7 @@ func (r53 dummyR53Service) ListResourceRecordSets(input *route53.ListResourceRec
 	}
 	return output, nil
 }
+
 func (r53 dummyR53Service) GetHostedZone(input *route53.GetHostedZoneInput) (*route53.GetHostedZoneOutput, error) {
 	for _, zone := range r53.HostedZones {
 		if zone.Id == aws.StringValue(input.Id) {
@@ -252,9 +297,9 @@ func (r53 dummyR53Service) GetHostedZone(input *route53.GetHostedZoneInput) (*ro
 			}, nil
 		}
 	}
-
 	return nil, fmt.Errorf("dummy route53 service: no hosted zone with id '%s'", aws.StringValue(input.Id))
 }
+
 func TestValidateDNSConfig(t *testing.T) {
 	r53 := dummyR53Service{
 		HostedZones: []Zone{
@@ -321,7 +366,7 @@ hostedZone: unicorns.core-os.net  #non-existant hostedZone DNS name
 	}
 
 	for _, validConfig := range validDNSConfigs {
-		configBody := minimalConfigYaml + validConfig
+		configBody := defaultConfigValues(t, validConfig)
 		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
 		if err != nil {
 			t.Errorf("could not get valid cluster config: %v", err)
@@ -335,7 +380,7 @@ hostedZone: unicorns.core-os.net  #non-existant hostedZone DNS name
 	}
 
 	for _, invalidConfig := range invalidDNSConfigs {
-		configBody := minimalConfigYaml + invalidConfig
+		configBody := defaultConfigValues(t, invalidConfig)
 		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
 		if err != nil {
 			t.Errorf("could not get valid cluster config: %v", err)
@@ -427,7 +472,7 @@ stackTags:
 	}
 
 	for _, testCase := range testCases {
-		configBody := minimalConfigYaml + testCase.clusterYaml
+		configBody := defaultConfigValues(t, testCase.clusterYaml)
 		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
 		if err != nil {
 			t.Errorf("could not get valid cluster config: %v", err)
