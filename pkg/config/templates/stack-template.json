@@ -632,7 +632,7 @@
     ,
     "{{$subnetLogicalName}}RouteTableAssociation": {
       "Properties": {
-        "RouteTableId": "{{.RouteTableID}}",
+        "RouteTableId": "{{$.RouteTableID}}",
         "SubnetId": {
           "Ref": "{{$subnetLogicalName}}"
         }
