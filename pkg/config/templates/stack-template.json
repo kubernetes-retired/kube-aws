@@ -103,7 +103,11 @@
     "ExternalDNS": {
       "Type": "AWS::Route53::RecordSet",
       "Properties": {
+	{{ if .HostedZoneID }}
+        "HostedZoneId": "{{.HostedZoneID}}",
+	{{else}}
         "HostedZoneName": "{{.HostedZone}}",
+	{{ end }}
         "Name": "{{.ExternalDNSName}}",
         "TTL": {{.RecordSetTTL}},
         "ResourceRecords": [{ "Ref": "EIPController"}],

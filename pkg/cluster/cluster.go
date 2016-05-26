@@ -309,6 +309,7 @@ func (c *Cluster) validateKeyPair(ec2Svc ec2Service) error {
 type r53Service interface {
 	ListHostedZonesByName(*route53.ListHostedZonesByNameInput) (*route53.ListHostedZonesByNameOutput, error)
 	ListResourceRecordSets(*route53.ListResourceRecordSetsInput) (*route53.ListResourceRecordSetsOutput, error)
+	GetHostedZone(*route53.GetHostedZoneInput) (*route53.GetHostedZoneOutput, error)
 }
 
 func (c *Cluster) validateDNSConfig(r53 r53Service) error {
@@ -316,26 +317,63 @@ func (c *Cluster) validateDNSConfig(r53 r53Service) error {
 		return nil
 	}
 
-	zonesResp, err := r53.ListHostedZonesByName(&route53.ListHostedZonesByNameInput{
-		DNSName: aws.String(c.HostedZone),
-	})
-	if err != nil {
-		return fmt.Errorf("Error validating HostedZone: %s", err)
+	if c.HostedZoneID == "" {
+		//TODO(colhom): When HostedZone parameter is gone, this block can be removed
+		//Config will gaurantee that HostedZoneID is set from the get-go
+		listHostedZoneInput := route53.ListHostedZonesByNameInput{
+			DNSName: aws.String(c.HostedZone),
+		}
+
+		zonesResp, err := r53.ListHostedZonesByName(&listHostedZoneInput)
+		if err != nil {
+			return fmt.Errorf("Error validating HostedZone: %s", err)
+		}
+
+		zones := zonesResp.HostedZones
+
+		if len(zones) == 0 {
+			return fmt.Errorf("hosted zone %s does not exist", c.HostedZone)
+		}
+
+		var matchingZone *route53.HostedZone
+		for _, zone := range zones {
+			if aws.StringValue(zone.Name) == c.HostedZone {
+				if matchingZone != nil {
+					//This means we've found another match, and HostedZone is ambiguous
+					return fmt.Errorf("multiple hosted-zones found for DNS name \"%s\"", c.HostedZone)
+				}
+				matchingZone = zone
+			} else {
+				/* Weird API semantics: if we see a zone which doesn't match the name
+				   we've exhausted all zones which match the name
+				  http://docs.aws.amazon.com/cli/latest/reference/route53/list-hosted-zones-by-name.html#options */
+
+				break
+			}
+		}
+		if matchingZone == nil {
+			return fmt.Errorf("hosted zone %s does not exist", c.HostedZone)
+		}
+		c.HostedZoneID = aws.StringValue(matchingZone.Id)
 	}
 
-	zones := zonesResp.HostedZones
-	if len(zones) == 0 || (*zones[0].Name != c.HostedZone) {
-		return fmt.Errorf(
-			"HostedZone %s does not exist.  You'll need to create it manually",
-			c.HostedZone,
-		)
+	hzOut, err := r53.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(c.HostedZoneID)})
+	if err != nil {
+		return fmt.Errorf("error getting hosted zone %s: %v", c.HostedZoneID, err)
+	}
+
+	if !isSubdomain(c.ExternalDNSName, aws.StringValue(hzOut.HostedZone.Name)) {
+		return fmt.Errorf("externalDNSName %s is not a sub-domain of hosted-zone %s", c.ExternalDNSName, aws.StringValue(hzOut.HostedZone.Name))
 	}
 
 	recordSetsResp, err := r53.ListResourceRecordSets(
 		&route53.ListResourceRecordSetsInput{
-			HostedZoneId: zones[0].Id,
+			HostedZoneId: hzOut.HostedZone.Id,
 		},
 	)
+	if err != nil {
+		return fmt.Errorf("error listing record sets for hosted zone id = %s: %v", c.HostedZoneID, err)
+	}
 
 	if len(recordSetsResp.ResourceRecordSets) > 0 {
 		for _, recordSet := range recordSetsResp.ResourceRecordSets {
@@ -372,4 +410,25 @@ func stackEventErrMsgs(events []*cloudformation.StackEvent) []string {
 	}
 
 	return errMsgs
+}
+
+func isSubdomain(sub, parent string) bool {
+	sub, parent = config.WithTrailingDot(sub), config.WithTrailingDot(parent)
+	subParts, parentParts := strings.Split(sub, "."), strings.Split(parent, ".")
+
+	if len(parentParts) > len(subParts) {
+		return false
+	}
+
+	subSuffixes := subParts[len(subParts)-len(parentParts):]
+
+	if len(subSuffixes) != len(parentParts) {
+		return false
+	}
+	for i := range subSuffixes {
+		if subSuffixes[i] != parentParts[i] {
+			return false
+		}
+	}
+	return true
 }

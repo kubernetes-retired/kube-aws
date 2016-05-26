@@ -50,6 +50,9 @@ hostedZone: core-os.net
 `, `
 createRecordSet: true
 hostedZone: "staging.core-os.net"
+`, `
+createRecordSet: true
+hostedZoneId: "XXXXXXXXXXX"
 `,
 }
 
@@ -104,17 +107,17 @@ routeTableId: rtb-xxxxxx # routeTableId specified without vpcId
 # invalid TTL
 recordSetTTL: 0
 `, `
-# hostedZone shouldn't be blank when createRecordSet is true
+# hostedZone and hostedZoneID shouldn't be blank when createRecordSet is true
 createRecordSet: true
-hostedZone: ""
 `, `
 # recordSetTTL shouldn't be modified when createRecordSet is false
 createRecordSet: false
 recordSetTTL: 400
 `, `
-# whatever.com is not a superdomain of test.staging.core-os.net
 createRecordSet: true
-hostedZone: "whatever.com"
+recordSetTTL: 60
+hostedZone: staging.core-os.net
+hostedZoneId: /hostedzone/staging_id_2 #hostedZone and hostedZoneId defined
 `,
 }
 
@@ -193,68 +196,6 @@ dnsServiceIP: 10.6.142.100
 			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s",
 				kubernetesServiceIP,
 				testConfig.KubernetesServiceIP)
-		}
-	}
-
-}
-
-func TestIsSubdomain(t *testing.T) {
-	validData := []struct {
-		sub    string
-		parent string
-	}{
-		{
-			// single level
-			sub:    "test.coreos.com",
-			parent: "coreos.com",
-		},
-		{
-			// multiple levels
-			sub:    "cgag.staging.coreos.com",
-			parent: "coreos.com",
-		},
-		{
-			// trailing dots shouldn't matter
-			sub:    "staging.coreos.com.",
-			parent: "coreos.com.",
-		},
-		{
-			// trailing dots shouldn't matter
-			sub:    "a.b.c.",
-			parent: "b.c",
-		},
-		{
-			// multiple level parent domain
-			sub:    "a.b.c.staging.core-os.net",
-			parent: "staging.core-os.net",
-		},
-	}
-
-	invalidData := []struct {
-		sub    string
-		parent string
-	}{
-		{
-			// mismatch
-			sub:    "staging.coreos.com",
-			parent: "example.com",
-		},
-		{
-			// superdomain is longer than subdomain
-			sub:    "staging.coreos.com",
-			parent: "cgag.staging.coreos.com",
-		},
-	}
-
-	for _, valid := range validData {
-		if !isSubdomain(valid.sub, valid.parent) {
-			t.Errorf("%s should be a valid subdomain of %s", valid.sub, valid.parent)
-		}
-	}
-
-	for _, invalid := range invalidData {
-		if isSubdomain(invalid.sub, invalid.parent) {
-			t.Errorf("%s should not be a valid subdomain of %s", invalid.sub, invalid.parent)
 		}
 	}
 

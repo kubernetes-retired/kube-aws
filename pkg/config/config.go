@@ -79,6 +79,8 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 		c.InstanceCIDR = "10.0.0.0/24"
 	}
 
+	c.HostedZoneID = withHostedZoneIDPrefix(c.HostedZoneID)
+
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
 	}
@@ -122,6 +124,7 @@ type Cluster struct {
 	CreateRecordSet          bool              `yaml:"createRecordSet"`
 	RecordSetTTL             int               `yaml:"recordSetTTL"`
 	HostedZone               string            `yaml:"hostedZone"`
+	HostedZoneID             string            `yaml:"hostedZoneId"`
 	StackTags                map[string]string `yaml:"stackTags"`
 	UseCalico                bool              `yaml:"useCalico"`
 	Subnets                  []Subnet          `yaml:"subnets"`
@@ -389,16 +392,19 @@ func (c Cluster) valid() error {
 	}
 
 	if c.CreateRecordSet {
-		if c.HostedZone == "" {
-			return errors.New("hostedZone cannot be blank when createRecordSet is true")
+		if c.HostedZone == "" && c.HostedZoneID == "" {
+			return errors.New("hostedZone or hostedZoneID must be specified createRecordSet is true")
 		}
+		if c.HostedZone != "" && c.HostedZoneID != "" {
+			return errors.New("hostedZone and hostedZoneID cannot both be specified")
+		}
+
+		if c.HostedZone != "" {
+			fmt.Printf("Warning: the 'hostedZone' parameter is deprecated. Use 'hostedZoneId' instead\n")
+		}
+
 		if c.RecordSetTTL < 1 {
 			return errors.New("TTL must be at least 1 second")
-		}
-		if !isSubdomain(c.ExternalDNSName, c.HostedZone) {
-			return fmt.Errorf("%s is not a subdomain of %s",
-				c.ExternalDNSName,
-				c.HostedZone)
 		}
 	} else {
 		if c.RecordSetTTL != newDefaultCluster().RecordSetTTL {
@@ -627,23 +633,14 @@ func WithTrailingDot(s string) string {
 	return s
 }
 
-func isSubdomain(sub, parent string) bool {
-	sub, parent = WithTrailingDot(sub), WithTrailingDot(parent)
-	subParts, parentParts := strings.Split(sub, "."), strings.Split(parent, ".")
+const hostedZoneIDPrefix = "/hostedzone/"
 
-	if len(parentParts) > len(subParts) {
-		return false
+func withHostedZoneIDPrefix(id string) string {
+	if id == "" {
+		return ""
 	}
-
-	subSuffixes := subParts[len(subParts)-len(parentParts):]
-
-	if len(subSuffixes) != len(parentParts) {
-		return false
+	if !strings.HasPrefix(id, hostedZoneIDPrefix) {
+		return fmt.Sprintf("%s%s", hostedZoneIDPrefix, id)
 	}
-	for i := range subSuffixes {
-		if subSuffixes[i] != parentParts[i] {
-			return false
-		}
-	}
-	return true
+	return id
 }
