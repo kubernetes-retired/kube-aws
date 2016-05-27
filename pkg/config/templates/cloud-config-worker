@@ -24,11 +24,21 @@ coreos:
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
-        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf --mount volume=dns,target=/etc/resolv.conf"
+        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --volume rktbin,kind=host,source=/usr/bin/rkt \
+          --mount volume=rktbin,target=/usr/bin/rkt \
+          --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
+          --mount volume=var-lib-rkt,target=/var/lib/rkt \
+          --volume=stage,kind=host,source=/usr/lib/rkt \
+          --mount volume=stage,target=/usr/lib/rkt"
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers={{.SecureAPIServers}} \
         --network-plugin-dir=/etc/kubernetes/cni/net.d \
         --network-plugin={{.K8sNetworkPlugin}} \
+        --container-runtime={{.ContainerRuntime}} \
+        --rkt-path=/usr/bin/rkt \
+        --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
         --register-node=true \
         --allow-privileged=true \
         --config=/etc/kubernetes/manifests \
@@ -42,6 +52,36 @@ coreos:
         RestartSec=10
         [Install]
         WantedBy=multi-user.target
+
+{{ if eq .ContainerRuntime "rkt" }}
+    - name: rkt-api.service
+      enable: true
+      content: |
+        [Unit]
+        Before=kubelet.service
+        [Service]
+        ExecStart=/usr/bin/rkt api-service
+        Restart=always
+        RestartSec=10
+        [Install]
+        RequiredBy=kubelet.service
+
+    - name: load-rkt-stage1.service
+      command: start
+      content: |
+        [Unit]
+        Description=Load rkt stage1 images
+        Documentation=http://github.com/coreos/rkt
+        Requires=network-online.target
+        After=network-online.target
+        Before=rkt-api.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/bin/rkt fetch /usr/lib/rkt/stage1-images/stage1-coreos.aci /usr/lib/rkt/stage1-images/stage1-fly.aci  --insecure-options=image
+        [Install]
+        RequiredBy=rkt-api.service
+{{ end }}
 
 {{ if .UseCalico }}
     - name: calico-node.service
@@ -143,6 +183,16 @@ write_files:
               - mountPath: /etc/kubernetes/ssl
                 name: "etc-kube-ssl"
                 readOnly: true
+              - mountPath: /sys/module/nf_conntrack/parameters
+                name: sys-hashsize
+                readOnly: false
+              - mountPath: /var/run/dbus
+                name: dbus
+                readOnly: false
+              - mountPath: /proc/sys/net
+                name: proc-sys-net
+                readOnly: false
+
           volumes:
             - name: "ssl-certs"
               hostPath:
@@ -153,6 +203,15 @@ write_files:
             - name: "etc-kube-ssl"
               hostPath:
                 path: "/etc/kubernetes/ssl"
+            - hostPath:
+                path: /sys/module/nf_conntrack/parameters
+              name: sys-hashsize
+            - hostPath:
+                path: /var/run/dbus
+              name: dbus
+            - hostPath:
+                path: /proc/sys/net
+              name: proc-sys-net
 
   - path: /etc/kubernetes/worker-kubeconfig.yaml
     content: |
@@ -205,4 +264,3 @@ write_files:
             }
         }
 {{ end }}
-

@@ -112,7 +112,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Use Calico for network policy.
 # useCalico: false
 
-# AWS Tags for cloudformation stack resources
+# Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
+# containerRuntime: docker
+
+# AWS Tags for cloudformation stack resources 
 #stackTags:
 #  Name: "Kubernetes"
 #  Environment: "Production"
