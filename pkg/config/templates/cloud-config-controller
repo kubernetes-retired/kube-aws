@@ -172,10 +172,10 @@ write_files:
     content: |
       #!/bin/bash -e
 
-      for encKey in $(find /etc/kubernetes/ssl/*.pem);do
+      for encKey in $(find /etc/kubernetes/ssl/*.pem.enc);do
         tmpPath="/tmp/$(basename $encKey).tmp"
         docker run --rm -v /etc/kubernetes/ssl:/etc/kubernetes/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
-        mv  $tmpPath $encKey
+        mv  $tmpPath /etc/kubernetes/ssl/$(basename $encKey .enc)
       done
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
@@ -714,15 +714,15 @@ write_files:
           }
         }
 
-  - path: /etc/kubernetes/ssl/ca.pem
+  - path: /etc/kubernetes/ssl/ca.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
 
-  - path: /etc/kubernetes/ssl/apiserver.pem
+  - path: /etc/kubernetes/ssl/apiserver.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerCert}}
 
-  - path: /etc/kubernetes/ssl/apiserver-key.pem
+  - path: /etc/kubernetes/ssl/apiserver-key.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerKey}}
 
