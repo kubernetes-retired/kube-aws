@@ -53,6 +53,11 @@ func TestTLSGeneration(t *testing.T) {
 			KeyBytes:  assets.WorkerKey,
 			CertBytes: assets.WorkerCert,
 		},
+		{
+			Name:      "etcd",
+			KeyBytes:  assets.EtcdKey,
+			CertBytes: assets.EtcdCert,
+		},
 	}
 
 	var err error

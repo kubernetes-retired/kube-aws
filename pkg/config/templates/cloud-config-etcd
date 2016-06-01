@@ -1,0 +1,122 @@
+#cloud-config
+coreos:
+  update:
+    reboot-strategy: etcd-lock
+  units:
+    - name: etcd2.service
+      drop-ins:
+        - name: 20-etcd2-aws-cluster.conf
+          content: |
+            [Unit]
+            Requires=decrypt-tls-assets.service
+            After=decrypt-tls-assets.service
+
+            [Service]
+            Environment=ETCD_NAME=%H
+
+            Environment=ETCD_PEER_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
+            Environment=ETCD_PEER_CERT_FILE=/etc/etcd2/ssl/etcd.pem
+            Environment=ETCD_PEER_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+
+            Environment=ETCD_CLIENT_CERT_AUTH=true
+            Environment=ETCD_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
+            Environment=ETCD_CERT_FILE=/etc/etcd2/ssl/etcd.pem
+            Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+
+            Environment=ETCD_INITIAL_CLUSTER_STATE=new
+            Environment=ETCD_INITIAL_CLUSTER={{.EtcdInitialCluster}}
+            Environment=ETCD_DATA_DIR=/var/lib/etcd2
+            Environment=ETCD_LISTEN_CLIENT_URLS=https://%H:2379
+            Environment=ETCD_ADVERTISE_CLIENT_URLS=https://%H:2379
+            Environment=ETCD_LISTEN_PEER_URLS=https://%H:2380
+            Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=https://%H:2380
+            PermissionsStartOnly=true
+            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
+      enable: true
+      command: start
+
+    - name: var-lib-etcd2.mount
+      enable: true
+      content: |
+        [Unit]
+        Before=etcd2.service
+
+        [Mount]
+        What=/dev/xvdf
+        Where=/var/lib/etcd2
+        Type=ext4
+
+        [Install]
+        RequiredBy=etcd2.service
+
+    - name: format-etcd2-volume.service
+      enable: true
+      content: |
+        [Unit]
+        Description=Formats etcd2 ebs volume
+        After=dev-xvdf.device
+        Requires=dev-xvdf.device
+        Before=var-lib-etcd2.mount
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/ext4-format-volume-once /dev/xvdf
+
+        [Install]
+        RequiredBy=var-lib-etcd2.mount
+
+    - name: decrypt-tls-assets.service
+      enable: true
+      content: |
+        [Unit]
+        Description=decrypt etcd2 tls assets using amazon kms
+        Before=etcd2.service
+        After=early-docker.service
+        Requires=early-docker.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
+        ExecStart=/opt/bin/decrypt-tls-assets
+
+        [Install]
+        RequiredBy=etcd2.service
+
+
+write_files:
+  - path: /opt/bin/ext4-format-volume-once
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      if [[ "$(wipefs -n -p $1 | grep ext4)" == "" ]];then
+        mkfs.ext4 $1
+      else
+        echo "volume $1 is already formatted"
+      fi
+
+  - path: /opt/bin/decrypt-tls-assets
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      for encKey in $(find /etc/etcd2/ssl/*.pem.enc);do
+        tmpPath="/tmp/$(basename $encKey).tmp"
+        docker run --net host --rm -v /etc/etcd2/ssl:/etc/etcd2/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
+        mv  $tmpPath /etc/etcd2/ssl/$(basename $encKey .enc)
+      done
+
+  - path: /etc/etcd2/ssl/ca.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.CACert}}
+
+  - path: /etc/etcd2/ssl/etcd-key.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdKey}}
+
+  - path: /etc/etcd2/ssl/etcd.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdCert}}

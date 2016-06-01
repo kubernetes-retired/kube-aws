@@ -35,6 +35,7 @@ var files = []struct {
 }{
 	{"cloud-config-controller", "CloudConfigController"},
 	{"cloud-config-worker", "CloudConfigWorker"},
+	{"cloud-config-etcd", "CloudConfigEtcd"},
 	{"cluster.yaml", "DefaultClusterConfig"},
 	{"kubeconfig.tmpl", "KubeConfigTemplate"},
 	{"stack-template.json", "StackTemplateTemplate"},

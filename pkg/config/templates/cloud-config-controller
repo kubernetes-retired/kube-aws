@@ -2,21 +2,15 @@
 coreos:
   update:
     reboot-strategy: "off"
+
   flannel:
     interface: $private_ipv4
-    etcd_endpoints: {{ .ETCDEndpoints }}
-  etcd2:
-    name: controller
-    advertise-client-urls: http://$private_ipv4:2379
-    initial-advertise-peer-urls: http://$private_ipv4:2380
-    listen-client-urls: http://0.0.0.0:2379
-    listen-peer-urls: http://0.0.0.0:2380
-    initial-cluster: controller=http://$private_ipv4:2380
-  units:
-    - name: etcd2.service
-      command: start
-      runtime: true
+    etcd_endpoints: {{ .EtcdEndpoints }}
+    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_certfile: /etc/kubernetes/ssl/etcd-client.pem
+    etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
+  units:
     - name: docker.service
       drop-ins:
         - name: 40-flannel.conf
@@ -31,10 +25,17 @@ coreos:
       drop-ins:
         - name: 10-etcd.conf
           content: |
+            [Unit]
+            Requires=decrypt-tls-assets.service
+            After=decrypt-tls-assets.service
             [Service]
-            ExecStartPre=/usr/bin/curl --silent -X PUT -d \
-            "value={\"Network\" : \"{{.PodCIDR}}\", \"Backend\" : {\"Type\" : \"vxlan\"}}" \
-            http://localhost:2379/v2/keys/coreos.com/network/config?prevExist=false
+            Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            ExecStartPre=/usr/bin/etcdctl \
+            --ca-file=/etc/kubernetes/ssl/ca.pem \
+            --cert-file=/etc/kubernetes/ssl/etcd-client.pem \
+            --key-file=/etc/kubernetes/ssl/etcd-client-key.pem \
+            --endpoints="{{.EtcdEndpoints}}" \
+            set /coreos.com/network/config '{"Network" : "{{.PodCIDR}}", "Backend" : {"Type" : "vxlan"}}'
     - name: kubelet.service
       command: start
       runtime: true
@@ -120,7 +121,7 @@ coreos:
         Environment=FELIX_FELIXHOSTNAME=$private_ipv4
         Environment=CALICO_NETWORKING=false
         Environment=NO_DEFAULT_POOLS=true
-        Environment=ETCD_ENDPOINTS={{ .ETCDEndpoints }}
+        Environment=ETCD_ENDPOINTS={{ .EtcdEndpoints }}
         ExecStart=/usr/bin/rkt run --inherit-env --stage1-from-dir=stage1-fly.aci \
         --volume=modules,kind=host,source=/lib/modules,readOnly=false \
         --mount=volume=modules,target=/lib/modules \
@@ -140,15 +141,18 @@ coreos:
       content: |
         [Unit]
         Description=decrypt kubelet tls assets using amazon kms
-        Before=kubelet.service
+        Before=kubelet.service flanneld.service
+        After=early-docker.service
+        Requires=early-docker.service
 
         [Service]
         Type=oneshot
         RemainAfterExit=yes
+        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
         ExecStart=/opt/bin/decrypt-tls-assets
 
         [Install]
-        RequiredBy=kubelet.service
+        RequiredBy=kubelet.service flanneld.service
 
     - name: install-kube-system.service
       command: start
@@ -315,7 +319,10 @@ write_files:
           - /hyperkube
           - apiserver
           - --bind-address=0.0.0.0
-          - --etcd-servers=http://localhost:2379
+          - --etcd-servers={{.EtcdEndpoints}}
+          - --etcd-cafile=/etc/kubernetes/ssl/ca.pem
+          - --etcd-certfile=/etc/kubernetes/ssl/etcd-client.pem
+          - --etcd-keyfile=/etc/kubernetes/ssl/etcd-client-key.pem
           - --allow-privileged=true
           - --service-cluster-ip-range={{.ServiceCIDR}}
           - --secure-port=443
@@ -445,7 +452,7 @@ write_files:
             image: calico/kube-policy-controller:v0.2.0
             env:
               - name: ETCD_ENDPOINTS
-                value: "{{ .ETCDEndpoints }}"
+                value: "{{ .EtcdEndpoints }}"
               - name: K8S_API
                 value: "http://127.0.0.1:8080"
               - name: LEADER_ELECTION
@@ -764,6 +771,15 @@ write_files:
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerKey}}
 
+  - path: /etc/kubernetes/ssl/etcd-client.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdClientCert}}
+
+  - path: /etc/kubernetes/ssl/etcd-client-key.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdClientKey}}
+
+
 {{ if .UseCalico }}
   - path: /etc/kubernetes/cni/net.d/10-calico.conf
     content: |
@@ -772,7 +788,7 @@ write_files:
             "type": "flannel",
             "delegate": {
                 "type": "calico",
-                "etcd_endpoints": "{{ .ETCDEndpoints }}",
+                "etcd_endpoints": "{{ .EtcdEndpoints }}",
                 "log_level": "none",
                 "log_level_stderr": "info",
                 "hostname": "$private_ipv4",

@@ -72,6 +72,7 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 		{"credentials/.gitignore", []byte("*"), 0644},
 		{"userdata/cloud-config-controller", config.CloudConfigController, 0644},
 		{"userdata/cloud-config-worker", config.CloudConfigWorker, 0644},
+		{"userdata/cloud-config-etcd", config.CloudConfigEtcd, 0644},
 		{"stack-template.json", config.StackTemplateTemplate, 0644},
 		{"kubeconfig", kubeconfig.Bytes(), 0600},
 	}

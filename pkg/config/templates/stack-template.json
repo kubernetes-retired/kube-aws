@@ -1,6 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "kube-aws Kubernetes cluster {{.ClusterName}}",
+  "Mappings" : {
+    "EtcdInstanceParams" : {
+      "UserData" : {
+	"cloudconfig" : "{{.UserDataEtcd}}"
+      }
+    }
+  },
   "Resources": {
     "AlarmControllerRecover": {
       "Properties": {
@@ -137,6 +144,17 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
+    "IAMInstanceProfileEtcd": {
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "IAMRoleEtcd"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::InstanceProfile"
+    },
     "IAMRoleController": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -249,6 +267,43 @@
       },
       "Type": "AWS::IAM::Role"
     },
+    "IAMRoleEtcd": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action" : "kms:Decrypt",
+                  "Effect" : "Allow",
+                  "Resource" : "{{.KMSKeyARN}}"
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "root"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::Role"
+    },
     "InstanceController": {
       "Properties": {
         "AvailabilityZone": "{{(index .Subnets .ControllerSubnetIndex).AvailabilityZone}}",
@@ -300,6 +355,64 @@
       },
       "Type": "AWS::EC2::Instance"
     },
+    {{range $etcdIndex, $etcdInstance := .EtcdInstances}}
+    "InstanceEtcd{{$etcdIndex}}": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": "{{$.EtcdRootVolumeSize}}"
+            }
+          },
+	  {
+            "DeviceName": "/dev/xvdf",
+	    {{if $.EtcdDataVolumeEphemeral}}
+	    "VirtualName" : "ephemeral0"
+	    {{else}}
+            "Ebs": {
+              "VolumeSize": "{{$.EtcdDataVolumeSize}}"
+            }
+	    {{end}}
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfileEtcd"
+        },
+        "ImageId": "{{$.AMI}}",
+        "InstanceType": "{{$.EtcdInstanceType}}",
+        "KeyName": "{{$.KeyName}}",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": true,
+            "DeleteOnTermination": true,
+            "DeviceIndex": "0",
+            "GroupSet": [
+              {
+                "Ref": "SecurityGroupEtcd"
+              }
+            ],
+            "PrivateIpAddress": "{{$etcdInstance.IPAddress}}",
+            "SubnetId": {
+              "Ref": "Subnet{{$etcdInstance.SubnetIndex}}"
+            }
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          },
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-kube-aws-etcd-{{$etcdIndex}}"
+          }
+        ],
+        "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
+      },
+      "Type": "AWS::EC2::Instance"
+    },
+    {{end}}
     "LaunchConfigurationWorker": {
       "Properties": {
         "BlockDeviceMappings": [
@@ -506,6 +619,34 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
+    "SecurityGroupEtcdIngressFromControllerToEtcd": {
+      "Properties": {
+        "FromPort": 2379,
+        "GroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 2379
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupEtcdIngressFromWorkerToEtcd": {
+      "Properties": {
+        "FromPort": 2379,
+        "GroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 2379
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
     "SecurityGroupWorkerIngressFromWorkerToFlannel": {
       "Properties": {
         "FromPort": 8472,
@@ -547,6 +688,63 @@
         "ToPort": 10255
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupEtcd": {
+      "Properties": {
+        "GroupDescription": {
+          "Ref": "AWS::StackName"
+        },
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 0,
+            "IpProtocol": "tcp",
+            "ToPort": 65535
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 0,
+            "IpProtocol": "udp",
+            "ToPort": 65535
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 3,
+            "IpProtocol": "icmp",
+            "ToPort": -1
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 22,
+            "IpProtocol": "tcp",
+            "ToPort": 22
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ],
+        "VpcId": {{.VPCRef}}
+      },
+      "Type": "AWS::EC2::SecurityGroup"
+    },
+    "SecurityGroupEtcdPeerIngress": {
+      "Properties": {
+        "FromPort": 2380,
+        "GroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "ToPort": 2380
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
     }
     {{range $index, $subnet := .Subnets}}
     {{with $subnetLogicalName := printf "Subnet%d" $index}}
@@ -568,8 +766,8 @@
     }
     {{end}}
     {{end}}
-    {{if not .VPCID}}
     ,
+    {{if not .VPCID}}
     "{{.VPCLogicalName}}": {
       "Properties": {
         "CidrBlock": "{{.VPCCIDR}}",
@@ -649,7 +847,6 @@
     {{if .RouteTableID}}
     {{range $index, $subnet := .Subnets}}
     {{with $subnetLogicalName := printf "Subnet%d" $index}}
-    ,
     "{{$subnetLogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId": "{{$.RouteTableID}}",

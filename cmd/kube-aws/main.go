@@ -21,6 +21,7 @@ var stackTemplateOptions = config.StackTemplateOptions{
 	TLSAssetsDir:          "credentials",
 	ControllerTmplFile:    "userdata/cloud-config-controller",
 	WorkerTmplFile:        "userdata/cloud-config-worker",
+	EtcdTmplFile:          "userdata/cloud-config-etcd",
 	StackTemplateTmplFile: "stack-template.json",
 }
 
