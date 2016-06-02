@@ -30,7 +30,7 @@ const (
 func newDefaultCluster() *Cluster {
 	return &Cluster{
 		ClusterName:              "kubernetes",
-		ReleaseChannel:           "alpha",
+		ReleaseChannel:           "stable",
 		VPCCIDR:                  "10.0.0.0/16",
 		ControllerIP:             "10.0.0.50",
 		PodCIDR:                  "10.2.0.0/16",
@@ -142,7 +142,7 @@ const (
 var supportedReleaseChannels = map[string]bool{
 	"alpha":  true,
 	"beta":   true,
-	"stable": false,
+	"stable": true,
 }
 
 func (c Cluster) Config() (*Config, error) {

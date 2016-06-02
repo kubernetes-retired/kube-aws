@@ -219,13 +219,15 @@ releaseChannel: beta
 `,
 			channel: "beta",
 		},
+		{
+			conf: `
+releaseChannel: stable
+`,
+			channel: "stable",
+		},
 	}
 
 	invalidConfigs := []string{
-		`
-#TODO(chom): move this to validConfigs when stable is supported
-releaseChannel: stable # stable is not supported (yet).
-`,
 		`
 releaseChannel: non-existant #this release channel will never exist
 `,
