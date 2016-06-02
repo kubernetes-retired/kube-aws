@@ -6,57 +6,22 @@ import (
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/coreosutil"
 )
 
-var regions = []string{
-	"ap-northeast-1",
-	"ap-southeast-1",
-	"ap-southeast-2",
-	"eu-central-1",
-	"eu-west-1",
-	"sa-east-1",
-	"us-east-1",
-	"us-gov-west-1",
-	"us-west-1",
-	"us-west-2",
-}
-
-var supportedChannels = []string{
-	"alpha",
-	"beta",
-}
-
 func getAMI(region, channel string) (string, error) {
-	regionMap := map[string]map[string]string{}
 
-	for _, channel := range supportedChannels {
-		regions, err := coreosutil.GetAMIData(channel)
+	regions, err := coreosutil.GetAMIData(channel)
 
-		if err != nil {
-			return "", err
-		}
-
-		for region, amis := range regions {
-			if region == "release_info" {
-				continue
-			}
-
-			if _, ok := regionMap[region]; !ok {
-				regionMap[region] = map[string]string{}
-			}
-
-			if ami, ok := amis["hvm"]; ok {
-				regionMap[region][channel] = ami
-			}
-		}
+	if err != nil {
+		return "", fmt.Errorf("error getting ami data for channel %s: %v", channel, err)
 	}
 
-	if regionMap[region] == nil {
-		return "", fmt.Errorf("could not get AMI for region %s", region)
+	amis, ok := regions[region]
+	if !ok {
+		return "", fmt.Errorf("could not find region %s for channel %s", region, channel)
 	}
 
-	ami := regionMap[region][channel]
-	if ami == "" {
-		return "", fmt.Errorf("could not get AMI in region %s for channel %s", region, channel)
+	if ami, ok := amis["hvm"]; ok {
+		return ami, nil
 	}
 
-	return ami, nil
+	return "", fmt.Errorf("could not find hvm image for region %s, channel %s", region, channel)
 }
