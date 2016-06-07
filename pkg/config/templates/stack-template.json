@@ -332,6 +332,12 @@
         "SecurityGroupEgress": [
           {
             "CidrIp": "0.0.0.0/0",
+            "FromPort": -1,
+            "IpProtocol": "icmp",
+            "ToPort": -1
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
             "FromPort": 0,
             "IpProtocol": "tcp",
             "ToPort": 65535
@@ -346,7 +352,7 @@
         "SecurityGroupIngress": [
           {
             "CidrIp": "0.0.0.0/0",
-            "FromPort": 3,
+            "FromPort": -1,
             "IpProtocol": "icmp",
             "ToPort": -1
           },
@@ -395,6 +401,12 @@
         "SecurityGroupEgress": [
           {
             "CidrIp": "0.0.0.0/0",
+            "FromPort": -1,
+            "IpProtocol": "icmp",
+            "ToPort": -1
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
             "FromPort": 0,
             "IpProtocol": "tcp",
             "ToPort": 65535
@@ -409,7 +421,7 @@
         "SecurityGroupIngress": [
           {
             "CidrIp": "0.0.0.0/0",
-            "FromPort": 3,
+            "FromPort": -1,
             "IpProtocol": "icmp",
             "ToPort": -1
           },
