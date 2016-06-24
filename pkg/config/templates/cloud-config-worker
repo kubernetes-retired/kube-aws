@@ -128,7 +128,6 @@ write_files:
             - proxy
             - --master=https://{{.ControllerIP}}:443
             - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
-            - --proxy-mode=iptables
             securityContext:
               privileged: true
             volumeMounts:
