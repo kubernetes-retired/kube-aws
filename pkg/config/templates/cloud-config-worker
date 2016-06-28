@@ -40,9 +40,9 @@ coreos:
         [Install]
         WantedBy=multi-user.target
 
+{{ if .UseCalico }}
     - name: calico-node.service
       command: start
-      enable: {{.UseCalico}}
       content: |
         [Unit]
         Description=Calico per-host agent
@@ -68,6 +68,7 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
+{{ end }}
 
     - name: decrypt-tls-assets.service
       enable: true
@@ -170,6 +171,7 @@ write_files:
           name: kubelet-context
         current-context: kubelet-context
 
+{{ if .UseCalico }}
   - path: /etc/kubernetes/cni/net.d/10-calico.conf
     content: |
         {
@@ -189,4 +191,5 @@ write_files:
                 }
             }
         }
+{{ end }}
 

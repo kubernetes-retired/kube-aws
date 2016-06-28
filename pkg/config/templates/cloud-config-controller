@@ -56,9 +56,9 @@ coreos:
         [Install]
         WantedBy=multi-user.target
 
+{{ if .UseCalico }}
     - name: calico-node.service
       command: start
-      enable: {{.UseCalico}}
       content: |
         [Unit]
         Description=Calico per-host agent
@@ -84,6 +84,7 @@ coreos:
 
         [Install]
         WantedBy=multi-user.target
+{{ end }}
 
     - name: decrypt-tls-assets.service
       enable: true
@@ -116,9 +117,9 @@ coreos:
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-kube-system
 
+{{ if .UseCalico }}
     - name: install-calico-system.service
       command: start
-      enable: {{.UseCalico}}
       content: |
         [Unit]
         Requires=kubelet.service docker.service
@@ -130,6 +131,7 @@ coreos:
         Restart=on-failure
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-calico-system
+{{ end }}
 
 write_files:
   - path: /opt/bin/install-kube-system
@@ -155,6 +157,7 @@ write_files:
           "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
       done
 
+{{ if .UseCalico }}
   - path: /opt/bin/install-calico-system
     permissions: 0700
     owner: root:root
@@ -167,6 +170,7 @@ write_files:
       "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/default/thirdpartyresources"
 
       /usr/bin/cp /srv/kubernetes/manifests/calico-policy-agent.yaml /etc/kubernetes/manifests
+{{ end }}
 
   - path: /opt/bin/decrypt-tls-assets
     owner: root:root
@@ -337,6 +341,7 @@ write_files:
             initialDelaySeconds: 15
             timeoutSeconds: 15
 
+{{ if .UseCalico }}
   - path: /srv/kubernetes/manifests/calico-policy-agent.yaml
     content: |
       apiVersion: v1
@@ -365,7 +370,9 @@ write_files:
               - "--election=calico-policy-election"
               - "--election-namespace=calico-system"
               - "--http=127.0.0.1:4040"
+{{ end }}
 
+{{ if .UseCalico }}
   - path: /srv/kubernetes/manifests/calico-system.json
     content: |
         {
@@ -375,7 +382,9 @@ write_files:
             "name": "calico-system"
           }
         }
+{{ end }}
 
+{{ if .UseCalico }}
   - path: /srv/kubernetes/manifests/network-policy.json
     content: |
         {
@@ -391,6 +400,7 @@ write_files:
             }
           ]
         }
+{{ end }}
 
   - path: /srv/kubernetes/manifests/kube-dns-rc.json
     content: |
@@ -784,6 +794,7 @@ write_files:
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerKey}}
 
+{{ if .UseCalico }}
   - path: /etc/kubernetes/cni/net.d/10-calico.conf
     content: |
         {
@@ -801,3 +812,4 @@ write_files:
                 }
             }
         }
+{{ end }}
