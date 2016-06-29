@@ -39,9 +39,13 @@ func newDefaultCluster() *Cluster {
 		K8sVer:                   "v1.3.2_coreos.0",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
 		ControllerInstanceType:   "m3.medium",
+		ControllerRootVolumeType: "gp2",
+		ControllerRootVolumeIOPS: 0,
 		ControllerRootVolumeSize: 30,
 		WorkerCount:              1,
 		WorkerInstanceType:       "m3.medium",
+		WorkerRootVolumeType:     "gp2",
+		WorkerRootVolumeIOPS:     0,
 		WorkerRootVolumeSize:     30,
 		CreateRecordSet:          false,
 		RecordSetTTL:             300,
@@ -94,6 +98,7 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 			},
 		}
 	}
+
 	return c, nil
 }
 
@@ -105,9 +110,13 @@ type Cluster struct {
 	AvailabilityZone         string            `yaml:"availabilityZone,omitempty"`
 	ReleaseChannel           string            `yaml:"releaseChannel,omitempty"`
 	ControllerInstanceType   string            `yaml:"controllerInstanceType,omitempty"`
+	ControllerRootVolumeType string            `yaml:"controllerRootVolumeType,omitempty"`
+	ControllerRootVolumeIOPS int               `yaml:"controllerRootVolumeIOPS,omitempty"`
 	ControllerRootVolumeSize int               `yaml:"controllerRootVolumeSize,omitempty"`
 	WorkerCount              int               `yaml:"workerCount,omitempty"`
 	WorkerInstanceType       string            `yaml:"workerInstanceType,omitempty"`
+	WorkerRootVolumeType     string            `yaml:"workerRootVolumeType,omitempty"`
+	WorkerRootVolumeIOPS     int               `yaml:"workerRootVolumeIOPS,omitempty"`
 	WorkerRootVolumeSize     int               `yaml:"workerRootVolumeSize,omitempty"`
 	WorkerSpotPrice          string            `yaml:"workerSpotPrice,omitempty"`
 	VPCID                    string            `yaml:"vpcId,omitempty"`
@@ -545,7 +554,51 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("dnsServiceIp conflicts with kubernetesServiceIp (%s)", dnsServiceIPAddr)
 	}
 
+	if c.ControllerRootVolumeType == "io1" {
+		if c.ControllerRootVolumeIOPS < 100 || c.ControllerRootVolumeIOPS > 2000 {
+			return fmt.Errorf("invalid controllerRootVolumeIOPS: %d", c.ControllerRootVolumeIOPS)
+		}
+	} else {
+		if c.ControllerRootVolumeIOPS != 0 {
+			return fmt.Errorf("invalid controllerRootVolumeIOPS for volume type '%s': %d", c.ControllerRootVolumeType, c.ControllerRootVolumeIOPS)
+		}
+
+		if c.ControllerRootVolumeType != "standard" && c.ControllerRootVolumeType != "gp2" {
+			return fmt.Errorf("invalid controllerRootVolumeType: %s", c.ControllerRootVolumeType)
+		}
+	}
+
+	if c.WorkerRootVolumeType == "io1" {
+		if c.WorkerRootVolumeIOPS < 100 || c.WorkerRootVolumeIOPS > 2000 {
+			return fmt.Errorf("invalid workerRootVolumeIOPS: %d", c.WorkerRootVolumeIOPS)
+		}
+	} else {
+		if c.WorkerRootVolumeIOPS != 0 {
+			return fmt.Errorf("invalid workerRootVolumeIOPS for volume type '%s': %d", c.WorkerRootVolumeType, c.WorkerRootVolumeIOPS)
+		}
+
+		if c.WorkerRootVolumeType != "standard" && c.WorkerRootVolumeType != "gp2" {
+			return fmt.Errorf("invalid workerRootVolumeType: %s", c.WorkerRootVolumeType)
+		}
+	}
+
 	return nil
+}
+
+/*
+Returns the availability zones referenced by the cluster configuration
+*/
+func (c *Cluster) AvailabilityZones() []string {
+	if len(c.Subnets) == 0 {
+		return []string{c.AvailabilityZone}
+	}
+
+	azs := make([]string, len(c.Subnets))
+	for i := range azs {
+		azs[i] = c.Subnets[i].AvailabilityZone
+	}
+
+	return azs
 }
 
 /*

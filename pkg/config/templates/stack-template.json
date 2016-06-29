@@ -256,7 +256,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{.ControllerRootVolumeSize}}"
+              "VolumeSize": "{{.ControllerRootVolumeSize}}",
+              {{if gt .ControllerRootVolumeIOPS 0}}
+              "Iops": "{{.ControllerRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{.ControllerRootVolumeType}}"
             }
           }
         ],
@@ -302,7 +306,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{.WorkerRootVolumeSize}}"
+              "VolumeSize": "{{.WorkerRootVolumeSize}}",
+              {{if gt .WorkerRootVolumeIOPS 0}}
+              "Iops": "{{.WorkerRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{.WorkerRootVolumeType}}"
             }
           }
         ],

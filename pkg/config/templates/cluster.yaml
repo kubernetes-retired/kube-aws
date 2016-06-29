@@ -48,6 +48,12 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Disk size (GiB) for controller node
 #controllerRootVolumeSize: 30
 
+# Disk type for controller node (one of standard, io1, or gp2)
+#controllerRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controllerRootVolumeType is not io1
+#controllerRootVolumeIOPS: 0
+
 # Number of worker nodes to create
 #workerCount: 1
 
@@ -56,6 +62,12 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 
 # Disk size (GiB) for worker nodes
 #workerRootVolumeSize: 30
+
+# Disk type for worker node (one of standard, io1, or gp2)
+#workerRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
+#workerRootVolumeIOPS: 0
 
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"

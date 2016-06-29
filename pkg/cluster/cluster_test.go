@@ -56,8 +56,53 @@ type VPC struct {
 }
 
 type dummyEC2Service struct {
-	VPCs     map[string]VPC
-	KeyPairs map[string]bool
+	VPCs               map[string]VPC
+	KeyPairs           map[string]bool
+	ExpectedRootVolume *ec2.CreateVolumeInput
+}
+
+func (svc dummyEC2Service) CreateVolume(input *ec2.CreateVolumeInput) (*ec2.Volume, error) {
+	expected := svc.ExpectedRootVolume
+
+	if !aws.BoolValue(input.DryRun) {
+		return nil, fmt.Errorf(
+			"expected dry-run request to create volume endpoint, but DryRun was false",
+		)
+	}
+
+	if aws.StringValue(input.AvailabilityZone) != "dummy-az-0" {
+		return nil, fmt.Errorf(
+			"expected AvailabilityZone to be %v, but was %v",
+			"dummy-az-0",
+			aws.StringValue(input.AvailabilityZone),
+		)
+	}
+
+	if aws.Int64Value(input.Iops) != aws.Int64Value(expected.Iops) {
+		return nil, fmt.Errorf(
+			"unexpected root volume iops\nexpected=%v, observed=%v",
+			aws.Int64Value(expected.Iops),
+			aws.Int64Value(input.Iops),
+		)
+	}
+
+	if aws.Int64Value(input.Size) != aws.Int64Value(expected.Size) {
+		return nil, fmt.Errorf(
+			"unexpected root volume size\nexpected=%v, observed=%v",
+			aws.Int64Value(expected.Size),
+			aws.Int64Value(input.Size),
+		)
+	}
+
+	if aws.StringValue(input.VolumeType) != aws.StringValue(expected.VolumeType) {
+		return nil, fmt.Errorf(
+			"unexpected root volume type\nexpected=%v, observed=%v",
+			aws.StringValue(expected.VolumeType),
+			aws.StringValue(input.VolumeType),
+		)
+	}
+
+	return nil, nil
 }
 
 func (svc dummyEC2Service) DescribeVpcs(input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
@@ -601,4 +646,148 @@ func TestIsSubdomain(t *testing.T) {
 		}
 	}
 
+}
+
+func TestValidateControllerRootVolume(t *testing.T) {
+	testCases := []struct {
+		expectedRootVolume *ec2.CreateVolumeInput
+		clusterYaml        string
+	}{
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(30),
+				VolumeType: aws.String("gp2"),
+			},
+			clusterYaml: `
+# no root volumes set
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(30),
+				VolumeType: aws.String("standard"),
+			},
+			clusterYaml: `
+controllerRootVolumeType: standard
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(50),
+				VolumeType: aws.String("gp2"),
+			},
+			clusterYaml: `
+controllerRootVolumeType: gp2
+controllerRootVolumeSize: 50
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(2000),
+				Size:       aws.Int64(100),
+				VolumeType: aws.String("io1"),
+			},
+			clusterYaml: `
+controllerRootVolumeType: io1
+controllerRootVolumeSize: 100
+controllerRootVolumeIOPS: 2000
+`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		configBody := defaultConfigValues(t, testCase.clusterYaml)
+		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("could not get valid cluster config: %v", err)
+			continue
+		}
+
+		c := &Cluster{
+			Cluster: *clusterConfig,
+		}
+
+		ec2Svc := &dummyEC2Service{
+			ExpectedRootVolume: testCase.expectedRootVolume,
+		}
+
+		if err := c.validateControllerRootVolume(ec2Svc); err != nil {
+			t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
+		}
+	}
+}
+
+func TestValidateWorkerRootVolume(t *testing.T) {
+	testCases := []struct {
+		expectedRootVolume *ec2.CreateVolumeInput
+		clusterYaml        string
+	}{
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(30),
+				VolumeType: aws.String("gp2"),
+			},
+			clusterYaml: `
+# no root volumes set
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(30),
+				VolumeType: aws.String("standard"),
+			},
+			clusterYaml: `
+workerRootVolumeType: standard
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(0),
+				Size:       aws.Int64(50),
+				VolumeType: aws.String("gp2"),
+			},
+			clusterYaml: `
+workerRootVolumeType: gp2
+workerRootVolumeSize: 50
+`,
+		},
+		{
+			expectedRootVolume: &ec2.CreateVolumeInput{
+				Iops:       aws.Int64(2000),
+				Size:       aws.Int64(100),
+				VolumeType: aws.String("io1"),
+			},
+			clusterYaml: `
+workerRootVolumeType: io1
+workerRootVolumeSize: 100
+workerRootVolumeIOPS: 2000
+`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		configBody := defaultConfigValues(t, testCase.clusterYaml)
+		clusterConfig, err := config.ClusterFromBytes([]byte(configBody))
+		if err != nil {
+			t.Errorf("could not get valid cluster config: %v", err)
+			continue
+		}
+
+		c := &Cluster{
+			Cluster: *clusterConfig,
+		}
+
+		ec2Svc := &dummyEC2Service{
+			ExpectedRootVolume: testCase.expectedRootVolume,
+		}
+
+		if err := c.validateWorkerRootVolume(ec2Svc); err != nil {
+			t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
+		}
+	}
 }

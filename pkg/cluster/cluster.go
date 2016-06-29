@@ -73,6 +73,7 @@ func (c *Cluster) ValidateStack(stackBody string) (string, error) {
 }
 
 type ec2Service interface {
+	CreateVolume(*ec2.CreateVolumeInput) (*ec2.Volume, error)
 	DescribeVpcs(*ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error)
 	DescribeSubnets(*ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error)
 	DescribeKeyPairs(*ec2.DescribeKeyPairsInput) (*ec2.DescribeKeyPairsOutput, error)
@@ -148,6 +149,14 @@ func (c *Cluster) Create(stackBody string) error {
 	}
 
 	if err := c.validateExistingVPCState(ec2Svc); err != nil {
+		return err
+	}
+
+	if err := c.validateControllerRootVolume(ec2Svc); err != nil {
+		return err
+	}
+
+	if err := c.validateWorkerRootVolume(ec2Svc); err != nil {
 		return err
 	}
 
@@ -431,4 +440,46 @@ func isSubdomain(sub, parent string) bool {
 		}
 	}
 	return true
+}
+
+func (c *Cluster) validateControllerRootVolume(ec2Svc ec2Service) error {
+
+	//Send a dry-run request to validate the controller root volume parameters
+	controllerRootVolume := &ec2.CreateVolumeInput{
+		DryRun:           aws.Bool(true),
+		AvailabilityZone: aws.String(c.AvailabilityZones()[0]),
+		Iops:             aws.Int64(int64(c.ControllerRootVolumeIOPS)),
+		Size:             aws.Int64(int64(c.ControllerRootVolumeSize)),
+		VolumeType:       aws.String(c.ControllerRootVolumeType),
+	}
+
+	if _, err := ec2Svc.CreateVolume(controllerRootVolume); err != nil {
+		if operr, ok := err.(awserr.Error); ok && operr.Code() != "DryRunOperation" {
+			return fmt.Errorf("create volume dry-run request failed: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (c *Cluster) validateWorkerRootVolume(ec2Svc ec2Service) error {
+
+	//Send a dry-run request to validate the worker root volume parameters
+	workerRootVolume := &ec2.CreateVolumeInput{
+		DryRun:           aws.Bool(true),
+		AvailabilityZone: aws.String(c.AvailabilityZones()[0]),
+		Iops:             aws.Int64(int64(c.WorkerRootVolumeIOPS)),
+		Size:             aws.Int64(int64(c.WorkerRootVolumeSize)),
+		VolumeType:       aws.String(c.WorkerRootVolumeType),
+	}
+
+	if _, err := ec2Svc.CreateVolume(workerRootVolume); err != nil {
+		operr, ok := err.(awserr.Error)
+
+		if !ok || (ok && operr.Code() != "DryRunOperation") {
+			return fmt.Errorf("create volume dry-run request failed: %v", err)
+		}
+	}
+
+	return nil
 }

@@ -259,6 +259,50 @@ releaseChannel: non-existant #this release channel will never exist
 
 }
 
+func TestAvailabilityZones(t *testing.T) {
+	testCases := []struct {
+		conf string
+		azs  []string
+	}{
+		{
+			conf: singleAzConfigYaml,
+			azs:  []string{"us-west-1c"},
+		},
+		{
+			conf: minimalConfigYaml + `
+# You can specify multiple subnets to be created in order to achieve H/A
+vpcCIDR: 10.4.3.0/16
+controllerIP: 10.4.3.50
+subnets:
+  - availabilityZone: ap-northeast-1a
+    instanceCIDR: 10.4.3.0/24
+  - availabilityZone: ap-northeast-1c
+    instanceCIDR: 10.4.4.0/24
+`,
+			azs: []string{"ap-northeast-1a", "ap-northeast-1c"},
+		},
+	}
+
+	for _, conf := range testCases {
+		confBody := conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+
+		actualAzs := c.AvailabilityZones()
+		if !reflect.DeepEqual(actualAzs, conf.azs) {
+			t.Errorf(
+				"availability zones %s do not match actual list %s in config: %s",
+				conf.azs,
+				actualAzs,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestMultipleSubnets(t *testing.T) {
 
 	validConfigs := []struct {
@@ -416,4 +460,198 @@ subnets:
 		}
 	}
 
+}
+
+func TestControllerVolumeType(t *testing.T) {
+
+	validConfigs := []struct {
+		conf       string
+		volumeType string
+		iops       int
+	}{
+		{
+			conf:       ``,
+			volumeType: "gp2",
+			iops:       0,
+		},
+		{
+			conf: `
+controllerRootVolumeType: gp2
+`,
+			volumeType: "gp2",
+			iops:       0,
+		},
+		{
+			conf: `
+controllerRootVolumeType: standard
+`,
+			volumeType: "standard",
+			iops:       0,
+		},
+		{
+			conf: `
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 100
+`,
+			volumeType: "io1",
+			iops:       100,
+		},
+		{
+			conf: `
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 2000
+`,
+			volumeType: "io1",
+			iops:       2000,
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+# There's no volume type 'default'
+controllerRootVolumeType: default
+`,
+		`
+# IOPS must be zero for volume types != 'io1'
+controllerRootVolumeType: standard
+controllerRootVolumeIOPS: 100
+`,
+		`
+# IOPS must be zero for volume types != 'io1'
+controllerRootVolumeType: gp2
+controllerRootVolumeIOPS: 2000
+`,
+		`
+# IOPS smaller than the minimum (100)
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 99
+`,
+		`
+# IOPS greater than the maximum (2000)
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 2001
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if c.ControllerRootVolumeType != conf.volumeType {
+			t.Errorf(
+				"parsed root volume type %s does not match root volume %s in config: %s",
+				c.ControllerRootVolumeType,
+				conf.volumeType,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := singleAzConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
+}
+
+func TestWorkerVolumeType(t *testing.T) {
+
+	validConfigs := []struct {
+		conf       string
+		volumeType string
+		iops       int
+	}{
+		{
+			conf:       ``,
+			volumeType: "gp2",
+			iops:       0,
+		},
+		{
+			conf: `
+workerRootVolumeType: gp2
+`,
+			volumeType: "gp2",
+			iops:       0,
+		},
+		{
+			conf: `
+workerRootVolumeType: standard
+`,
+			volumeType: "standard",
+			iops:       0,
+		},
+		{
+			conf: `
+workerRootVolumeType: io1
+workerRootVolumeIOPS: 100
+`,
+			volumeType: "io1",
+			iops:       100,
+		},
+		{
+			conf: `
+workerRootVolumeType: io1
+workerRootVolumeIOPS: 2000
+`,
+			volumeType: "io1",
+			iops:       2000,
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+# There's no volume type 'default'
+workerRootVolumeType: default
+`,
+		`
+# IOPS must be zero for volume types != 'io1'
+workerRootVolumeType: standard
+workerRootVolumeIOPS: 100
+`,
+		`
+# IOPS must be zero for volume types != 'io1'
+workerRootVolumeType: gp2
+workerRootVolumeIOPS: 2000
+`,
+		`
+# IOPS smaller than the minimum (100)
+workerRootVolumeType: io1
+workerRootVolumeIOPS: 99
+`,
+		`
+# IOPS greater than the maximum (2000)
+workerRootVolumeType: io1
+workerRootVolumeIOPS: 2001
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if c.WorkerRootVolumeType != conf.volumeType {
+			t.Errorf(
+				"parsed root volume type %s does not match root volume %s in config: %s",
+				c.WorkerRootVolumeType,
+				conf.volumeType,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := singleAzConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
 }
