@@ -18,10 +18,6 @@ coreos:
       enable: true
       command: start
       content: |
-        [Unit]
-        Requires=docker.service
-        After=docker.service
-
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
