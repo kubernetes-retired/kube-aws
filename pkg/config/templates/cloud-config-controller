@@ -165,11 +165,7 @@ write_files:
       #!/bin/bash -e
       /usr/bin/curl -H "Content-Type: application/json" -XPOST -d @"/srv/kubernetes/manifests/calico-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
 
-      /usr/bin/curl -H "Content-Type: application/json" -XPOST \
-      -d @"/srv/kubernetes/manifests/network-policy.json" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/default/thirdpartyresources"
-
-      /usr/bin/cp /srv/kubernetes/manifests/calico-policy-agent.yaml /etc/kubernetes/manifests
+      /usr/bin/cp /srv/kubernetes/manifests/calico-policy-controller.yaml /etc/kubernetes/manifests
 {{ end }}
 
   - path: /opt/bin/decrypt-tls-assets
@@ -237,7 +233,7 @@ write_files:
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --runtime-config=extensions/v1beta1/thirdpartyresources=true
+          - --runtime-config=extensions/v1beta1/networkpolicies=true
           - --cloud-provider=aws
           livenessProbe:
             httpGet:
@@ -342,19 +338,19 @@ write_files:
             timeoutSeconds: 15
 
 {{ if .UseCalico }}
-  - path: /srv/kubernetes/manifests/calico-policy-agent.yaml
+  - path: /srv/kubernetes/manifests/calico-policy-controller.yaml
     content: |
       apiVersion: v1
       kind: Pod
       metadata:
-        name: calico-policy-agent
+        name: calico-policy-controller
         namespace: calico-system
       spec:
         hostNetwork: true
         containers:
-          # The Calico policy agent.
-          - name: k8s-policy-agent
-            image: calico/k8s-policy-agent:v0.1.4
+          # The Calico policy controller.
+          - name: kube-policy-controller
+            image: calico/kube-policy-controller:v0.2.0
             env:
               - name: ETCD_ENDPOINTS
                 value: "{{ .ETCDEndpoints }}"
@@ -362,7 +358,7 @@ write_files:
                 value: "http://127.0.0.1:8080"
               - name: LEADER_ELECTION
                 value: "true"
-          # Leader election container used by the policy agent.
+          # Leader election container used by the policy controller.
           - name: leader-elector
             image: quay.io/calico/leader-elector:v0.1.0
             imagePullPolicy: IfNotPresent
@@ -381,24 +377,6 @@ write_files:
           "metadata": {
             "name": "calico-system"
           }
-        }
-{{ end }}
-
-{{ if .UseCalico }}
-  - path: /srv/kubernetes/manifests/network-policy.json
-    content: |
-        {
-          "kind": "ThirdPartyResource",
-          "apiVersion": "extensions/v1beta1",
-          "metadata": {
-            "name": "network-policy.net.alpha.kubernetes.io"
-          },
-          "description": "Specification for a network isolation policy",
-          "versions": [
-            {
-              "name": "v1alpha1"
-            }
-          ]
         }
 {{ end }}
 
