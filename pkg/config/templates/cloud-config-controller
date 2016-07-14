@@ -23,6 +23,9 @@ coreos:
             [Unit]
             Requires=flanneld.service
             After=flanneld.service
+            [Service]
+            ExecStart=
+            ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_MTU
 
     - name: flanneld.service
       drop-ins:
@@ -788,6 +791,16 @@ write_files:
                     "type": "k8s",
                     "k8s_api_root": "http://127.0.0.1:8080/api/v1/"
                 }
+            }
+        }
+{{ else }}
+  - path: /etc/kubernetes/cni/net.d/10-flannel.conf
+    content: |
+        {
+            "name": "podnet",
+            "type": "flannel",
+            "delegate": {
+                "isDefaultGateway": true
             }
         }
 {{ end }}

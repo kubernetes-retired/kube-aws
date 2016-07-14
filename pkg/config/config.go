@@ -160,9 +160,7 @@ func (c Cluster) Config() (*Config, error) {
 	config.APIServers = fmt.Sprintf("http://%s:8080", c.ControllerIP)
 	config.SecureAPIServers = fmt.Sprintf("https://%s:443", c.ControllerIP)
 	config.APIServerEndpoint = fmt.Sprintf("https://%s", c.ExternalDNSName)
-	if config.UseCalico {
-		config.K8sNetworkPlugin = "cni"
-	}
+	config.K8sNetworkPlugin = "cni"
 
 	var err error
 	if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
