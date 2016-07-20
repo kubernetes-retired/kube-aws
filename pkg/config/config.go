@@ -19,6 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 
 	"github.com/coreos/coreos-cloudinit/config/validate"
+	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/coreosutil"
+	"github.com/coreos/go-semver/semver"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -164,6 +166,22 @@ func (c Cluster) Config() (*Config, error) {
 	config.APIServerEndpoint = fmt.Sprintf("https://%s", c.ExternalDNSName)
 	config.K8sNetworkPlugin = "cni"
 
+	// Check if we are running CoreOS 1122.0.0 or greater when using rkt as
+	// runtime. Proceed regardless if running alpha. TODO(pb) delete when rkt
+	// works well with stable.
+	if config.ContainerRuntime == "rkt" && config.ReleaseChannel != "alpha" {
+		minVersion := semver.Version{Major: 1122}
+
+		ok, err := isMinImageVersion(minVersion, config.ReleaseChannel)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, fmt.Errorf("The container runtime is 'rkt' but the latest CoreOS version for the %s channel is less then the minimum version %s. Please select the 'alpha' release channel to use the rkt runtime.", config.ReleaseChannel, minVersion)
+		}
+	}
+
 	var err error
 	if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
 		return nil, fmt.Errorf("failed getting AMI for config: %v", err)
@@ -182,6 +200,32 @@ func (c Cluster) Config() (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// isMinImageVersion will return true if the supplied version is greater then
+// or equal to the current CoreOS release indicated by the given release
+// channel.
+func isMinImageVersion(minVersion semver.Version, release string) (bool, error) {
+	metaData, err := coreosutil.GetAMIData(release)
+	if err != nil {
+		return false, fmt.Errorf("Unable to retrieve current release channel version: %v", err)
+	}
+
+	version, ok := metaData["release_info"]["version"]
+	if !ok {
+		return false, fmt.Errorf("Error parsing image metadata for version")
+	}
+
+	current, err := semver.NewVersion(version)
+	if err != nil {
+		return false, fmt.Errorf("Error parsing semver from image version %v", err)
+	}
+
+	if minVersion.LessThan(*current) {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 type StackTemplateOptions struct {
