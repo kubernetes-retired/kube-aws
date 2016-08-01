@@ -9,41 +9,6 @@
     }
   },
   "Resources": {
-    "AlarmControllerRecover": {
-      "Properties": {
-        "AlarmActions": [
-          {
-            "Fn::Join": [
-              "",
-              [
-                "arn:aws:automate:",
-                {
-                  "Ref": "AWS::Region"
-                },
-                ":ec2:recover"
-              ]
-            ]
-          }
-        ],
-        "AlarmDescription": "Trigger a recovery when system check fails for 5 consecutive minutes.",
-        "ComparisonOperator": "GreaterThanThreshold",
-        "Dimensions": [
-          {
-            "Name": "InstanceId",
-            "Value": {
-              "Ref": "InstanceController"
-            }
-          }
-        ],
-        "EvaluationPeriods": "5",
-        "MetricName": "StatusCheckFailed_System",
-        "Namespace": "AWS/EC2",
-        "Period": "60",
-        "Statistic": "Minimum",
-        "Threshold": "0"
-      },
-      "Type": "AWS::CloudWatch::Alarm"
-    },
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
@@ -97,14 +62,56 @@
         }
       }
     },
-    "EIPController": {
+    "AutoScaleController": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "Domain": "vpc",
-        "InstanceId": {
-          "Ref": "InstanceController"
-        }
+        "AvailabilityZones": [
+          {{range $index, $subnet := .Subnets}}
+          {{if gt $index 0}},{{end}}
+          "{{$subnet.AvailabilityZone}}"
+          {{end}}
+        ],
+        "DesiredCapacity": "{{.ControllerCount}}",
+        "HealthCheckGracePeriod": 600,
+        "HealthCheckType": "EC2",
+        "LaunchConfigurationName": {
+          "Ref": "LaunchConfigurationController"
+        },
+        "MaxSize": "{{.ControllerCount}}",
+        "MinSize": "{{.ControllerCount}}",
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "PropagateAtLaunch": "true",
+            "Value": "{{.ClusterName}}"
+          },
+          {
+            "Key": "Name",
+            "PropagateAtLaunch": "true",
+            "Value": "{{.ClusterName}}-kube-aws-controller"
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {{range $index, $subnet := .Subnets}}
+          {{with $subnetLogicalName := printf "Subnet%d" $index}}
+          {{if gt $index 0}},{{end}}
+          {
+            "Ref": "{{$subnetLogicalName}}"
+          }
+          {{end}}
+          {{end}}
+        ],
+	"LoadBalancerNames" : [
+	  { "Ref" : "ElbAPIServer" }
+	]
       },
-      "Type": "AWS::EC2::EIP"
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
+          "MinInstancesInService" : "{{.ControllerCount}}",
+          "MaxBatchSize" : "1",
+          "PauseTime" : "PT2M"
+        }
+      }
     },
     {{ if .CreateRecordSet }}
     "ExternalDNS": {
@@ -117,8 +124,8 @@
 	{{ end }}
         "Name": "{{.ExternalDNSName}}",
         "TTL": {{.RecordSetTTL}},
-        "ResourceRecords": [{ "Ref": "EIPController"}],
-        "Type": "A"
+        "ResourceRecords": [{ "Fn::GetAtt": ["ElbAPIServer", "DNSName"]}],
+        "Type": "CNAME"
       }
     },
     {{ end }}
@@ -304,57 +311,6 @@
       },
       "Type": "AWS::IAM::Role"
     },
-    "InstanceController": {
-      "Properties": {
-        "AvailabilityZone": "{{(index .Subnets .ControllerSubnetIndex).AvailabilityZone}}",
-        "BlockDeviceMappings": [
-          {
-            "DeviceName": "/dev/xvda",
-            "Ebs": {
-              "VolumeSize": "{{.ControllerRootVolumeSize}}",
-              {{if gt .ControllerRootVolumeIOPS 0}}
-              "Iops": "{{.ControllerRootVolumeIOPS}}",
-              {{end}}
-              "VolumeType": "{{.ControllerRootVolumeType}}"
-            }
-          }
-        ],
-        "IamInstanceProfile": {
-          "Ref": "IAMInstanceProfileController"
-        },
-        "ImageId": "{{.AMI}}",
-        "InstanceType": "{{.ControllerInstanceType}}",
-        "KeyName": "{{.KeyName}}",
-        "NetworkInterfaces": [
-          {
-            "AssociatePublicIpAddress": false,
-            "DeleteOnTermination": true,
-            "DeviceIndex": "0",
-            "GroupSet": [
-              {
-                "Ref": "SecurityGroupController"
-              }
-            ],
-            "PrivateIpAddress": "{{.ControllerIP}}",
-            "SubnetId": {
-              "Ref": "Subnet{{.ControllerSubnetIndex}}"
-            }
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{.ClusterName}}"
-          },
-          {
-            "Key": "Name",
-            "Value": "{{.ClusterName}}-kube-aws-controller"
-          }
-        ],
-        "UserData": "{{ .UserDataController }}"
-      },
-      "Type": "AWS::EC2::Instance"
-    },
     {{range $etcdIndex, $etcdInstance := .EtcdInstances}}
     "InstanceEtcd{{$etcdIndex}}": {
       "Properties": {
@@ -445,6 +401,84 @@
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
+    "LaunchConfigurationController": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": "{{.ControllerRootVolumeSize}}"
+            }
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfileController"
+        },
+        "ImageId": "{{.AMI}}",
+        "InstanceType": "{{.ControllerInstanceType}}",
+        "KeyName": "{{.KeyName}}",
+        "SecurityGroups": [
+          {
+            "Ref": "SecurityGroupController"
+          }
+        ],
+        "UserData": "{{ .UserDataController }}"
+      },
+      "Type": "AWS::AutoScaling::LaunchConfiguration"
+    },
+    "ElbAPIServer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+	"CrossZone" : true,
+	"HealthCheck" : {
+	  "HealthyThreshold" : "3",
+	  "Interval" : "10",
+	  "Target" : "TCP:443",
+	  "Timeout" : "8",
+	  "UnhealthyThreshold" : "3"
+	},
+	"Subnets" : [
+          {{range $index, $subnet := .Subnets}}
+          {{if gt $index 0}},{{end}}
+          { "Ref" : "Subnet{{$index}}" }
+          {{end}}
+	],
+	"Listeners" : [
+	  {
+	    "InstancePort" : "443",
+	    "InstanceProtocol" : "TCP",
+	    "LoadBalancerPort" : "443",
+	    "Protocol" : "TCP"
+	  }
+	],
+	"SecurityGroups" : [
+	  { "Ref" : "SecurityGroupElbAPIServer" }
+	]
+      }
+    },
+    "SecurityGroupElbAPIServer" : {
+      "Properties": {
+        "GroupDescription": {
+          "Ref": "AWS::StackName"
+        },
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ],
+        "VpcId": {{.VPCRef}}
+      },
+      "Type": "AWS::EC2::SecurityGroup"
+    },
     "SecurityGroupController": {
       "Properties": {
         "GroupDescription": {
@@ -484,7 +518,13 @@
             "ToPort": 22
           },
           {
-            "CidrIp": "0.0.0.0/0",
+            "SourceSecurityGroupId" : { "Ref" : "SecurityGroupElbAPIServer" },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+	  {
+            "SourceSecurityGroupId" : { "Ref" : "SecurityGroupWorker" },
             "FromPort": 443,
             "IpProtocol": "tcp",
             "ToPort": 443

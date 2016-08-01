@@ -456,7 +456,7 @@ subnets:
 		confBody := minimalConfigYaml + conf
 		_, err := ClusterFromBytes([]byte(confBody))
 		if err == nil {
-			t.Errorf("expected error parsing invalid config: %s", confBody)
+			t.Errorf("expected error parsing invalid config:\n%s", confBody)
 		}
 	}
 

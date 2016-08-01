@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/route53"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
@@ -24,8 +25,8 @@ import (
 var VERSION = "UNKNOWN"
 
 type Info struct {
-	Name         string
-	ControllerIP string
+	Name           string
+	ControllerHost string
 }
 
 func (c *Info) String() string {
@@ -34,7 +35,7 @@ func (c *Info) String() string {
 	w.Init(buf, 0, 8, 0, '\t', 0)
 
 	fmt.Fprintf(w, "Cluster Name:\t%s\n", c.Name)
-	fmt.Fprintf(w, "Controller IP:\t%s\n", c.ControllerIP)
+	fmt.Fprintf(w, "Controller DNS Name:\t%s\n", c.ControllerHost)
 
 	w.Flush()
 	return buf.String()
@@ -340,21 +341,45 @@ func (c *Cluster) Update(stackBody string) (string, error) {
 }
 
 func (c *Cluster) Info() (*Info, error) {
-	cfSvc := cloudformation.New(c.session)
-	resp, err := cfSvc.DescribeStackResource(
-		&cloudformation.DescribeStackResourceInput{
-			LogicalResourceId: aws.String("EIPController"),
-			StackName:         aws.String(c.ClusterName),
-		},
-	)
-	if err != nil {
-		errmsg := "unable to get public IP of controller instance:\n" + err.Error()
-		return nil, fmt.Errorf(errmsg)
+	var elbName string
+	{
+		cfSvc := cloudformation.New(c.session)
+		resp, err := cfSvc.DescribeStackResource(
+			&cloudformation.DescribeStackResourceInput{
+				LogicalResourceId: aws.String("ElbAPIServer"),
+				StackName:         aws.String(c.ClusterName),
+			},
+		)
+		if err != nil {
+			errmsg := "unable to get public IP of controller instance:\n" + err.Error()
+			return nil, fmt.Errorf(errmsg)
+		}
+		elbName = *resp.StackResourceDetail.PhysicalResourceId
 	}
 
+	elbSvc := elb.New(c.session)
+
 	var info Info
-	info.ControllerIP = *resp.StackResourceDetail.PhysicalResourceId
-	info.Name = c.ClusterName
+	{
+		resp, err := elbSvc.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+			LoadBalancerNames: []*string{
+				aws.String(elbName),
+			},
+			PageSize: aws.Int64(2),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error describing load balancer %s: %v", elbName, err)
+		}
+		if len(resp.LoadBalancerDescriptions) == 0 {
+			return nil, fmt.Errorf("could not find a load balancer with name %s", elbName)
+		}
+		if len(resp.LoadBalancerDescriptions) > 1 {
+			return nil, fmt.Errorf("found multiple load balancers with name %s: %v", elbName, resp)
+		}
+
+		info.Name = c.ClusterName
+		info.ControllerHost = *resp.LoadBalancerDescriptions[0].DNSName
+	}
 	return &info, nil
 }
 

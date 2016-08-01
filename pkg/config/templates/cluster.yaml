@@ -113,9 +113,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #   - availabilityZone: us-west-1b
 #     instanceCIDR: "10.0.1.0/24"
 
-# IP Address for the controller in Kubernetes subnet. When we have 2 or more subnets, the controller is placed in the first subnet and controllerIP must be included in the instanceCIDR of the first subnet. This convention will change once we have H/A controllers
-# controllerIP: 10.0.0.50
-
 # CIDR for all service IP addresses
 # serviceCIDR: "10.3.0.0/24"
 

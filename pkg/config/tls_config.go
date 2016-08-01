@@ -90,7 +90,6 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 			c.ExternalDNSName,
 		},
 		IPAddresses: []string{
-			c.ControllerIP,
 			kubernetesServiceIPAddr.String(),
 		},
 		Duration: certDuration,
