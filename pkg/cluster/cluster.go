@@ -230,6 +230,17 @@ func (c *Cluster) createStack(cfSvc cloudformationService, stackBody string) (*c
 		Capabilities: []*string{aws.String(cloudformation.CapabilityCapabilityIam)},
 		TemplateBody: &stackBody,
 		Tags:         tags,
+		StackPolicyBody: aws.String(`{
+  "Statement" : [
+    {
+      "Effect" : "Deny",
+      "Action" : "Update:*",
+      "Principal" : "*",
+      "Resource" : "LogicalResourceId/InstanceEtcd*"
+    }
+  ]
+}
+`),
 	}
 
 	return cfSvc.CreateStack(creq)
@@ -243,6 +254,7 @@ TODO(chom): etcd controller + dynamic cluster management will obviate need for t
 */
 type cfStackResources struct {
 	Resources map[string]map[string]interface{} `json:"Resources"`
+	Mappings  map[string]interface{}            `json:"Mappings"`
 }
 
 func (c *Cluster) lockEtcdResources(cfSvc *cloudformation.CloudFormation, stackBody string) (string, error) {
@@ -257,7 +269,6 @@ func (c *Cluster) lockEtcdResources(cfSvc *cloudformation.CloudFormation, stackB
 	//Remove all etcdInstance resource defintions from incoming stack
 	for name, _ := range newStack.Resources {
 		if instanceEtcdExpr.Match([]byte(name)) {
-			fmt.Printf("[lockEtcdResources: REMOVE %s\n", name)
 			delete(newStack.Resources, name)
 		}
 	}
@@ -277,23 +288,30 @@ func (c *Cluster) lockEtcdResources(cfSvc *cloudformation.CloudFormation, stackB
 	//splice in existing resource defintions for etcd into new stack
 	for name, definition := range existingStack.Resources {
 		if instanceEtcdExpr.Match([]byte(name)) {
-			fmt.Printf("[lockEtcdResources: ADD %s\n", name)
 			newStack.Resources[name] = definition
 		}
 	}
+	newStack.Mappings["EtcdInstanceParams"] = existingStack.Mappings["EtcdInstanceParams"]
+
 	var outgoingStack map[string]interface{}
 	if err := json.Unmarshal([]byte(stackBody), &outgoingStack); err != nil {
 		return "", fmt.Errorf("error unmarshaling outgoing stack json: %v", err)
 	}
 	outgoingStack["Resources"] = newStack.Resources
+	outgoingStack["Mappings"] = newStack.Mappings
 
 	// ship off new stack to cloudformation api for an update
-	out, err := json.MarshalIndent(&outgoingStack, "", "")
+	out, err := json.Marshal(&outgoingStack)
 	if err != nil {
 		return "", fmt.Errorf("error marshaling stack json: %v", err)
 	}
 
-	return string(out), nil
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, out); err != nil {
+		return "", fmt.Errorf("error compacting stack json: %v", err)
+	}
+
+	return buf.String(), nil
 }
 
 func (c *Cluster) Update(stackBody string) (string, error) {
@@ -331,7 +349,7 @@ func (c *Cluster) Update(stackBody string) (string, error) {
 		case cloudformation.ResourceStatusUpdateFailed, cloudformation.StackStatusUpdateRollbackComplete, cloudformation.StackStatusUpdateRollbackFailed:
 			errMsg := fmt.Sprintf("Stack status: %s : %s", statusString, aws.StringValue(resp.Stacks[0].StackStatusReason))
 			return "", errors.New(errMsg)
-		case cloudformation.ResourceStatusUpdateInProgress:
+		case cloudformation.ResourceStatusUpdateInProgress, cloudformation.StackStatusUpdateCompleteCleanupInProgress:
 			time.Sleep(3 * time.Second)
 			continue
 		default:

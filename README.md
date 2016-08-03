@@ -96,9 +96,31 @@ There will now be a cluster.yaml file in the asset directory.
 
 ## Render contents of the asset directory
 
-```sh
-$ kube-aws render
-```
+* In the simplest case, you can have kube-aws generate both your TLS identities and certificate authority for you.
+
+  ```sh
+  $ kube-aws render --generate-credentials --generate-ca
+  ```
+
+  This is not recommended for production.
+
+* It is recommended that, for production, you supply your own immediate certificate signing authority.
+
+  ```sh
+  $ kube-aws render --generate-credentials --ca-cert-path=/path/to/ca-cert.pem --ca-key-path=/path/to/ca-key.pem
+  ```
+
+  For more information on operating your own CA, check out this [awesome guide](https://jamielinux.com/docs/openssl-certificate-authority/).
+
+* In certain cases, such as users with advanced pre-existing PKI infrastructure, you may wish to pre-generate all cluster TLS assets. In this case, make sure the file tree below exists in your cluster assets directory before running `kube-aws up`.
+
+  ```sh
+  ls -R credentials/
+  credentials/:
+  admin-key.pem  apiserver-key.pem  ca.pem               etcd-client.pem  etcd.pem        worker.pem
+  admin.pem      apiserver.pem      etcd-client-key.pem  etcd-key.pem     worker-key.pem
+  ```
+
 
 This generates the default set of cluster assets in your asset directory. These assets are templates and credentials that are used to create, update and interact with your Kubernetes cluster.
 
@@ -168,6 +190,10 @@ It can take some time after `kube-aws up` completes before the cluster is availa
 ```sh
 $ kube-aws up --export
 ```
+
+## Update an existing kube-aws cluster
+
+Read the [cluster update](Documentation/kube-aws-cluster-updates.md) documentation.
 
 ## Development
 

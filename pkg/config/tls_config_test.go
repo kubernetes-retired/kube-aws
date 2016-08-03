@@ -14,7 +14,11 @@ func genTLSAssets(t *testing.T) *RawTLSAssets {
 		t.Fatalf("failed generating config: %v", err)
 	}
 
-	assets, err := cluster.NewTLSAssets()
+	caKey, caCert, err := NewTLSCA()
+	if err != nil {
+		t.Fatalf("failed generating tls ca: %v", err)
+	}
+	assets, err := cluster.NewTLSAssets(caKey, caCert)
 	if err != nil {
 		t.Fatalf("failed generating tls: %v", err)
 	}

@@ -73,6 +73,9 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # workerSpotPrice: "0.05"
 
 ## Etcd Cluster config
+## WARNING: Any changes to etcd parameters after the cluster is first created will not be applied
+## during a cluster upgrade, due to concerns over data loss.
+## This situation is being rectified with work towards automated management of etcd clusters
 
 # Number of etcd nodes
 # (Set to an odd number >= 3 for HA control plane)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -48,20 +49,11 @@ type CompactTLSAssets struct {
 	EtcdKey        string
 }
 
-func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
-	// Convert from days to time.Duration
-	caDuration := time.Duration(c.TLSCADurationDays) * 24 * time.Hour
-	certDuration := time.Duration(c.TLSCertDurationDays) * 24 * time.Hour
-
-	// Generate keys for the various components.
-	keys := make([]*rsa.PrivateKey, 6)
-	var err error
-	for i := range keys {
-		if keys[i], err = tlsutil.NewPrivateKey(); err != nil {
-			return nil, err
-		}
+func NewTLSCA() (*rsa.PrivateKey, *x509.Certificate, error) {
+	caKey, err := tlsutil.NewPrivateKey()
+	if err != nil {
+		return nil, nil, err
 	}
-	caKey, apiServerKey, workerKey, adminKey, etcdKey, etcdClientKey := keys[0], keys[1], keys[2], keys[3], keys[4], keys[5]
 
 	caConfig := tlsutil.CACertConfig{
 		CommonName:   "kube-ca",
@@ -70,8 +62,25 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 	}
 	caCert, err := tlsutil.NewSelfSignedCACertificate(caConfig, caKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	return caKey, caCert, nil
+}
+
+func (c *Cluster) NewTLSAssets(caKey *rsa.PrivateKey, caCert *x509.Certificate) (*RawTLSAssets, error) {
+	// Convert from days to time.Duration
+	certDuration := time.Duration(c.TLSCertDurationDays) * 24 * time.Hour
+
+	// Generate keys for the various components.
+	keys := make([]*rsa.PrivateKey, 5)
+	var err error
+	for i := range keys {
+		if keys[i], err = tlsutil.NewPrivateKey(); err != nil {
+			return nil, err
+		}
+	}
+	apiServerKey, workerKey, adminKey, etcdKey, etcdClientKey := keys[0], keys[1], keys[2], keys[3], keys[4]
 
 	//Compute kubernetesServiceIP from serviceCIDR
 	_, serviceNet, err := net.ParseCIDR(c.ServiceCIDR)
@@ -105,6 +114,9 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 			fmt.Sprintf("*.%s.compute.internal", c.Region),
 			"*.ec2.internal",
 		},
+		//etcd https client/peer interfaces are not exposed externally
+		//will live the full year with the CA
+		Duration: tlsutil.Duration365d,
 	}
 
 	etcdCert, err := tlsutil.NewSignedServerCertificate(etcdConfig, etcdKey, caCert, caKey)
@@ -165,7 +177,7 @@ func ReadTLSAssets(dirname string) (*RawTLSAssets, error) {
 		name      string
 		cert, key *[]byte
 	}{
-		{"ca", &r.CACert, &r.CAKey},
+		{"ca", &r.CACert, nil},
 		{"apiserver", &r.APIServerCert, &r.APIServerKey},
 		{"worker", &r.WorkerCert, &r.WorkerKey},
 		{"admin", &r.AdminCert, &r.AdminKey},
@@ -181,16 +193,19 @@ func ReadTLSAssets(dirname string) (*RawTLSAssets, error) {
 			return nil, err
 		}
 		*file.cert = certData
-		keyData, err := ioutil.ReadFile(keyPath)
-		if err != nil {
-			return nil, err
+
+		if file.key != nil {
+			keyData, err := ioutil.ReadFile(keyPath)
+			if err != nil {
+				return nil, err
+			}
+			*file.key = keyData
 		}
-		*file.key = keyData
 	}
 	return r, nil
 }
 
-func (r *RawTLSAssets) WriteToDir(dirname string) error {
+func (r *RawTLSAssets) WriteToDir(dirname string, includeCAKey bool) error {
 	assets := []struct {
 		name      string
 		cert, key []byte
@@ -205,11 +220,15 @@ func (r *RawTLSAssets) WriteToDir(dirname string) error {
 	for _, asset := range assets {
 		certPath := filepath.Join(dirname, asset.name+".pem")
 		keyPath := filepath.Join(dirname, asset.name+"-key.pem")
+
 		if err := ioutil.WriteFile(certPath, asset.cert, 0600); err != nil {
 			return err
 		}
-		if err := ioutil.WriteFile(keyPath, asset.key, 0600); err != nil {
-			return err
+
+		if asset.name != "ca" || includeCAKey {
+			if err := ioutil.WriteFile(keyPath, asset.key, 0600); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -257,7 +276,6 @@ func (r *RawTLSAssets) compact(cfg *Config, kmsSvc encryptService) (*CompactTLSA
 	}
 	compactAssets := CompactTLSAssets{
 		CACert:         compact(r.CACert),
-		CAKey:          compact(r.CAKey),
 		APIServerCert:  compact(r.APIServerCert),
 		APIServerKey:   compact(r.APIServerKey),
 		WorkerCert:     compact(r.WorkerCert),

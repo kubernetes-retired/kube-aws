@@ -26,7 +26,7 @@ var (
 func init() {
 	cmdRoot.AddCommand(cmdUp)
 	cmdUp.Flags().BoolVar(&upOpts.export, "export", false, "Don't create cluster, instead export cloudformation stack file")
-	//	cmdUp.Flags().BoolVar(&upOpts.update, "update", false, "update existing cluster with new cloudformation stack")
+	cmdUp.Flags().BoolVar(&upOpts.update, "update", false, "update existing cluster with new cloudformation stack")
 	cmdUp.Flags().BoolVar(&upOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
 }
 

@@ -23,7 +23,11 @@ func TestCloudConfigTemplating(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to load cluster config: %v", err)
 	}
-	assets, err := cluster.NewTLSAssets()
+	caKey, caCert, err := NewTLSCA()
+	if err != nil {
+		t.Fatalf("failed generating tls ca: %v", err)
+	}
+	assets, err := cluster.NewTLSAssets(caKey, caCert)
 	if err != nil {
 		t.Fatalf("Error generating default assets: %v", err)
 	}
