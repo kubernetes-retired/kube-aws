@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+COREOS_KUBERNETES_ROOT=$(git rev-parse --show-toplevel)
+sudo rkt run \
+    --volume bk,kind=host,source=${COREOS_KUBERNETES_ROOT} \
+    --mount volume=bk,target=/go/src/github.com/coreos/coreos-kubernetes \
+    --insecure-options=image docker://golang:1.6.3 --exec /bin/bash -- -c \
+    "cd /go/src/github.com/coreos/coreos-kubernetes/multi-node/aws && ./build-release-binaries"
+
