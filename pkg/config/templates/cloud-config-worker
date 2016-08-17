@@ -166,7 +166,8 @@ write_files:
 
       for encKey in $(find /etc/kubernetes/ssl/*.pem.enc);do
         tmpPath="/tmp/$(basename $encKey).tmp"
-        docker run --rm -v /etc/kubernetes/ssl:/etc/kubernetes/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
+        docker run --rm -v /etc/kubernetes/ssl:/etc/kubernetes/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext > $tmpPath.b64
+        base64 --decode < $tmpPath.b64 > $tmpPath
         mv  $tmpPath /etc/kubernetes/ssl/$(basename $encKey .enc)
       done
 
