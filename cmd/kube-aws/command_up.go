@@ -81,7 +81,7 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 	successMsg :=
 		`Success! Your AWS resources have been created:
 %s
-The containers that power your cluster are now being dowloaded.
+The containers that power your cluster are now being downloaded.
 
 You should be able to access the Kubernetes API once the containers finish downloading.
 `
