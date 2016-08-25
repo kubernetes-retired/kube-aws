@@ -24,8 +24,7 @@ coreos:
             Requires=flanneld.service
             After=flanneld.service
             [Service]
-            ExecStart=
-            ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_MTU
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
 
     - name: flanneld.service
       drop-ins:
@@ -199,6 +198,11 @@ write_files:
           -d @"/srv/kubernetes/manifests/$manifest" \
           "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
       done
+
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
 
   - path: /opt/bin/host-rkt
     permissions: 0755

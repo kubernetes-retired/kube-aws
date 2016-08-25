@@ -14,8 +14,7 @@ coreos:
             Requires=flanneld.service
             After=flanneld.service
             [Service]
-            ExecStart=
-            ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_MTU
+            EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
 
     - name: kubelet.service
       enable: true
@@ -131,6 +130,11 @@ coreos:
         RequiredBy=kubelet.service
 
 write_files:
+  - path: /etc/kubernetes/cni/docker_opts_cni.env
+    content: |
+      DOCKER_OPT_BIP=""
+      DOCKER_OPT_IPMASQ=""
+
   - path: /opt/bin/host-rkt
     permissions: 0755
     owner: root:root
