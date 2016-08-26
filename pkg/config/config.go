@@ -166,11 +166,11 @@ func (c Cluster) Config() (*Config, error) {
 	config.APIServerEndpoint = fmt.Sprintf("https://%s", c.ExternalDNSName)
 	config.K8sNetworkPlugin = "cni"
 
-	// Check if we are running CoreOS 1122.0.0 or greater when using rkt as
+	// Check if we are running CoreOS 1151.0.0 or greater when using rkt as
 	// runtime. Proceed regardless if running alpha. TODO(pb) delete when rkt
 	// works well with stable.
 	if config.ContainerRuntime == "rkt" && config.ReleaseChannel != "alpha" {
-		minVersion := semver.Version{Major: 1122}
+		minVersion := semver.Version{Major: 1151}
 
 		ok, err := isMinImageVersion(minVersion, config.ReleaseChannel)
 		if err != nil {
