@@ -6,15 +6,16 @@ There are two distinct categories of cluster update.
 * **Parameter-level update**: Only changes to `cluster.yaml` and/or TLS assets in `credentials/` folder are reflected. To enact this type of update. Modifications to CloudFormation or cloud-config userdata templates will not be reflected. In this case, you do not have to re-render:
 
 ```sh
-kube-aws up --update
+kube-aws update
 ```
 
 * **Full update**: Any change (besides changes made to the etcd cluster- more on that later) will be enacted, including structural changes to CloudFormation and cloudinit templates. This is the type of upgrade that must be run on installing a new version of kube-aws, or more generally when cloudinit or CloudFormation templates are modified:
 
 ```sh
-kube-aws render
+kube-aws render stack
+kube-aws render credentials
 git diff # view changes to rendered assets
-kube-aws up --update
+kube-aws update
 ```
 
 ## Certificate rotation
@@ -22,8 +23,8 @@ kube-aws up --update
 The parameter-level update mechanism can be used to rotate in new TLS credentials:
 
 ```sh
-kube-aws render --generate-credentials
-kube-aws up --update
+kube-aws render credentials
+kube-aws update
 ```
 
 ## the etcd caveat

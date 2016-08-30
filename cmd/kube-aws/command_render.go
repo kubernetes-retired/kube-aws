@@ -20,75 +20,67 @@ import (
 var (
 	cmdRender = &cobra.Command{
 		Use:          "render",
-		Short:        "Render a CloudFormation template",
+		Short:        "Render deployment artifacts",
 		Long:         ``,
 		RunE:         runCmdRender,
 		SilenceUsage: true,
 	}
-	renderOpts = struct {
-		generateCredentials bool
-		generateCA          bool
-		caKeyPath           string
-		caCertPath          string
+
+	cmdRenderCredentials = &cobra.Command{
+		Use:          "credentials",
+		Short:        "Render TLS credentials",
+		Long:         ``,
+		RunE:         runCmdRenderCredentials,
+		SilenceUsage: true,
+	}
+
+	renderCredentialsOpts = struct {
+		generateCA bool
+		caKeyPath  string
+		caCertPath string
 	}{}
+
+	cmdRenderStack = &cobra.Command{
+		Use:          "stack",
+		Short:        "Render CloudFormation stack",
+		Long:         ``,
+		RunE:         runCmdRenderStack,
+		SilenceUsage: true,
+	}
 )
 
 func init() {
 	cmdRoot.AddCommand(cmdRender)
-	cmdRender.Flags().BoolVar(&renderOpts.generateCredentials, "generate-credentials", false, "generate new cluster TLS assets")
-	cmdRender.Flags().BoolVar(&renderOpts.generateCA, "generate-ca", false, "if generating credentials, generate root CA key and cert. NOT RECOMMENDED FOR PRODUCTION USE- use '-ca-key-path' and '-ca-cert-path' options to provide your own certificate authority assets")
-	cmdRender.Flags().StringVar(&renderOpts.caKeyPath, "ca-key-path", "./credentials/ca-key.pem", "path to pem-encoded CA RSA key")
-	cmdRender.Flags().StringVar(&renderOpts.caCertPath, "ca-cert-path", "./credentials/ca.pem", "path to pem-encoded CA x509 certificate")
-}
 
+	cmdRender.AddCommand(cmdRenderCredentials)
+	cmdRenderCredentials.Flags().BoolVar(&renderCredentialsOpts.generateCA, "generate-ca", false, "if generating credentials, generate root CA key and cert. NOT RECOMMENDED FOR PRODUCTION USE- use '-ca-key-path' and '-ca-cert-path' options to provide your own certificate authority assets")
+	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.caKeyPath, "ca-key-path", "./credentials/ca-key.pem", "path to pem-encoded CA RSA key")
+	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.caCertPath, "ca-cert-path", "./credentials/ca.pem", "path to pem-encoded CA x509 certificate")
+
+	cmdRender.AddCommand(cmdRenderStack)
+}
 func runCmdRender(cmd *cobra.Command, args []string) error {
+	fmt.Printf("WARNING: 'kube-aws render' is deprecated. See 'kube-aws render --help' for usage\n")
+	if len(args) != 0 {
+		return fmt.Errorf("render takes no arguments\n")
+	}
+	renderCredentialsOpts.generateCA = true
+	if err := runCmdRenderCredentials(cmdRenderCredentials, args); err != nil {
+		return err
+	}
+
+	if err := runCmdRenderStack(cmdRenderCredentials, args); err != nil {
+		return err
+	}
+
+	return nil
+}
+func runCmdRenderStack(cmd *cobra.Command, args []string) error {
 	// Read the config from file.
 	cluster, err := config.ClusterFromFile(configPath)
 	if err != nil {
 		return fmt.Errorf("Failed to read cluster config: %v", err)
 	}
-
-	if renderOpts.generateCredentials {
-		fmt.Printf("Generating TLS credentials...\n")
-		var caKey *rsa.PrivateKey
-		var caCert *x509.Certificate
-		if renderOpts.generateCA {
-			var err error
-			caKey, caCert, err = config.NewTLSCA()
-			if err != nil {
-				return fmt.Errorf("failed generating cluster CA: %v", err)
-			}
-			fmt.Printf("-> Generating new TLS CA\n")
-		} else {
-			fmt.Printf("-> Parsing existing TLS CA\n")
-			if caKeyBytes, err := ioutil.ReadFile(renderOpts.caKeyPath); err != nil {
-				return fmt.Errorf("failed reading ca key file %s : %v", renderOpts.caKeyPath, err)
-			} else {
-				if caKey, err = tlsutil.DecodePrivateKeyPEM(caKeyBytes); err != nil {
-					return fmt.Errorf("failed parsing ca key: %v", err)
-				}
-			}
-			if caCertBytes, err := ioutil.ReadFile(renderOpts.caCertPath); err != nil {
-				return fmt.Errorf("failed reading ca cert file %s : %v", renderOpts.caCertPath, err)
-			} else {
-				if caCert, err = tlsutil.DecodeCertificatePEM(caCertBytes); err != nil {
-					return fmt.Errorf("failed parsing ca cert: %v", err)
-				}
-			}
-		}
-		fmt.Printf("-> Generating new TLS assets\n")
-		assets, err := cluster.NewTLSAssets(caKey, caCert)
-		if err != nil {
-			return fmt.Errorf("Error generating default assets: %v", err)
-		}
-		if err := os.MkdirAll("credentials", 0700); err != nil {
-			return err
-		}
-		if err := assets.WriteToDir("./credentials", renderOpts.generateCA); err != nil {
-			return fmt.Errorf("Error create assets: %v", err)
-		}
-	}
-	fmt.Printf("WARNING: The generated client TLS CA cert expires in %v days and the server and client cert expire in %v days. It is recommended that you create your own TLS infrastructure for revocation and rotation of keys before using in prod\n", cluster.TLSCADurationDays, cluster.TLSCertDurationDays)
 
 	// Create a Config and attempt to render a kubeconfig for it.
 	cfg, err := cluster.Config()
@@ -137,5 +129,53 @@ Next steps:
 `
 
 	fmt.Printf(successMsg, configPath)
+	return nil
+}
+
+func runCmdRenderCredentials(cmd *cobra.Command, args []string) error {
+	cluster, err := config.ClusterFromFile(configPath)
+	if err != nil {
+		return fmt.Errorf("Failed to read cluster config: %v", err)
+	}
+
+	fmt.Printf("Generating TLS credentials...\n")
+	var caKey *rsa.PrivateKey
+	var caCert *x509.Certificate
+	if renderCredentialsOpts.generateCA {
+		var err error
+		caKey, caCert, err = config.NewTLSCA()
+		if err != nil {
+			return fmt.Errorf("failed generating cluster CA: %v", err)
+		}
+		fmt.Printf("-> Generating new TLS CA\n")
+	} else {
+		fmt.Printf("-> Parsing existing TLS CA\n")
+		if caKeyBytes, err := ioutil.ReadFile(renderCredentialsOpts.caKeyPath); err != nil {
+			return fmt.Errorf("failed reading ca key file %s : %v", renderCredentialsOpts.caKeyPath, err)
+		} else {
+			if caKey, err = tlsutil.DecodePrivateKeyPEM(caKeyBytes); err != nil {
+				return fmt.Errorf("failed parsing ca key: %v", err)
+			}
+		}
+		if caCertBytes, err := ioutil.ReadFile(renderCredentialsOpts.caCertPath); err != nil {
+			return fmt.Errorf("failed reading ca cert file %s : %v", renderCredentialsOpts.caCertPath, err)
+		} else {
+			if caCert, err = tlsutil.DecodeCertificatePEM(caCertBytes); err != nil {
+				return fmt.Errorf("failed parsing ca cert: %v", err)
+			}
+		}
+	}
+	fmt.Printf("-> Generating new TLS assets\n")
+	assets, err := cluster.NewTLSAssets(caKey, caCert)
+	if err != nil {
+		return fmt.Errorf("Error generating default assets: %v", err)
+	}
+	if err := os.MkdirAll("credentials", 0700); err != nil {
+		return err
+	}
+	if err := assets.WriteToDir("./credentials", renderCredentialsOpts.generateCA); err != nil {
+		return fmt.Errorf("Error create assets: %v", err)
+	}
+
 	return nil
 }

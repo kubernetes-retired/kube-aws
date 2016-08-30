@@ -99,7 +99,7 @@ There will now be a cluster.yaml file in the asset directory.
 * In the simplest case, you can have kube-aws generate both your TLS identities and certificate authority for you.
 
   ```sh
-  $ kube-aws render --generate-credentials --generate-ca
+  $ kube-aws render credentials --generate-ca
   ```
 
   This is not recommended for production.
@@ -107,7 +107,7 @@ There will now be a cluster.yaml file in the asset directory.
 * It is recommended that, for production, you supply your own immediate certificate signing authority.
 
   ```sh
-  $ kube-aws render --generate-credentials --ca-cert-path=/path/to/ca-cert.pem --ca-key-path=/path/to/ca-key.pem
+  $ kube-aws render credentials --ca-cert-path=/path/to/ca-cert.pem --ca-key-path=/path/to/ca-key.pem
   ```
 
   For more information on operating your own CA, check out this [awesome guide](https://jamielinux.com/docs/openssl-certificate-authority/).

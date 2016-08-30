@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
@@ -19,14 +18,13 @@ var (
 	}
 
 	upOpts = struct {
-		awsDebug, export, update bool
+		awsDebug, export bool
 	}{}
 )
 
 func init() {
 	cmdRoot.AddCommand(cmdUp)
 	cmdUp.Flags().BoolVar(&upOpts.export, "export", false, "Don't create cluster, instead export cloudformation stack file")
-	cmdUp.Flags().BoolVar(&upOpts.update, "update", false, "update existing cluster with new cloudformation stack")
 	cmdUp.Flags().BoolVar(&upOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
 }
 
@@ -45,32 +43,10 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to render stack template: %v", err)
 	}
 
-	if upOpts.export {
-		templatePath := fmt.Sprintf("%s.stack-template.json", conf.ClusterName)
-		fmt.Printf("Exporting %s\n", templatePath)
-		if err := ioutil.WriteFile(templatePath, data, 0600); err != nil {
-			return fmt.Errorf("Error writing %s : %v", templatePath, err)
-		}
-		if conf.KMSKeyARN == "" {
-			fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
-		}
-		return nil
-	}
-
 	cluster := cluster.New(conf, upOpts.awsDebug)
-	if upOpts.update {
-		report, err := cluster.Update(string(data))
-		if err != nil {
-			return fmt.Errorf("Error updating cluster: %v", err)
-		}
-		if report != "" {
-			fmt.Printf("Update stack: %s\n", report)
-		}
-	} else {
-		fmt.Printf("Creating AWS resources. This should take around 5 minutes.\n")
-		if err := cluster.Create(string(data)); err != nil {
-			return fmt.Errorf("Error creating cluster: %v", err)
-		}
+	fmt.Printf("Creating AWS resources. This should take around 5 minutes.\n")
+	if err := cluster.Create(string(data)); err != nil {
+		return fmt.Errorf("Error creating cluster: %v", err)
 	}
 
 	info, err := cluster.Info()
