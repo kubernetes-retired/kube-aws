@@ -43,6 +43,7 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 	if err := assets.WriteToDir("./credentials"); err != nil {
 		return fmt.Errorf("Error create assets: %v", err)
 	}
+	fmt.Printf("WARNING: The generated client TLS CA cert expires in %v days and the server and client cert expire in %v days. It is recommended that you create your own TLS infrastructure for revocation and rotation of keys before using in prod\n", cluster.TLSCADurationDays, cluster.TLSCertDurationDays)
 
 	// Create a Config and attempt to render a kubeconfig for it.
 	cfg, err := cluster.Config()

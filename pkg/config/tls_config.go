@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"path/filepath"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -40,6 +41,10 @@ type CompactTLSAssets struct {
 }
 
 func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
+	// Convert from days to time.Duration
+	caDuration := time.Duration(c.TLSCADurationDays) * 24 * time.Hour
+	certDuration := time.Duration(c.TLSCertDurationDays) * 24 * time.Hour
+
 	// Generate keys for the various components.
 	keys := make([]*rsa.PrivateKey, 4)
 	var err error
@@ -53,6 +58,7 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 	caConfig := tlsutil.CACertConfig{
 		CommonName:   "kube-ca",
 		Organization: "kube-aws",
+		Duration:     caDuration,
 	}
 	caCert, err := tlsutil.NewSelfSignedCACertificate(caConfig, caKey)
 	if err != nil {
@@ -79,6 +85,7 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 			c.ControllerIP,
 			kubernetesServiceIPAddr.String(),
 		},
+		Duration: certDuration,
 	}
 	apiServerCert, err := tlsutil.NewSignedServerCertificate(apiServerConfig, apiServerKey, caCert, caKey)
 	if err != nil {
@@ -91,6 +98,7 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 			"*.*.compute.internal",
 			"*.ec2.internal",
 		},
+		Duration: certDuration,
 	}
 	workerCert, err := tlsutil.NewSignedClientCertificate(workerConfig, workerKey, caCert, caKey)
 	if err != nil {
@@ -99,6 +107,7 @@ func (c *Cluster) NewTLSAssets() (*RawTLSAssets, error) {
 
 	adminConfig := tlsutil.ClientCertConfig{
 		CommonName: "kube-admin",
+		Duration:   certDuration,
 	}
 	adminCert, err := tlsutil.NewSignedClientCertificate(adminConfig, adminKey, caCert, caKey)
 	if err != nil {

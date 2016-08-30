@@ -40,6 +40,8 @@ func newDefaultCluster() *Cluster {
 		DNSServiceIP:             "10.3.0.10",
 		K8sVer:                   "v1.3.5_coreos.1",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
+		TLSCADurationDays:        365 * 10,
+		TLSCertDurationDays:      365,
 		ContainerRuntime:         "docker",
 		ControllerInstanceType:   "m3.medium",
 		ControllerRootVolumeType: "gp2",
@@ -136,6 +138,8 @@ type Cluster struct {
 	KMSKeyARN                string            `yaml:"kmsKeyArn,omitempty"`
 	CreateRecordSet          bool              `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL             int               `yaml:"recordSetTTL,omitempty"`
+	TLSCADurationDays        int               `yaml:"tlsCADurationDays,omitempty"`
+	TLSCertDurationDays      int               `yaml:"tlsCertDurationDays,omitempty"`
 	HostedZone               string            `yaml:"hostedZone,omitempty"`
 	HostedZoneID             string            `yaml:"hostedZoneId,omitempty"`
 	StackTags                map[string]string `yaml:"stackTags,omitempty"`
