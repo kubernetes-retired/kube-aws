@@ -121,8 +121,6 @@ coreos:
         [Unit]
         Description=decrypt kubelet tls assets using amazon kms
         Before=kubelet.service
-        After=docker.service
-        Requires=docker.service
 
         [Service]
         Type=oneshot
@@ -172,10 +170,24 @@ write_files:
       #!/bin/bash -e
 
       for encKey in $(find /etc/kubernetes/ssl/*.pem.enc);do
-        tmpPath="/tmp/$(basename $encKey).tmp"
-        docker run --rm -v /etc/kubernetes/ssl:/etc/kubernetes/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext > $tmpPath.b64
-        base64 --decode < $tmpPath.b64 > $tmpPath
-        mv  $tmpPath /etc/kubernetes/ssl/$(basename $encKey .enc)
+        sudo rkt run \
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
+        --mount=volume=ssl,target=/etc/kubernetes/ssl \
+        --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
+        --dns=8.8.8.8 --dns=8.8.4.4 \
+        --net=host \
+        --trust-keys-from-https \
+        quay.io/coreos/awscli --exec=/bin/bash -- \
+          -c \
+          "/usr/bin/aws \
+            --region {{.Region}} kms decrypt \
+            --ciphertext-blob fileb://$encKey \
+            --output text \
+            --query Plaintext \
+            > $encKey.b64"
+
+        base64 --decode < $encKey.b64 > ${encKey%.enc}
+        sudo rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid
       done
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
