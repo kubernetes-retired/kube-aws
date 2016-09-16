@@ -103,6 +103,12 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # IP address of Kubernetes dns service (must be contained by serviceCIDR)
 # dnsServiceIP: 10.3.0.10
 
+# Expiration in days from creation time of TLS assets. By default, the CA will
+# expire in 10 years and the server and client certificates will expire in 1
+# year.
+#tlsCADurationDays: 3650
+#tlsCertDurationDays: 365
+
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
 # kubernetesVersion: v1.3.6_coreos.0
 
