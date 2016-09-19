@@ -17,8 +17,8 @@ coreos:
             EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
 
     - name: kubelet.service
-      enable: true
       command: start
+      runtime: true
       content: |
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
@@ -88,6 +88,7 @@ coreos:
 {{ if .UseCalico }}
     - name: calico-node.service
       command: start
+      runtime: true
       content: |
         [Unit]
         Description=Calico per-host agent
