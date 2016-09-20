@@ -15,6 +15,7 @@ coreos:
   units:
     - name: etcd2.service
       command: start
+      runtime: true
 
     - name: docker.service
       drop-ins:
@@ -36,7 +37,7 @@ coreos:
             http://localhost:2379/v2/keys/coreos.com/network/config?prevExist=false
     - name: kubelet.service
       command: start
-      enable: true
+      runtime: true
       content: |
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
@@ -104,6 +105,7 @@ coreos:
 {{ if .UseCalico }}
     - name: calico-node.service
       command: start
+      runtime: true
       content: |
         [Unit]
         Description=Calico per-host agent
@@ -150,6 +152,7 @@ coreos:
 
     - name: install-kube-system.service
       command: start
+      runtime: true
       content: |
         [Unit]
         Requires=kubelet.service docker.service
@@ -165,6 +168,7 @@ coreos:
 {{ if .UseCalico }}
     - name: install-calico-system.service
       command: start
+      runtime: true
       content: |
         [Unit]
         Requires=kubelet.service docker.service
