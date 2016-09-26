@@ -38,7 +38,7 @@ func newDefaultCluster() *Cluster {
 		PodCIDR:                  "10.2.0.0/16",
 		ServiceCIDR:              "10.3.0.0/24",
 		DNSServiceIP:             "10.3.0.10",
-		K8sVer:                   "v1.3.6_coreos.0",
+		K8sVer:                   "v1.4.0_coreos.0",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
 		TLSCADurationDays:        365 * 10,
 		TLSCertDurationDays:      365,
