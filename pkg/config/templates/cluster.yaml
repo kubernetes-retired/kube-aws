@@ -110,7 +110,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #tlsCertDurationDays: 365
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.4.0_coreos.0
+# kubernetesVersion: v1.4.1_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
