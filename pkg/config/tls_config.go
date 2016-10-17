@@ -58,7 +58,6 @@ func NewTLSCA() (*rsa.PrivateKey, *x509.Certificate, error) {
 	caConfig := tlsutil.CACertConfig{
 		CommonName:   "kube-ca",
 		Organization: "kube-aws",
-		Duration:     caDuration,
 	}
 	caCert, err := tlsutil.NewSelfSignedCACertificate(caConfig, caKey)
 	if err != nil {

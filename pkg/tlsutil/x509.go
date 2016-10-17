@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+var (
+    Duration365d = time.Hour * 24 * 365
+)
+
 type CACertConfig struct {
 	CommonName   string
 	Organization string
