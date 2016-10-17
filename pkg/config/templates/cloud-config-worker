@@ -149,6 +149,29 @@ coreos:
         [Install]
         RequiredBy=kubelet.service flanneld.service
 
+    {{ if .Experimental.NodeDrainer.Enabled }}
+    - name: kube-node-drainer.service
+      enable: true
+      content: |
+        [Unit]
+        Description=drain this k8s node to make running pods time to gracefully shut down before stopping kubelet
+        After=kubelet.service
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStart=/bin/true
+        ExecStop=/bin/sh -c '/usr/bin/docker run --rm -v /etc/kubernetes:/etc/kubernetes {{.HyperkubeImageRepo}}:{{.K8sVer}} \
+          /hyperkube kubectl \
+          --server=https://{{.ExternalDNSName}}:443 \
+          --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+          drain $$(hostname) \
+          --ignore-daemonsets \
+          --force'
+
+        [Install]
+        RequiredBy=kubelet.service
+    {{ end }}
 
 write_files:
   - path: /etc/kubernetes/cni/docker_opts_cni.env

@@ -1,9 +1,13 @@
 package config
 
 import (
+	"bytes"
+	"gopkg.in/yaml.v2"
 	"net"
 	"reflect"
+	"strings"
 	"testing"
+	"text/template"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
@@ -653,5 +657,159 @@ workerRootVolumeIOPS: 2001
 		if err == nil {
 			t.Errorf("expected error parsing invalid config: %s", confBody)
 		}
+	}
+}
+
+func TestNodeDrainerConfig(t *testing.T) {
+
+	validConfigs := []struct {
+		conf        string
+		nodeDrainer NodeDrainer
+	}{
+		{
+			conf: `
+`,
+			nodeDrainer: NodeDrainer{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeDrainer:
+    enabled: false
+`,
+			nodeDrainer: NodeDrainer{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeDrainer:
+    enabled: true
+`,
+			nodeDrainer: NodeDrainer{
+				Enabled: true,
+			},
+		},
+		{
+			conf: `
+# Settings for an experimental feature must be under the "experimental" field. Ignored.
+nodeDrainer:
+  enabled: true
+`,
+			nodeDrainer: NodeDrainer{
+				Enabled: false,
+			},
+		},
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Experimental.NodeDrainer, conf.nodeDrainer) {
+			t.Errorf(
+				"parsed node drainer settings %+v does not match config: %s",
+				c.Experimental.NodeDrainer,
+				confBody,
+			)
+		}
+	}
+
+}
+
+func newMinimalConfig() (*Config, error) {
+	cluster := newDefaultCluster()
+	cluster.ExternalDNSName = "k8s.example.com"
+	cluster.Region = "us-west-1"
+	cluster.Subnets = []*Subnet{
+		&Subnet{
+			AvailabilityZone: "us-west-1a",
+			InstanceCIDR:     "10.0.0.0/24",
+		},
+		&Subnet{
+			AvailabilityZone: "us-west-1b",
+			InstanceCIDR:     "10.0.1.0/24",
+		},
+	}
+	c, err := cluster.Config()
+	if err != nil {
+		return nil, err
+	}
+	c.TLSConfig = &CompactTLSAssets{
+		CACert:         "examplecacert",
+		CAKey:          "examplecakey",
+		APIServerCert:  "exampleapiservercert",
+		APIServerKey:   "exampleapiserverkey",
+		WorkerCert:     "exampleworkercert",
+		WorkerKey:      "exampleworkerkey",
+		AdminCert:      "exampleadmincert",
+		AdminKey:       "exampleadminkey",
+		EtcdCert:       "exampleetcdcert",
+		EtcdClientCert: "exampleetcdclientcert",
+		EtcdClientKey:  "exampleetcdclientkey",
+		EtcdKey:        "exampleetcdkey",
+	}
+	return c, nil
+}
+
+func renderTemplate(name string, templateBody []byte, data interface{}) (string, error) {
+	tmpl, err := template.New(name).Parse(string(templateBody))
+	if err != nil {
+		return "", err
+	}
+	var buff bytes.Buffer
+	if err := tmpl.Execute(&buff, data); err != nil {
+		return "", err
+	}
+	return buff.String(), nil
+}
+
+func renderCloudConfigWorker(data interface{}) (string, error) {
+	return renderTemplate("cluod-config-worker", _CloudConfigWorker, data)
+}
+
+func parseYaml(text string) (map[interface{}]interface{}, error) {
+	parsedYaml := make(map[interface{}]interface{})
+	err := yaml.Unmarshal([]byte(text), &parsedYaml)
+	return parsedYaml, err
+}
+
+func TestNodeDrainerWorkerUserData(t *testing.T) {
+	config, err := newMinimalConfig()
+
+	if err != nil {
+		t.Errorf("Unexpected error while setting up a test data: %s", err)
+	}
+
+	var cloudConfig string
+
+	config.Experimental.NodeDrainer.Enabled = true
+	if cloudConfig, err = renderCloudConfigWorker(config); err != nil {
+		t.Errorf("failed to render worker cloud config: %v", err)
+	}
+	if _, err = parseYaml(cloudConfig); err != nil {
+		t.Errorf("failed to parse as YAML %s: %v", cloudConfig, err)
+	}
+	if !strings.Contains(cloudConfig, "kube-node-drainer.service") {
+		t.Errorf("expected \"kube-node-drainer.service\" to exist, but it didn't in the template output: %s", cloudConfig)
+
+	}
+
+	config.Cluster.Experimental.NodeDrainer.Enabled = false
+	if cloudConfig, err = renderCloudConfigWorker(config); err != nil {
+		t.Errorf("failed to render worker cloud config: %v", err)
+	}
+	if _, err = parseYaml(cloudConfig); err != nil {
+		t.Errorf("Failed to parse as YAML %s: %v", cloudConfig, err)
+	}
+	if strings.Contains(cloudConfig, "kube-node-drainer.service") {
+		t.Errorf("expected \"kube-node-drainer.service\" not to exist, but it did exist in the template output: %s", cloudConfig)
+
 	}
 }

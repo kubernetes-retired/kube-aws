@@ -143,6 +143,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
 # containerRuntime: docker
 
+# Experimental features will change in backward-incompatible ways
+# experimental:
+#   nodeDrainer:
+#     enabled: true
+
 # AWS Tags for cloudformation stack resources 
 #stackTags:
 #  Name: "Kubernetes"

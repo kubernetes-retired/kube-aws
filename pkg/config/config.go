@@ -30,6 +30,12 @@ const (
 )
 
 func newDefaultCluster() *Cluster {
+	experimental := Experimental{
+		NodeDrainer{
+			Enabled: false,
+		},
+	}
+
 	return &Cluster{
 		ClusterName:              "kubernetes",
 		ReleaseChannel:           "stable",
@@ -59,6 +65,7 @@ func newDefaultCluster() *Cluster {
 		CreateRecordSet:          false,
 		RecordSetTTL:             300,
 		Subnets:                  []*Subnet{},
+		Experimental:             experimental,
 	}
 }
 
@@ -154,12 +161,21 @@ type Cluster struct {
 	StackTags                map[string]string `yaml:"stackTags,omitempty"`
 	UseCalico                bool              `yaml:"useCalico,omitempty"`
 	Subnets                  []*Subnet         `yaml:"subnets,omitempty"`
+	Experimental             Experimental      `yaml:"experimental"`
 }
 
 type Subnet struct {
 	AvailabilityZone  string `yaml:"availabilityZone,omitempty"`
 	InstanceCIDR      string `yaml:"instanceCIDR,omitempty"`
 	lastAllocatedAddr *net.IP
+}
+
+type Experimental struct {
+	NodeDrainer NodeDrainer `yaml:"nodeDrainer"`
+}
+
+type NodeDrainer struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 const (
