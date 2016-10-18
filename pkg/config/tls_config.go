@@ -49,15 +49,19 @@ type CompactTLSAssets struct {
 	EtcdKey        string
 }
 
-func NewTLSCA() (*rsa.PrivateKey, *x509.Certificate, error) {
+func (c *Cluster) NewTLSCA() (*rsa.PrivateKey, *x509.Certificate, error) {
 	caKey, err := tlsutil.NewPrivateKey()
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Convert from days to time.Duration
+	caDuration := time.Duration(c.TLSCADurationDays) * 24 * time.Hour
+
 	caConfig := tlsutil.CACertConfig{
 		CommonName:   "kube-ca",
 		Organization: "kube-aws",
+		Duration:     caDuration,
 	}
 	caCert, err := tlsutil.NewSelfSignedCACertificate(caConfig, caKey)
 	if err != nil {
@@ -138,6 +142,7 @@ func (c *Cluster) NewTLSAssets(caKey *rsa.PrivateKey, caCert *x509.Certificate) 
 
 	etcdClientConfig := tlsutil.ClientCertConfig{
 		CommonName: "kube-etcd-client",
+		Duration:   certDuration,
 	}
 
 	etcdClientCert, err := tlsutil.NewSignedClientCertificate(etcdClientConfig, etcdClientKey, caCert, caKey)

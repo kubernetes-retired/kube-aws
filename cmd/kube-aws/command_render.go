@@ -143,7 +143,7 @@ func runCmdRenderCredentials(cmd *cobra.Command, args []string) error {
 	var caCert *x509.Certificate
 	if renderCredentialsOpts.generateCA {
 		var err error
-		caKey, caCert, err = config.NewTLSCA()
+		caKey, caCert, err = cluster.NewTLSCA()
 		if err != nil {
 			return fmt.Errorf("failed generating cluster CA: %v", err)
 		}

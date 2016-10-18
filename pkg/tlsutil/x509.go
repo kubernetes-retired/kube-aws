@@ -13,7 +13,7 @@ import (
 )
 
 var (
-    Duration365d = time.Hour * 24 * 365
+	Duration365d = time.Hour * 24 * 365
 )
 
 type CACertConfig struct {
@@ -38,7 +38,7 @@ type ClientCertConfig struct {
 
 func NewSelfSignedCACertificate(cfg CACertConfig, key *rsa.PrivateKey) (*x509.Certificate, error) {
 	if cfg.Duration <= 0 {
-		return nil, errors.New("Cert duration must not be negative or zero.")
+		return nil, errors.New("Self-signed CA cert duration must not be negative or zero.")
 	}
 
 	tmpl := x509.Certificate{
@@ -73,7 +73,7 @@ func NewSignedServerCertificate(cfg ServerCertConfig, key *rsa.PrivateKey, caCer
 	}
 
 	if cfg.Duration <= 0 {
-		return nil, errors.New("Cert duration must not be negative or zero.")
+		return nil, errors.New("Signed server cert duration must not be negative or zero.")
 	}
 
 	certTmpl := x509.Certificate{
@@ -108,7 +108,7 @@ func NewSignedClientCertificate(cfg ClientCertConfig, key *rsa.PrivateKey, caCer
 	}
 
 	if cfg.Duration <= 0 {
-		return nil, errors.New("Cert duration must not be negative or zero.")
+		return nil, errors.New("Signed client cert duration must not be negative or zero.")
 	}
 
 	certTmpl := x509.Certificate{
