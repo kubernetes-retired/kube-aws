@@ -237,7 +237,13 @@ func (c *Cluster) createStack(cfSvc cloudformationService, stackBody string) (*c
       "Action" : "Update:*",
       "Principal" : "*",
       "Resource" : "LogicalResourceId/InstanceEtcd*"
-    }
+    },
+    {
+       "Effect" : "Allow",
+       "Principal" : "*",
+       "Action" : "Update:*",
+       "Resource" : "*"
+     }
   ]
 }
 `),
