@@ -6,6 +6,7 @@ import (
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
 	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 var (
@@ -41,6 +42,18 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 	data, err := conf.RenderStackTemplate(stackTemplateOptions)
 	if err != nil {
 		return fmt.Errorf("Failed to render stack template: %v", err)
+	}
+
+	if upOpts.export {
+		templatePath := fmt.Sprintf("%s.stack-template.json", conf.ClusterName)
+		fmt.Printf("Exporting %s\n", templatePath)
+		if err := ioutil.WriteFile(templatePath, data, 0600); err != nil {
+			return fmt.Errorf("Error writing %s : %v", templatePath, err)
+		}
+		if conf.KMSKeyARN == "" {
+			fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
+		}
+		return nil
 	}
 
 	cluster := cluster.New(conf, upOpts.awsDebug)
