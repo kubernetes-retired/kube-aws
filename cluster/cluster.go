@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/route53"
 
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
+	"github.com/coreos/kube-aws/config"
 )
 
 // VERSION set by build script

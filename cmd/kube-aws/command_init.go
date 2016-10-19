@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
+	"github.com/coreos/kube-aws/config"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
+	"github.com/coreos/kube-aws/cluster"
 	"github.com/spf13/cobra"
 )
 

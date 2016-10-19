@@ -14,7 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/tlsutil"
+	"github.com/coreos/kube-aws/tlsutil"
 )
 
 // PEM encoded TLS assets.

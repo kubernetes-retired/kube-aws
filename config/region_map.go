@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/coreosutil"
+	"github.com/coreos/kube-aws/coreosutil"
 )
 
 func getAMI(region, channel string) (string, error) {

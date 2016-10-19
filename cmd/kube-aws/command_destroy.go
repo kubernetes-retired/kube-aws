@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster"
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/config"
+	"github.com/coreos/kube-aws/cluster"
+	"github.com/coreos/kube-aws/config"
 )
 
 var (

@@ -16,19 +16,7 @@ if [ -n "$(git diff --shortstat 2> /dev/null | tail -n1)" ]; then
     VERSION="${VERSION}+dirty"
 fi
 
-GOPATH_VENDOR="$(pwd)/_gopath-vendor"
-GOPATH_KUBE_AWS="$(pwd)/_gopath-kube-aws"
-KUBE_AWS_DIR="${GOPATH_KUBE_AWS}/src/github.com/coreos/coreos-kubernetes/multi-node/aws"
+echo Building kube-aws ${VERSION}
 
-rm -rf "$GOPATH_VENDOR" "$GOPATH_KUBE_AWS"
-
-mkdir -p "$GOPATH_VENDOR"
-mkdir -p "$(dirname "$KUBE_AWS_DIR")"
-
-ln -s "$(pwd)"/vendor "$GOPATH_VENDOR"/src
-ln -s "$(pwd)" "$KUBE_AWS_DIR"
-
-export GOPATH="${GOPATH_VENDOR}:${GOPATH_KUBE_AWS}"
-cd "$KUBE_AWS_DIR"
-go generate ./pkg/config
-go build -ldflags "-X github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/cluster.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./cmd/kube-aws
+go generate ./config
+go build -ldflags "-X github.com/coreos/kube-aws/cluster.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./cmd/kube-aws

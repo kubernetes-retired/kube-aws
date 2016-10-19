@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 
 	"github.com/coreos/coreos-cloudinit/config/validate"
-	"github.com/coreos/coreos-kubernetes/multi-node/aws/pkg/coreosutil"
+	"github.com/coreos/kube-aws/coreosutil"
 	"github.com/coreos/go-semver/semver"
 	yaml "gopkg.in/yaml.v2"
 )
