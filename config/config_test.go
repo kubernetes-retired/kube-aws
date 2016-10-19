@@ -9,6 +9,8 @@ import (
 	"testing"
 	"text/template"
 	"fmt"
+	"os"
+	"io/ioutil"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
@@ -854,6 +856,173 @@ releaseChannel: %s
 		_, err2 := cluster.Config()
 		if err2 == nil {
 			t.Errorf("expcted to fail generating config for %s", channel)
+		}
+	}
+}
+
+func TestValidateExistingVPC(t *testing.T) {
+	validCases := []struct {
+		vpc string
+		subnets []string
+	}{
+		{"10.0.0.0/16", []string{"10.0.3.0/24", "10.0.4.0/24"}},
+	}
+
+	invalidCases := []struct {
+		vpc string
+		subnets []string
+	}{
+		// both subnets conflicts
+		{"10.0.0.0/16", []string{"10.0.1.0/24", "10.0.2.0/24"}},
+		// 10.0.1.0/24 conflicts
+		{"10.0.0.0/16", []string{"10.0.1.0/24", "10.0.3.0/24"}},
+		// 10.0.2.0/24 conflicts
+		{"10.0.0.0/16", []string{"10.0.2.0/24", "10.0.3.0/24"}},
+		// vpc cidr doesn't match
+		{"10.1.0.0/16", []string{"10.1.1.0/24", "10.1.2.0/24"}},
+		// vpc cidr is invalid
+		{"1o.1.o.o/16", []string{"10.1.1.0/24", "10.1.2.0/24"}},
+		// subnet cidr is invalid
+		{"10.1.0.0/16", []string{"1o.1.1.o/24", "10.1.2.0/24"}},
+	}
+
+	cluster := newDefaultCluster()
+
+	cluster.VPCCIDR = "10.0.0.0/16"
+	cluster.Subnets = []*Subnet {
+		{ "ap-northeast-1a", "10.0.1.0/24", nil},
+		{ "ap-northeast-1a", "10.0.2.0/24", nil},
+	}
+
+	for _, testCase := range validCases {
+		err := cluster.ValidateExistingVPC(testCase.vpc, testCase.subnets)
+
+		if err != nil {
+			t.Errorf("failed to validate existing vpc and subnets: %v", err)
+		}
+	}
+
+	for _, testCase := range invalidCases {
+		err := cluster.ValidateExistingVPC(testCase.vpc, testCase.subnets)
+
+		if err == nil {
+			t.Errorf("expected to fail validating existing vpc and subnets: %v", testCase)
+		}
+	}
+}
+
+func withDummyCredentials(fn func(dir string)) {
+	if _, err := ioutil.ReadDir("temp"); err != nil {
+		if err := os.Mkdir("temp", 0755); err != nil {
+			panic(err)
+		}
+	}
+
+	dir, err := ioutil.TempDir("temp", "dummy-credentials")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer os.Remove(dir)
+
+	for _, pairName := range []string {"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
+		certFile := fmt.Sprintf("%s/%s.pem", dir, pairName)
+
+		if err := ioutil.WriteFile(certFile, []byte("dummycert"), 0644); err != nil {
+			panic(err)
+		}
+
+		defer os.Remove(certFile)
+
+		keyFile := fmt.Sprintf("%s/%s-key.pem", dir, pairName)
+
+		if err := ioutil.WriteFile(keyFile, []byte("dummykey"), 0644); err != nil {
+			panic(err)
+		}
+
+		defer os.Remove(keyFile)
+	}
+
+	fn(dir)
+}
+
+func TestValidateUserData(t *testing.T) {
+	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
+
+	cluster.Region = "us-west-1"
+	cluster.Subnets = []*Subnet {
+		{"us-west-1a", "10.0.1.0/16", nil},
+		{"us-west-1b", "10.0.2.0/16", nil},
+	}
+
+	withDummyCredentials(func(dir string) {
+		var stackTemplateOptions = StackTemplateOptions{
+			TLSAssetsDir:          dir,
+			ControllerTmplFile:    "templates/cloud-config-controller",
+			WorkerTmplFile:        "templates/cloud-config-worker",
+			EtcdTmplFile:          "templates/cloud-config-etcd",
+			StackTemplateTmplFile: "templates/stack-template.json",
+		}
+
+		if err := cluster.ValidateUserData(stackTemplateOptions); err != nil {
+			t.Errorf("failed to validate user data: %v", err)
+		}
+	})
+}
+
+func TestRenderStackTemplate(t *testing.T) {
+	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
+
+	cluster.Region = "us-west-1"
+	cluster.Subnets = []*Subnet {
+		{"us-west-1a", "10.0.1.0/16", nil},
+		{"us-west-1b", "10.0.2.0/16", nil},
+	}
+
+	withDummyCredentials(func(dir string) {
+		var stackTemplateOptions = StackTemplateOptions{
+			TLSAssetsDir:          dir,
+			ControllerTmplFile:    "templates/cloud-config-controller",
+			WorkerTmplFile:        "templates/cloud-config-worker",
+			EtcdTmplFile:          "templates/cloud-config-etcd",
+			StackTemplateTmplFile: "templates/stack-template.json",
+		}
+
+		if _, err := cluster.RenderStackTemplate(stackTemplateOptions); err != nil {
+			t.Errorf("failed to render stack template: %v", err)
+		}
+	})
+}
+
+func TestWithTrailingDot(t *testing.T) {
+	tests := [][]string {
+		[]string {
+			"",
+			"",
+		},
+		[]string {
+			"foo.bar.",
+			"foo.bar.",
+		},
+		[]string {
+			"foo.bar",
+			"foo.bar.",
+		},
+	}
+
+	for _, test := range tests {
+		input := test[0]
+		actual := WithTrailingDot(input)
+		expected := test[1]
+
+		if expected != actual {
+			t.Errorf(
+				"WithTrailingDot(\"%s\") expected to return \"%s\" but it returned: \"%s\"",
+				input,
+				expected,
+				actual,
+			)
 		}
 	}
 }

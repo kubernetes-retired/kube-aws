@@ -69,6 +69,12 @@ func newDefaultCluster() *Cluster {
 	}
 }
 
+func newDefaultClusterWithDeps(encSvc encryptService) *Cluster {
+	cluster := newDefaultCluster()
+	cluster.providedEncryptService = encSvc
+	return cluster
+}
+
 func ClusterFromFile(filename string) (*Cluster, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -162,6 +168,7 @@ type Cluster struct {
 	UseCalico                bool              `yaml:"useCalico,omitempty"`
 	Subnets                  []*Subnet         `yaml:"subnets,omitempty"`
 	Experimental             Experimental      `yaml:"experimental"`
+	providedEncryptService   encryptService
 }
 
 type Subnet struct {
@@ -383,7 +390,13 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		WithRegion(stackConfig.Config.Region).
 		WithCredentialsChainVerboseErrors(true)
 
-	kmsSvc := kms.New(session.New(awsConfig))
+	// TODO Cleaner way to inject this dependency
+	var kmsSvc encryptService
+	if c.providedEncryptService != nil {
+		kmsSvc = c.providedEncryptService
+	} else {
+		kmsSvc = kms.New(session.New(awsConfig))
+	}
 
 	compactAssets, err := assets.compact(stackConfig.Config, kmsSvc)
 	if err != nil {
