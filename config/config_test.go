@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+	"fmt"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
@@ -811,5 +812,48 @@ func TestNodeDrainerWorkerUserData(t *testing.T) {
 	if strings.Contains(cloudConfig, "kube-node-drainer.service") {
 		t.Errorf("expected \"kube-node-drainer.service\" not to exist, but it did exist in the template output: %s", cloudConfig)
 
+	}
+}
+
+func TestRktConfig(t *testing.T) {
+	validChannels := []string {
+		"alpha",
+		"beta",
+	}
+
+	invalidChannels := []string{
+		"stable",
+	}
+
+	conf := func(channel string) string {
+		return fmt.Sprintf(`containerRuntime: rkt
+releaseChannel: %s
+`, channel)
+	}
+
+	for _, channel := range validChannels {
+		confBody := singleAzConfigYaml + conf(channel)
+		cluster, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+		}
+
+		_, err2 := cluster.Config()
+		if err2 != nil {
+			t.Errorf("failed to generate config for %s: %v", channel, err2)
+		}
+	}
+
+	for _, channel := range invalidChannels {
+		confBody := singleAzConfigYaml + conf(channel)
+		cluster, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+		}
+
+		_, err2 := cluster.Config()
+		if err2 == nil {
+			t.Errorf("expcted to fail generating config for %s", channel)
+		}
 	}
 }

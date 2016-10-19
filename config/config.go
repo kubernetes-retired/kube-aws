@@ -19,8 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 
 	"github.com/coreos/coreos-cloudinit/config/validate"
-	"github.com/coreos/kube-aws/coreosutil"
 	"github.com/coreos/go-semver/semver"
+	"github.com/coreos/kube-aws/coreosutil"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -206,7 +206,7 @@ func (c Cluster) Config() (*Config, error) {
 	if config.ContainerRuntime == "rkt" && config.ReleaseChannel != "alpha" {
 		minVersion := semver.Version{Major: 1151}
 
-		ok, err := isMinImageVersion(minVersion, config.ReleaseChannel)
+		ok, err := releaseVersionIsGreaterThan(minVersion, config.ReleaseChannel)
 		if err != nil {
 			return nil, err
 		}
@@ -307,10 +307,10 @@ func (c Cluster) Config() (*Config, error) {
 	return &config, nil
 }
 
-// isMinImageVersion will return true if the supplied version is greater then
+// releaseVersionIsGreaterThan will return true if the supplied version is greater then
 // or equal to the current CoreOS release indicated by the given release
 // channel.
-func isMinImageVersion(minVersion semver.Version, release string) (bool, error) {
+func releaseVersionIsGreaterThan(minVersion semver.Version, release string) (bool, error) {
 	metaData, err := coreosutil.GetAMIData(release)
 	if err != nil {
 		return false, fmt.Errorf("Unable to retrieve current release channel version: %v", err)
@@ -326,7 +326,7 @@ func isMinImageVersion(minVersion semver.Version, release string) (bool, error) 
 		return false, fmt.Errorf("Error parsing semver from image version %v", err)
 	}
 
-	if minVersion.LessThan(*current) {
+	if current.LessThan(minVersion) {
 		return false, nil
 	}
 
