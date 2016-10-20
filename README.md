@@ -230,7 +230,7 @@ The following links can be useful for development:
 
 ## Contributing
 
-Submit a PR to this repository, following the [contributors guide](../../CONTRIBUTING.md).
-The documentation is published from [this source](../../Documentation/kubernetes-on-aws.md).
+Submit a PR to this repository, following the [contributors guide](CONTRIBUTING.md).
+The documentation is published from [this source](Documentation/kubernetes-on-aws.md).
 
 
