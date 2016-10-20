@@ -1,3 +1,5 @@
+// +build codegen
+
 // Package api represents API abstractions for rendering service generated files.
 package api
 
@@ -33,6 +35,9 @@ type API struct {
 
 	// Set to true to not generate API service name constants
 	NoConstServiceNames bool
+
+	// Set to true to not generate validation shapes
+	NoValidataShapeMethods bool
 
 	SvcClientImportPath string
 
@@ -76,10 +81,12 @@ func (a *API) StructName() string {
 		}
 
 		name = nameRegex.ReplaceAllString(name, "")
-		switch name {
-		case "ElasticLoadBalancing":
+		switch strings.ToLower(name) {
+		case "elasticloadbalancing":
 			a.name = "ELB"
-		case "Config":
+		case "elasticloadbalancingv2":
+			a.name = "ELBV2"
+		case "config":
 			a.name = "ConfigService"
 		default:
 			a.name = name
@@ -156,10 +163,16 @@ func (a *API) ShapeNames() []string {
 }
 
 // ShapeList returns a slice of shape pointers used by the API.
+//
+// Will exclude error shapes from the list of shapes returned.
 func (a *API) ShapeList() []*Shape {
-	list := make([]*Shape, len(a.Shapes))
-	for i, n := range a.ShapeNames() {
-		list[i] = a.Shapes[n]
+	list := make([]*Shape, 0, len(a.Shapes))
+	for _, n := range a.ShapeNames() {
+		// Ignore error shapes in list
+		if a.Shapes[n].IsError {
+			continue
+		}
+		list = append(list, a.Shapes[n])
 	}
 	return list
 }
@@ -230,6 +243,14 @@ func (a *API) APIGoCode() string {
 		a.imports["github.com/aws/aws-sdk-go/private/protocol/"+a.ProtocolPackage()] = true
 		a.imports["github.com/aws/aws-sdk-go/private/protocol"] = true
 	}
+
+	for _, op := range a.Operations {
+		if op.AuthType == "none" {
+			a.imports["github.com/aws/aws-sdk-go/aws/credentials"] = true
+			break
+		}
+	}
+
 	var buf bytes.Buffer
 	err := tplAPI.Execute(&buf, a)
 	if err != nil {
@@ -295,7 +316,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
     }
 
 	// Handlers
-	svc.Handlers.Sign.PushBack({{if eq .Metadata.SignatureVersion "v2"}}v2{{else}}v4{{end}}.Sign)
+	svc.Handlers.Sign.PushBackNamed({{if eq .Metadata.SignatureVersion "v2"}}v2{{else}}v4{{end}}.SignRequestHandler)
 	{{if eq .Metadata.SignatureVersion "v2"}}svc.Handlers.Sign.PushBackNamed(corehandlers.BuildContentLengthHandler)
 	{{end}}svc.Handlers.Build.PushBackNamed({{ .ProtocolPackage }}.BuildHandler)
 	svc.Handlers.Unmarshal.PushBackNamed({{ .ProtocolPackage }}.UnmarshalHandler)
@@ -336,7 +357,7 @@ func (a *API) ServiceGoCode() string {
 		a.imports["github.com/aws/aws-sdk-go/private/signer/v2"] = true
 		a.imports["github.com/aws/aws-sdk-go/aws/corehandlers"] = true
 	} else {
-		a.imports["github.com/aws/aws-sdk-go/private/signer/v4"] = true
+		a.imports["github.com/aws/aws-sdk-go/aws/signer/v4"] = true
 	}
 	a.imports["github.com/aws/aws-sdk-go/private/protocol/"+a.ProtocolPackage()] = true
 
@@ -372,10 +393,57 @@ func (a *API) ExampleGoCode() string {
 
 // A tplInterface defines the template for the service interface type.
 var tplInterface = template.Must(template.New("interface").Parse(`
-// {{ .StructName }}API is the interface type for {{ .PackageName }}.{{ .StructName }}.
+// {{ .StructName }}API provides an interface to enable mocking the
+// {{ .PackageName }}.{{ .StructName }} service client's API operation,
+// paginators, and waiters. This make unit testing your code that calls out
+// to the SDK's service client's calls easier.
+//
+// The best way to use this interface is so the SDK's service client's calls
+// can be stubbed out for unit testing your code with the SDK without needing
+// to inject custom request handlers into the the SDK's request pipeline.
+//
+//    // myFunc uses an SDK service client to make a request to
+//    // {{.Metadata.ServiceFullName}}. {{ $opts := .OperationList }}{{ $opt := index $opts 0 }}
+//    func myFunc(svc {{ .InterfacePackageName }}.{{ .StructName }}API) bool {
+//        // Make svc.{{ $opt.ExportedName }} request
+//    }
+//
+//    func main() {
+//        sess := session.New()
+//        svc := {{ .PackageName }}.New(sess)
+//
+//        myFunc(svc)
+//    }
+//
+// In your _test.go file:
+//
+//    // Define a mock struct to be used in your unit tests of myFunc.
+//    type mock{{ .StructName }}Client struct {
+//        {{ .InterfacePackageName }}.{{ .StructName }}API
+//    }
+//    func (m *mock{{ .StructName }}Client) {{ $opt.ExportedName }}(input {{ $opt.InputRef.GoTypeWithPkgName }}) ({{ $opt.OutputRef.GoTypeWithPkgName }}, error) {
+//        // mock response/functionality
+//    }
+//
+//    TestMyFunc(t *testing.T) {
+//        // Setup Test
+//        mockSvc := &mock{{ .StructName }}Client{}
+//
+//        myfunc(mockSvc)
+//
+//        // Verify myFunc's functionality
+//    }
+//
+// It is important to note that this interface will have breaking changes
+// when the service model is updated and adds new API operations, paginators,
+// and waiters. Its suggested to use the pattern above for testing, or using 
+// tooling to generate mocks to satisfy the interfaces.
 type {{ .StructName }}API interface {
     {{ range $_, $o := .OperationList }}
         {{ $o.InterfaceSignature }}
+    {{ end }}
+    {{ range $_, $w := .Waiters }}
+        {{ $w.InterfaceSignature }}
     {{ end }}
 }
 
@@ -407,4 +475,68 @@ func (a *API) InterfaceGoCode() string {
 // with its package name. Takes a string depicting the Config.
 func (a *API) NewAPIGoCodeWithPkgName(cfg string) string {
 	return fmt.Sprintf("%s.New(%s)", a.PackageName(), cfg)
+}
+
+// computes the validation chain for all input shapes
+func (a *API) addShapeValidations() {
+	for _, o := range a.Operations {
+		resolveShapeValidations(o.InputRef.Shape)
+	}
+}
+
+// Updates the source shape and all nested shapes with the validations that
+// could possibly be needed.
+func resolveShapeValidations(s *Shape, ancestry ...*Shape) {
+	for _, a := range ancestry {
+		if a == s {
+			return
+		}
+	}
+
+	children := []string{}
+	for _, name := range s.MemberNames() {
+		ref := s.MemberRefs[name]
+
+		if s.IsRequired(name) && !s.Validations.Has(ref, ShapeValidationRequired) {
+			s.Validations = append(s.Validations, ShapeValidation{
+				Name: name, Ref: ref, Type: ShapeValidationRequired,
+			})
+		}
+
+		if ref.Shape.Min != 0 && !s.Validations.Has(ref, ShapeValidationMinVal) {
+			s.Validations = append(s.Validations, ShapeValidation{
+				Name: name, Ref: ref, Type: ShapeValidationMinVal,
+			})
+		}
+
+		switch ref.Shape.Type {
+		case "map", "list", "structure":
+			children = append(children, name)
+		}
+	}
+
+	ancestry = append(ancestry, s)
+	for _, name := range children {
+		ref := s.MemberRefs[name]
+		nestedShape := ref.Shape.NestedShape()
+
+		var v *ShapeValidation
+		if len(nestedShape.Validations) > 0 {
+			v = &ShapeValidation{
+				Name: name, Ref: ref, Type: ShapeValidationNested,
+			}
+		} else {
+			resolveShapeValidations(nestedShape, ancestry...)
+			if len(nestedShape.Validations) > 0 {
+				v = &ShapeValidation{
+					Name: name, Ref: ref, Type: ShapeValidationNested,
+				}
+			}
+		}
+
+		if v != nil && !s.Validations.Has(v.Ref, v.Type) {
+			s.Validations = append(s.Validations, *v)
+		}
+	}
+	ancestry = ancestry[:len(ancestry)-1]
 }

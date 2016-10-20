@@ -7,27 +7,29 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/private/protocol/query"
-	"github.com/aws/aws-sdk-go/private/signer/v4"
 )
 
-// Overview  This is an interface reference for Amazon Redshift. It contains
-// documentation for one of the programming or command line interfaces you can
-// use to manage Amazon Redshift clusters. Note that Amazon Redshift is asynchronous,
-// which means that some interfaces may require techniques, such as polling
-// or asynchronous callback handlers, to determine when a command has been applied.
-// In this reference, the parameter descriptions indicate whether a change is
-// applied immediately, on the next instance reboot, or during the next maintenance
-// window. For a summary of the Amazon Redshift cluster management interfaces,
-// go to Using the Amazon Redshift Management Interfaces  (http://docs.aws.amazon.com/redshift/latest/mgmt/using-aws-sdk.html).
+// Overview
 //
-//  Amazon Redshift manages all the work of setting up, operating, and scaling
+// This is an interface reference for Amazon Redshift. It contains documentation
+// for one of the programming or command line interfaces you can use to manage
+// Amazon Redshift clusters. Note that Amazon Redshift is asynchronous, which
+// means that some interfaces may require techniques, such as polling or asynchronous
+// callback handlers, to determine when a command has been applied. In this
+// reference, the parameter descriptions indicate whether a change is applied
+// immediately, on the next instance reboot, or during the next maintenance
+// window. For a summary of the Amazon Redshift cluster management interfaces,
+// go to Using the Amazon Redshift Management Interfaces (http://docs.aws.amazon.com/redshift/latest/mgmt/using-aws-sdk.html).
+//
+// Amazon Redshift manages all the work of setting up, operating, and scaling
 // a data warehouse: provisioning capacity, monitoring and backing up the cluster,
 // and applying patches and upgrades to the Amazon Redshift engine. You can
 // focus on using your data to acquire new insights for your business and customers.
 //
 // If you are a first-time user of Amazon Redshift, we recommend that you begin
-// by reading the The Amazon Redshift Getting Started Guide (http://docs.aws.amazon.com/redshift/latest/gsg/getting-started.html)
+// by reading the Amazon Redshift Getting Started Guide (http://docs.aws.amazon.com/redshift/latest/gsg/getting-started.html).
 //
 // If you are a database developer, the Amazon Redshift Database Developer
 // Guide (http://docs.aws.amazon.com/redshift/latest/dg/welcome.html) explains
@@ -79,7 +81,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 	}
 
 	// Handlers
-	svc.Handlers.Sign.PushBack(v4.Sign)
+	svc.Handlers.Sign.PushBackNamed(v4.SignRequestHandler)
 	svc.Handlers.Build.PushBackNamed(query.BuildHandler)
 	svc.Handlers.Unmarshal.PushBackNamed(query.UnmarshalHandler)
 	svc.Handlers.UnmarshalMeta.PushBackNamed(query.UnmarshalMetaHandler)

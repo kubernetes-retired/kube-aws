@@ -4,15 +4,41 @@
 package inspector
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 const opAddAttributesToFindings = "AddAttributesToFindings"
 
-// AddAttributesToFindingsRequest generates a request for the AddAttributesToFindings operation.
+// AddAttributesToFindingsRequest generates a "aws/request.Request" representing the
+// client's request for the AddAttributesToFindings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See AddAttributesToFindings for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the AddAttributesToFindings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the AddAttributesToFindingsRequest method.
+//    req, resp := client.AddAttributesToFindingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) AddAttributesToFindingsRequest(input *AddAttributesToFindingsInput) (req *request.Request, output *AddAttributesToFindingsOutput) {
 	op := &request.Operation{
 		Name:       opAddAttributesToFindings,
@@ -30,103 +56,227 @@ func (c *Inspector) AddAttributesToFindingsRequest(input *AddAttributesToFinding
 	return
 }
 
-// Assigns attributes (key and value pair) to the findings specified by the
-// findings' ARNs.
+// AddAttributesToFindings API operation for Amazon Inspector.
+//
+// Assigns attributes (key and value pairs) to the findings that are specified
+// by the ARNs of the findings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation AddAttributesToFindings for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
 func (c *Inspector) AddAttributesToFindings(input *AddAttributesToFindingsInput) (*AddAttributesToFindingsOutput, error) {
 	req, out := c.AddAttributesToFindingsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opAttachAssessmentAndRulesPackage = "AttachAssessmentAndRulesPackage"
+const opCreateAssessmentTarget = "CreateAssessmentTarget"
 
-// AttachAssessmentAndRulesPackageRequest generates a request for the AttachAssessmentAndRulesPackage operation.
-func (c *Inspector) AttachAssessmentAndRulesPackageRequest(input *AttachAssessmentAndRulesPackageInput) (req *request.Request, output *AttachAssessmentAndRulesPackageOutput) {
+// CreateAssessmentTargetRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAssessmentTarget operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateAssessmentTarget for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateAssessmentTarget method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateAssessmentTargetRequest method.
+//    req, resp := client.CreateAssessmentTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) CreateAssessmentTargetRequest(input *CreateAssessmentTargetInput) (req *request.Request, output *CreateAssessmentTargetOutput) {
 	op := &request.Operation{
-		Name:       opAttachAssessmentAndRulesPackage,
+		Name:       opCreateAssessmentTarget,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &AttachAssessmentAndRulesPackageInput{}
+		input = &CreateAssessmentTargetInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &AttachAssessmentAndRulesPackageOutput{}
+	output = &CreateAssessmentTargetOutput{}
 	req.Data = output
 	return
 }
 
-// Attaches the rules package specified by the rules package ARN to the assessment
-// specified by the assessment ARN.
-func (c *Inspector) AttachAssessmentAndRulesPackage(input *AttachAssessmentAndRulesPackageInput) (*AttachAssessmentAndRulesPackageOutput, error) {
-	req, out := c.AttachAssessmentAndRulesPackageRequest(input)
+// CreateAssessmentTarget API operation for Amazon Inspector.
+//
+// Creates a new assessment target using the ARN of the resource group that
+// is generated by CreateResourceGroup. You can create up to 50 assessment targets
+// per AWS account. You can run up to 500 concurrent agents per AWS account.
+// For more information, see  Amazon Inspector Assessment Targets (http://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation CreateAssessmentTarget for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) CreateAssessmentTarget(input *CreateAssessmentTargetInput) (*CreateAssessmentTargetOutput, error) {
+	req, out := c.CreateAssessmentTargetRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opCreateApplication = "CreateApplication"
+const opCreateAssessmentTemplate = "CreateAssessmentTemplate"
 
-// CreateApplicationRequest generates a request for the CreateApplication operation.
-func (c *Inspector) CreateApplicationRequest(input *CreateApplicationInput) (req *request.Request, output *CreateApplicationOutput) {
+// CreateAssessmentTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAssessmentTemplate operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateAssessmentTemplate for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateAssessmentTemplate method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateAssessmentTemplateRequest method.
+//    req, resp := client.CreateAssessmentTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) CreateAssessmentTemplateRequest(input *CreateAssessmentTemplateInput) (req *request.Request, output *CreateAssessmentTemplateOutput) {
 	op := &request.Operation{
-		Name:       opCreateApplication,
+		Name:       opCreateAssessmentTemplate,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &CreateApplicationInput{}
+		input = &CreateAssessmentTemplateInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &CreateApplicationOutput{}
+	output = &CreateAssessmentTemplateOutput{}
 	req.Data = output
 	return
 }
 
-// Creates a new application using the resource group ARN generated by CreateResourceGroup.
-// You can create up to 50 applications per AWS account. You can run up to 500
-// concurrent agents per AWS account. For more information, see  Inspector Applications.
-// (https://docs.aws.amazon.com/inspector/latest/userguide//inspector_applications.html)
-func (c *Inspector) CreateApplication(input *CreateApplicationInput) (*CreateApplicationOutput, error) {
-	req, out := c.CreateApplicationRequest(input)
-	err := req.Send()
-	return out, err
-}
-
-const opCreateAssessment = "CreateAssessment"
-
-// CreateAssessmentRequest generates a request for the CreateAssessment operation.
-func (c *Inspector) CreateAssessmentRequest(input *CreateAssessmentInput) (req *request.Request, output *CreateAssessmentOutput) {
-	op := &request.Operation{
-		Name:       opCreateAssessment,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &CreateAssessmentInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &CreateAssessmentOutput{}
-	req.Data = output
-	return
-}
-
-// Creates an assessment for the application specified by the application ARN.
-// You can create up to 500 assessments per AWS account.
-func (c *Inspector) CreateAssessment(input *CreateAssessmentInput) (*CreateAssessmentOutput, error) {
-	req, out := c.CreateAssessmentRequest(input)
+// CreateAssessmentTemplate API operation for Amazon Inspector.
+//
+// Creates an assessment template for the assessment target that is specified
+// by the ARN of the assessment target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation CreateAssessmentTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) CreateAssessmentTemplate(input *CreateAssessmentTemplateInput) (*CreateAssessmentTemplateOutput, error) {
+	req, out := c.CreateAssessmentTemplateRequest(input)
 	err := req.Send()
 	return out, err
 }
 
 const opCreateResourceGroup = "CreateResourceGroup"
 
-// CreateResourceGroupRequest generates a request for the CreateResourceGroup operation.
+// CreateResourceGroupRequest generates a "aws/request.Request" representing the
+// client's request for the CreateResourceGroup operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See CreateResourceGroup for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the CreateResourceGroup method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the CreateResourceGroupRequest method.
+//    req, resp := client.CreateResourceGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) CreateResourceGroupRequest(input *CreateResourceGroupInput) (req *request.Request, output *CreateResourceGroupOutput) {
 	op := &request.Operation{
 		Name:       opCreateResourceGroup,
@@ -144,154 +294,520 @@ func (c *Inspector) CreateResourceGroupRequest(input *CreateResourceGroupInput) 
 	return
 }
 
+// CreateResourceGroup API operation for Amazon Inspector.
+//
 // Creates a resource group using the specified set of tags (key and value pairs)
-// that are used to select the EC2 instances to be included in an Inspector
-// application. The created resource group is then used to create an Inspector
-// application.
+// that are used to select the EC2 instances to be included in an Amazon Inspector
+// assessment target. The created resource group is then used to create an Amazon
+// Inspector assessment target. For more information, see CreateAssessmentTarget.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation CreateResourceGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
 func (c *Inspector) CreateResourceGroup(input *CreateResourceGroupInput) (*CreateResourceGroupOutput, error) {
 	req, out := c.CreateResourceGroupRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDeleteApplication = "DeleteApplication"
+const opDeleteAssessmentRun = "DeleteAssessmentRun"
 
-// DeleteApplicationRequest generates a request for the DeleteApplication operation.
-func (c *Inspector) DeleteApplicationRequest(input *DeleteApplicationInput) (req *request.Request, output *DeleteApplicationOutput) {
+// DeleteAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAssessmentRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteAssessmentRun for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteAssessmentRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteAssessmentRunRequest method.
+//    req, resp := client.DeleteAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DeleteAssessmentRunRequest(input *DeleteAssessmentRunInput) (req *request.Request, output *DeleteAssessmentRunOutput) {
 	op := &request.Operation{
-		Name:       opDeleteApplication,
+		Name:       opDeleteAssessmentRun,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DeleteApplicationInput{}
+		input = &DeleteAssessmentRunInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DeleteApplicationOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &DeleteAssessmentRunOutput{}
 	req.Data = output
 	return
 }
 
-// Deletes the application specified by the application ARN.
-func (c *Inspector) DeleteApplication(input *DeleteApplicationInput) (*DeleteApplicationOutput, error) {
-	req, out := c.DeleteApplicationRequest(input)
+// DeleteAssessmentRun API operation for Amazon Inspector.
+//
+// Deletes the assessment run that is specified by the ARN of the assessment
+// run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DeleteAssessmentRun for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AssessmentRunInProgressException
+//   You cannot perform a specified action if an assessment run is currently in
+//   progress.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) DeleteAssessmentRun(input *DeleteAssessmentRunInput) (*DeleteAssessmentRunOutput, error) {
+	req, out := c.DeleteAssessmentRunRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDeleteAssessment = "DeleteAssessment"
+const opDeleteAssessmentTarget = "DeleteAssessmentTarget"
 
-// DeleteAssessmentRequest generates a request for the DeleteAssessment operation.
-func (c *Inspector) DeleteAssessmentRequest(input *DeleteAssessmentInput) (req *request.Request, output *DeleteAssessmentOutput) {
+// DeleteAssessmentTargetRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAssessmentTarget operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteAssessmentTarget for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteAssessmentTarget method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteAssessmentTargetRequest method.
+//    req, resp := client.DeleteAssessmentTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DeleteAssessmentTargetRequest(input *DeleteAssessmentTargetInput) (req *request.Request, output *DeleteAssessmentTargetOutput) {
 	op := &request.Operation{
-		Name:       opDeleteAssessment,
+		Name:       opDeleteAssessmentTarget,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DeleteAssessmentInput{}
+		input = &DeleteAssessmentTargetInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DeleteAssessmentOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &DeleteAssessmentTargetOutput{}
 	req.Data = output
 	return
 }
 
-// Deletes the assessment specified by the assessment ARN.
-func (c *Inspector) DeleteAssessment(input *DeleteAssessmentInput) (*DeleteAssessmentOutput, error) {
-	req, out := c.DeleteAssessmentRequest(input)
+// DeleteAssessmentTarget API operation for Amazon Inspector.
+//
+// Deletes the assessment target that is specified by the ARN of the assessment
+// target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DeleteAssessmentTarget for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AssessmentRunInProgressException
+//   You cannot perform a specified action if an assessment run is currently in
+//   progress.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) DeleteAssessmentTarget(input *DeleteAssessmentTargetInput) (*DeleteAssessmentTargetOutput, error) {
+	req, out := c.DeleteAssessmentTargetRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDeleteRun = "DeleteRun"
+const opDeleteAssessmentTemplate = "DeleteAssessmentTemplate"
 
-// DeleteRunRequest generates a request for the DeleteRun operation.
-func (c *Inspector) DeleteRunRequest(input *DeleteRunInput) (req *request.Request, output *DeleteRunOutput) {
+// DeleteAssessmentTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAssessmentTemplate operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DeleteAssessmentTemplate for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DeleteAssessmentTemplate method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DeleteAssessmentTemplateRequest method.
+//    req, resp := client.DeleteAssessmentTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DeleteAssessmentTemplateRequest(input *DeleteAssessmentTemplateInput) (req *request.Request, output *DeleteAssessmentTemplateOutput) {
 	op := &request.Operation{
-		Name:       opDeleteRun,
+		Name:       opDeleteAssessmentTemplate,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DeleteRunInput{}
+		input = &DeleteAssessmentTemplateInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DeleteRunOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &DeleteAssessmentTemplateOutput{}
 	req.Data = output
 	return
 }
 
-// Deletes the assessment run specified by the run ARN.
-func (c *Inspector) DeleteRun(input *DeleteRunInput) (*DeleteRunOutput, error) {
-	req, out := c.DeleteRunRequest(input)
+// DeleteAssessmentTemplate API operation for Amazon Inspector.
+//
+// Deletes the assessment template that is specified by the ARN of the assessment
+// template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DeleteAssessmentTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AssessmentRunInProgressException
+//   You cannot perform a specified action if an assessment run is currently in
+//   progress.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) DeleteAssessmentTemplate(input *DeleteAssessmentTemplateInput) (*DeleteAssessmentTemplateOutput, error) {
+	req, out := c.DeleteAssessmentTemplateRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeApplication = "DescribeApplication"
+const opDescribeAssessmentRuns = "DescribeAssessmentRuns"
 
-// DescribeApplicationRequest generates a request for the DescribeApplication operation.
-func (c *Inspector) DescribeApplicationRequest(input *DescribeApplicationInput) (req *request.Request, output *DescribeApplicationOutput) {
+// DescribeAssessmentRunsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAssessmentRuns operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeAssessmentRuns for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeAssessmentRuns method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeAssessmentRunsRequest method.
+//    req, resp := client.DescribeAssessmentRunsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeAssessmentRunsRequest(input *DescribeAssessmentRunsInput) (req *request.Request, output *DescribeAssessmentRunsOutput) {
 	op := &request.Operation{
-		Name:       opDescribeApplication,
+		Name:       opDescribeAssessmentRuns,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeApplicationInput{}
+		input = &DescribeAssessmentRunsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeApplicationOutput{}
+	output = &DescribeAssessmentRunsOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the application specified by the application ARN.
-func (c *Inspector) DescribeApplication(input *DescribeApplicationInput) (*DescribeApplicationOutput, error) {
-	req, out := c.DescribeApplicationRequest(input)
+// DescribeAssessmentRuns API operation for Amazon Inspector.
+//
+// Describes the assessment runs that are specified by the ARNs of the assessment
+// runs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeAssessmentRuns for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeAssessmentRuns(input *DescribeAssessmentRunsInput) (*DescribeAssessmentRunsOutput, error) {
+	req, out := c.DescribeAssessmentRunsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeAssessment = "DescribeAssessment"
+const opDescribeAssessmentTargets = "DescribeAssessmentTargets"
 
-// DescribeAssessmentRequest generates a request for the DescribeAssessment operation.
-func (c *Inspector) DescribeAssessmentRequest(input *DescribeAssessmentInput) (req *request.Request, output *DescribeAssessmentOutput) {
+// DescribeAssessmentTargetsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAssessmentTargets operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeAssessmentTargets for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeAssessmentTargets method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeAssessmentTargetsRequest method.
+//    req, resp := client.DescribeAssessmentTargetsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeAssessmentTargetsRequest(input *DescribeAssessmentTargetsInput) (req *request.Request, output *DescribeAssessmentTargetsOutput) {
 	op := &request.Operation{
-		Name:       opDescribeAssessment,
+		Name:       opDescribeAssessmentTargets,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeAssessmentInput{}
+		input = &DescribeAssessmentTargetsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeAssessmentOutput{}
+	output = &DescribeAssessmentTargetsOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the assessment specified by the assessment ARN.
-func (c *Inspector) DescribeAssessment(input *DescribeAssessmentInput) (*DescribeAssessmentOutput, error) {
-	req, out := c.DescribeAssessmentRequest(input)
+// DescribeAssessmentTargets API operation for Amazon Inspector.
+//
+// Describes the assessment targets that are specified by the ARNs of the assessment
+// targets.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeAssessmentTargets for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeAssessmentTargets(input *DescribeAssessmentTargetsInput) (*DescribeAssessmentTargetsOutput, error) {
+	req, out := c.DescribeAssessmentTargetsRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opDescribeAssessmentTemplates = "DescribeAssessmentTemplates"
+
+// DescribeAssessmentTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAssessmentTemplates operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeAssessmentTemplates for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeAssessmentTemplates method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeAssessmentTemplatesRequest method.
+//    req, resp := client.DescribeAssessmentTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeAssessmentTemplatesRequest(input *DescribeAssessmentTemplatesInput) (req *request.Request, output *DescribeAssessmentTemplatesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAssessmentTemplates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAssessmentTemplatesInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	output = &DescribeAssessmentTemplatesOutput{}
+	req.Data = output
+	return
+}
+
+// DescribeAssessmentTemplates API operation for Amazon Inspector.
+//
+// Describes the assessment templates that are specified by the ARNs of the
+// assessment templates.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeAssessmentTemplates for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeAssessmentTemplates(input *DescribeAssessmentTemplatesInput) (*DescribeAssessmentTemplatesOutput, error) {
+	req, out := c.DescribeAssessmentTemplatesRequest(input)
 	err := req.Send()
 	return out, err
 }
 
 const opDescribeCrossAccountAccessRole = "DescribeCrossAccountAccessRole"
 
-// DescribeCrossAccountAccessRoleRequest generates a request for the DescribeCrossAccountAccessRole operation.
+// DescribeCrossAccountAccessRoleRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCrossAccountAccessRole operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeCrossAccountAccessRole for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeCrossAccountAccessRole method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeCrossAccountAccessRoleRequest method.
+//    req, resp := client.DescribeCrossAccountAccessRoleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) DescribeCrossAccountAccessRoleRequest(input *DescribeCrossAccountAccessRoleInput) (req *request.Request, output *DescribeCrossAccountAccessRoleOutput) {
 	op := &request.Operation{
 		Name:       opDescribeCrossAccountAccessRole,
@@ -309,319 +825,713 @@ func (c *Inspector) DescribeCrossAccountAccessRoleRequest(input *DescribeCrossAc
 	return
 }
 
-// Describes the IAM role that enables Inspector to access your AWS account.
+// DescribeCrossAccountAccessRole API operation for Amazon Inspector.
+//
+// Describes the IAM role that enables Amazon Inspector to access your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeCrossAccountAccessRole for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
 func (c *Inspector) DescribeCrossAccountAccessRole(input *DescribeCrossAccountAccessRoleInput) (*DescribeCrossAccountAccessRoleOutput, error) {
 	req, out := c.DescribeCrossAccountAccessRoleRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeFinding = "DescribeFinding"
+const opDescribeFindings = "DescribeFindings"
 
-// DescribeFindingRequest generates a request for the DescribeFinding operation.
-func (c *Inspector) DescribeFindingRequest(input *DescribeFindingInput) (req *request.Request, output *DescribeFindingOutput) {
+// DescribeFindingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFindings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeFindings for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeFindings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeFindingsRequest method.
+//    req, resp := client.DescribeFindingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeFindingsRequest(input *DescribeFindingsInput) (req *request.Request, output *DescribeFindingsOutput) {
 	op := &request.Operation{
-		Name:       opDescribeFinding,
+		Name:       opDescribeFindings,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeFindingInput{}
+		input = &DescribeFindingsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeFindingOutput{}
+	output = &DescribeFindingsOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the finding specified by the finding ARN.
-func (c *Inspector) DescribeFinding(input *DescribeFindingInput) (*DescribeFindingOutput, error) {
-	req, out := c.DescribeFindingRequest(input)
+// DescribeFindings API operation for Amazon Inspector.
+//
+// Describes the findings that are specified by the ARNs of the findings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeFindings for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeFindings(input *DescribeFindingsInput) (*DescribeFindingsOutput, error) {
+	req, out := c.DescribeFindingsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeResourceGroup = "DescribeResourceGroup"
+const opDescribeResourceGroups = "DescribeResourceGroups"
 
-// DescribeResourceGroupRequest generates a request for the DescribeResourceGroup operation.
-func (c *Inspector) DescribeResourceGroupRequest(input *DescribeResourceGroupInput) (req *request.Request, output *DescribeResourceGroupOutput) {
+// DescribeResourceGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeResourceGroups operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeResourceGroups for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeResourceGroups method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeResourceGroupsRequest method.
+//    req, resp := client.DescribeResourceGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeResourceGroupsRequest(input *DescribeResourceGroupsInput) (req *request.Request, output *DescribeResourceGroupsOutput) {
 	op := &request.Operation{
-		Name:       opDescribeResourceGroup,
+		Name:       opDescribeResourceGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeResourceGroupInput{}
+		input = &DescribeResourceGroupsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeResourceGroupOutput{}
+	output = &DescribeResourceGroupsOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the resource group specified by the resource group ARN.
-func (c *Inspector) DescribeResourceGroup(input *DescribeResourceGroupInput) (*DescribeResourceGroupOutput, error) {
-	req, out := c.DescribeResourceGroupRequest(input)
+// DescribeResourceGroups API operation for Amazon Inspector.
+//
+// Describes the resource groups that are specified by the ARNs of the resource
+// groups.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeResourceGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeResourceGroups(input *DescribeResourceGroupsInput) (*DescribeResourceGroupsOutput, error) {
+	req, out := c.DescribeResourceGroupsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeRulesPackage = "DescribeRulesPackage"
+const opDescribeRulesPackages = "DescribeRulesPackages"
 
-// DescribeRulesPackageRequest generates a request for the DescribeRulesPackage operation.
-func (c *Inspector) DescribeRulesPackageRequest(input *DescribeRulesPackageInput) (req *request.Request, output *DescribeRulesPackageOutput) {
+// DescribeRulesPackagesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeRulesPackages operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeRulesPackages for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeRulesPackages method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeRulesPackagesRequest method.
+//    req, resp := client.DescribeRulesPackagesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) DescribeRulesPackagesRequest(input *DescribeRulesPackagesInput) (req *request.Request, output *DescribeRulesPackagesOutput) {
 	op := &request.Operation{
-		Name:       opDescribeRulesPackage,
+		Name:       opDescribeRulesPackages,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeRulesPackageInput{}
+		input = &DescribeRulesPackagesInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeRulesPackageOutput{}
+	output = &DescribeRulesPackagesOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the rules package specified by the rules package ARN.
-func (c *Inspector) DescribeRulesPackage(input *DescribeRulesPackageInput) (*DescribeRulesPackageOutput, error) {
-	req, out := c.DescribeRulesPackageRequest(input)
+// DescribeRulesPackages API operation for Amazon Inspector.
+//
+// Describes the rules packages that are specified by the ARNs of the rules
+// packages.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation DescribeRulesPackages for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+func (c *Inspector) DescribeRulesPackages(input *DescribeRulesPackagesInput) (*DescribeRulesPackagesOutput, error) {
+	req, out := c.DescribeRulesPackagesRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDescribeRun = "DescribeRun"
+const opGetTelemetryMetadata = "GetTelemetryMetadata"
 
-// DescribeRunRequest generates a request for the DescribeRun operation.
-func (c *Inspector) DescribeRunRequest(input *DescribeRunInput) (req *request.Request, output *DescribeRunOutput) {
+// GetTelemetryMetadataRequest generates a "aws/request.Request" representing the
+// client's request for the GetTelemetryMetadata operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetTelemetryMetadata for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetTelemetryMetadata method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetTelemetryMetadataRequest method.
+//    req, resp := client.GetTelemetryMetadataRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) GetTelemetryMetadataRequest(input *GetTelemetryMetadataInput) (req *request.Request, output *GetTelemetryMetadataOutput) {
 	op := &request.Operation{
-		Name:       opDescribeRun,
+		Name:       opGetTelemetryMetadata,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DescribeRunInput{}
+		input = &GetTelemetryMetadataInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DescribeRunOutput{}
+	output = &GetTelemetryMetadataOutput{}
 	req.Data = output
 	return
 }
 
-// Describes the assessment run specified by the run ARN.
-func (c *Inspector) DescribeRun(input *DescribeRunInput) (*DescribeRunOutput, error) {
-	req, out := c.DescribeRunRequest(input)
+// GetTelemetryMetadata API operation for Amazon Inspector.
+//
+// Information about the data that is collected for the specified assessment
+// run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation GetTelemetryMetadata for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) GetTelemetryMetadata(input *GetTelemetryMetadataInput) (*GetTelemetryMetadataOutput, error) {
+	req, out := c.GetTelemetryMetadataRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opDetachAssessmentAndRulesPackage = "DetachAssessmentAndRulesPackage"
+const opListAssessmentRunAgents = "ListAssessmentRunAgents"
 
-// DetachAssessmentAndRulesPackageRequest generates a request for the DetachAssessmentAndRulesPackage operation.
-func (c *Inspector) DetachAssessmentAndRulesPackageRequest(input *DetachAssessmentAndRulesPackageInput) (req *request.Request, output *DetachAssessmentAndRulesPackageOutput) {
+// ListAssessmentRunAgentsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssessmentRunAgents operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListAssessmentRunAgents for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListAssessmentRunAgents method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListAssessmentRunAgentsRequest method.
+//    req, resp := client.ListAssessmentRunAgentsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) ListAssessmentRunAgentsRequest(input *ListAssessmentRunAgentsInput) (req *request.Request, output *ListAssessmentRunAgentsOutput) {
 	op := &request.Operation{
-		Name:       opDetachAssessmentAndRulesPackage,
+		Name:       opListAssessmentRunAgents,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &DetachAssessmentAndRulesPackageInput{}
+		input = &ListAssessmentRunAgentsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &DetachAssessmentAndRulesPackageOutput{}
+	output = &ListAssessmentRunAgentsOutput{}
 	req.Data = output
 	return
 }
 
-// Detaches the rules package specified by the rules package ARN from the assessment
-// specified by the assessment ARN.
-func (c *Inspector) DetachAssessmentAndRulesPackage(input *DetachAssessmentAndRulesPackageInput) (*DetachAssessmentAndRulesPackageOutput, error) {
-	req, out := c.DetachAssessmentAndRulesPackageRequest(input)
+// ListAssessmentRunAgents API operation for Amazon Inspector.
+//
+// Lists the agents of the assessment runs that are specified by the ARNs of
+// the assessment runs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListAssessmentRunAgents for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) ListAssessmentRunAgents(input *ListAssessmentRunAgentsInput) (*ListAssessmentRunAgentsOutput, error) {
+	req, out := c.ListAssessmentRunAgentsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opGetAssessmentTelemetry = "GetAssessmentTelemetry"
+const opListAssessmentRuns = "ListAssessmentRuns"
 
-// GetAssessmentTelemetryRequest generates a request for the GetAssessmentTelemetry operation.
-func (c *Inspector) GetAssessmentTelemetryRequest(input *GetAssessmentTelemetryInput) (req *request.Request, output *GetAssessmentTelemetryOutput) {
+// ListAssessmentRunsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssessmentRuns operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListAssessmentRuns for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListAssessmentRuns method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListAssessmentRunsRequest method.
+//    req, resp := client.ListAssessmentRunsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) ListAssessmentRunsRequest(input *ListAssessmentRunsInput) (req *request.Request, output *ListAssessmentRunsOutput) {
 	op := &request.Operation{
-		Name:       opGetAssessmentTelemetry,
+		Name:       opListAssessmentRuns,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &GetAssessmentTelemetryInput{}
+		input = &ListAssessmentRunsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &GetAssessmentTelemetryOutput{}
+	output = &ListAssessmentRunsOutput{}
 	req.Data = output
 	return
 }
 
-// Returns the metadata about the telemetry (application behavioral data) for
-// the assessment specified by the assessment ARN.
-func (c *Inspector) GetAssessmentTelemetry(input *GetAssessmentTelemetryInput) (*GetAssessmentTelemetryOutput, error) {
-	req, out := c.GetAssessmentTelemetryRequest(input)
+// ListAssessmentRuns API operation for Amazon Inspector.
+//
+// Lists the assessment runs that correspond to the assessment templates that
+// are specified by the ARNs of the assessment templates.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListAssessmentRuns for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) ListAssessmentRuns(input *ListAssessmentRunsInput) (*ListAssessmentRunsOutput, error) {
+	req, out := c.ListAssessmentRunsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opListApplications = "ListApplications"
+const opListAssessmentTargets = "ListAssessmentTargets"
 
-// ListApplicationsRequest generates a request for the ListApplications operation.
-func (c *Inspector) ListApplicationsRequest(input *ListApplicationsInput) (req *request.Request, output *ListApplicationsOutput) {
+// ListAssessmentTargetsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssessmentTargets operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListAssessmentTargets for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListAssessmentTargets method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListAssessmentTargetsRequest method.
+//    req, resp := client.ListAssessmentTargetsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) ListAssessmentTargetsRequest(input *ListAssessmentTargetsInput) (req *request.Request, output *ListAssessmentTargetsOutput) {
 	op := &request.Operation{
-		Name:       opListApplications,
+		Name:       opListAssessmentTargets,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &ListApplicationsInput{}
+		input = &ListAssessmentTargetsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &ListApplicationsOutput{}
+	output = &ListAssessmentTargetsOutput{}
 	req.Data = output
 	return
 }
 
-// Lists the ARNs of the applications within this AWS account. For more information
-// about applications, see Inspector Applications (https://docs.aws.amazon.com/inspector/latest/userguide//inspector_applications.html).
-func (c *Inspector) ListApplications(input *ListApplicationsInput) (*ListApplicationsOutput, error) {
-	req, out := c.ListApplicationsRequest(input)
+// ListAssessmentTargets API operation for Amazon Inspector.
+//
+// Lists the ARNs of the assessment targets within this AWS account. For more
+// information about assessment targets, see Amazon Inspector Assessment Targets
+// (http://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListAssessmentTargets for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+func (c *Inspector) ListAssessmentTargets(input *ListAssessmentTargetsInput) (*ListAssessmentTargetsOutput, error) {
+	req, out := c.ListAssessmentTargetsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opListAssessmentAgents = "ListAssessmentAgents"
+const opListAssessmentTemplates = "ListAssessmentTemplates"
 
-// ListAssessmentAgentsRequest generates a request for the ListAssessmentAgents operation.
-func (c *Inspector) ListAssessmentAgentsRequest(input *ListAssessmentAgentsInput) (req *request.Request, output *ListAssessmentAgentsOutput) {
+// ListAssessmentTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssessmentTemplates operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListAssessmentTemplates for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListAssessmentTemplates method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListAssessmentTemplatesRequest method.
+//    req, resp := client.ListAssessmentTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) ListAssessmentTemplatesRequest(input *ListAssessmentTemplatesInput) (req *request.Request, output *ListAssessmentTemplatesOutput) {
 	op := &request.Operation{
-		Name:       opListAssessmentAgents,
+		Name:       opListAssessmentTemplates,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &ListAssessmentAgentsInput{}
+		input = &ListAssessmentTemplatesInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &ListAssessmentAgentsOutput{}
+	output = &ListAssessmentTemplatesOutput{}
 	req.Data = output
 	return
 }
 
-// Lists the agents of the assessment specified by the assessment ARN.
-func (c *Inspector) ListAssessmentAgents(input *ListAssessmentAgentsInput) (*ListAssessmentAgentsOutput, error) {
-	req, out := c.ListAssessmentAgentsRequest(input)
+// ListAssessmentTemplates API operation for Amazon Inspector.
+//
+// Lists the assessment templates that correspond to the assessment targets
+// that are specified by the ARNs of the assessment targets.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListAssessmentTemplates for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) ListAssessmentTemplates(input *ListAssessmentTemplatesInput) (*ListAssessmentTemplatesOutput, error) {
+	req, out := c.ListAssessmentTemplatesRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opListAssessments = "ListAssessments"
+const opListEventSubscriptions = "ListEventSubscriptions"
 
-// ListAssessmentsRequest generates a request for the ListAssessments operation.
-func (c *Inspector) ListAssessmentsRequest(input *ListAssessmentsInput) (req *request.Request, output *ListAssessmentsOutput) {
+// ListEventSubscriptionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListEventSubscriptions operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListEventSubscriptions for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListEventSubscriptions method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListEventSubscriptionsRequest method.
+//    req, resp := client.ListEventSubscriptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) ListEventSubscriptionsRequest(input *ListEventSubscriptionsInput) (req *request.Request, output *ListEventSubscriptionsOutput) {
 	op := &request.Operation{
-		Name:       opListAssessments,
+		Name:       opListEventSubscriptions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &ListAssessmentsInput{}
+		input = &ListEventSubscriptionsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &ListAssessmentsOutput{}
+	output = &ListEventSubscriptionsOutput{}
 	req.Data = output
 	return
 }
 
-// Lists the assessments corresponding to applications specified by the applications'
-// ARNs.
-func (c *Inspector) ListAssessments(input *ListAssessmentsInput) (*ListAssessmentsOutput, error) {
-	req, out := c.ListAssessmentsRequest(input)
-	err := req.Send()
-	return out, err
-}
-
-const opListAttachedAssessments = "ListAttachedAssessments"
-
-// ListAttachedAssessmentsRequest generates a request for the ListAttachedAssessments operation.
-func (c *Inspector) ListAttachedAssessmentsRequest(input *ListAttachedAssessmentsInput) (req *request.Request, output *ListAttachedAssessmentsOutput) {
-	op := &request.Operation{
-		Name:       opListAttachedAssessments,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &ListAttachedAssessmentsInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &ListAttachedAssessmentsOutput{}
-	req.Data = output
-	return
-}
-
-// Lists the assessments attached to the rules package specified by the rules
-// package ARN.
-func (c *Inspector) ListAttachedAssessments(input *ListAttachedAssessmentsInput) (*ListAttachedAssessmentsOutput, error) {
-	req, out := c.ListAttachedAssessmentsRequest(input)
-	err := req.Send()
-	return out, err
-}
-
-const opListAttachedRulesPackages = "ListAttachedRulesPackages"
-
-// ListAttachedRulesPackagesRequest generates a request for the ListAttachedRulesPackages operation.
-func (c *Inspector) ListAttachedRulesPackagesRequest(input *ListAttachedRulesPackagesInput) (req *request.Request, output *ListAttachedRulesPackagesOutput) {
-	op := &request.Operation{
-		Name:       opListAttachedRulesPackages,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &ListAttachedRulesPackagesInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &ListAttachedRulesPackagesOutput{}
-	req.Data = output
-	return
-}
-
-// Lists the rules packages attached to the assessment specified by the assessment
-// ARN.
-func (c *Inspector) ListAttachedRulesPackages(input *ListAttachedRulesPackagesInput) (*ListAttachedRulesPackagesOutput, error) {
-	req, out := c.ListAttachedRulesPackagesRequest(input)
+// ListEventSubscriptions API operation for Amazon Inspector.
+//
+// Lists all the event subscriptions for the assessment template that is specified
+// by the ARN of the assessment template. For more information, see SubscribeToEvent
+// and UnsubscribeFromEvent.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListEventSubscriptions for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) ListEventSubscriptions(input *ListEventSubscriptionsInput) (*ListEventSubscriptionsOutput, error) {
+	req, out := c.ListEventSubscriptionsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
 const opListFindings = "ListFindings"
 
-// ListFindingsRequest generates a request for the ListFindings operation.
+// ListFindingsRequest generates a "aws/request.Request" representing the
+// client's request for the ListFindings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListFindings for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListFindings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListFindingsRequest method.
+//    req, resp := client.ListFindingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) ListFindingsRequest(input *ListFindingsInput) (req *request.Request, output *ListFindingsOutput) {
 	op := &request.Operation{
 		Name:       opListFindings,
@@ -639,7 +1549,33 @@ func (c *Inspector) ListFindingsRequest(input *ListFindingsInput) (req *request.
 	return
 }
 
-// Lists findings generated by the assessment run specified by the run ARNs.
+// ListFindings API operation for Amazon Inspector.
+//
+// Lists findings that are generated by the assessment runs that are specified
+// by the ARNs of the assessment runs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListFindings for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
 func (c *Inspector) ListFindings(input *ListFindingsInput) (*ListFindingsOutput, error) {
 	req, out := c.ListFindingsRequest(input)
 	err := req.Send()
@@ -648,7 +1584,30 @@ func (c *Inspector) ListFindings(input *ListFindingsInput) (*ListFindingsOutput,
 
 const opListRulesPackages = "ListRulesPackages"
 
-// ListRulesPackagesRequest generates a request for the ListRulesPackages operation.
+// ListRulesPackagesRequest generates a "aws/request.Request" representing the
+// client's request for the ListRulesPackages operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListRulesPackages for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListRulesPackages method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListRulesPackagesRequest method.
+//    req, resp := client.ListRulesPackagesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) ListRulesPackagesRequest(input *ListRulesPackagesInput) (req *request.Request, output *ListRulesPackagesOutput) {
 	op := &request.Operation{
 		Name:       opListRulesPackages,
@@ -666,44 +1625,60 @@ func (c *Inspector) ListRulesPackagesRequest(input *ListRulesPackagesInput) (req
 	return
 }
 
-// Lists all available Inspector rules packages.
+// ListRulesPackages API operation for Amazon Inspector.
+//
+// Lists all available Amazon Inspector rules packages.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListRulesPackages for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
 func (c *Inspector) ListRulesPackages(input *ListRulesPackagesInput) (*ListRulesPackagesOutput, error) {
 	req, out := c.ListRulesPackagesRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opListRuns = "ListRuns"
-
-// ListRunsRequest generates a request for the ListRuns operation.
-func (c *Inspector) ListRunsRequest(input *ListRunsInput) (req *request.Request, output *ListRunsOutput) {
-	op := &request.Operation{
-		Name:       opListRuns,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &ListRunsInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &ListRunsOutput{}
-	req.Data = output
-	return
-}
-
-// Lists the assessment runs associated with the assessments specified by the
-// assessment ARNs.
-func (c *Inspector) ListRuns(input *ListRunsInput) (*ListRunsOutput, error) {
-	req, out := c.ListRunsRequest(input)
-	err := req.Send()
-	return out, err
-}
-
 const opListTagsForResource = "ListTagsForResource"
 
-// ListTagsForResourceRequest generates a request for the ListTagsForResource operation.
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListTagsForResource for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListTagsForResource method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
 	op := &request.Operation{
 		Name:       opListTagsForResource,
@@ -721,72 +1696,144 @@ func (c *Inspector) ListTagsForResourceRequest(input *ListTagsForResourceInput) 
 	return
 }
 
-// Lists all tags associated with a resource.
+// ListTagsForResource API operation for Amazon Inspector.
+//
+// Lists all tags associated with an assessment template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
 func (c *Inspector) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opLocalizeText = "LocalizeText"
+const opPreviewAgents = "PreviewAgents"
 
-// LocalizeTextRequest generates a request for the LocalizeText operation.
-func (c *Inspector) LocalizeTextRequest(input *LocalizeTextInput) (req *request.Request, output *LocalizeTextOutput) {
+// PreviewAgentsRequest generates a "aws/request.Request" representing the
+// client's request for the PreviewAgents operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See PreviewAgents for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the PreviewAgents method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the PreviewAgentsRequest method.
+//    req, resp := client.PreviewAgentsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) PreviewAgentsRequest(input *PreviewAgentsInput) (req *request.Request, output *PreviewAgentsOutput) {
 	op := &request.Operation{
-		Name:       opLocalizeText,
+		Name:       opPreviewAgents,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &LocalizeTextInput{}
+		input = &PreviewAgentsInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &LocalizeTextOutput{}
+	output = &PreviewAgentsOutput{}
 	req.Data = output
 	return
 }
 
-// Translates a textual identifier into a user-readable text in a specified
-// locale.
-func (c *Inspector) LocalizeText(input *LocalizeTextInput) (*LocalizeTextOutput, error) {
-	req, out := c.LocalizeTextRequest(input)
-	err := req.Send()
-	return out, err
-}
-
-const opPreviewAgentsForResourceGroup = "PreviewAgentsForResourceGroup"
-
-// PreviewAgentsForResourceGroupRequest generates a request for the PreviewAgentsForResourceGroup operation.
-func (c *Inspector) PreviewAgentsForResourceGroupRequest(input *PreviewAgentsForResourceGroupInput) (req *request.Request, output *PreviewAgentsForResourceGroupOutput) {
-	op := &request.Operation{
-		Name:       opPreviewAgentsForResourceGroup,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &PreviewAgentsForResourceGroupInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &PreviewAgentsForResourceGroupOutput{}
-	req.Data = output
-	return
-}
-
-// Previews the agents installed on the EC2 instances that are included in the
-// application created with the specified resource group.
-func (c *Inspector) PreviewAgentsForResourceGroup(input *PreviewAgentsForResourceGroupInput) (*PreviewAgentsForResourceGroupOutput, error) {
-	req, out := c.PreviewAgentsForResourceGroupRequest(input)
+// PreviewAgents API operation for Amazon Inspector.
+//
+// Previews the agents installed on the EC2 instances that are part of the specified
+// assessment target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation PreviewAgents for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+//   * InvalidCrossAccountRoleException
+//   Amazon Inspector cannot assume the cross-account role that it needs to list
+//   your EC2 instances during the assessment run.
+//
+func (c *Inspector) PreviewAgents(input *PreviewAgentsInput) (*PreviewAgentsOutput, error) {
+	req, out := c.PreviewAgentsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
 const opRegisterCrossAccountAccessRole = "RegisterCrossAccountAccessRole"
 
-// RegisterCrossAccountAccessRoleRequest generates a request for the RegisterCrossAccountAccessRole operation.
+// RegisterCrossAccountAccessRoleRequest generates a "aws/request.Request" representing the
+// client's request for the RegisterCrossAccountAccessRole operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See RegisterCrossAccountAccessRole for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RegisterCrossAccountAccessRole method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RegisterCrossAccountAccessRoleRequest method.
+//    req, resp := client.RegisterCrossAccountAccessRoleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) RegisterCrossAccountAccessRoleRequest(input *RegisterCrossAccountAccessRoleInput) (req *request.Request, output *RegisterCrossAccountAccessRoleOutput) {
 	op := &request.Operation{
 		Name:       opRegisterCrossAccountAccessRole,
@@ -799,13 +1846,40 @@ func (c *Inspector) RegisterCrossAccountAccessRoleRequest(input *RegisterCrossAc
 	}
 
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	output = &RegisterCrossAccountAccessRoleOutput{}
 	req.Data = output
 	return
 }
 
-// Register the role that Inspector uses to list your EC2 instances during the
-// assessment.
+// RegisterCrossAccountAccessRole API operation for Amazon Inspector.
+//
+// Registers the IAM role that Amazon Inspector uses to list your EC2 instances
+// at the start of the assessment run or when you call the PreviewAgents action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation RegisterCrossAccountAccessRole for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * InvalidCrossAccountRoleException
+//   Amazon Inspector cannot assume the cross-account role that it needs to list
+//   your EC2 instances during the assessment run.
+//
 func (c *Inspector) RegisterCrossAccountAccessRole(input *RegisterCrossAccountAccessRoleInput) (*RegisterCrossAccountAccessRoleOutput, error) {
 	req, out := c.RegisterCrossAccountAccessRoleRequest(input)
 	err := req.Send()
@@ -814,7 +1888,30 @@ func (c *Inspector) RegisterCrossAccountAccessRole(input *RegisterCrossAccountAc
 
 const opRemoveAttributesFromFindings = "RemoveAttributesFromFindings"
 
-// RemoveAttributesFromFindingsRequest generates a request for the RemoveAttributesFromFindings operation.
+// RemoveAttributesFromFindingsRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveAttributesFromFindings operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See RemoveAttributesFromFindings for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the RemoveAttributesFromFindings method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the RemoveAttributesFromFindingsRequest method.
+//    req, resp := client.RemoveAttributesFromFindingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) RemoveAttributesFromFindingsRequest(input *RemoveAttributesFromFindingsInput) (req *request.Request, output *RemoveAttributesFromFindingsOutput) {
 	op := &request.Operation{
 		Name:       opRemoveAttributesFromFindings,
@@ -832,45 +1929,66 @@ func (c *Inspector) RemoveAttributesFromFindingsRequest(input *RemoveAttributesF
 	return
 }
 
-// Removes the entire attribute (key and value pair) from the findings specified
-// by the finding ARNs where an attribute with the specified key exists.
+// RemoveAttributesFromFindings API operation for Amazon Inspector.
+//
+// Removes entire attributes (key and value pairs) from the findings that are
+// specified by the ARNs of the findings where an attribute with the specified
+// key exists.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation RemoveAttributesFromFindings for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
 func (c *Inspector) RemoveAttributesFromFindings(input *RemoveAttributesFromFindingsInput) (*RemoveAttributesFromFindingsOutput, error) {
 	req, out := c.RemoveAttributesFromFindingsRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opRunAssessment = "RunAssessment"
-
-// RunAssessmentRequest generates a request for the RunAssessment operation.
-func (c *Inspector) RunAssessmentRequest(input *RunAssessmentInput) (req *request.Request, output *RunAssessmentOutput) {
-	op := &request.Operation{
-		Name:       opRunAssessment,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &RunAssessmentInput{}
-	}
-
-	req = c.newRequest(op, input, output)
-	output = &RunAssessmentOutput{}
-	req.Data = output
-	return
-}
-
-// Starts the analysis of the application’s behavior against selected rule packages
-// for the assessment specified by the assessment ARN.
-func (c *Inspector) RunAssessment(input *RunAssessmentInput) (*RunAssessmentOutput, error) {
-	req, out := c.RunAssessmentRequest(input)
-	err := req.Send()
-	return out, err
-}
-
 const opSetTagsForResource = "SetTagsForResource"
 
-// SetTagsForResourceRequest generates a request for the SetTagsForResource operation.
+// SetTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the SetTagsForResource operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See SetTagsForResource for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SetTagsForResource method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SetTagsForResourceRequest method.
+//    req, resp := client.SetTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *Inspector) SetTagsForResourceRequest(input *SetTagsForResourceInput) (req *request.Request, output *SetTagsForResourceOutput) {
 	op := &request.Operation{
 		Name:       opSetTagsForResource,
@@ -883,125 +2001,446 @@ func (c *Inspector) SetTagsForResourceRequest(input *SetTagsForResourceInput) (r
 	}
 
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	output = &SetTagsForResourceOutput{}
 	req.Data = output
 	return
 }
 
-// Sets tags (key and value pairs) to the assessment specified by the assessment
-// ARN.
+// SetTagsForResource API operation for Amazon Inspector.
+//
+// Sets tags (key and value pairs) to the assessment template that is specified
+// by the ARN of the assessment template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation SetTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
 func (c *Inspector) SetTagsForResource(input *SetTagsForResourceInput) (*SetTagsForResourceOutput, error) {
 	req, out := c.SetTagsForResourceRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opStartDataCollection = "StartDataCollection"
+const opStartAssessmentRun = "StartAssessmentRun"
 
-// StartDataCollectionRequest generates a request for the StartDataCollection operation.
-func (c *Inspector) StartDataCollectionRequest(input *StartDataCollectionInput) (req *request.Request, output *StartDataCollectionOutput) {
+// StartAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the StartAssessmentRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See StartAssessmentRun for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StartAssessmentRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StartAssessmentRunRequest method.
+//    req, resp := client.StartAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) StartAssessmentRunRequest(input *StartAssessmentRunInput) (req *request.Request, output *StartAssessmentRunOutput) {
 	op := &request.Operation{
-		Name:       opStartDataCollection,
+		Name:       opStartAssessmentRun,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &StartDataCollectionInput{}
+		input = &StartAssessmentRunInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &StartDataCollectionOutput{}
+	output = &StartAssessmentRunOutput{}
 	req.Data = output
 	return
 }
 
-// Starts data collection for the assessment specified by the assessment ARN.
+// StartAssessmentRun API operation for Amazon Inspector.
+//
+// Starts the assessment run specified by the ARN of the assessment template.
 // For this API to function properly, you must not exceed the limit of running
 // up to 500 concurrent agents per AWS account.
-func (c *Inspector) StartDataCollection(input *StartDataCollectionInput) (*StartDataCollectionOutput, error) {
-	req, out := c.StartDataCollectionRequest(input)
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation StartAssessmentRun for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+//   * InvalidCrossAccountRoleException
+//   Amazon Inspector cannot assume the cross-account role that it needs to list
+//   your EC2 instances during the assessment run.
+//
+//   * AgentsAlreadyRunningAssessmentException
+//   You started an assessment run, but one of the instances is already participating
+//   in another assessment run.
+//
+func (c *Inspector) StartAssessmentRun(input *StartAssessmentRunInput) (*StartAssessmentRunOutput, error) {
+	req, out := c.StartAssessmentRunRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opStopDataCollection = "StopDataCollection"
+const opStopAssessmentRun = "StopAssessmentRun"
 
-// StopDataCollectionRequest generates a request for the StopDataCollection operation.
-func (c *Inspector) StopDataCollectionRequest(input *StopDataCollectionInput) (req *request.Request, output *StopDataCollectionOutput) {
+// StopAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the StopAssessmentRun operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See StopAssessmentRun for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the StopAssessmentRun method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the StopAssessmentRunRequest method.
+//    req, resp := client.StopAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) StopAssessmentRunRequest(input *StopAssessmentRunInput) (req *request.Request, output *StopAssessmentRunOutput) {
 	op := &request.Operation{
-		Name:       opStopDataCollection,
+		Name:       opStopAssessmentRun,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &StopDataCollectionInput{}
+		input = &StopAssessmentRunInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &StopDataCollectionOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &StopAssessmentRunOutput{}
 	req.Data = output
 	return
 }
 
-// Stop data collection for the assessment specified by the assessment ARN.
-func (c *Inspector) StopDataCollection(input *StopDataCollectionInput) (*StopDataCollectionOutput, error) {
-	req, out := c.StopDataCollectionRequest(input)
+// StopAssessmentRun API operation for Amazon Inspector.
+//
+// Stops the assessment run that is specified by the ARN of the assessment run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation StopAssessmentRun for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) StopAssessmentRun(input *StopAssessmentRunInput) (*StopAssessmentRunOutput, error) {
+	req, out := c.StopAssessmentRunRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opUpdateApplication = "UpdateApplication"
+const opSubscribeToEvent = "SubscribeToEvent"
 
-// UpdateApplicationRequest generates a request for the UpdateApplication operation.
-func (c *Inspector) UpdateApplicationRequest(input *UpdateApplicationInput) (req *request.Request, output *UpdateApplicationOutput) {
+// SubscribeToEventRequest generates a "aws/request.Request" representing the
+// client's request for the SubscribeToEvent operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See SubscribeToEvent for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the SubscribeToEvent method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the SubscribeToEventRequest method.
+//    req, resp := client.SubscribeToEventRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) SubscribeToEventRequest(input *SubscribeToEventInput) (req *request.Request, output *SubscribeToEventOutput) {
 	op := &request.Operation{
-		Name:       opUpdateApplication,
+		Name:       opSubscribeToEvent,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &UpdateApplicationInput{}
+		input = &SubscribeToEventInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &UpdateApplicationOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &SubscribeToEventOutput{}
 	req.Data = output
 	return
 }
 
-// Updates application specified by the application ARN.
-func (c *Inspector) UpdateApplication(input *UpdateApplicationInput) (*UpdateApplicationOutput, error) {
-	req, out := c.UpdateApplicationRequest(input)
+// SubscribeToEvent API operation for Amazon Inspector.
+//
+// Enables the process of sending Amazon Simple Notification Service (SNS) notifications
+// about a specified event to a specified SNS topic.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation SubscribeToEvent for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) SubscribeToEvent(input *SubscribeToEventInput) (*SubscribeToEventOutput, error) {
+	req, out := c.SubscribeToEventRequest(input)
 	err := req.Send()
 	return out, err
 }
 
-const opUpdateAssessment = "UpdateAssessment"
+const opUnsubscribeFromEvent = "UnsubscribeFromEvent"
 
-// UpdateAssessmentRequest generates a request for the UpdateAssessment operation.
-func (c *Inspector) UpdateAssessmentRequest(input *UpdateAssessmentInput) (req *request.Request, output *UpdateAssessmentOutput) {
+// UnsubscribeFromEventRequest generates a "aws/request.Request" representing the
+// client's request for the UnsubscribeFromEvent operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See UnsubscribeFromEvent for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UnsubscribeFromEvent method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UnsubscribeFromEventRequest method.
+//    req, resp := client.UnsubscribeFromEventRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) UnsubscribeFromEventRequest(input *UnsubscribeFromEventInput) (req *request.Request, output *UnsubscribeFromEventOutput) {
 	op := &request.Operation{
-		Name:       opUpdateAssessment,
+		Name:       opUnsubscribeFromEvent,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
 	}
 
 	if input == nil {
-		input = &UpdateAssessmentInput{}
+		input = &UnsubscribeFromEventInput{}
 	}
 
 	req = c.newRequest(op, input, output)
-	output = &UpdateAssessmentOutput{}
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &UnsubscribeFromEventOutput{}
 	req.Data = output
 	return
 }
 
-// Updates the assessment specified by the assessment ARN.
-func (c *Inspector) UpdateAssessment(input *UpdateAssessmentInput) (*UpdateAssessmentOutput, error) {
-	req, out := c.UpdateAssessmentRequest(input)
+// UnsubscribeFromEvent API operation for Amazon Inspector.
+//
+// Disables the process of sending Amazon Simple Notification Service (SNS)
+// notifications about a specified event to a specified SNS topic.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation UnsubscribeFromEvent for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) UnsubscribeFromEvent(input *UnsubscribeFromEventInput) (*UnsubscribeFromEventOutput, error) {
+	req, out := c.UnsubscribeFromEventRequest(input)
+	err := req.Send()
+	return out, err
+}
+
+const opUpdateAssessmentTarget = "UpdateAssessmentTarget"
+
+// UpdateAssessmentTargetRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAssessmentTarget operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See UpdateAssessmentTarget for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the UpdateAssessmentTarget method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the UpdateAssessmentTargetRequest method.
+//    req, resp := client.UpdateAssessmentTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+func (c *Inspector) UpdateAssessmentTargetRequest(input *UpdateAssessmentTargetInput) (req *request.Request, output *UpdateAssessmentTargetOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAssessmentTarget,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateAssessmentTargetInput{}
+	}
+
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(jsonrpc.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	output = &UpdateAssessmentTargetOutput{}
+	req.Data = output
+	return
+}
+
+// UpdateAssessmentTarget API operation for Amazon Inspector.
+//
+// Updates the assessment target that is specified by the ARN of the assessment
+// target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Inspector's
+// API operation UpdateAssessmentTarget for usage and error information.
+//
+// Returned Error Codes:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because an invalid or out-of-range value was supplied
+//   for an input parameter.
+//
+//   * AccessDeniedException
+//   You do not have required permissions to access the requested resource.
+//
+//   * NoSuchEntityException
+//   The request was rejected because it referenced an entity that does not exist.
+//   The error code describes the entity.
+//
+func (c *Inspector) UpdateAssessmentTarget(input *UpdateAssessmentTargetInput) (*UpdateAssessmentTargetOutput, error) {
+	req, out := c.UpdateAssessmentTargetRequest(input)
 	err := req.Send()
 	return out, err
 }
@@ -1010,10 +2449,14 @@ type AddAttributesToFindingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The array of attributes that you want to assign to specified findings.
+	//
+	// Attributes is a required field
 	Attributes []*Attribute `locationName:"attributes" type:"list" required:"true"`
 
-	// The ARNs specifying the findings that you want to assign attributes to.
-	FindingArns []*string `locationName:"findingArns" type:"list" required:"true"`
+	// The ARNs that specify the findings that you want to assign attributes to.
+	//
+	// FindingArns is a required field
+	FindingArns []*string `locationName:"findingArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -1026,11 +2469,43 @@ func (s AddAttributesToFindingsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddAttributesToFindingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddAttributesToFindingsInput"}
+	if s.Attributes == nil {
+		invalidParams.Add(request.NewErrParamRequired("Attributes"))
+	}
+	if s.FindingArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingArns"))
+	}
+	if s.FindingArns != nil && len(s.FindingArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingArns", 1))
+	}
+	if s.Attributes != nil {
+		for i, v := range s.Attributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attributes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type AddAttributesToFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	// Attribute details that cannot be described. An error code is provided for
+	// each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 }
 
 // String returns the string representation
@@ -1043,57 +2518,88 @@ func (s AddAttributesToFindingsOutput) GoString() string {
 	return s.String()
 }
 
-// Contains information about an Inspector agent. This data type is used as
-// a response element in the ListAssessmentAgents action.
-type Agent struct {
+// Used in the exception error that is thrown if you start an assessment run
+// for an assessment target that includes an EC2 instance that is already participating
+// in another started assessment run.
+type AgentAlreadyRunningAssessment struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account of the EC2 instance where the agent is installed.
-	AccountId *string `locationName:"accountId" type:"string"`
+	// ID of the agent that is running on an EC2 instance that is already participating
+	// in another started assessment run.
+	//
+	// AgentId is a required field
+	AgentId *string `locationName:"agentId" min:"1" type:"string" required:"true"`
 
-	// The current health state of the agent. Values can be set to HEALTHY or UNHEALTHY.
-	AgentHealth *string `locationName:"agentHealth" type:"string"`
-
-	// The detailed health state of the agent. Values can be set to RUNNING, HEALTHY,
-	// UNHEALTHY, UNKNOWN, BLACKLISTED, SHUTDOWN, THROTTLED.
-	AgentHealthCode *string `locationName:"agentHealthCode" type:"string"`
-
-	// The description for the agent health code.
-	AgentHealthDetails *string `locationName:"agentHealthDetails" type:"string"`
-
-	// The EC2 instance ID where the agent is installed.
-	AgentId *string `locationName:"agentId" type:"string"`
-
-	// The ARN of the assessment that is associated with the agent.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string"`
-
-	// This data type property is currently not used.
-	AutoScalingGroup *string `locationName:"autoScalingGroup" type:"string"`
-
-	// The Inspector application data metrics collected by the agent.
-	Telemetry []*Telemetry `locationName:"telemetry" type:"list"`
+	// The ARN of the assessment run that has already been started.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s Agent) String() string {
+func (s AgentAlreadyRunningAssessment) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s Agent) GoString() string {
+func (s AgentAlreadyRunningAssessment) GoString() string {
 	return s.String()
 }
 
-// This data type is used as a response element in the PreviewAgentsForResourceGroup
-// action.
+// Contains information about an Amazon Inspector agent. This data type is used
+// as a request parameter in the ListAssessmentRunAgents action.
+type AgentFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The detailed health state of the agent. Values can be set to IDLE, RUNNING,
+	// SHUTDOWN, UNHEALTHY, THROTTLED, and UNKNOWN.
+	//
+	// AgentHealthCodes is a required field
+	AgentHealthCodes []*string `locationName:"agentHealthCodes" type:"list" required:"true"`
+
+	// The current health state of the agent. Values can be set to HEALTHY or UNHEALTHY.
+	//
+	// AgentHealths is a required field
+	AgentHealths []*string `locationName:"agentHealths" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AgentFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AgentFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AgentFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AgentFilter"}
+	if s.AgentHealthCodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("AgentHealthCodes"))
+	}
+	if s.AgentHealths == nil {
+		invalidParams.Add(request.NewErrParamRequired("AgentHealths"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Used as a response element in the PreviewAgents action.
 type AgentPreview struct {
 	_ struct{} `type:"structure"`
 
-	// The id of the EC2 instance where the agent is intalled.
-	AgentId *string `locationName:"agentId" type:"string"`
+	// The ID of the EC2 instance where the agent is installed.
+	//
+	// AgentId is a required field
+	AgentId *string `locationName:"agentId" min:"1" type:"string" required:"true"`
 
-	// The autoscaling group for the EC2 instance where the agent is installed.
-	AutoScalingGroup *string `locationName:"autoScalingGroup" type:"string"`
+	// The Auto Scaling group for the EC2 instance where the agent is installed.
+	AutoScalingGroup *string `locationName:"autoScalingGroup" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -1106,218 +2612,502 @@ func (s AgentPreview) GoString() string {
 	return s.String()
 }
 
-// This data type is used as a response element in the ListAssessmentAgents
-// action.
-type AgentsFilter struct {
-	_ struct{} `type:"structure"`
-
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the agentHealth property of the Agent
-	// data type.
-	AgentHealthList []*string `locationName:"agentHealthList" type:"list"`
-}
-
-// String returns the string representation
-func (s AgentsFilter) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s AgentsFilter) GoString() string {
-	return s.String()
-}
-
-// Contains information about an Inspector application.
+// A snapshot of an Amazon Inspector assessment run that contains the findings
+// of the assessment run .
 //
-// This data type is used as the response element in the DescribeApplication
-// action.
-type Application struct {
+// Used as the response element in the DescribeAssessmentRuns action.
+type AssessmentRun struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the Inspector application.
-	ApplicationArn *string `locationName:"applicationArn" type:"string"`
+	// The ARN of the assessment run.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
 
-	// The name of the Inspector application.
-	ApplicationName *string `locationName:"applicationName" type:"string"`
+	// The ARN of the assessment template that is associated with the assessment
+	// run.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
 
-	// The ARN specifying the resource group that is associated with the application.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string"`
-}
+	// The assessment run completion time that corresponds to the rules packages
+	// evaluation completion time or failure.
+	CompletedAt *time.Time `locationName:"completedAt" type:"timestamp" timestampFormat:"unix"`
 
-// String returns the string representation
-func (s Application) String() string {
-	return awsutil.Prettify(s)
-}
+	// The time when StartAssessmentRun was called.
+	//
+	// CreatedAt is a required field
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
 
-// GoString returns the string representation
-func (s Application) GoString() string {
-	return s.String()
-}
+	// A Boolean value (true or false) that specifies whether the process of collecting
+	// data from the agents is completed.
+	//
+	// DataCollected is a required field
+	DataCollected *bool `locationName:"dataCollected" type:"boolean" required:"true"`
 
-// This data type is used as the request parameter in the ListApplications action.
-type ApplicationsFilter struct {
-	_ struct{} `type:"structure"`
+	// The duration of the assessment run.
+	//
+	// DurationInSeconds is a required field
+	DurationInSeconds *int64 `locationName:"durationInSeconds" min:"180" type:"integer" required:"true"`
 
-	// For a record to match a filter, an explicit value or a string containing
-	// a wildcard specified for this data type property must match the value of
-	// the applicationName property of the Application data type.
-	ApplicationNamePatterns []*string `locationName:"applicationNamePatterns" type:"list"`
-}
+	// The auto-generated name for the assessment run.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
-// String returns the string representation
-func (s ApplicationsFilter) String() string {
-	return awsutil.Prettify(s)
-}
+	// A list of notifications for the event subscriptions. A notification about
+	// a particular generated finding is added to this list only once.
+	//
+	// Notifications is a required field
+	Notifications []*AssessmentRunNotification `locationName:"notifications" type:"list" required:"true"`
 
-// GoString returns the string representation
-func (s ApplicationsFilter) GoString() string {
-	return s.String()
-}
+	// The rules packages selected for the assessment run.
+	//
+	// RulesPackageArns is a required field
+	RulesPackageArns []*string `locationName:"rulesPackageArns" min:"1" type:"list" required:"true"`
 
-// Contains information about an Inspector assessment.
-//
-// This data type is used as the response element in the DescribeAssessment
-// action.
-type Assessment struct {
-	_ struct{} `type:"structure"`
+	// The time when StartAssessmentRun was called.
+	StartedAt *time.Time `locationName:"startedAt" type:"timestamp" timestampFormat:"unix"`
 
-	// The ARN of the application that corresponds to this assessment.
-	ApplicationArn *string `locationName:"applicationArn" type:"string"`
+	// The state of the assessment run.
+	//
+	// State is a required field
+	State *string `locationName:"state" type:"string" required:"true" enum:"AssessmentRunState"`
 
-	// The ARN of the assessment.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string"`
+	// The last time when the assessment run's state changed.
+	//
+	// StateChangedAt is a required field
+	StateChangedAt *time.Time `locationName:"stateChangedAt" type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// The name of the assessment.
-	AssessmentName *string `locationName:"assessmentName" type:"string"`
-
-	// The state of the assessment. Values can be set to Created, Collecting Data,
-	// Stopping, and Completed.
-	AssessmentState *string `locationName:"assessmentState" type:"string"`
-
-	// Boolean value (true or false) specifying whether the data collection process
-	// is completed.
-	DataCollected *bool `locationName:"dataCollected" type:"boolean"`
-
-	// The assessment duration in seconds. The default value is 3600 seconds (one
-	// hour). The maximum value is 86400 seconds (one day).
-	DurationInSeconds *int64 `locationName:"durationInSeconds" type:"integer"`
-
-	// The assessment end time.
-	EndTime *time.Time `locationName:"endTime" type:"timestamp" timestampFormat:"unix"`
-
-	// This data type property is not currently used.
-	FailureMessage *string `locationName:"failureMessage" type:"string"`
-
-	// The assessment start time.
-	StartTime *time.Time `locationName:"startTime" type:"timestamp" timestampFormat:"unix"`
+	// A list of the assessment run state changes.
+	//
+	// StateChanges is a required field
+	StateChanges []*AssessmentRunStateChange `locationName:"stateChanges" type:"list" required:"true"`
 
 	// The user-defined attributes that are assigned to every generated finding.
-	UserAttributesForFindings []*Attribute `locationName:"userAttributesForFindings" type:"list"`
+	//
+	// UserAttributesForFindings is a required field
+	UserAttributesForFindings []*Attribute `locationName:"userAttributesForFindings" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s Assessment) String() string {
+func (s AssessmentRun) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s Assessment) GoString() string {
+func (s AssessmentRun) GoString() string {
 	return s.String()
 }
 
-// This data type is used as the request parameter in the ListAssessments and
-// ListAttachedAssessments actions.
-type AssessmentsFilter struct {
+// Contains information about an Amazon Inspector agent. This data type is used
+// as a response element in the ListAssessmentRunAgents action.
+type AssessmentRunAgent struct {
 	_ struct{} `type:"structure"`
 
-	// For a record to match a filter, an explicit value or a string containing
-	// a wildcard specified for this data type property must match the value of
-	// the assessmentName property of the Assessment data type.
-	AssessmentNamePatterns []*string `locationName:"assessmentNamePatterns" type:"list"`
+	// The current health state of the agent.
+	//
+	// AgentHealth is a required field
+	AgentHealth *string `locationName:"agentHealth" type:"string" required:"true" enum:"AgentHealth"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the assessmentState property of the
-	// Assessment data type.
-	AssessmentStates []*string `locationName:"assessmentStates" type:"list"`
+	// The detailed health state of the agent.
+	//
+	// AgentHealthCode is a required field
+	AgentHealthCode *string `locationName:"agentHealthCode" type:"string" required:"true" enum:"AgentHealthCode"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the dataCollected property of the
-	// Assessment data type.
-	DataCollected *bool `locationName:"dataCollected" type:"boolean"`
+	// The description for the agent health code.
+	AgentHealthDetails *string `locationName:"agentHealthDetails" type:"string"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must inclusively match any value between the specified minimum and maximum
-	// values of the durationInSeconds property of the Assessment data type.
+	// The AWS account of the EC2 instance where the agent is installed.
+	//
+	// AgentId is a required field
+	AgentId *string `locationName:"agentId" min:"1" type:"string" required:"true"`
+
+	// The ARN of the assessment run that is associated with the agent.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
+
+	// The Auto Scaling group of the EC2 instance that is specified by the agent
+	// ID.
+	AutoScalingGroup *string `locationName:"autoScalingGroup" min:"1" type:"string"`
+
+	// The Amazon Inspector application data metrics that are collected by the agent.
+	//
+	// TelemetryMetadata is a required field
+	TelemetryMetadata []*TelemetryMetadata `locationName:"telemetryMetadata" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AssessmentRunAgent) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentRunAgent) GoString() string {
+	return s.String()
+}
+
+// Used as the request parameter in the ListAssessmentRuns action.
+type AssessmentRunFilter struct {
+	_ struct{} `type:"structure"`
+
+	// For a record to match a filter, the value that is specified for this data
+	// type property must inclusively match any value between the specified minimum
+	// and maximum values of the completedAt property of the AssessmentRun data
+	// type.
+	CompletionTimeRange *TimestampRange `locationName:"completionTimeRange" type:"structure"`
+
+	// For a record to match a filter, the value that is specified for this data
+	// type property must inclusively match any value between the specified minimum
+	// and maximum values of the durationInSeconds property of the AssessmentRun
+	// data type.
 	DurationRange *DurationRange `locationName:"durationRange" type:"structure"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must inclusively match any value between the specified minimum and maximum
-	// values of the endTime property of the Assessment data type.
-	EndTimeRange *TimestampRange `locationName:"endTimeRange" type:"structure"`
+	// For a record to match a filter, an explicit value or a string containing
+	// a wildcard that is specified for this data type property must match the value
+	// of the assessmentRunName property of the AssessmentRun data type.
+	NamePattern *string `locationName:"namePattern" min:"1" type:"string"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must inclusively match any value between the specified minimum and maximum
-	// values of the startTime property of the Assessment data type.
+	// For a record to match a filter, the value that is specified for this data
+	// type property must be contained in the list of values of the rulesPackages
+	// property of the AssessmentRun data type.
+	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list"`
+
+	// For a record to match a filter, the value that is specified for this data
+	// type property must inclusively match any value between the specified minimum
+	// and maximum values of the startTime property of the AssessmentRun data type.
 	StartTimeRange *TimestampRange `locationName:"startTimeRange" type:"structure"`
+
+	// For a record to match a filter, the value that is specified for this data
+	// type property must match the stateChangedAt property of the AssessmentRun
+	// data type.
+	StateChangeTimeRange *TimestampRange `locationName:"stateChangeTimeRange" type:"structure"`
+
+	// For a record to match a filter, one of the values specified for this data
+	// type property must be the exact match of the value of the assessmentRunState
+	// property of the AssessmentRun data type.
+	States []*string `locationName:"states" type:"list"`
 }
 
 // String returns the string representation
-func (s AssessmentsFilter) String() string {
+func (s AssessmentRunFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s AssessmentsFilter) GoString() string {
+func (s AssessmentRunFilter) GoString() string {
 	return s.String()
 }
 
-type AttachAssessmentAndRulesPackageInput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssessmentRunFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssessmentRunFilter"}
+	if s.NamePattern != nil && len(*s.NamePattern) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NamePattern", 1))
+	}
+	if s.DurationRange != nil {
+		if err := s.DurationRange.Validate(); err != nil {
+			invalidParams.AddNested("DurationRange", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Used as one of the elements of the AssessmentRun data type.
+type AssessmentRunNotification struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment to which you want to attach a rules package.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The date of the notification.
+	//
+	// Date is a required field
+	Date *time.Time `locationName:"date" type:"timestamp" timestampFormat:"unix" required:"true"`
 
-	// The ARN specifying the rules package that you want to attach to the assessment.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string" required:"true"`
-}
+	// The Boolean value that specifies whether the notification represents an error.
+	//
+	// Error is a required field
+	Error *bool `locationName:"error" type:"boolean" required:"true"`
 
-// String returns the string representation
-func (s AttachAssessmentAndRulesPackageInput) String() string {
-	return awsutil.Prettify(s)
-}
+	// The event for which a notification is sent.
+	//
+	// Event is a required field
+	Event *string `locationName:"event" type:"string" required:"true" enum:"Event"`
 
-// GoString returns the string representation
-func (s AttachAssessmentAndRulesPackageInput) GoString() string {
-	return s.String()
-}
-
-type AttachAssessmentAndRulesPackageOutput struct {
-	_ struct{} `type:"structure"`
-
-	// Confirmation details of the action performed.
 	Message *string `locationName:"message" type:"string"`
+
+	// The status code of the SNS notification.
+	SnsPublishStatusCode *string `locationName:"snsPublishStatusCode" type:"string" enum:"AssessmentRunNotificationSnsStatusCode"`
+
+	// The SNS topic to which the SNS notification is sent.
+	SnsTopicArn *string `locationName:"snsTopicArn" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s AttachAssessmentAndRulesPackageOutput) String() string {
+func (s AssessmentRunNotification) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s AttachAssessmentAndRulesPackageOutput) GoString() string {
+func (s AssessmentRunNotification) GoString() string {
 	return s.String()
 }
 
-// This data type is used as a response element in the AddAttributesToFindings
-// action and a request parameter in the CreateAssessment action.
+// Used as one of the elements of the AssessmentRun data type.
+type AssessmentRunStateChange struct {
+	_ struct{} `type:"structure"`
+
+	// The assessment run state.
+	//
+	// State is a required field
+	State *string `locationName:"state" type:"string" required:"true" enum:"AssessmentRunState"`
+
+	// The last time the assessment run state changed.
+	//
+	// StateChangedAt is a required field
+	StateChangedAt *time.Time `locationName:"stateChangedAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+}
+
+// String returns the string representation
+func (s AssessmentRunStateChange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentRunStateChange) GoString() string {
+	return s.String()
+}
+
+// Contains information about an Amazon Inspector application. This data type
+// is used as the response element in the DescribeAssessmentTargets action.
+type AssessmentTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that specifies the Amazon Inspector assessment target.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// The time at which the assessment target is created.
+	//
+	// CreatedAt is a required field
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The name of the Amazon Inspector assessment target.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// The ARN that specifies the resource group that is associated with the assessment
+	// target.
+	//
+	// ResourceGroupArn is a required field
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
+
+	// The time at which UpdateAssessmentTarget is called.
+	//
+	// UpdatedAt is a required field
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+}
+
+// String returns the string representation
+func (s AssessmentTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentTarget) GoString() string {
+	return s.String()
+}
+
+// Used as the request parameter in the ListAssessmentTargets action.
+type AssessmentTargetFilter struct {
+	_ struct{} `type:"structure"`
+
+	// For a record to match a filter, an explicit value or a string that contains
+	// a wildcard that is specified for this data type property must match the value
+	// of the assessmentTargetName property of the AssessmentTarget data type.
+	AssessmentTargetNamePattern *string `locationName:"assessmentTargetNamePattern" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AssessmentTargetFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentTargetFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssessmentTargetFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssessmentTargetFilter"}
+	if s.AssessmentTargetNamePattern != nil && len(*s.AssessmentTargetNamePattern) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetNamePattern", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Contains information about an Amazon Inspector assessment template. This
+// data type is used as the response element in the DescribeAssessmentTemplates
+// action.
+type AssessmentTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the assessment template.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// The ARN of the assessment target that corresponds to this assessment template.
+	//
+	// AssessmentTargetArn is a required field
+	AssessmentTargetArn *string `locationName:"assessmentTargetArn" min:"1" type:"string" required:"true"`
+
+	// The time at which the assessment template is created.
+	//
+	// CreatedAt is a required field
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The duration in seconds specified for this assessment tempate. The default
+	// value is 3600 seconds (one hour). The maximum value is 86400 seconds (one
+	// day).
+	//
+	// DurationInSeconds is a required field
+	DurationInSeconds *int64 `locationName:"durationInSeconds" min:"180" type:"integer" required:"true"`
+
+	// The name of the assessment template.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// The rules packages that are specified for this assessment template.
+	//
+	// RulesPackageArns is a required field
+	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list" required:"true"`
+
+	// The user-defined attributes that are assigned to every generated finding
+	// from the assessment run that uses this assessment template.
+	//
+	// UserAttributesForFindings is a required field
+	UserAttributesForFindings []*Attribute `locationName:"userAttributesForFindings" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AssessmentTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentTemplate) GoString() string {
+	return s.String()
+}
+
+// Used as the request parameter in the ListAssessmentTemplates action.
+type AssessmentTemplateFilter struct {
+	_ struct{} `type:"structure"`
+
+	// For a record to match a filter, the value specified for this data type property
+	// must inclusively match any value between the specified minimum and maximum
+	// values of the durationInSeconds property of the AssessmentTemplate data type.
+	DurationRange *DurationRange `locationName:"durationRange" type:"structure"`
+
+	// For a record to match a filter, an explicit value or a string that contains
+	// a wildcard that is specified for this data type property must match the value
+	// of the assessmentTemplateName property of the AssessmentTemplate data type.
+	NamePattern *string `locationName:"namePattern" min:"1" type:"string"`
+
+	// For a record to match a filter, the values that are specified for this data
+	// type property must be contained in the list of values of the rulesPackageArns
+	// property of the AssessmentTemplate data type.
+	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list"`
+}
+
+// String returns the string representation
+func (s AssessmentTemplateFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssessmentTemplateFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssessmentTemplateFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssessmentTemplateFilter"}
+	if s.NamePattern != nil && len(*s.NamePattern) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NamePattern", 1))
+	}
+	if s.DurationRange != nil {
+		if err := s.DurationRange.Validate(); err != nil {
+			invalidParams.AddNested("DurationRange", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// A collection of attributes of the host from which the finding is generated.
+type AssetAttributes struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the agent that is installed on the EC2 instance where the finding
+	// is generated.
+	AgentId *string `locationName:"agentId" min:"1" type:"string"`
+
+	// The ID of the Amazon Machine Image (AMI) that is installed on the EC2 instance
+	// where the finding is generated.
+	AmiId *string `locationName:"amiId" type:"string"`
+
+	// The Auto Scaling group of the EC2 instance where the finding is generated.
+	AutoScalingGroup *string `locationName:"autoScalingGroup" min:"1" type:"string"`
+
+	// The hostname of the EC2 instance where the finding is generated.
+	Hostname *string `locationName:"hostname" type:"string"`
+
+	// The list of IP v4 addresses of the EC2 instance where the finding is generated.
+	Ipv4Addresses []*string `locationName:"ipv4Addresses" type:"list"`
+
+	// The schema version of this data type.
+	//
+	// SchemaVersion is a required field
+	SchemaVersion *int64 `locationName:"schemaVersion" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s AssetAttributes) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetAttributes) GoString() string {
+	return s.String()
+}
+
+// This data type is used as a request parameter in the AddAttributesToFindings
+// and CreateAssessmentTemplate actions.
 type Attribute struct {
 	_ struct{} `type:"structure"`
 
 	// The attribute key.
-	Key *string `locationName:"key" type:"string"`
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
 
 	// The value assigned to the attribute key.
-	Value *string `locationName:"value" type:"string"`
+	Value *string `locationName:"value" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -1330,98 +3120,205 @@ func (s Attribute) GoString() string {
 	return s.String()
 }
 
-type CreateApplicationInput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Attribute) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Attribute"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type CreateAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The user-defined name identifying the application that you want to create.
-	// The name must be unique within the AWS account.
-	ApplicationName *string `locationName:"applicationName" type:"string" required:"true"`
+	// The user-defined name that identifies the assessment target that you want
+	// to create. The name must be unique within the AWS account.
+	//
+	// AssessmentTargetName is a required field
+	AssessmentTargetName *string `locationName:"assessmentTargetName" min:"1" type:"string" required:"true"`
 
-	// The ARN specifying the resource group that is used to create the application.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string" required:"true"`
+	// The ARN that specifies the resource group that is used to create the assessment
+	// target.
+	//
+	// ResourceGroupArn is a required field
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s CreateApplicationInput) String() string {
+func (s CreateAssessmentTargetInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s CreateApplicationInput) GoString() string {
+func (s CreateAssessmentTargetInput) GoString() string {
 	return s.String()
 }
 
-type CreateApplicationOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateAssessmentTargetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateAssessmentTargetInput"}
+	if s.AssessmentTargetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetName"))
+	}
+	if s.AssessmentTargetName != nil && len(*s.AssessmentTargetName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetName", 1))
+	}
+	if s.ResourceGroupArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceGroupArn"))
+	}
+	if s.ResourceGroupArn != nil && len(*s.ResourceGroupArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type CreateAssessmentTargetOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the application that is created.
-	ApplicationArn *string `locationName:"applicationArn" type:"string"`
+	// The ARN that specifies the assessment target that is created.
+	//
+	// AssessmentTargetArn is a required field
+	AssessmentTargetArn *string `locationName:"assessmentTargetArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s CreateApplicationOutput) String() string {
+func (s CreateAssessmentTargetOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s CreateApplicationOutput) GoString() string {
+func (s CreateAssessmentTargetOutput) GoString() string {
 	return s.String()
 }
 
-type CreateAssessmentInput struct {
+type CreateAssessmentTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the application for which you want to create an assessment.
-	ApplicationArn *string `locationName:"applicationArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment target for which you want to create
+	// the assessment template.
+	//
+	// AssessmentTargetArn is a required field
+	AssessmentTargetArn *string `locationName:"assessmentTargetArn" min:"1" type:"string" required:"true"`
 
-	// The user-defined name identifying the assessment that you want to create.
-	// You can create several assessments for an application. The names of the assessments
-	// corresponding to a particular application must be unique.
-	AssessmentName *string `locationName:"assessmentName" type:"string" required:"true"`
+	// The user-defined name that identifies the assessment template that you want
+	// to create. You can create several assessment templates for an assessment
+	// target. The names of the assessment templates that correspond to a particular
+	// assessment target must be unique.
+	//
+	// AssessmentTemplateName is a required field
+	AssessmentTemplateName *string `locationName:"assessmentTemplateName" min:"1" type:"string" required:"true"`
 
-	// The duration of the assessment in seconds. The default value is 3600 seconds
-	// (one hour). The maximum value is 86400 seconds (one day).
-	DurationInSeconds *int64 `locationName:"durationInSeconds" type:"integer" required:"true"`
+	// The duration of the assessment run in seconds. The default value is 3600
+	// seconds (one hour).
+	//
+	// DurationInSeconds is a required field
+	DurationInSeconds *int64 `locationName:"durationInSeconds" min:"180" type:"integer" required:"true"`
 
-	// The user-defined attributes that are assigned to every finding generated
-	// by running this assessment.
+	// The ARNs that specify the rules packages that you want to attach to the assessment
+	// template.
+	//
+	// RulesPackageArns is a required field
+	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list" required:"true"`
+
+	// The user-defined attributes that are assigned to every finding that is generated
+	// by the assessment run that uses this assessment template.
 	UserAttributesForFindings []*Attribute `locationName:"userAttributesForFindings" type:"list"`
 }
 
 // String returns the string representation
-func (s CreateAssessmentInput) String() string {
+func (s CreateAssessmentTemplateInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s CreateAssessmentInput) GoString() string {
+func (s CreateAssessmentTemplateInput) GoString() string {
 	return s.String()
 }
 
-type CreateAssessmentOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateAssessmentTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateAssessmentTemplateInput"}
+	if s.AssessmentTargetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetArn"))
+	}
+	if s.AssessmentTargetArn != nil && len(*s.AssessmentTargetArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetArn", 1))
+	}
+	if s.AssessmentTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateName"))
+	}
+	if s.AssessmentTemplateName != nil && len(*s.AssessmentTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateName", 1))
+	}
+	if s.DurationInSeconds == nil {
+		invalidParams.Add(request.NewErrParamRequired("DurationInSeconds"))
+	}
+	if s.DurationInSeconds != nil && *s.DurationInSeconds < 180 {
+		invalidParams.Add(request.NewErrParamMinValue("DurationInSeconds", 180))
+	}
+	if s.RulesPackageArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("RulesPackageArns"))
+	}
+	if s.UserAttributesForFindings != nil {
+		for i, v := range s.UserAttributesForFindings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "UserAttributesForFindings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type CreateAssessmentTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment that is created.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string"`
+	// The ARN that specifies the assessment template that is created.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s CreateAssessmentOutput) String() string {
+func (s CreateAssessmentTemplateOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s CreateAssessmentOutput) GoString() string {
+func (s CreateAssessmentTemplateOutput) GoString() string {
 	return s.String()
 }
 
 type CreateResourceGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// A collection of keys and an array of possible values in JSON format.
+	// A collection of keys and an array of possible values, '[{"key":"key1","values":["Value1","Value2"]},{"key":"Key2","values":["Value3"]}]'.
 	//
-	// For example, [{ "key1" : ["Value1","Value2"]},{"Key2": ["Value3"]}]
-	ResourceGroupTags *string `locationName:"resourceGroupTags" type:"string" required:"true"`
+	// For example,'[{"key":"Name","values":["TestEC2Instance"]}]'.
+	//
+	// ResourceGroupTags is a required field
+	ResourceGroupTags []*ResourceGroupTag `locationName:"resourceGroupTags" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -1434,11 +3331,39 @@ func (s CreateResourceGroupInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateResourceGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateResourceGroupInput"}
+	if s.ResourceGroupTags == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceGroupTags"))
+	}
+	if s.ResourceGroupTags != nil && len(s.ResourceGroupTags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupTags", 1))
+	}
+	if s.ResourceGroupTags != nil {
+		for i, v := range s.ResourceGroupTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceGroupTags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type CreateResourceGroupOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the resource group that is created.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string"`
+	// The ARN that specifies the resource group that is created.
+	//
+	// ResourceGroupArn is a required field
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -1451,173 +3376,330 @@ func (s CreateResourceGroupOutput) GoString() string {
 	return s.String()
 }
 
-type DeleteApplicationInput struct {
+type DeleteAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the application that you want to delete.
-	ApplicationArn *string `locationName:"applicationArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment run that you want to delete.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s DeleteApplicationInput) String() string {
+func (s DeleteAssessmentRunInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteApplicationInput) GoString() string {
+func (s DeleteAssessmentRunInput) GoString() string {
 	return s.String()
 }
 
-type DeleteApplicationOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAssessmentRunInput"}
+	if s.AssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArn"))
+	}
+	if s.AssessmentRunArn != nil && len(*s.AssessmentRunArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DeleteAssessmentRunOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s DeleteApplicationOutput) String() string {
+func (s DeleteAssessmentRunOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteApplicationOutput) GoString() string {
+func (s DeleteAssessmentRunOutput) GoString() string {
 	return s.String()
 }
 
-type DeleteAssessmentInput struct {
+type DeleteAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment that you want to delete.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment target that you want to delete.
+	//
+	// AssessmentTargetArn is a required field
+	AssessmentTargetArn *string `locationName:"assessmentTargetArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s DeleteAssessmentInput) String() string {
+func (s DeleteAssessmentTargetInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteAssessmentInput) GoString() string {
+func (s DeleteAssessmentTargetInput) GoString() string {
 	return s.String()
 }
 
-type DeleteAssessmentOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAssessmentTargetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAssessmentTargetInput"}
+	if s.AssessmentTargetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetArn"))
+	}
+	if s.AssessmentTargetArn != nil && len(*s.AssessmentTargetArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DeleteAssessmentTargetOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s DeleteAssessmentOutput) String() string {
+func (s DeleteAssessmentTargetOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteAssessmentOutput) GoString() string {
+func (s DeleteAssessmentTargetOutput) GoString() string {
 	return s.String()
 }
 
-type DeleteRunInput struct {
+type DeleteAssessmentTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment run that you want to delete.
-	RunArn *string `locationName:"runArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment template that you want to delete.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s DeleteRunInput) String() string {
+func (s DeleteAssessmentTemplateInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteRunInput) GoString() string {
+func (s DeleteAssessmentTemplateInput) GoString() string {
 	return s.String()
 }
 
-type DeleteRunOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAssessmentTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAssessmentTemplateInput"}
+	if s.AssessmentTemplateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateArn"))
+	}
+	if s.AssessmentTemplateArn != nil && len(*s.AssessmentTemplateArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DeleteAssessmentTemplateOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s DeleteRunOutput) String() string {
+func (s DeleteAssessmentTemplateOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DeleteRunOutput) GoString() string {
+func (s DeleteAssessmentTemplateOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeApplicationInput struct {
+type DescribeAssessmentRunsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the application that you want to describe.
-	ApplicationArn *string `locationName:"applicationArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment run that you want to describe.
+	//
+	// AssessmentRunArns is a required field
+	AssessmentRunArns []*string `locationName:"assessmentRunArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeApplicationInput) String() string {
+func (s DescribeAssessmentRunsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeApplicationInput) GoString() string {
+func (s DescribeAssessmentRunsInput) GoString() string {
 	return s.String()
 }
 
-type DescribeApplicationOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAssessmentRunsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAssessmentRunsInput"}
+	if s.AssessmentRunArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArns"))
+	}
+	if s.AssessmentRunArns != nil && len(s.AssessmentRunArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeAssessmentRunsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the application.
-	Application *Application `locationName:"application" type:"structure"`
+	// Information about the assessment run.
+	//
+	// AssessmentRuns is a required field
+	AssessmentRuns []*AssessmentRun `locationName:"assessmentRuns" type:"list" required:"true"`
+
+	// Assessment run details that cannot be described. An error code is provided
+	// for each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeApplicationOutput) String() string {
+func (s DescribeAssessmentRunsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeApplicationOutput) GoString() string {
+func (s DescribeAssessmentRunsOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeAssessmentInput struct {
+type DescribeAssessmentTargetsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment that you want to describe.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The ARNs that specifies the assessment targets that you want to describe.
+	//
+	// AssessmentTargetArns is a required field
+	AssessmentTargetArns []*string `locationName:"assessmentTargetArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeAssessmentInput) String() string {
+func (s DescribeAssessmentTargetsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeAssessmentInput) GoString() string {
+func (s DescribeAssessmentTargetsInput) GoString() string {
 	return s.String()
 }
 
-type DescribeAssessmentOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAssessmentTargetsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAssessmentTargetsInput"}
+	if s.AssessmentTargetArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetArns"))
+	}
+	if s.AssessmentTargetArns != nil && len(s.AssessmentTargetArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeAssessmentTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the assessment.
-	Assessment *Assessment `locationName:"assessment" type:"structure"`
+	// Information about the assessment targets.
+	//
+	// AssessmentTargets is a required field
+	AssessmentTargets []*AssessmentTarget `locationName:"assessmentTargets" type:"list" required:"true"`
+
+	// Assessment target details that cannot be described. An error code is provided
+	// for each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeAssessmentOutput) String() string {
+func (s DescribeAssessmentTargetsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeAssessmentOutput) GoString() string {
+func (s DescribeAssessmentTargetsOutput) GoString() string {
+	return s.String()
+}
+
+type DescribeAssessmentTemplatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that specifiesthe assessment templates that you want to describe.
+	//
+	// AssessmentTemplateArns is a required field
+	AssessmentTemplateArns []*string `locationName:"assessmentTemplateArns" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAssessmentTemplatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAssessmentTemplatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAssessmentTemplatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAssessmentTemplatesInput"}
+	if s.AssessmentTemplateArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateArns"))
+	}
+	if s.AssessmentTemplateArns != nil && len(s.AssessmentTemplateArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeAssessmentTemplatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the assessment templates.
+	//
+	// AssessmentTemplates is a required field
+	AssessmentTemplates []*AssessmentTemplate `locationName:"assessmentTemplates" type:"list" required:"true"`
+
+	// Assessment template details that cannot be described. An error code is provided
+	// for each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAssessmentTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAssessmentTemplatesOutput) GoString() string {
 	return s.String()
 }
 
@@ -1638,12 +3720,22 @@ func (s DescribeCrossAccountAccessRoleInput) GoString() string {
 type DescribeCrossAccountAccessRoleOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the IAM role that Inspector uses to access your AWS account.
-	RoleArn *string `locationName:"roleArn" type:"string"`
+	// The date when the cross-account access role was registered.
+	//
+	// RegisteredAt is a required field
+	RegisteredAt *time.Time `locationName:"registeredAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The ARN that specifies the IAM role that Amazon Inspector uses to access
+	// your AWS account.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"1" type:"string" required:"true"`
 
 	// A Boolean value that specifies whether the IAM role has the necessary policies
-	// attached to enable Inspector to access your AWS account.
-	Valid *bool `locationName:"valid" type:"boolean"`
+	// attached to enable Amazon Inspector to access your AWS account.
+	//
+	// Valid is a required field
+	Valid *bool `locationName:"valid" type:"boolean" required:"true"`
 }
 
 // String returns the string representation
@@ -1656,189 +3748,203 @@ func (s DescribeCrossAccountAccessRoleOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeFindingInput struct {
+type DescribeFindingsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the finding that you want to describe.
-	FindingArn *string `locationName:"findingArn" type:"string" required:"true"`
+	// The ARN that specifies the finding that you want to describe.
+	//
+	// FindingArns is a required field
+	FindingArns []*string `locationName:"findingArns" min:"1" type:"list" required:"true"`
+
+	// The locale into which you want to translate a finding description, recommendation,
+	// and the short description that identifies the finding.
+	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
 }
 
 // String returns the string representation
-func (s DescribeFindingInput) String() string {
+func (s DescribeFindingsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeFindingInput) GoString() string {
+func (s DescribeFindingsInput) GoString() string {
 	return s.String()
 }
 
-type DescribeFindingOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeFindingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeFindingsInput"}
+	if s.FindingArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingArns"))
+	}
+	if s.FindingArns != nil && len(s.FindingArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeFindingsOutput struct {
 	_ struct{} `type:"structure"`
+
+	// Finding details that cannot be described. An error code is provided for each
+	// failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 
 	// Information about the finding.
-	Finding *Finding `locationName:"finding" type:"structure"`
+	//
+	// Findings is a required field
+	Findings []*Finding `locationName:"findings" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeFindingOutput) String() string {
+func (s DescribeFindingsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeFindingOutput) GoString() string {
+func (s DescribeFindingsOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeResourceGroupInput struct {
+type DescribeResourceGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the resource group that you want to describe.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string" required:"true"`
+	// The ARN that specifies the resource group that you want to describe.
+	//
+	// ResourceGroupArns is a required field
+	ResourceGroupArns []*string `locationName:"resourceGroupArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeResourceGroupInput) String() string {
+func (s DescribeResourceGroupsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeResourceGroupInput) GoString() string {
+func (s DescribeResourceGroupsInput) GoString() string {
 	return s.String()
 }
 
-type DescribeResourceGroupOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeResourceGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeResourceGroupsInput"}
+	if s.ResourceGroupArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceGroupArns"))
+	}
+	if s.ResourceGroupArns != nil && len(s.ResourceGroupArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeResourceGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the resource group.
-	ResourceGroup *ResourceGroup `locationName:"resourceGroup" type:"structure"`
+	// Resource group details that cannot be described. An error code is provided
+	// for each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
+
+	// Information about a resource group.
+	//
+	// ResourceGroups is a required field
+	ResourceGroups []*ResourceGroup `locationName:"resourceGroups" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeResourceGroupOutput) String() string {
+func (s DescribeResourceGroupsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeResourceGroupOutput) GoString() string {
+func (s DescribeResourceGroupsOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeRulesPackageInput struct {
+type DescribeRulesPackagesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the rules package that you want to describe.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string" required:"true"`
+	// The locale that you want to translate a rules package description into.
+	Locale *string `locationName:"locale" type:"string" enum:"Locale"`
+
+	// The ARN that specifies the rules package that you want to describe.
+	//
+	// RulesPackageArns is a required field
+	RulesPackageArns []*string `locationName:"rulesPackageArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeRulesPackageInput) String() string {
+func (s DescribeRulesPackagesInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeRulesPackageInput) GoString() string {
+func (s DescribeRulesPackagesInput) GoString() string {
 	return s.String()
 }
 
-type DescribeRulesPackageOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeRulesPackagesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeRulesPackagesInput"}
+	if s.RulesPackageArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("RulesPackageArns"))
+	}
+	if s.RulesPackageArns != nil && len(s.RulesPackageArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RulesPackageArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type DescribeRulesPackagesOutput struct {
 	_ struct{} `type:"structure"`
+
+	// Rules package details that cannot be described. An error code is provided
+	// for each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 
 	// Information about the rules package.
-	RulesPackage *RulesPackage `locationName:"rulesPackage" type:"structure"`
+	//
+	// RulesPackages is a required field
+	RulesPackages []*RulesPackage `locationName:"rulesPackages" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s DescribeRulesPackageOutput) String() string {
+func (s DescribeRulesPackagesOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s DescribeRulesPackageOutput) GoString() string {
+func (s DescribeRulesPackagesOutput) GoString() string {
 	return s.String()
 }
 
-type DescribeRunInput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARN specifying the assessment run that you want to describe.
-	RunArn *string `locationName:"runArn" type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s DescribeRunInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DescribeRunInput) GoString() string {
-	return s.String()
-}
-
-type DescribeRunOutput struct {
-	_ struct{} `type:"structure"`
-
-	// Information about the assessment run.
-	Run *Run `locationName:"run" type:"structure"`
-}
-
-// String returns the string representation
-func (s DescribeRunOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DescribeRunOutput) GoString() string {
-	return s.String()
-}
-
-type DetachAssessmentAndRulesPackageInput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARN specifying the assessment from which you want to detach a rules package.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
-
-	// The ARN specifying the rules package that you want to detach from the assessment.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s DetachAssessmentAndRulesPackageInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DetachAssessmentAndRulesPackageInput) GoString() string {
-	return s.String()
-}
-
-type DetachAssessmentAndRulesPackageOutput struct {
-	_ struct{} `type:"structure"`
-
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
-}
-
-// String returns the string representation
-func (s DetachAssessmentAndRulesPackageOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DetachAssessmentAndRulesPackageOutput) GoString() string {
-	return s.String()
-}
-
-// This data type is used in the AssessmentsFilter data type.
+// This data type is used in the AssessmentTemplateFilter data type.
 type DurationRange struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum value of the duration range. Must be less than or equal to 604800
 	// seconds (1 week).
-	Maximum *int64 `locationName:"maximum" type:"integer"`
+	MaxSeconds *int64 `locationName:"maxSeconds" min:"180" type:"integer"`
 
 	// The minimum value of the duration range. Must be greater than zero.
-	Minimum *int64 `locationName:"minimum" type:"integer"`
+	MinSeconds *int64 `locationName:"minSeconds" min:"180" type:"integer"`
 }
 
 // String returns the string representation
@@ -1851,49 +3957,142 @@ func (s DurationRange) GoString() string {
 	return s.String()
 }
 
-// Contains information about an Inspector finding.
-//
-// This data type is used as the response element in the DescribeFinding action.
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DurationRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DurationRange"}
+	if s.MaxSeconds != nil && *s.MaxSeconds < 180 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxSeconds", 180))
+	}
+	if s.MinSeconds != nil && *s.MinSeconds < 180 {
+		invalidParams.Add(request.NewErrParamMinValue("MinSeconds", 180))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// This data type is used in the Subscription data type.
+type EventSubscription struct {
+	_ struct{} `type:"structure"`
+
+	// The event for which Amazon Simple Notification Service (SNS) notifications
+	// are sent.
+	//
+	// Event is a required field
+	Event *string `locationName:"event" type:"string" required:"true" enum:"Event"`
+
+	// The time at which SubscribeToEvent is called.
+	//
+	// SubscribedAt is a required field
+	SubscribedAt *time.Time `locationName:"subscribedAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+}
+
+// String returns the string representation
+func (s EventSubscription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EventSubscription) GoString() string {
+	return s.String()
+}
+
+// Includes details about the failed items.
+type FailedItemDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The status code of a failed item.
+	//
+	// FailureCode is a required field
+	FailureCode *string `locationName:"failureCode" type:"string" required:"true" enum:"FailedItemErrorCode"`
+
+	// Indicates whether you can immediately retry a request for this item for a
+	// specified resource.
+	//
+	// Retryable is a required field
+	Retryable *bool `locationName:"retryable" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s FailedItemDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedItemDetails) GoString() string {
+	return s.String()
+}
+
+// Contains information about an Amazon Inspector finding. This data type is
+// used as the response element in the DescribeFindings action.
 type Finding struct {
 	_ struct{} `type:"structure"`
 
-	// The EC2 instance ID where the agent is installed that is used during the
-	// assessment that generates the finding.
-	AgentId *string `locationName:"agentId" type:"string"`
+	// The ARN that specifies the finding.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// A collection of attributes of the host from which the finding is generated.
+	AssetAttributes *AssetAttributes `locationName:"assetAttributes" type:"structure"`
+
+	// The type of the host from which the finding is generated.
+	AssetType *string `locationName:"assetType" type:"string" enum:"AssetType"`
 
 	// The system-defined attributes for the finding.
-	Attributes []*Attribute `locationName:"attributes" type:"list"`
+	//
+	// Attributes is a required field
+	Attributes []*Attribute `locationName:"attributes" type:"list" required:"true"`
 
-	// The autoscaling group of the EC2 instance where the agent is installed that
-	// is used during the assessment that generates the finding.
-	AutoScalingGroup *string `locationName:"autoScalingGroup" type:"string"`
+	// This data element is currently not used.
+	Confidence *int64 `locationName:"confidence" type:"integer"`
+
+	// The time when the finding was generated.
+	//
+	// CreatedAt is a required field
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The description of the finding.
-	Description *LocalizedText `locationName:"description" type:"structure"`
+	Description *string `locationName:"description" type:"string"`
 
-	// A short description that identifies the finding.
-	Finding *LocalizedText `locationName:"finding" type:"structure"`
+	// The ID of the finding.
+	Id *string `locationName:"id" type:"string"`
 
-	// The ARN specifying the finding.
-	FindingArn *string `locationName:"findingArn" type:"string"`
+	// This data element is currently not used.
+	IndicatorOfCompromise *bool `locationName:"indicatorOfCompromise" type:"boolean"`
+
+	// The numeric value of the finding severity.
+	NumericSeverity *float64 `locationName:"numericSeverity" type:"double"`
 
 	// The recommendation for the finding.
-	Recommendation *LocalizedText `locationName:"recommendation" type:"structure"`
+	Recommendation *string `locationName:"recommendation" type:"string"`
 
-	// The rule name that is used to generate the finding.
-	RuleName *string `locationName:"ruleName" type:"string"`
+	// The schema version of this data type.
+	SchemaVersion *int64 `locationName:"schemaVersion" type:"integer"`
 
-	// The ARN of the rules package that is used to generate the finding.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string"`
+	// The data element is set to "Inspector".
+	Service *string `locationName:"service" type:"string"`
 
-	// The ARN of the assessment run that generated the finding.
-	RunArn *string `locationName:"runArn" type:"string"`
+	// This data type is used in the Finding data type.
+	ServiceAttributes *ServiceAttributes `locationName:"serviceAttributes" type:"structure"`
 
 	// The finding severity. Values can be set to High, Medium, Low, and Informational.
-	Severity *string `locationName:"severity" type:"string"`
+	Severity *string `locationName:"severity" type:"string" enum:"Severity"`
+
+	// The name of the finding.
+	Title *string `locationName:"title" type:"string"`
+
+	// The time when AddAttributesToFindings is called.
+	//
+	// UpdatedAt is a required field
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"unix" required:"true"`
 
 	// The user-defined attributes that are assigned to the finding.
-	UserAttributes []*Attribute `locationName:"userAttributes" type:"list"`
+	//
+	// UserAttributes is a required field
+	UserAttributes []*Attribute `locationName:"userAttributes" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -1907,81 +4106,150 @@ func (s Finding) GoString() string {
 }
 
 // This data type is used as a request parameter in the ListFindings action.
-type FindingsFilter struct {
+type FindingFilter struct {
 	_ struct{} `type:"structure"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the attributes property of the Finding
-	// data type.
+	// For a record to match a filter, one of the values that is specified for this
+	// data type property must be the exact match of the value of the agentId property
+	// of the Finding data type.
+	AgentIds []*string `locationName:"agentIds" type:"list"`
+
+	// For a record to match a filter, the list of values that are specified for
+	// this data type property must be contained in the list of values of the attributes
+	// property of the Finding data type.
 	Attributes []*Attribute `locationName:"attributes" type:"list"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the ruleName property of the Finding
-	// data type.
+	// For a record to match a filter, one of the values that is specified for this
+	// data type property must be the exact match of the value of the autoScalingGroup
+	// property of the Finding data type.
+	AutoScalingGroups []*string `locationName:"autoScalingGroups" type:"list"`
+
+	// The time range during which the finding is generated.
+	CreationTimeRange *TimestampRange `locationName:"creationTimeRange" type:"structure"`
+
+	// For a record to match a filter, one of the values that is specified for this
+	// data type property must be the exact match of the value of the ruleName property
+	// of the Finding data type.
 	RuleNames []*string `locationName:"ruleNames" type:"list"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the rulesPackageArn property of the
-	// Finding data type.
+	// For a record to match a filter, one of the values that is specified for this
+	// data type property must be the exact match of the value of the rulesPackageArn
+	// property of the Finding data type.
 	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the severity property of the Finding
-	// data type.
+	// For a record to match a filter, one of the values that is specified for this
+	// data type property must be the exact match of the value of the severity property
+	// of the Finding data type.
 	Severities []*string `locationName:"severities" type:"list"`
 
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the userAttributes property of the
-	// Finding data type.
+	// For a record to match a filter, the value that is specified for this data
+	// type property must be contained in the list of values of the userAttributes
+	// property of the Finding data type.
 	UserAttributes []*Attribute `locationName:"userAttributes" type:"list"`
 }
 
 // String returns the string representation
-func (s FindingsFilter) String() string {
+func (s FindingFilter) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s FindingsFilter) GoString() string {
+func (s FindingFilter) GoString() string {
 	return s.String()
 }
 
-type GetAssessmentTelemetryInput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FindingFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FindingFilter"}
+	if s.Attributes != nil {
+		for i, v := range s.Attributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attributes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.UserAttributes != nil {
+		for i, v := range s.UserAttributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "UserAttributes", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type GetTelemetryMetadataInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment the telemetry of which you want to obtain.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment run that has the telemetry data that
+	// you want to obtain.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s GetAssessmentTelemetryInput) String() string {
+func (s GetTelemetryMetadataInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s GetAssessmentTelemetryInput) GoString() string {
+func (s GetTelemetryMetadataInput) GoString() string {
 	return s.String()
 }
 
-type GetAssessmentTelemetryOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTelemetryMetadataInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTelemetryMetadataInput"}
+	if s.AssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArn"))
+	}
+	if s.AssessmentRunArn != nil && len(*s.AssessmentRunArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type GetTelemetryMetadataOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Telemetry details.
-	Telemetry []*Telemetry `locationName:"telemetry" type:"list"`
+	//
+	// TelemetryMetadata is a required field
+	TelemetryMetadata []*TelemetryMetadata `locationName:"telemetryMetadata" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s GetAssessmentTelemetryOutput) String() string {
+func (s GetTelemetryMetadataOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s GetAssessmentTelemetryOutput) GoString() string {
+func (s GetTelemetryMetadataOutput) GoString() string {
 	return s.String()
 }
 
-type ListApplicationsInput struct {
+type ListAssessmentRunAgentsInput struct {
 	_ struct{} `type:"structure"`
+
+	// The ARN that specifies the assessment run whose agents you want to list.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 
 	// You can use this parameter to specify a subset of data to be included in
 	// the action's response.
@@ -1989,170 +4257,159 @@ type ListApplicationsInput struct {
 	// For a record to match a filter, all specified filter attributes must match.
 	// When multiple values are specified for a filter attribute, any of the values
 	// can match.
-	Filter *ApplicationsFilter `locationName:"filter" type:"structure"`
+	Filter *AgentFilter `locationName:"filter" type:"structure"`
 
-	// You can use this parameter to indicate the maximum number of items you want
-	// in the response. The default value is 10. The maximum value is 500.
+	// You can use this parameter to indicate the maximum number of items that you
+	// want in the response. The default value is 10. The maximum value is 500.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListApplications action. Subsequent
+	// parameter to null on your first call to the ListAssessmentRunAgents action.
+	// Subsequent calls to the action fill nextToken in the request with the value
+	// of NextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssessmentRunAgentsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssessmentRunAgentsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssessmentRunAgentsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssessmentRunAgentsInput"}
+	if s.AssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArn"))
+	}
+	if s.AssessmentRunArn != nil && len(*s.AssessmentRunArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArn", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ListAssessmentRunAgentsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ARNs that specifies the agents returned by the action.
+	//
+	// AssessmentRunAgents is a required field
+	AssessmentRunAgents []*AssessmentRunAgent `locationName:"assessmentRunAgents" type:"list" required:"true"`
+
+	// When a response is generated, if there is more data to be listed, this parameter
+	// is present in the response and contains the value to use for the nextToken
+	// parameter in a subsequent pagination request. If there is no more data to
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssessmentRunAgentsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssessmentRunAgentsOutput) GoString() string {
+	return s.String()
+}
+
+type ListAssessmentRunsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARNs that specify the assessment templates whose assessment runs you
+	// want to list.
+	AssessmentTemplateArns []*string `locationName:"assessmentTemplateArns" type:"list"`
+
+	// You can use this parameter to specify a subset of data to be included in
+	// the action's response.
+	//
+	// For a record to match a filter, all specified filter attributes must match.
+	// When multiple values are specified for a filter attribute, any of the values
+	// can match.
+	Filter *AssessmentRunFilter `locationName:"filter" type:"structure"`
+
+	// You can use this parameter to indicate the maximum number of items that you
+	// want in the response. The default value is 10. The maximum value is 500.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// You can use this parameter when paginating results. Set the value of this
+	// parameter to null on your first call to the ListAssessmentRuns action. Subsequent
 	// calls to the action fill nextToken in the request with the value of NextToken
-	// from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s ListApplicationsInput) String() string {
+func (s ListAssessmentRunsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListApplicationsInput) GoString() string {
+func (s ListAssessmentRunsInput) GoString() string {
 	return s.String()
 }
 
-type ListApplicationsOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssessmentRunsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssessmentRunsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ListAssessmentRunsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of ARNs specifying the applications returned by the action.
-	ApplicationArnList []*string `locationName:"applicationArnList" type:"list"`
-
-	// When a response is generated, if there is more data to be listed, this parameter
-	// is present in the response and contains the value to use for the nextToken
-	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
-}
-
-// String returns the string representation
-func (s ListApplicationsOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListApplicationsOutput) GoString() string {
-	return s.String()
-}
-
-type ListAssessmentAgentsInput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARN specifying the assessment whose agents you want to list.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
-
-	// You can use this parameter to specify a subset of data to be included in
-	// the action's response.
+	// A list of ARNs that specifies the assessment runs that are returned by the
+	// action.
 	//
-	// For a record to match a filter, all specified filter attributes must match.
-	// When multiple values are specified for a filter attribute, any of the values
-	// can match.
-	Filter *AgentsFilter `locationName:"filter" type:"structure"`
-
-	// You can use this parameter to indicate the maximum number of items you want
-	// in the response. The default value is 10. The maximum value is 500.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
-
-	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListAssessmentAgents action.
-	// Subsequent calls to the action fill nextToken in the request with the value
-	// of NextToken from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
-}
-
-// String returns the string representation
-func (s ListAssessmentAgentsInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListAssessmentAgentsInput) GoString() string {
-	return s.String()
-}
-
-type ListAssessmentAgentsOutput struct {
-	_ struct{} `type:"structure"`
-
-	// A list of ARNs specifying the agents returned by the action.
-	AgentList []*Agent `locationName:"agentList" type:"list"`
+	// AssessmentRunArns is a required field
+	AssessmentRunArns []*string `locationName:"assessmentRunArns" type:"list" required:"true"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s ListAssessmentAgentsOutput) String() string {
+func (s ListAssessmentRunsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListAssessmentAgentsOutput) GoString() string {
+func (s ListAssessmentRunsOutput) GoString() string {
 	return s.String()
 }
 
-type ListAssessmentsInput struct {
-	_ struct{} `type:"structure"`
-
-	// A list of ARNs specifying the applications the assessments of which you want
-	// to list.
-	ApplicationArns []*string `locationName:"applicationArns" type:"list"`
-
-	// You can use this parameter to specify a subset of data to be included in
-	// the action's response.
-	//
-	// For a record to match a filter, all specified filter attributes must match.
-	// When multiple values are specified for a filter attribute, any of the values
-	// can match.
-	Filter *AssessmentsFilter `locationName:"filter" type:"structure"`
-
-	// You can use this parameter to indicate the maximum number of items you want
-	// in the response. The default value is 10. The maximum value is 500.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
-
-	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListAssessments action. Subsequent
-	// calls to the action fill nextToken in the request with the value of NextToken
-	// from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
-}
-
-// String returns the string representation
-func (s ListAssessmentsInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListAssessmentsInput) GoString() string {
-	return s.String()
-}
-
-type ListAssessmentsOutput struct {
-	_ struct{} `type:"structure"`
-
-	// A list of ARNs specifying the assessments returned by the action.
-	AssessmentArnList []*string `locationName:"assessmentArnList" type:"list"`
-
-	// When a response is generated, if there is more data to be listed, this parameter
-	// is present in the response and contains the value to use for the nextToken
-	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
-}
-
-// String returns the string representation
-func (s ListAssessmentsOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListAssessmentsOutput) GoString() string {
-	return s.String()
-}
-
-type ListAttachedAssessmentsInput struct {
+type ListAssessmentTargetsInput struct {
 	_ struct{} `type:"structure"`
 
 	// You can use this parameter to specify a subset of data to be included in
@@ -2161,129 +4418,245 @@ type ListAttachedAssessmentsInput struct {
 	// For a record to match a filter, all specified filter attributes must match.
 	// When multiple values are specified for a filter attribute, any of the values
 	// can match.
-	Filter *AssessmentsFilter `locationName:"filter" type:"structure"`
+	Filter *AssessmentTargetFilter `locationName:"filter" type:"structure"`
 
 	// You can use this parameter to indicate the maximum number of items you want
 	// in the response. The default value is 10. The maximum value is 500.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListAttachedAssessments action.
+	// parameter to null on your first call to the ListAssessmentTargets action.
 	// Subsequent calls to the action fill nextToken in the request with the value
-	// of NextToken from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
-
-	// The ARN specifying the rules package whose assessments you want to list.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string" required:"true"`
+	// of NextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s ListAttachedAssessmentsInput) String() string {
+func (s ListAssessmentTargetsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListAttachedAssessmentsInput) GoString() string {
+func (s ListAssessmentTargetsInput) GoString() string {
 	return s.String()
 }
 
-type ListAttachedAssessmentsOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssessmentTargetsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssessmentTargetsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ListAssessmentTargetsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of ARNs specifying the assessments returned by the action.
-	AssessmentArnList []*string `locationName:"assessmentArnList" type:"list"`
+	// A list of ARNs that specifies the assessment targets that are returned by
+	// the action.
+	//
+	// AssessmentTargetArns is a required field
+	AssessmentTargetArns []*string `locationName:"assessmentTargetArns" type:"list" required:"true"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s ListAttachedAssessmentsOutput) String() string {
+func (s ListAssessmentTargetsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListAttachedAssessmentsOutput) GoString() string {
+func (s ListAssessmentTargetsOutput) GoString() string {
 	return s.String()
 }
 
-type ListAttachedRulesPackagesInput struct {
+type ListAssessmentTemplatesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the assessment whose rules packages you want to list.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// A list of ARNs that specifies the assessment targets whose assessment templates
+	// you want to list.
+	AssessmentTargetArns []*string `locationName:"assessmentTargetArns" type:"list"`
+
+	// You can use this parameter to specify a subset of data to be included in
+	// the action's response.
+	//
+	// For a record to match a filter, all specified filter attributes must match.
+	// When multiple values are specified for a filter attribute, any of the values
+	// can match.
+	Filter *AssessmentTemplateFilter `locationName:"filter" type:"structure"`
 
 	// You can use this parameter to indicate the maximum number of items you want
 	// in the response. The default value is 10. The maximum value is 500.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListAttachedRulesPackages action.
+	// parameter to null on your first call to the ListAssessmentTemplates action.
 	// Subsequent calls to the action fill nextToken in the request with the value
-	// of NextToken from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// of NextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s ListAttachedRulesPackagesInput) String() string {
+func (s ListAssessmentTemplatesInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListAttachedRulesPackagesInput) GoString() string {
+func (s ListAssessmentTemplatesInput) GoString() string {
 	return s.String()
 }
 
-type ListAttachedRulesPackagesOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssessmentTemplatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssessmentTemplatesInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ListAssessmentTemplatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ARNs that specifies the assessment templates returned by the action.
+	//
+	// AssessmentTemplateArns is a required field
+	AssessmentTemplateArns []*string `locationName:"assessmentTemplateArns" type:"list" required:"true"`
+
+	// When a response is generated, if there is more data to be listed, this parameter
+	// is present in the response and contains the value to use for the nextToken
+	// parameter in a subsequent pagination request. If there is no more data to
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssessmentTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssessmentTemplatesOutput) GoString() string {
+	return s.String()
+}
+
+type ListEventSubscriptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// You can use this parameter to indicate the maximum number of items you want
+	// in the response. The default value is 10. The maximum value is 500.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// You can use this parameter when paginating results. Set the value of this
+	// parameter to null on your first call to the ListEventSubscriptions action.
+	// Subsequent calls to the action fill nextToken in the request with the value
+	// of NextToken from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// The ARN of the assessment template for which you want to list the existing
+	// event subscriptions.
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListEventSubscriptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListEventSubscriptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListEventSubscriptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListEventSubscriptionsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type ListEventSubscriptionsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
-	// A list of ARNs specifying the rules packages returned by the action.
-	RulesPackageArnList []*string `locationName:"rulesPackageArnList" type:"list"`
+	// Details of the returned event subscriptions.
+	//
+	// Subscriptions is a required field
+	Subscriptions []*Subscription `locationName:"subscriptions" type:"list" required:"true"`
 }
 
 // String returns the string representation
-func (s ListAttachedRulesPackagesOutput) String() string {
+func (s ListEventSubscriptionsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s ListAttachedRulesPackagesOutput) GoString() string {
+func (s ListEventSubscriptionsOutput) GoString() string {
 	return s.String()
 }
 
 type ListFindingsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ARNs of the assessment runs that generate the findings that you want
+	// to list.
+	AssessmentRunArns []*string `locationName:"assessmentRunArns" type:"list"`
+
 	// You can use this parameter to specify a subset of data to be included in
 	// the action's response.
 	//
 	// For a record to match a filter, all specified filter attributes must match.
 	// When multiple values are specified for a filter attribute, any of the values
 	// can match.
-	Filter *FindingsFilter `locationName:"filter" type:"structure"`
+	Filter *FindingFilter `locationName:"filter" type:"structure"`
 
 	// You can use this parameter to indicate the maximum number of items you want
 	// in the response. The default value is 10. The maximum value is 500.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListFindings action. Subsequent
+	// parameter to null on your first call to the ListFindings action. Subsequent
 	// calls to the action fill nextToken in the request with the value of NextToken
-	// from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
-
-	// The ARNs of the assessment runs that generate the findings that you want
-	// to list.
-	RunArns []*string `locationName:"runArns" type:"list"`
+	// from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -2296,17 +4669,37 @@ func (s ListFindingsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListFindingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListFindingsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.Filter != nil {
+		if err := s.Filter.Validate(); err != nil {
+			invalidParams.AddNested("Filter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type ListFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of ARNs specifying the findings returned by the action.
-	FindingArnList []*string `locationName:"findingArnList" type:"list"`
+	// A list of ARNs that specifies the findings returned by the action.
+	//
+	// FindingArns is a required field
+	FindingArns []*string `locationName:"findingArns" type:"list" required:"true"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -2327,10 +4720,10 @@ type ListRulesPackagesInput struct {
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListRulesPackages action. Subsequent
+	// parameter to null on your first call to the ListRulesPackages action. Subsequent
 	// calls to the action fill nextToken in the request with the value of NextToken
-	// from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -2343,17 +4736,32 @@ func (s ListRulesPackagesInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListRulesPackagesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListRulesPackagesInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type ListRulesPackagesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
-	// The list of ARNs specifying the rules packages returned by the action.
-	RulesPackageArnList []*string `locationName:"rulesPackageArnList" type:"list"`
+	// The list of ARNs that specifies the rules packages returned by the action.
+	//
+	// RulesPackageArns is a required field
+	RulesPackageArns []*string `locationName:"rulesPackageArns" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -2366,69 +4774,13 @@ func (s ListRulesPackagesOutput) GoString() string {
 	return s.String()
 }
 
-type ListRunsInput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARNs specifying the assessments whose runs you want to list.
-	AssessmentArns []*string `locationName:"assessmentArns" type:"list"`
-
-	// You can use this parameter to specify a subset of data to be included in
-	// the action's response.
-	//
-	// For a record to match a filter, all specified filter attributes must match.
-	// When multiple values are specified for a filter attribute, any of the values
-	// can match.
-	Filter *RunsFilter `locationName:"filter" type:"structure"`
-
-	// You can use this parameter to indicate the maximum number of items you want
-	// in the response. The default value is 10. The maximum value is 500.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
-
-	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the ListRuns action. Subsequent
-	// calls to the action fill nextToken in the request with the value of NextToken
-	// from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
-}
-
-// String returns the string representation
-func (s ListRunsInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListRunsInput) GoString() string {
-	return s.String()
-}
-
-type ListRunsOutput struct {
-	_ struct{} `type:"structure"`
-
-	// When a response is generated, if there is more data to be listed, this parameter
-	// is present in the response and contains the value to use for the nextToken
-	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
-
-	// A list of ARNs specifying the assessment runs returned by the action.
-	RunArnList []*string `locationName:"runArnList" type:"list"`
-}
-
-// String returns the string representation
-func (s ListRunsOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ListRunsOutput) GoString() string {
-	return s.String()
-}
-
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN specifying the resource whose tags you want to list.
-	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
+	// The ARN that specifies the assessment template whose tags you want to list.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2441,11 +4793,29 @@ func (s ListTagsForResourceInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A collection of key and value pairs.
-	TagList []*Tag `locationName:"tagList" type:"list"`
+	//
+	// Tags is a required field
+	Tags []*Tag `locationName:"tags" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -2458,141 +4828,7 @@ func (s ListTagsForResourceOutput) GoString() string {
 	return s.String()
 }
 
-type LocalizeTextInput struct {
-	_ struct{} `type:"structure"`
-
-	// The locale that you want to translate a textual identifier into.
-	Locale *string `locationName:"locale" type:"string" required:"true"`
-
-	// A list of textual identifiers.
-	LocalizedTexts []*LocalizedText `locationName:"localizedTexts" type:"list" required:"true"`
-}
-
-// String returns the string representation
-func (s LocalizeTextInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s LocalizeTextInput) GoString() string {
-	return s.String()
-}
-
-type LocalizeTextOutput struct {
-	_ struct{} `type:"structure"`
-
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
-
-	// The resulting list of user-readable texts.
-	Results []*string `locationName:"results" type:"list"`
-}
-
-// String returns the string representation
-func (s LocalizeTextOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s LocalizeTextOutput) GoString() string {
-	return s.String()
-}
-
-// The textual identifier. This data type is used as the request parameter in
-// the LocalizeText action.
-type LocalizedText struct {
-	_ struct{} `type:"structure"`
-
-	// The facility and id properties of the LocalizedTextKey data type.
-	Key *LocalizedTextKey `locationName:"key" type:"structure"`
-
-	// Values for the dynamic elements of the string specified by the textual identifier.
-	Parameters []*Parameter `locationName:"parameters" type:"list"`
-}
-
-// String returns the string representation
-func (s LocalizedText) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s LocalizedText) GoString() string {
-	return s.String()
-}
-
-// This data type is used in the LocalizedText data type.
-type LocalizedTextKey struct {
-	_ struct{} `type:"structure"`
-
-	// The module response source of the text.
-	Facility *string `locationName:"facility" type:"string"`
-
-	// Part of the module response source of the text.
-	Id *string `locationName:"id" type:"string"`
-}
-
-// String returns the string representation
-func (s LocalizedTextKey) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s LocalizedTextKey) GoString() string {
-	return s.String()
-}
-
-// This data type is used in the Telemetry data type.
-//
-// This is metadata about the behavioral data collected by the Inspector agent
-// on your EC2 instances during an assessment and passed to the Inspector service
-// for analysis.
-type MessageTypeTelemetry struct {
-	_ struct{} `type:"structure"`
-
-	// The number of times that the behavioral data is collected by the agent during
-	// an assessment.
-	Count *int64 `locationName:"count" type:"long"`
-
-	// The total size of the behavioral data that is collected by the agent during
-	// an assessment.
-	DataSize *int64 `locationName:"dataSize" type:"long"`
-
-	// A specific type of behavioral data that is collected by the agent.
-	MessageType *string `locationName:"messageType" type:"string"`
-}
-
-// String returns the string representation
-func (s MessageTypeTelemetry) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s MessageTypeTelemetry) GoString() string {
-	return s.String()
-}
-
-// This data type is used in the LocalizedText data type.
-type Parameter struct {
-	_ struct{} `type:"structure"`
-
-	// The name of the variable that is being replaced.
-	Name *string `locationName:"name" type:"string"`
-
-	// The value assigned to the variable that is being replaced.
-	Value *string `locationName:"value" type:"string"`
-}
-
-// String returns the string representation
-func (s Parameter) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s Parameter) GoString() string {
-	return s.String()
-}
-
-type PreviewAgentsForResourceGroupInput struct {
+type PreviewAgentsInput struct {
 	_ struct{} `type:"structure"`
 
 	// You can use this parameter to indicate the maximum number of items you want
@@ -2600,54 +4836,79 @@ type PreviewAgentsForResourceGroupInput struct {
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// You can use this parameter when paginating results. Set the value of this
-	// parameter to 'null' on your first call to the PreviewAgentsForResourceGroup
-	// action. Subsequent calls to the action fill nextToken in the request with
-	// the value of NextToken from previous response to continue listing data.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// parameter to null on your first call to the PreviewAgents action. Subsequent
+	// calls to the action fill nextToken in the request with the value of NextToken
+	// from the previous response to continue listing data.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
-	// The ARN of the resource group that is used to create an application.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string" required:"true"`
+	// The ARN of the assessment target whose agents you want to preview.
+	//
+	// PreviewAgentsArn is a required field
+	PreviewAgentsArn *string `locationName:"previewAgentsArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s PreviewAgentsForResourceGroupInput) String() string {
+func (s PreviewAgentsInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s PreviewAgentsForResourceGroupInput) GoString() string {
+func (s PreviewAgentsInput) GoString() string {
 	return s.String()
 }
 
-type PreviewAgentsForResourceGroupOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PreviewAgentsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PreviewAgentsInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.PreviewAgentsArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("PreviewAgentsArn"))
+	}
+	if s.PreviewAgentsArn != nil && len(*s.PreviewAgentsArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PreviewAgentsArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type PreviewAgentsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The resulting list of agents.
-	AgentPreviewList []*AgentPreview `locationName:"agentPreviewList" type:"list"`
+	//
+	// AgentPreviews is a required field
+	AgentPreviews []*AgentPreview `locationName:"agentPreviews" type:"list" required:"true"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
 	// is present in the response and contains the value to use for the nextToken
 	// parameter in a subsequent pagination request. If there is no more data to
-	// be listed, this parameter is set to 'null'.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	// be listed, this parameter is set to null.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
-func (s PreviewAgentsForResourceGroupOutput) String() string {
+func (s PreviewAgentsOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s PreviewAgentsForResourceGroupOutput) GoString() string {
+func (s PreviewAgentsOutput) GoString() string {
 	return s.String()
 }
 
 type RegisterCrossAccountAccessRoleInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the IAM role that Inspector uses to list your EC2 instances during
-	// the assessment.
-	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+	// The ARN of the IAM role that Amazon Inspector uses to list your EC2 instances
+	// during the assessment run or when you call the PreviewAgents action.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2660,11 +4921,24 @@ func (s RegisterCrossAccountAccessRoleInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegisterCrossAccountAccessRoleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegisterCrossAccountAccessRoleInput"}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type RegisterCrossAccountAccessRoleOutput struct {
 	_ struct{} `type:"structure"`
-
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2681,10 +4955,14 @@ type RemoveAttributesFromFindingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The array of attribute keys that you want to remove from specified findings.
+	//
+	// AttributeKeys is a required field
 	AttributeKeys []*string `locationName:"attributeKeys" type:"list" required:"true"`
 
-	// The ARNs specifying the findings that you want to remove attributes from.
-	FindingArns []*string `locationName:"findingArns" type:"list" required:"true"`
+	// The ARNs that specify the findings that you want to remove attributes from.
+	//
+	// FindingArns is a required field
+	FindingArns []*string `locationName:"findingArns" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -2697,11 +4975,33 @@ func (s RemoveAttributesFromFindingsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveAttributesFromFindingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveAttributesFromFindingsInput"}
+	if s.AttributeKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("AttributeKeys"))
+	}
+	if s.FindingArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingArns"))
+	}
+	if s.FindingArns != nil && len(s.FindingArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type RemoveAttributesFromFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	// Attributes details that cannot be described. An error code is provided for
+	// each failed item.
+	//
+	// FailedItems is a required field
+	FailedItems map[string]*FailedItemDetails `locationName:"failedItems" type:"map" required:"true"`
 }
 
 // String returns the string representation
@@ -2715,25 +5015,27 @@ func (s RemoveAttributesFromFindingsOutput) GoString() string {
 }
 
 // Contains information about a resource group. The resource group defines a
-// set of tags that, when queried, identify the AWS resources that comprise
-// the application.
-//
-// This data type is used as the response element in the DescribeResourceGroup
-// action.
+// set of tags that, when queried, identify the AWS resources that make up the
+// assessment target. This data type is used as the response element in the
+// DescribeResourceGroups action.
 type ResourceGroup struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the resource group.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string"`
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
 
-	// The tags (key and value pairs) of the resource group.
+	// The time at which resource group is created.
 	//
-	// This data type property is used in the CreateResourceGroup action.
+	// CreatedAt is a required field
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unix" required:"true"`
+
+	// The tags (key and value pairs) of the resource group. This data type property
+	// is used in the CreateResourceGroup action.
 	//
-	// A collection of keys and an array of possible values in JSON format.
-	//
-	// For example, [{ "key1" : ["Value1","Value2"]},{"Key2": ["Value3"]}]
-	ResourceGroupTags *string `locationName:"resourceGroupTags" type:"string"`
+	// Tags is a required field
+	Tags []*ResourceGroupTag `locationName:"tags" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -2746,27 +5048,75 @@ func (s ResourceGroup) GoString() string {
 	return s.String()
 }
 
-// Contains information about an Inspector rules package.
-//
-// This data type is used as the response element in the DescribeRulesPackage
-// action.
+// This data type is used as one of the elements of the ResourceGroup data type.
+type ResourceGroupTag struct {
+	_ struct{} `type:"structure"`
+
+	// A tag key.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The value assigned to a tag key.
+	Value *string `locationName:"value" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceGroupTag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceGroupTag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceGroupTag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceGroupTag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// Contains information about an Amazon Inspector rules package. This data type
+// is used as the response element in the DescribeRulesPackages action.
 type RulesPackage struct {
 	_ struct{} `type:"structure"`
 
-	// The description of the rules package.
-	Description *LocalizedText `locationName:"description" type:"structure"`
-
-	// The provider of the rules package.
-	Provider *string `locationName:"provider" type:"string"`
-
 	// The ARN of the rules package.
-	RulesPackageArn *string `locationName:"rulesPackageArn" type:"string"`
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" min:"1" type:"string" required:"true"`
+
+	// The description of the rules package.
+	Description *string `locationName:"description" type:"string"`
 
 	// The name of the rules package.
-	RulesPackageName *string `locationName:"rulesPackageName" type:"string"`
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// The version id of the rules package.
-	Version *string `locationName:"version" type:"string"`
+	// The provider of the rules package.
+	//
+	// Provider is a required field
+	Provider *string `locationName:"provider" type:"string" required:"true"`
+
+	// The version ID of the rules package.
+	//
+	// Version is a required field
+	Version *string `locationName:"version" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2779,131 +5129,42 @@ func (s RulesPackage) GoString() string {
 	return s.String()
 }
 
-// A snapshot of an Inspector assessment that contains the assessment's findings.
-//
-// This data type is used as the response element in the DescribeRun action.
-type Run struct {
+// This data type is used in the Finding data type.
+type ServiceAttributes struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the assessment that is associated with the run.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string"`
+	// The ARN of the assessment run during which the finding is generated.
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string"`
 
-	// Run completion time that corresponds to the rules packages evaluation completion
-	// time or failure.
-	CompletionTime *time.Time `locationName:"completionTime" type:"timestamp" timestampFormat:"unix"`
+	// The ARN of the rules package that is used to generate the finding.
+	RulesPackageArn *string `locationName:"rulesPackageArn" min:"1" type:"string"`
 
-	// Run creation time that corresponds to the data collection completion time
-	// or failure.
-	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"unix"`
-
-	// Rules packages selected for the run of the assessment.
-	RulesPackages []*string `locationName:"rulesPackages" type:"list"`
-
-	// The ARN of the run.
-	RunArn *string `locationName:"runArn" type:"string"`
-
-	// The auto-generated name for the run.
-	RunName *string `locationName:"runName" type:"string"`
-
-	// The state of the run. Values can be set to DataCollectionComplete, EvaluatingPolicies,
-	// EvaluatingPoliciesErrorCanRetry, Completed, Failed, TombStoned.
-	RunState *string `locationName:"runState" type:"string"`
+	// The schema version of this data type.
+	//
+	// SchemaVersion is a required field
+	SchemaVersion *int64 `locationName:"schemaVersion" type:"integer" required:"true"`
 }
 
 // String returns the string representation
-func (s Run) String() string {
+func (s ServiceAttributes) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s Run) GoString() string {
-	return s.String()
-}
-
-type RunAssessmentInput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARN of the assessment that you want to run.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
-
-	// A name specifying the run of the assessment.
-	RunName *string `locationName:"runName" type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s RunAssessmentInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s RunAssessmentInput) GoString() string {
-	return s.String()
-}
-
-type RunAssessmentOutput struct {
-	_ struct{} `type:"structure"`
-
-	// The ARN specifying the run of the assessment.
-	RunArn *string `locationName:"runArn" type:"string"`
-}
-
-// String returns the string representation
-func (s RunAssessmentOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s RunAssessmentOutput) GoString() string {
-	return s.String()
-}
-
-// This data type is used as the request parameter in the ListRuns action.
-type RunsFilter struct {
-	_ struct{} `type:"structure"`
-
-	// For a record to match a filter, the value specified for this data type property
-	// must inclusively match any value between the specified minimum and maximum
-	// values of the completionTime property of the Run data type.
-	CompletionTime *TimestampRange `locationName:"completionTime" type:"structure"`
-
-	// For a record to match a filter, the value specified for this data type property
-	// must inclusively match any value between the specified minimum and maximum
-	// values of the creationTime property of the Run data type.
-	CreationTime *TimestampRange `locationName:"creationTime" type:"structure"`
-
-	// For a record to match a filter, the value specified for this data type property
-	// must match a list of values of the rulesPackages property of the Run data
-	// type.
-	RulesPackages []*string `locationName:"rulesPackages" type:"list"`
-
-	// For a record to match a filter, an explicit value or a string containing
-	// a wildcard specified for this data type property must match the value of
-	// the runName property of the Run data type.
-	RunNamePatterns []*string `locationName:"runNamePatterns" type:"list"`
-
-	// For a record to match a filter, the value specified for this data type property
-	// must be the exact match of the value of the runState property of the Run
-	// data type.
-	RunStates []*string `locationName:"runStates" type:"list"`
-}
-
-// String returns the string representation
-func (s RunsFilter) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s RunsFilter) GoString() string {
+func (s ServiceAttributes) GoString() string {
 	return s.String()
 }
 
 type SetTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the assessment that you want to set tags to.
-	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
+	// The ARN of the assessment template that you want to set tags to.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
 
-	// A collection of key and value pairs that you want to set to an assessment.
+	// A collection of key and value pairs that you want to set to the assessment
+	// template.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -2917,11 +5178,34 @@ func (s SetTagsForResourceInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SetTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SetTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 type SetTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
-
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
 }
 
 // String returns the string representation
@@ -2934,88 +5218,233 @@ func (s SetTagsForResourceOutput) GoString() string {
 	return s.String()
 }
 
-type StartDataCollectionInput struct {
+type StartAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the assessment for which you want to start the data collection
-	// process.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// You can specify the name for the assessment run, or you can use the auto-generated
+	// name that is based on the assessment template name. The name must be unique
+	// for the assessment template.
+	AssessmentRunName *string `locationName:"assessmentRunName" min:"1" type:"string"`
+
+	// The ARN of the assessment template of the assessment run that you want to
+	// start.
+	//
+	// AssessmentTemplateArn is a required field
+	AssessmentTemplateArn *string `locationName:"assessmentTemplateArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s StartDataCollectionInput) String() string {
+func (s StartAssessmentRunInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s StartDataCollectionInput) GoString() string {
+func (s StartAssessmentRunInput) GoString() string {
 	return s.String()
 }
 
-type StartDataCollectionOutput struct {
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAssessmentRunInput"}
+	if s.AssessmentRunName != nil && len(*s.AssessmentRunName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunName", 1))
+	}
+	if s.AssessmentTemplateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTemplateArn"))
+	}
+	if s.AssessmentTemplateArn != nil && len(*s.AssessmentTemplateArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTemplateArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type StartAssessmentRunOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	// The ARN of the assessment run that has been started.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s StartDataCollectionOutput) String() string {
+func (s StartAssessmentRunOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s StartDataCollectionOutput) GoString() string {
+func (s StartAssessmentRunOutput) GoString() string {
 	return s.String()
 }
 
-type StopDataCollectionInput struct {
+type StopAssessmentRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the assessment for which you want to stop the data collection
-	// process.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The ARN of the assessment run that you want to stop.
+	//
+	// AssessmentRunArn is a required field
+	AssessmentRunArn *string `locationName:"assessmentRunArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s StopDataCollectionInput) String() string {
+func (s StopAssessmentRunInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s StopDataCollectionInput) GoString() string {
+func (s StopAssessmentRunInput) GoString() string {
 	return s.String()
 }
 
-type StopDataCollectionOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopAssessmentRunInput"}
+	if s.AssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunArn"))
+	}
+	if s.AssessmentRunArn != nil && len(*s.AssessmentRunArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentRunArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type StopAssessmentRunOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s StopDataCollectionOutput) String() string {
+func (s StopAssessmentRunOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s StopDataCollectionOutput) GoString() string {
+func (s StopAssessmentRunOutput) GoString() string {
 	return s.String()
 }
 
-// A key and value pair.
-//
-// This data type is used as a request parameter in the SetTagsForResource
-// action and a response element in the ListTagsForResource action.
+type SubscribeToEventInput struct {
+	_ struct{} `type:"structure"`
+
+	// The event for which you want to receive SNS notifications.
+	//
+	// Event is a required field
+	Event *string `locationName:"event" type:"string" required:"true" enum:"Event"`
+
+	// The ARN of the assessment template that is used during the event for which
+	// you want to receive SNS notifications.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// The ARN of the SNS topic to which the SNS notifications are sent.
+	//
+	// TopicArn is a required field
+	TopicArn *string `locationName:"topicArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SubscribeToEventInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubscribeToEventInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SubscribeToEventInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SubscribeToEventInput"}
+	if s.Event == nil {
+		invalidParams.Add(request.NewErrParamRequired("Event"))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TopicArn"))
+	}
+	if s.TopicArn != nil && len(*s.TopicArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TopicArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type SubscribeToEventOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s SubscribeToEventOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SubscribeToEventOutput) GoString() string {
+	return s.String()
+}
+
+// This data type is used as a response element in the ListEventSubscriptions
+// action.
+type Subscription struct {
+	_ struct{} `type:"structure"`
+
+	// The list of existing event subscriptions.
+	//
+	// EventSubscriptions is a required field
+	EventSubscriptions []*EventSubscription `locationName:"eventSubscriptions" min:"1" type:"list" required:"true"`
+
+	// The ARN of the assessment template that is used during the event for which
+	// the SNS notification is sent.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// The ARN of the Amazon Simple Notification Service (SNS) topic to which the
+	// SNS notifications are sent.
+	//
+	// TopicArn is a required field
+	TopicArn *string `locationName:"topicArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Subscription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Subscription) GoString() string {
+	return s.String()
+}
+
+// A key and value pair. This data type is used as a request parameter in the
+// SetTagsForResource action and a response element in the ListTagsForResource
+// action.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
-	// The tag key.
-	Key *string `type:"string"`
+	// A tag key.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
 
-	// The value assigned to a tag key.
-	Value *string `type:"string"`
+	// A value assigned to a tag key.
+	Value *string `locationName:"value" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -3028,41 +5457,64 @@ func (s Tag) GoString() string {
 	return s.String()
 }
 
-// The metadata about the Inspector application data metrics collected by the
-// agent.
-//
-// This data type is used as the response element in the GetAssessmentTelemetry
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// The metadata about the Amazon Inspector application data metrics collected
+// by the agent. This data type is used as the response element in the GetTelemetryMetadata
 // action.
-type Telemetry struct {
+type TelemetryMetadata struct {
 	_ struct{} `type:"structure"`
 
-	// Counts of individual metrics received by Inspector from the agent.
-	MessageTypeTelemetries []*MessageTypeTelemetry `locationName:"messageTypeTelemetries" type:"list"`
+	// The count of messages that the agent sends to the Amazon Inspector service.
+	//
+	// Count is a required field
+	Count *int64 `locationName:"count" type:"long" required:"true"`
 
-	// The category of the individual metrics that together constitute the telemetry
-	// that Inspector received from the agent.
-	Status *string `locationName:"status" type:"string"`
+	// The data size of messages that the agent sends to the Amazon Inspector service.
+	DataSize *int64 `locationName:"dataSize" type:"long"`
+
+	// A specific type of behavioral data that is collected by the agent.
+	//
+	// MessageType is a required field
+	MessageType *string `locationName:"messageType" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s Telemetry) String() string {
+func (s TelemetryMetadata) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s Telemetry) GoString() string {
+func (s TelemetryMetadata) GoString() string {
 	return s.String()
 }
 
-// This data type is used in the AssessmentsFilter and RunsFilter data types.
+// This data type is used in the AssessmentRunFilter data type.
 type TimestampRange struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum value of the timestamp range.
-	Maximum *time.Time `locationName:"maximum" type:"timestamp" timestampFormat:"unix"`
-
 	// The minimum value of the timestamp range.
-	Minimum *time.Time `locationName:"minimum" type:"timestamp" timestampFormat:"unix"`
+	BeginDate *time.Time `locationName:"beginDate" type:"timestamp" timestampFormat:"unix"`
+
+	// The maximum value of the timestamp range.
+	EndDate *time.Time `locationName:"endDate" type:"timestamp" timestampFormat:"unix"`
 }
 
 // String returns the string representation
@@ -3075,83 +5527,522 @@ func (s TimestampRange) GoString() string {
 	return s.String()
 }
 
-type UpdateApplicationInput struct {
+type UnsubscribeFromEventInput struct {
 	_ struct{} `type:"structure"`
 
-	// Application ARN that you want to update.
-	ApplicationArn *string `locationName:"applicationArn" type:"string" required:"true"`
+	// The event for which you want to stop receiving SNS notifications.
+	//
+	// Event is a required field
+	Event *string `locationName:"event" type:"string" required:"true" enum:"Event"`
 
-	// Application name that you want to update.
-	ApplicationName *string `locationName:"applicationName" type:"string" required:"true"`
+	// The ARN of the assessment template that is used during the event for which
+	// you want to stop receiving SNS notifications.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
 
-	// The resource group ARN that you want to update.
-	ResourceGroupArn *string `locationName:"resourceGroupArn" type:"string" required:"true"`
+	// The ARN of the SNS topic to which SNS notifications are sent.
+	//
+	// TopicArn is a required field
+	TopicArn *string `locationName:"topicArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s UpdateApplicationInput) String() string {
+func (s UnsubscribeFromEventInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s UpdateApplicationInput) GoString() string {
+func (s UnsubscribeFromEventInput) GoString() string {
 	return s.String()
 }
 
-type UpdateApplicationOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UnsubscribeFromEventInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UnsubscribeFromEventInput"}
+	if s.Event == nil {
+		invalidParams.Add(request.NewErrParamRequired("Event"))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TopicArn"))
+	}
+	if s.TopicArn != nil && len(*s.TopicArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TopicArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type UnsubscribeFromEventOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s UpdateApplicationOutput) String() string {
+func (s UnsubscribeFromEventOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s UpdateApplicationOutput) GoString() string {
+func (s UnsubscribeFromEventOutput) GoString() string {
 	return s.String()
 }
 
-type UpdateAssessmentInput struct {
+type UpdateAssessmentTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// Asessment ARN that you want to update.
-	AssessmentArn *string `locationName:"assessmentArn" type:"string" required:"true"`
+	// The ARN of the assessment target that you want to update.
+	//
+	// AssessmentTargetArn is a required field
+	AssessmentTargetArn *string `locationName:"assessmentTargetArn" min:"1" type:"string" required:"true"`
 
-	// Assessment name that you want to update.
-	AssessmentName *string `locationName:"assessmentName" type:"string" required:"true"`
+	// The name of the assessment target that you want to update.
+	//
+	// AssessmentTargetName is a required field
+	AssessmentTargetName *string `locationName:"assessmentTargetName" min:"1" type:"string" required:"true"`
 
-	// Assessment duration in seconds that you want to update. The default value
-	// is 3600 seconds (one hour). The maximum value is 86400 seconds (one day).
-	DurationInSeconds *int64 `locationName:"durationInSeconds" type:"integer" required:"true"`
+	// The ARN of the resource group that is used to specify the new resource group
+	// to associate with the assessment target.
+	//
+	// ResourceGroupArn is a required field
+	ResourceGroupArn *string `locationName:"resourceGroupArn" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
-func (s UpdateAssessmentInput) String() string {
+func (s UpdateAssessmentTargetInput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s UpdateAssessmentInput) GoString() string {
+func (s UpdateAssessmentTargetInput) GoString() string {
 	return s.String()
 }
 
-type UpdateAssessmentOutput struct {
-	_ struct{} `type:"structure"`
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAssessmentTargetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAssessmentTargetInput"}
+	if s.AssessmentTargetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetArn"))
+	}
+	if s.AssessmentTargetArn != nil && len(*s.AssessmentTargetArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetArn", 1))
+	}
+	if s.AssessmentTargetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentTargetName"))
+	}
+	if s.AssessmentTargetName != nil && len(*s.AssessmentTargetName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssessmentTargetName", 1))
+	}
+	if s.ResourceGroupArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceGroupArn"))
+	}
+	if s.ResourceGroupArn != nil && len(*s.ResourceGroupArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceGroupArn", 1))
+	}
 
-	// Confirmation details of the action performed.
-	Message *string `locationName:"message" type:"string"`
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+type UpdateAssessmentTargetOutput struct {
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
-func (s UpdateAssessmentOutput) String() string {
+func (s UpdateAssessmentTargetOutput) String() string {
 	return awsutil.Prettify(s)
 }
 
 // GoString returns the string representation
-func (s UpdateAssessmentOutput) GoString() string {
+func (s UpdateAssessmentTargetOutput) GoString() string {
 	return s.String()
 }
+
+const (
+	// AccessDeniedErrorCodeAccessDeniedToAssessmentTarget is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToAssessmentTarget = "ACCESS_DENIED_TO_ASSESSMENT_TARGET"
+
+	// AccessDeniedErrorCodeAccessDeniedToAssessmentTemplate is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToAssessmentTemplate = "ACCESS_DENIED_TO_ASSESSMENT_TEMPLATE"
+
+	// AccessDeniedErrorCodeAccessDeniedToAssessmentRun is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToAssessmentRun = "ACCESS_DENIED_TO_ASSESSMENT_RUN"
+
+	// AccessDeniedErrorCodeAccessDeniedToFinding is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToFinding = "ACCESS_DENIED_TO_FINDING"
+
+	// AccessDeniedErrorCodeAccessDeniedToResourceGroup is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToResourceGroup = "ACCESS_DENIED_TO_RESOURCE_GROUP"
+
+	// AccessDeniedErrorCodeAccessDeniedToRulesPackage is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToRulesPackage = "ACCESS_DENIED_TO_RULES_PACKAGE"
+
+	// AccessDeniedErrorCodeAccessDeniedToSnsTopic is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToSnsTopic = "ACCESS_DENIED_TO_SNS_TOPIC"
+
+	// AccessDeniedErrorCodeAccessDeniedToIamRole is a AccessDeniedErrorCode enum value
+	AccessDeniedErrorCodeAccessDeniedToIamRole = "ACCESS_DENIED_TO_IAM_ROLE"
+)
+
+const (
+	// AgentHealthHealthy is a AgentHealth enum value
+	AgentHealthHealthy = "HEALTHY"
+
+	// AgentHealthUnhealthy is a AgentHealth enum value
+	AgentHealthUnhealthy = "UNHEALTHY"
+)
+
+const (
+	// AgentHealthCodeIdle is a AgentHealthCode enum value
+	AgentHealthCodeIdle = "IDLE"
+
+	// AgentHealthCodeRunning is a AgentHealthCode enum value
+	AgentHealthCodeRunning = "RUNNING"
+
+	// AgentHealthCodeShutdown is a AgentHealthCode enum value
+	AgentHealthCodeShutdown = "SHUTDOWN"
+
+	// AgentHealthCodeUnhealthy is a AgentHealthCode enum value
+	AgentHealthCodeUnhealthy = "UNHEALTHY"
+
+	// AgentHealthCodeThrottled is a AgentHealthCode enum value
+	AgentHealthCodeThrottled = "THROTTLED"
+
+	// AgentHealthCodeUnknown is a AgentHealthCode enum value
+	AgentHealthCodeUnknown = "UNKNOWN"
+)
+
+const (
+	// AssessmentRunNotificationSnsStatusCodeSuccess is a AssessmentRunNotificationSnsStatusCode enum value
+	AssessmentRunNotificationSnsStatusCodeSuccess = "SUCCESS"
+
+	// AssessmentRunNotificationSnsStatusCodeTopicDoesNotExist is a AssessmentRunNotificationSnsStatusCode enum value
+	AssessmentRunNotificationSnsStatusCodeTopicDoesNotExist = "TOPIC_DOES_NOT_EXIST"
+
+	// AssessmentRunNotificationSnsStatusCodeAccessDenied is a AssessmentRunNotificationSnsStatusCode enum value
+	AssessmentRunNotificationSnsStatusCodeAccessDenied = "ACCESS_DENIED"
+
+	// AssessmentRunNotificationSnsStatusCodeInternalError is a AssessmentRunNotificationSnsStatusCode enum value
+	AssessmentRunNotificationSnsStatusCodeInternalError = "INTERNAL_ERROR"
+)
+
+const (
+	// AssessmentRunStateCreated is a AssessmentRunState enum value
+	AssessmentRunStateCreated = "CREATED"
+
+	// AssessmentRunStateStartDataCollectionPending is a AssessmentRunState enum value
+	AssessmentRunStateStartDataCollectionPending = "START_DATA_COLLECTION_PENDING"
+
+	// AssessmentRunStateStartDataCollectionInProgress is a AssessmentRunState enum value
+	AssessmentRunStateStartDataCollectionInProgress = "START_DATA_COLLECTION_IN_PROGRESS"
+
+	// AssessmentRunStateCollectingData is a AssessmentRunState enum value
+	AssessmentRunStateCollectingData = "COLLECTING_DATA"
+
+	// AssessmentRunStateStopDataCollectionPending is a AssessmentRunState enum value
+	AssessmentRunStateStopDataCollectionPending = "STOP_DATA_COLLECTION_PENDING"
+
+	// AssessmentRunStateDataCollected is a AssessmentRunState enum value
+	AssessmentRunStateDataCollected = "DATA_COLLECTED"
+
+	// AssessmentRunStateEvaluatingRules is a AssessmentRunState enum value
+	AssessmentRunStateEvaluatingRules = "EVALUATING_RULES"
+
+	// AssessmentRunStateFailed is a AssessmentRunState enum value
+	AssessmentRunStateFailed = "FAILED"
+
+	// AssessmentRunStateCompleted is a AssessmentRunState enum value
+	AssessmentRunStateCompleted = "COMPLETED"
+
+	// AssessmentRunStateCompletedWithErrors is a AssessmentRunState enum value
+	AssessmentRunStateCompletedWithErrors = "COMPLETED_WITH_ERRORS"
+)
+
+const (
+	// AssetTypeEc2Instance is a AssetType enum value
+	AssetTypeEc2Instance = "ec2-instance"
+)
+
+const (
+	// EventAssessmentRunStarted is a Event enum value
+	EventAssessmentRunStarted = "ASSESSMENT_RUN_STARTED"
+
+	// EventAssessmentRunCompleted is a Event enum value
+	EventAssessmentRunCompleted = "ASSESSMENT_RUN_COMPLETED"
+
+	// EventAssessmentRunStateChanged is a Event enum value
+	EventAssessmentRunStateChanged = "ASSESSMENT_RUN_STATE_CHANGED"
+
+	// EventFindingReported is a Event enum value
+	EventFindingReported = "FINDING_REPORTED"
+
+	// EventOther is a Event enum value
+	EventOther = "OTHER"
+)
+
+const (
+	// FailedItemErrorCodeInvalidArn is a FailedItemErrorCode enum value
+	FailedItemErrorCodeInvalidArn = "INVALID_ARN"
+
+	// FailedItemErrorCodeDuplicateArn is a FailedItemErrorCode enum value
+	FailedItemErrorCodeDuplicateArn = "DUPLICATE_ARN"
+
+	// FailedItemErrorCodeItemDoesNotExist is a FailedItemErrorCode enum value
+	FailedItemErrorCodeItemDoesNotExist = "ITEM_DOES_NOT_EXIST"
+
+	// FailedItemErrorCodeAccessDenied is a FailedItemErrorCode enum value
+	FailedItemErrorCodeAccessDenied = "ACCESS_DENIED"
+
+	// FailedItemErrorCodeLimitExceeded is a FailedItemErrorCode enum value
+	FailedItemErrorCodeLimitExceeded = "LIMIT_EXCEEDED"
+
+	// FailedItemErrorCodeInternalError is a FailedItemErrorCode enum value
+	FailedItemErrorCodeInternalError = "INTERNAL_ERROR"
+)
+
+const (
+	// InvalidCrossAccountRoleErrorCodeRoleDoesNotExistOrInvalidTrustRelationship is a InvalidCrossAccountRoleErrorCode enum value
+	InvalidCrossAccountRoleErrorCodeRoleDoesNotExistOrInvalidTrustRelationship = "ROLE_DOES_NOT_EXIST_OR_INVALID_TRUST_RELATIONSHIP"
+
+	// InvalidCrossAccountRoleErrorCodeRoleDoesNotHaveCorrectPolicy is a InvalidCrossAccountRoleErrorCode enum value
+	InvalidCrossAccountRoleErrorCodeRoleDoesNotHaveCorrectPolicy = "ROLE_DOES_NOT_HAVE_CORRECT_POLICY"
+)
+
+const (
+	// InvalidInputErrorCodeInvalidAssessmentTargetArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTargetArn = "INVALID_ASSESSMENT_TARGET_ARN"
+
+	// InvalidInputErrorCodeInvalidAssessmentTemplateArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTemplateArn = "INVALID_ASSESSMENT_TEMPLATE_ARN"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunArn = "INVALID_ASSESSMENT_RUN_ARN"
+
+	// InvalidInputErrorCodeInvalidFindingArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidFindingArn = "INVALID_FINDING_ARN"
+
+	// InvalidInputErrorCodeInvalidResourceGroupArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidResourceGroupArn = "INVALID_RESOURCE_GROUP_ARN"
+
+	// InvalidInputErrorCodeInvalidRulesPackageArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidRulesPackageArn = "INVALID_RULES_PACKAGE_ARN"
+
+	// InvalidInputErrorCodeInvalidResourceArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidResourceArn = "INVALID_RESOURCE_ARN"
+
+	// InvalidInputErrorCodeInvalidSnsTopicArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidSnsTopicArn = "INVALID_SNS_TOPIC_ARN"
+
+	// InvalidInputErrorCodeInvalidIamRoleArn is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidIamRoleArn = "INVALID_IAM_ROLE_ARN"
+
+	// InvalidInputErrorCodeInvalidAssessmentTargetName is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTargetName = "INVALID_ASSESSMENT_TARGET_NAME"
+
+	// InvalidInputErrorCodeInvalidAssessmentTargetNamePattern is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTargetNamePattern = "INVALID_ASSESSMENT_TARGET_NAME_PATTERN"
+
+	// InvalidInputErrorCodeInvalidAssessmentTemplateName is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTemplateName = "INVALID_ASSESSMENT_TEMPLATE_NAME"
+
+	// InvalidInputErrorCodeInvalidAssessmentTemplateNamePattern is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTemplateNamePattern = "INVALID_ASSESSMENT_TEMPLATE_NAME_PATTERN"
+
+	// InvalidInputErrorCodeInvalidAssessmentTemplateDuration is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTemplateDuration = "INVALID_ASSESSMENT_TEMPLATE_DURATION"
+
+	// InvalidInputErrorCodeInvalidAssessmentTemplateDurationRange is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentTemplateDurationRange = "INVALID_ASSESSMENT_TEMPLATE_DURATION_RANGE"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunDurationRange is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunDurationRange = "INVALID_ASSESSMENT_RUN_DURATION_RANGE"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunStartTimeRange is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunStartTimeRange = "INVALID_ASSESSMENT_RUN_START_TIME_RANGE"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunCompletionTimeRange is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunCompletionTimeRange = "INVALID_ASSESSMENT_RUN_COMPLETION_TIME_RANGE"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunStateChangeTimeRange is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunStateChangeTimeRange = "INVALID_ASSESSMENT_RUN_STATE_CHANGE_TIME_RANGE"
+
+	// InvalidInputErrorCodeInvalidAssessmentRunState is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAssessmentRunState = "INVALID_ASSESSMENT_RUN_STATE"
+
+	// InvalidInputErrorCodeInvalidTag is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidTag = "INVALID_TAG"
+
+	// InvalidInputErrorCodeInvalidTagKey is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidTagKey = "INVALID_TAG_KEY"
+
+	// InvalidInputErrorCodeInvalidTagValue is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidTagValue = "INVALID_TAG_VALUE"
+
+	// InvalidInputErrorCodeInvalidResourceGroupTagKey is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidResourceGroupTagKey = "INVALID_RESOURCE_GROUP_TAG_KEY"
+
+	// InvalidInputErrorCodeInvalidResourceGroupTagValue is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidResourceGroupTagValue = "INVALID_RESOURCE_GROUP_TAG_VALUE"
+
+	// InvalidInputErrorCodeInvalidAttribute is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAttribute = "INVALID_ATTRIBUTE"
+
+	// InvalidInputErrorCodeInvalidUserAttribute is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidUserAttribute = "INVALID_USER_ATTRIBUTE"
+
+	// InvalidInputErrorCodeInvalidUserAttributeKey is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidUserAttributeKey = "INVALID_USER_ATTRIBUTE_KEY"
+
+	// InvalidInputErrorCodeInvalidUserAttributeValue is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidUserAttributeValue = "INVALID_USER_ATTRIBUTE_VALUE"
+
+	// InvalidInputErrorCodeInvalidPaginationToken is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidPaginationToken = "INVALID_PAGINATION_TOKEN"
+
+	// InvalidInputErrorCodeInvalidMaxResults is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidMaxResults = "INVALID_MAX_RESULTS"
+
+	// InvalidInputErrorCodeInvalidAgentId is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAgentId = "INVALID_AGENT_ID"
+
+	// InvalidInputErrorCodeInvalidAutoScalingGroup is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidAutoScalingGroup = "INVALID_AUTO_SCALING_GROUP"
+
+	// InvalidInputErrorCodeInvalidRuleName is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidRuleName = "INVALID_RULE_NAME"
+
+	// InvalidInputErrorCodeInvalidSeverity is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidSeverity = "INVALID_SEVERITY"
+
+	// InvalidInputErrorCodeInvalidLocale is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidLocale = "INVALID_LOCALE"
+
+	// InvalidInputErrorCodeInvalidEvent is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidEvent = "INVALID_EVENT"
+
+	// InvalidInputErrorCodeAssessmentTargetNameAlreadyTaken is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeAssessmentTargetNameAlreadyTaken = "ASSESSMENT_TARGET_NAME_ALREADY_TAKEN"
+
+	// InvalidInputErrorCodeAssessmentTemplateNameAlreadyTaken is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeAssessmentTemplateNameAlreadyTaken = "ASSESSMENT_TEMPLATE_NAME_ALREADY_TAKEN"
+
+	// InvalidInputErrorCodeInvalidNumberOfAssessmentTargetArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAssessmentTargetArns = "INVALID_NUMBER_OF_ASSESSMENT_TARGET_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfAssessmentTemplateArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAssessmentTemplateArns = "INVALID_NUMBER_OF_ASSESSMENT_TEMPLATE_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfAssessmentRunArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAssessmentRunArns = "INVALID_NUMBER_OF_ASSESSMENT_RUN_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfFindingArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfFindingArns = "INVALID_NUMBER_OF_FINDING_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfResourceGroupArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfResourceGroupArns = "INVALID_NUMBER_OF_RESOURCE_GROUP_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfRulesPackageArns is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfRulesPackageArns = "INVALID_NUMBER_OF_RULES_PACKAGE_ARNS"
+
+	// InvalidInputErrorCodeInvalidNumberOfAssessmentRunStates is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAssessmentRunStates = "INVALID_NUMBER_OF_ASSESSMENT_RUN_STATES"
+
+	// InvalidInputErrorCodeInvalidNumberOfTags is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfTags = "INVALID_NUMBER_OF_TAGS"
+
+	// InvalidInputErrorCodeInvalidNumberOfResourceGroupTags is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfResourceGroupTags = "INVALID_NUMBER_OF_RESOURCE_GROUP_TAGS"
+
+	// InvalidInputErrorCodeInvalidNumberOfAttributes is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAttributes = "INVALID_NUMBER_OF_ATTRIBUTES"
+
+	// InvalidInputErrorCodeInvalidNumberOfUserAttributes is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfUserAttributes = "INVALID_NUMBER_OF_USER_ATTRIBUTES"
+
+	// InvalidInputErrorCodeInvalidNumberOfAgentIds is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAgentIds = "INVALID_NUMBER_OF_AGENT_IDS"
+
+	// InvalidInputErrorCodeInvalidNumberOfAutoScalingGroups is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfAutoScalingGroups = "INVALID_NUMBER_OF_AUTO_SCALING_GROUPS"
+
+	// InvalidInputErrorCodeInvalidNumberOfRuleNames is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfRuleNames = "INVALID_NUMBER_OF_RULE_NAMES"
+
+	// InvalidInputErrorCodeInvalidNumberOfSeverities is a InvalidInputErrorCode enum value
+	InvalidInputErrorCodeInvalidNumberOfSeverities = "INVALID_NUMBER_OF_SEVERITIES"
+)
+
+const (
+	// LimitExceededErrorCodeAssessmentTargetLimitExceeded is a LimitExceededErrorCode enum value
+	LimitExceededErrorCodeAssessmentTargetLimitExceeded = "ASSESSMENT_TARGET_LIMIT_EXCEEDED"
+
+	// LimitExceededErrorCodeAssessmentTemplateLimitExceeded is a LimitExceededErrorCode enum value
+	LimitExceededErrorCodeAssessmentTemplateLimitExceeded = "ASSESSMENT_TEMPLATE_LIMIT_EXCEEDED"
+
+	// LimitExceededErrorCodeAssessmentRunLimitExceeded is a LimitExceededErrorCode enum value
+	LimitExceededErrorCodeAssessmentRunLimitExceeded = "ASSESSMENT_RUN_LIMIT_EXCEEDED"
+
+	// LimitExceededErrorCodeResourceGroupLimitExceeded is a LimitExceededErrorCode enum value
+	LimitExceededErrorCodeResourceGroupLimitExceeded = "RESOURCE_GROUP_LIMIT_EXCEEDED"
+
+	// LimitExceededErrorCodeEventSubscriptionLimitExceeded is a LimitExceededErrorCode enum value
+	LimitExceededErrorCodeEventSubscriptionLimitExceeded = "EVENT_SUBSCRIPTION_LIMIT_EXCEEDED"
+)
+
+const (
+	// LocaleEnUs is a Locale enum value
+	LocaleEnUs = "EN_US"
+)
+
+const (
+	// NoSuchEntityErrorCodeAssessmentTargetDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeAssessmentTargetDoesNotExist = "ASSESSMENT_TARGET_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeAssessmentTemplateDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeAssessmentTemplateDoesNotExist = "ASSESSMENT_TEMPLATE_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeAssessmentRunDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeAssessmentRunDoesNotExist = "ASSESSMENT_RUN_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeFindingDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeFindingDoesNotExist = "FINDING_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeResourceGroupDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeResourceGroupDoesNotExist = "RESOURCE_GROUP_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeRulesPackageDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeRulesPackageDoesNotExist = "RULES_PACKAGE_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeSnsTopicDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeSnsTopicDoesNotExist = "SNS_TOPIC_DOES_NOT_EXIST"
+
+	// NoSuchEntityErrorCodeIamRoleDoesNotExist is a NoSuchEntityErrorCode enum value
+	NoSuchEntityErrorCodeIamRoleDoesNotExist = "IAM_ROLE_DOES_NOT_EXIST"
+)
+
+const (
+	// SeverityLow is a Severity enum value
+	SeverityLow = "Low"
+
+	// SeverityMedium is a Severity enum value
+	SeverityMedium = "Medium"
+
+	// SeverityHigh is a Severity enum value
+	SeverityHigh = "High"
+
+	// SeverityInformational is a Severity enum value
+	SeverityInformational = "Informational"
+
+	// SeverityUndefined is a Severity enum value
+	SeverityUndefined = "Undefined"
+)

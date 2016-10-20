@@ -1,3 +1,5 @@
+// +build 1.6,codegen
+
 package api_test
 
 import (

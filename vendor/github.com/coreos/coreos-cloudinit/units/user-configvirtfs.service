@@ -6,6 +6,7 @@ Before=user-config.target
 
 [Service]
 Type=oneshot
+TimeoutSec=10min
 RemainAfterExit=yes
 EnvironmentFile=-/etc/environment
 ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configvirtfs

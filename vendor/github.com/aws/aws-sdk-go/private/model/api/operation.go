@@ -1,3 +1,5 @@
+// +build codegen
+
 package api
 
 import (
@@ -16,10 +18,12 @@ type Operation struct {
 	Name          string
 	Documentation string
 	HTTP          HTTPInfo
-	InputRef      ShapeRef `json:"input"`
-	OutputRef     ShapeRef `json:"output"`
+	InputRef      ShapeRef   `json:"input"`
+	OutputRef     ShapeRef   `json:"output"`
+	ErrorRefs     []ShapeRef `json:"errors"`
 	Paginator     *Paginator
-	Deprecated    bool `json:"deprecated"`
+	Deprecated    bool   `json:"deprecated"`
+	AuthType      string `json:"authtype"`
 }
 
 // A HTTPInfo defines the method of HTTP request for the Operation.
@@ -43,7 +47,30 @@ func (o *Operation) HasOutput() bool {
 var tplOperation = template.Must(template.New("operation").Parse(`
 const op{{ .ExportedName }} = "{{ .Name }}"
 
-// {{ .ExportedName }}Request generates a request for the {{ .ExportedName }} operation.
+// {{ .ExportedName }}Request generates a "aws/request.Request" representing the
+// client's request for the {{ .ExportedName }} operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See {{ .ExportedName }} for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the {{ .ExportedName }} method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the {{ .ExportedName }}Request method.
+//    req, resp := client.{{ .ExportedName }}Request(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *{{ .API.StructName }}) {{ .ExportedName }}Request(` +
 	`input {{ .InputRef.GoType }}) (req *request.Request, output {{ .OutputRef.GoType }}) {
 	{{ if (or .Deprecated (or .InputRef.Deprecated .OutputRef.Deprecated)) }}if c.Client.Config.Logger != nil {
@@ -52,8 +79,8 @@ func (c *{{ .API.StructName }}) {{ .ExportedName }}Request(` +
 	op := &request.Operation{ {{ else }} op := &request.Operation{ {{ end }}	
 		Name:       op{{ .ExportedName }},
 		{{ if ne .HTTP.Method "" }}HTTPMethod: "{{ .HTTP.Method }}",
-		{{ end }}{{ if ne .HTTP.RequestURI "" }}HTTPPath:   "{{ .HTTP.RequestURI }}",
-		{{ end }}{{ if .Paginator }}Paginator: &request.Paginator{
+		{{ end }}HTTPPath: {{ if ne .HTTP.RequestURI "" }}"{{ .HTTP.RequestURI }}"{{ else }}"/"{{ end }},
+		{{ if .Paginator }}Paginator: &request.Paginator{
 				InputTokens: {{ .Paginator.InputTokensString }},
 				OutputTokens: {{ .Paginator.OutputTokensString }},
 				LimitToken: "{{ .Paginator.LimitKey }}",
@@ -69,12 +96,36 @@ func (c *{{ .API.StructName }}) {{ .ExportedName }}Request(` +
 	req = c.newRequest(op, input, output){{ if eq .OutputRef.Shape.Placeholder true }}
 	req.Handlers.Unmarshal.Remove({{ .API.ProtocolPackage }}.UnmarshalHandler)
 	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler){{ end }}
-	output = &{{ .OutputRef.GoTypeElem }}{}
+	{{ if eq .AuthType "none" }}req.Config.Credentials = credentials.AnonymousCredentials
+	output = &{{ .OutputRef.GoTypeElem }}{} {{ else }} output = &{{ .OutputRef.GoTypeElem }}{} {{ end }}
 	req.Data = output
 	return
 }
 
-{{ .Documentation }}func (c *{{ .API.StructName }}) {{ .ExportedName }}(` +
+// {{ .ExportedName }} API operation for {{ .API.Metadata.ServiceFullName }}.
+{{ if .Documentation -}}
+//
+{{ .Documentation }}
+{{ end -}}
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for {{ .API.Metadata.ServiceFullName }}'s
+// API operation {{ .ExportedName }} for usage and error information.
+{{ if .ErrorRefs -}}
+//
+// Returned Error Codes:
+{{ range $_, $err := .ErrorRefs -}}
+	{{ $errDoc := $err.IndentedDocstring -}}
+//   * {{ $err.Shape.ErrorName }}
+{{ if $errDoc -}}
+{{ $errDoc }}{{ end }}
+//
+{{ end -}}
+{{ end -}}
+func (c *{{ .API.StructName }}) {{ .ExportedName }}(` +
 	`input {{ .InputRef.GoType }}) ({{ .OutputRef.GoType }}, error) {
 	req, out := c.{{ .ExportedName }}Request(input)
 	err := req.Send()
@@ -82,6 +133,23 @@ func (c *{{ .API.StructName }}) {{ .ExportedName }}Request(` +
 }
 
 {{ if .Paginator }}
+// {{ .ExportedName }}Pages iterates over the pages of a {{ .ExportedName }} operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See {{ .ExportedName }} method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a {{ .ExportedName }} operation.
+//    pageNum := 0
+//    err := client.{{ .ExportedName }}Pages(params,
+//        func(page {{ .OutputRef.GoType }}, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
 func (c *{{ .API.StructName }}) {{ .ExportedName }}Pages(` +
 	`input {{ .InputRef.GoType }}, fn func(p {{ .OutputRef.GoType }}, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.{{ .ExportedName }}Request(input)
@@ -109,8 +177,10 @@ var tplInfSig = template.Must(template.New("opsig").Parse(`
 {{ .ExportedName }}Request({{ .InputRef.GoTypeWithPkgName }}) (*request.Request, {{ .OutputRef.GoTypeWithPkgName }})
 
 {{ .ExportedName }}({{ .InputRef.GoTypeWithPkgName }}) ({{ .OutputRef.GoTypeWithPkgName }}, error)
-{{ if .Paginator }}
-{{ .ExportedName }}Pages({{ .InputRef.GoTypeWithPkgName }}, func({{ .OutputRef.GoTypeWithPkgName }}, bool) bool) error{{ end }}
+
+{{ if .Paginator -}}
+{{ .ExportedName }}Pages({{ .InputRef.GoTypeWithPkgName }}, func({{ .OutputRef.GoTypeWithPkgName }}, bool) bool) error
+{{- end }}
 `))
 
 // InterfaceSignature returns a string representing the Operation's interface{}
@@ -128,7 +198,13 @@ func (o *Operation) InterfaceSignature() string {
 // tplExample defines the template for rendering an Operation example
 var tplExample = template.Must(template.New("operationExample").Parse(`
 func Example{{ .API.StructName }}_{{ .ExportedName }}() {
-	svc := {{ .API.PackageName }}.New(session.New())
+	sess, err := session.NewSession()
+	if err != nil {
+		fmt.Println("failed to create session,", err)
+		return
+	}
+
+	svc := {{ .API.PackageName }}.New(sess)
 
 	{{ .ExampleInput }}
 	resp, err := svc.{{ .ExportedName }}(params)

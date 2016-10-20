@@ -26,7 +26,7 @@ import (
 
 	"github.com/coreos/coreos-cloudinit/datasource"
 
-	"github.com/coreos/coreos-cloudinit/Godeps/_workspace/src/github.com/cloudsigma/cepgo"
+	"github.com/cloudsigma/cepgo"
 )
 
 const (

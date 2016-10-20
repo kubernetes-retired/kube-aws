@@ -93,7 +93,7 @@ func TestFetchMetadata(t *testing.T) {
 				NetworkConfig: Metadata{
 					Interfaces: Interfaces{
 						Public: []Interface{
-							Interface{
+							{
 								IPv4: &Address{
 									IPAddress: "192.168.1.2",
 									Netmask:   "255.255.255.0",

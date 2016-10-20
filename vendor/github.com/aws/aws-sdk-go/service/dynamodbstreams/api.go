@@ -13,7 +13,30 @@ import (
 
 const opDescribeStream = "DescribeStream"
 
-// DescribeStreamRequest generates a request for the DescribeStream operation.
+// DescribeStreamRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeStream operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See DescribeStream for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the DescribeStream method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the DescribeStreamRequest method.
+//    req, resp := client.DescribeStreamRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DynamoDBStreams) DescribeStreamRequest(input *DescribeStreamInput) (req *request.Request, output *DescribeStreamOutput) {
 	op := &request.Operation{
 		Name:       opDescribeStream,
@@ -31,17 +54,34 @@ func (c *DynamoDBStreams) DescribeStreamRequest(input *DescribeStreamInput) (req
 	return
 }
 
+// DescribeStream API operation for Amazon DynamoDB Streams.
+//
 // Returns information about a stream, including the current status of the stream,
 // its Amazon Resource Name (ARN), the composition of its shards, and its corresponding
 // DynamoDB table.
 //
-// You can call DescribeStream at a maximum rate of 10 times per second.
+//  You can call DescribeStream at a maximum rate of 10 times per second.
 //
-// Each shard in the stream has a SequenceNumberRange associated with it. If
-// the SequenceNumberRange has a StartingSequenceNumber but no EndingSequenceNumber,
+//  Each shard in the stream has a SequenceNumberRange associated with it.
+// If the SequenceNumberRange has a StartingSequenceNumber but no EndingSequenceNumber,
 // then the shard is still open (able to receive more stream records). If both
-// StartingSequenceNumber and EndingSequenceNumber are present, the that shared
+// StartingSequenceNumber and EndingSequenceNumber are present, then that shard
 // is closed and can no longer receive more data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB Streams's
+// API operation DescribeStream for usage and error information.
+//
+// Returned Error Codes:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent stream.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
 func (c *DynamoDBStreams) DescribeStream(input *DescribeStreamInput) (*DescribeStreamOutput, error) {
 	req, out := c.DescribeStreamRequest(input)
 	err := req.Send()
@@ -50,7 +90,30 @@ func (c *DynamoDBStreams) DescribeStream(input *DescribeStreamInput) (*DescribeS
 
 const opGetRecords = "GetRecords"
 
-// GetRecordsRequest generates a request for the GetRecords operation.
+// GetRecordsRequest generates a "aws/request.Request" representing the
+// client's request for the GetRecords operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetRecords for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetRecords method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetRecordsRequest method.
+//    req, resp := client.GetRecordsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DynamoDBStreams) GetRecordsRequest(input *GetRecordsInput) (req *request.Request, output *GetRecordsOutput) {
 	op := &request.Operation{
 		Name:       opGetRecords,
@@ -68,6 +131,8 @@ func (c *DynamoDBStreams) GetRecordsRequest(input *GetRecordsInput) (req *reques
 	return
 }
 
+// GetRecords API operation for Amazon DynamoDB Streams.
+//
 // Retrieves the stream records from a given shard.
 //
 // Specify a shard iterator using the ShardIterator parameter. The shard iterator
@@ -77,8 +142,50 @@ func (c *DynamoDBStreams) GetRecordsRequest(input *GetRecordsInput) (req *reques
 // an empty list. Note that it might take multiple calls to get to a portion
 // of the shard that contains stream records.
 //
-// GetRecords can retrieve a maximum of 1 MB of data or 2000 stream records,
+//   GetRecords can retrieve a maximum of 1 MB of data or 1000 stream records,
 // whichever comes first.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB Streams's
+// API operation GetRecords for usage and error information.
+//
+// Returned Error Codes:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent stream.
+//
+//   * LimitExceededException
+//   Your request rate is too high. The AWS SDKs for DynamoDB automatically retry
+//   requests that receive this exception. Your request is eventually successful,
+//   unless your retry queue is too large to finish. Reduce the frequency of requests
+//   and use exponential backoff. For more information, go to Error Retries and
+//   Exponential Backoff (http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ErrorHandling.html#APIRetries)
+//   in the Amazon DynamoDB Developer Guide.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+//   * ExpiredIteratorException
+//   The shard iterator has expired and can no longer be used to retrieve stream
+//   records. A shard iterator expires 15 minutes after it is retrieved using
+//   the GetShardIterator action.
+//
+//   * TrimmedDataAccessException
+//   The operation attempted to read past the oldest stream record in a shard.
+//
+//   In DynamoDB Streams, there is a 24 hour limit on data retention. Stream
+//   records whose age exceeds this limit are subject to removal (trimming) from
+//   the stream. You might receive a TrimmedDataAccessException if:
+//
+//    You request a shard iterator with a sequence number older than the trim
+//   point (24 hours).
+//
+//    You obtain a shard iterator, but before you use the iterator in a GetRecords
+//   request, a stream record in the shard exceeds the 24 hour period and is trimmed.
+//   This causes the iterator to access a record that no longer exists.
+//
 func (c *DynamoDBStreams) GetRecords(input *GetRecordsInput) (*GetRecordsOutput, error) {
 	req, out := c.GetRecordsRequest(input)
 	err := req.Send()
@@ -87,7 +194,30 @@ func (c *DynamoDBStreams) GetRecords(input *GetRecordsInput) (*GetRecordsOutput,
 
 const opGetShardIterator = "GetShardIterator"
 
-// GetShardIteratorRequest generates a request for the GetShardIterator operation.
+// GetShardIteratorRequest generates a "aws/request.Request" representing the
+// client's request for the GetShardIterator operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See GetShardIterator for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the GetShardIterator method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the GetShardIteratorRequest method.
+//    req, resp := client.GetShardIteratorRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DynamoDBStreams) GetShardIteratorRequest(input *GetShardIteratorInput) (req *request.Request, output *GetShardIteratorOutput) {
 	op := &request.Operation{
 		Name:       opGetShardIterator,
@@ -105,11 +235,42 @@ func (c *DynamoDBStreams) GetShardIteratorRequest(input *GetShardIteratorInput) 
 	return
 }
 
+// GetShardIterator API operation for Amazon DynamoDB Streams.
+//
 // Returns a shard iterator. A shard iterator provides information about how
 // to retrieve the stream records from within a shard. Use the shard iterator
 // in a subsequent GetRecords request to read the stream records from the shard.
 //
-// A shard iterator expires 15 minutes after it is returned to the requester.
+//  A shard iterator expires 15 minutes after it is returned to the requester.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB Streams's
+// API operation GetShardIterator for usage and error information.
+//
+// Returned Error Codes:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent stream.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
+//   * TrimmedDataAccessException
+//   The operation attempted to read past the oldest stream record in a shard.
+//
+//   In DynamoDB Streams, there is a 24 hour limit on data retention. Stream
+//   records whose age exceeds this limit are subject to removal (trimming) from
+//   the stream. You might receive a TrimmedDataAccessException if:
+//
+//    You request a shard iterator with a sequence number older than the trim
+//   point (24 hours).
+//
+//    You obtain a shard iterator, but before you use the iterator in a GetRecords
+//   request, a stream record in the shard exceeds the 24 hour period and is trimmed.
+//   This causes the iterator to access a record that no longer exists.
+//
 func (c *DynamoDBStreams) GetShardIterator(input *GetShardIteratorInput) (*GetShardIteratorOutput, error) {
 	req, out := c.GetShardIteratorRequest(input)
 	err := req.Send()
@@ -118,7 +279,30 @@ func (c *DynamoDBStreams) GetShardIterator(input *GetShardIteratorInput) (*GetSh
 
 const opListStreams = "ListStreams"
 
-// ListStreamsRequest generates a request for the ListStreams operation.
+// ListStreamsRequest generates a "aws/request.Request" representing the
+// client's request for the ListStreams operation. The "output" return
+// value can be used to capture response data after the request's "Send" method
+// is called.
+//
+// See ListStreams for usage and error information.
+//
+// Creating a request object using this method should be used when you want to inject
+// custom logic into the request's lifecycle using a custom handler, or if you want to
+// access properties on the request object before or after sending the request. If
+// you just want the service response, call the ListStreams method directly
+// instead.
+//
+// Note: You must call the "Send" method on the returned request object in order
+// to execute the request.
+//
+//    // Example sending a request using the ListStreamsRequest method.
+//    req, resp := client.ListStreamsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
 func (c *DynamoDBStreams) ListStreamsRequest(input *ListStreamsInput) (req *request.Request, output *ListStreamsOutput) {
 	op := &request.Operation{
 		Name:       opListStreams,
@@ -136,11 +320,28 @@ func (c *DynamoDBStreams) ListStreamsRequest(input *ListStreamsInput) (req *requ
 	return
 }
 
+// ListStreams API operation for Amazon DynamoDB Streams.
+//
 // Returns an array of stream ARNs associated with the current account and endpoint.
 // If the TableName parameter is present, then ListStreams will return only
 // the streams ARNs for that table.
 //
-// You can call ListStreams at a maximum rate of 5 times per second.
+//  You can call ListStreams at a maximum rate of 5 times per second.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB Streams's
+// API operation ListStreams for usage and error information.
+//
+// Returned Error Codes:
+//   * ResourceNotFoundException
+//   The operation tried to access a nonexistent stream.
+//
+//   * InternalServerError
+//   An error occurred on the server side.
+//
 func (c *DynamoDBStreams) ListStreams(input *ListStreamsInput) (*ListStreamsOutput, error) {
 	req, out := c.ListStreamsRequest(input)
 	err := req.Send()
@@ -159,6 +360,8 @@ type DescribeStreamInput struct {
 	Limit *int64 `min:"1" type:"integer"`
 
 	// The Amazon Resource Name (ARN) for the stream.
+	//
+	// StreamArn is a required field
 	StreamArn *string `min:"37" type:"string" required:"true"`
 }
 
@@ -170,6 +373,28 @@ func (s DescribeStreamInput) String() string {
 // GoString returns the string representation
 func (s DescribeStreamInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeStreamInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeStreamInput"}
+	if s.ExclusiveStartShardId != nil && len(*s.ExclusiveStartShardId) < 28 {
+		invalidParams.Add(request.NewErrParamMinLen("ExclusiveStartShardId", 28))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.StreamArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamArn"))
+	}
+	if s.StreamArn != nil && len(*s.StreamArn) < 37 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamArn", 37))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // Represents the output of a DescribeStream operation.
@@ -203,6 +428,8 @@ type GetRecordsInput struct {
 
 	// A shard iterator that was retrieved from a previous GetShardIterator operation.
 	// This iterator can be used to access the stream records in this shard.
+	//
+	// ShardIterator is a required field
 	ShardIterator *string `min:"1" type:"string" required:"true"`
 }
 
@@ -214,6 +441,25 @@ func (s GetRecordsInput) String() string {
 // GoString returns the string representation
 func (s GetRecordsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetRecordsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetRecordsInput"}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.ShardIterator == nil {
+		invalidParams.Add(request.NewErrParamRequired("ShardIterator"))
+	}
+	if s.ShardIterator != nil && len(*s.ShardIterator) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ShardIterator", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // Represents the output of a GetRecords operation.
@@ -248,27 +494,33 @@ type GetShardIteratorInput struct {
 
 	// The identifier of the shard. The iterator will be returned for this shard
 	// ID.
+	//
+	// ShardId is a required field
 	ShardId *string `min:"28" type:"string" required:"true"`
 
 	// Determines how the shard iterator is used to start reading stream records
 	// from the shard:
 	//
-	//   AT_SEQUENCE_NUMBER - Start reading exactly from the position denoted by
-	// a specific sequence number.
-	//
-	//   AFTER_SEQUENCE_NUMBER - Start reading right after the position denoted
+	//    AT_SEQUENCE_NUMBER - Start reading exactly from the position denoted
 	// by a specific sequence number.
 	//
-	//   TRIM_HORIZON - Start reading at the last (untrimmed) stream record, which
+	//    AFTER_SEQUENCE_NUMBER - Start reading right after the position denoted
+	// by a specific sequence number.
+	//
+	//    TRIM_HORIZON - Start reading at the last (untrimmed) stream record, which
 	// is the oldest record in the shard. In DynamoDB Streams, there is a 24 hour
 	// limit on data retention. Stream records whose age exceeds this limit are
 	// subject to removal (trimming) from the stream.
 	//
-	//   LATEST - Start reading just after the most recent stream record in the
+	//    LATEST - Start reading just after the most recent stream record in the
 	// shard, so that you always read the most recent data in the shard.
+	//
+	// ShardIteratorType is a required field
 	ShardIteratorType *string `type:"string" required:"true" enum:"ShardIteratorType"`
 
 	// The Amazon Resource Name (ARN) for the stream.
+	//
+	// StreamArn is a required field
 	StreamArn *string `min:"37" type:"string" required:"true"`
 }
 
@@ -280,6 +532,34 @@ func (s GetShardIteratorInput) String() string {
 // GoString returns the string representation
 func (s GetShardIteratorInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetShardIteratorInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetShardIteratorInput"}
+	if s.SequenceNumber != nil && len(*s.SequenceNumber) < 21 {
+		invalidParams.Add(request.NewErrParamMinLen("SequenceNumber", 21))
+	}
+	if s.ShardId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ShardId"))
+	}
+	if s.ShardId != nil && len(*s.ShardId) < 28 {
+		invalidParams.Add(request.NewErrParamMinLen("ShardId", 28))
+	}
+	if s.ShardIteratorType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ShardIteratorType"))
+	}
+	if s.StreamArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("StreamArn"))
+	}
+	if s.StreamArn != nil && len(*s.StreamArn) < 37 {
+		invalidParams.Add(request.NewErrParamMinLen("StreamArn", 37))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // Represents the output of a GetShardIterator operation.
@@ -329,6 +609,25 @@ func (s ListStreamsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListStreamsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListStreamsInput"}
+	if s.ExclusiveStartStreamArn != nil && len(*s.ExclusiveStartStreamArn) < 37 {
+		invalidParams.Add(request.NewErrParamMinLen("ExclusiveStartStreamArn", 37))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // Represents the output of a ListStreams operation.
 type ListStreamsOutput struct {
 	_ struct{} `type:"structure"`
@@ -376,18 +675,23 @@ type Record struct {
 
 	// The type of data modification that was performed on the DynamoDB table:
 	//
-	//  INSERT - a new item was added to the table.
+	//    INSERT - a new item was added to the table.
 	//
-	// MODIFY - one or more of the item's attributes were updated.
+	//    MODIFY - one or more of an existing item's attributes were modified.
 	//
-	// REMOVE - the item was deleted from the table
+	//    REMOVE - the item was deleted from the table
 	EventName *string `locationName:"eventName" type:"string" enum:"OperationType"`
 
 	// The AWS service from which the stream record originated. For DynamoDB Streams,
 	// this is aws:dynamodb.
 	EventSource *string `locationName:"eventSource" type:"string"`
 
-	// The version number of the stream record format. Currently, this is 1.0.
+	// The version number of the stream record format. This number is updated whenever
+	// the structure of Record is modified.
+	//
+	// Client applications must not assume that eventVersion will remain at a particular
+	// value, as this number is subject to change at any time. In general, eventVersion
+	// will only increase as the low-level DynamoDB Streams API evolves.
 	EventVersion *string `locationName:"eventVersion" type:"string"`
 }
 
@@ -461,11 +765,11 @@ type Stream struct {
 	// However, the combination of the following three elements is guaranteed to
 	// be unique:
 	//
-	//  the AWS customer ID.
+	//   the AWS customer ID.
 	//
-	// the table name
+	//   the table name
 	//
-	// the StreamLabel
+	//   the StreamLabel
 	StreamLabel *string `type:"string"`
 
 	// The DynamoDB table with which the stream is associated.
@@ -517,36 +821,37 @@ type StreamDescription struct {
 	// However, the combination of the following three elements is guaranteed to
 	// be unique:
 	//
-	//  the AWS customer ID.
+	//   the AWS customer ID.
 	//
-	// the table name
+	//   the table name
 	//
-	// the StreamLabel
+	//   the StreamLabel
 	StreamLabel *string `type:"string"`
 
 	// Indicates the current status of the stream:
 	//
-	//  ENABLING - Streams is currently being enabled on the DynamoDB table.
+	//    ENABLING - Streams is currently being enabled on the DynamoDB table.
 	//
-	// ENABLING - the stream is enabled.
+	//    ENABLED - the stream is enabled.
 	//
-	// DISABLING - Streams is currently being disabled on the DynamoDB table.
+	//    DISABLING - Streams is currently being disabled on the DynamoDB table.
 	//
-	// DISABLED - the stream is disabled.
+	//    DISABLED - the stream is disabled.
 	StreamStatus *string `type:"string" enum:"StreamStatus"`
 
 	// Indicates the format of the records within this stream:
 	//
-	//  KEYS_ONLY - only the key attributes of items that were modified in the
+	//    KEYS_ONLY - only the key attributes of items that were modified in the
 	// DynamoDB table.
 	//
-	// NEW_IMAGE - entire item from the table, as it appeared after they were modified.
+	//    NEW_IMAGE - entire items from the table, as they appeared after they
+	// were modified.
 	//
-	// OLD_IMAGE - entire item from the table, as it appeared before they were
-	// modified.
+	//    OLD_IMAGE - entire items from the table, as they appeared before they
+	// were modified.
 	//
-	// NEW_AND_OLD_IMAGES - both the new and the old images of the items from the
-	// table.
+	//    NEW_AND_OLD_IMAGES - both the new and the old images of the items from
+	// the table.
 	StreamViewType *string `type:"string" enum:"StreamViewType"`
 
 	// The DynamoDB table with which the stream is associated.
@@ -568,6 +873,10 @@ func (s StreamDescription) GoString() string {
 type StreamRecord struct {
 	_ struct{} `type:"structure"`
 
+	// The approximate date and time when the stream record was created, in UNIX
+	// epoch time (http://www.epochconverter.com/) format.
+	ApproximateCreationDateTime *time.Time `type:"timestamp" timestampFormat:"unix"`
+
 	// The primary key attribute(s) for the DynamoDB item that was modified.
 	Keys map[string]*dynamodb.AttributeValue `type:"map"`
 
@@ -586,13 +895,13 @@ type StreamRecord struct {
 	// The type of data from the modified DynamoDB item that was captured in this
 	// stream record:
 	//
-	//  KEYS_ONLY - only the key attributes of the modified item.
+	//    KEYS_ONLY - only the key attributes of the modified item.
 	//
-	// NEW_IMAGE - the entire item, as it appears after it was modified.
+	//    NEW_IMAGE - the entire item, as it appeared after it was modified.
 	//
-	// OLD_IMAGE - the entire item, as it appeared before it was modified.
+	//    OLD_IMAGE - the entire item, as it appeared before it was modified.
 	//
-	// NEW_AND_OLD_IMAGES — both the new and the old item images of the item.
+	//    NEW_AND_OLD_IMAGES - both the new and the old item images of the item.
 	StreamViewType *string `type:"string" enum:"StreamViewType"`
 }
 
@@ -607,50 +916,62 @@ func (s StreamRecord) GoString() string {
 }
 
 const (
-	// @enum KeyType
+	// KeyTypeHash is a KeyType enum value
 	KeyTypeHash = "HASH"
-	// @enum KeyType
+
+	// KeyTypeRange is a KeyType enum value
 	KeyTypeRange = "RANGE"
 )
 
 const (
-	// @enum OperationType
+	// OperationTypeInsert is a OperationType enum value
 	OperationTypeInsert = "INSERT"
-	// @enum OperationType
+
+	// OperationTypeModify is a OperationType enum value
 	OperationTypeModify = "MODIFY"
-	// @enum OperationType
+
+	// OperationTypeRemove is a OperationType enum value
 	OperationTypeRemove = "REMOVE"
 )
 
 const (
-	// @enum ShardIteratorType
+	// ShardIteratorTypeTrimHorizon is a ShardIteratorType enum value
 	ShardIteratorTypeTrimHorizon = "TRIM_HORIZON"
-	// @enum ShardIteratorType
+
+	// ShardIteratorTypeLatest is a ShardIteratorType enum value
 	ShardIteratorTypeLatest = "LATEST"
-	// @enum ShardIteratorType
+
+	// ShardIteratorTypeAtSequenceNumber is a ShardIteratorType enum value
 	ShardIteratorTypeAtSequenceNumber = "AT_SEQUENCE_NUMBER"
-	// @enum ShardIteratorType
+
+	// ShardIteratorTypeAfterSequenceNumber is a ShardIteratorType enum value
 	ShardIteratorTypeAfterSequenceNumber = "AFTER_SEQUENCE_NUMBER"
 )
 
 const (
-	// @enum StreamStatus
+	// StreamStatusEnabling is a StreamStatus enum value
 	StreamStatusEnabling = "ENABLING"
-	// @enum StreamStatus
+
+	// StreamStatusEnabled is a StreamStatus enum value
 	StreamStatusEnabled = "ENABLED"
-	// @enum StreamStatus
+
+	// StreamStatusDisabling is a StreamStatus enum value
 	StreamStatusDisabling = "DISABLING"
-	// @enum StreamStatus
+
+	// StreamStatusDisabled is a StreamStatus enum value
 	StreamStatusDisabled = "DISABLED"
 )
 
 const (
-	// @enum StreamViewType
+	// StreamViewTypeNewImage is a StreamViewType enum value
 	StreamViewTypeNewImage = "NEW_IMAGE"
-	// @enum StreamViewType
+
+	// StreamViewTypeOldImage is a StreamViewType enum value
 	StreamViewTypeOldImage = "OLD_IMAGE"
-	// @enum StreamViewType
+
+	// StreamViewTypeNewAndOldImages is a StreamViewType enum value
 	StreamViewTypeNewAndOldImages = "NEW_AND_OLD_IMAGES"
-	// @enum StreamViewType
+
+	// StreamViewTypeKeysOnly is a StreamViewType enum value
 	StreamViewTypeKeysOnly = "KEYS_ONLY"
 )

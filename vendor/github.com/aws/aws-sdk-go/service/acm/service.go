@@ -7,18 +7,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
-	"github.com/aws/aws-sdk-go/private/signer/v4"
 )
 
-// Welcome to the AWS Certificate Manager (ACM) Command Reference. This guide
-// provides descriptions, syntax, and usage examples for each ACM command. You
-// can use AWS Certificate Manager to request ACM Certificates for your AWS-based
-// websites and applications. For general information about using ACM and for
-// more information about using the console, see the AWS Certificate Manager
-// User Guide (http://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html).
-// For more information about using the ACM API, see the  AWS Certificate Manager
-// API Reference (http://docs.aws.amazon.com/acm/latest/APIReference/Welcome.html).
+// Welcome to the AWS Certificate Manager (ACM) API documentation.
+//
+// You can use ACM to manage SSL/TLS certificates for your AWS-based websites
+// and applications. For general information about using ACM, see the  AWS Certificate
+// Manager User Guide  (http://docs.aws.amazon.com/acm/latest/userguide/).
 //The service client's operations are safe to be used concurrently.
 // It is not safe to mutate any of the client's properties though.
 type ACM struct {
@@ -67,7 +64,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 	}
 
 	// Handlers
-	svc.Handlers.Sign.PushBack(v4.Sign)
+	svc.Handlers.Sign.PushBackNamed(v4.SignRequestHandler)
 	svc.Handlers.Build.PushBackNamed(jsonrpc.BuildHandler)
 	svc.Handlers.Unmarshal.PushBackNamed(jsonrpc.UnmarshalHandler)
 	svc.Handlers.UnmarshalMeta.PushBackNamed(jsonrpc.UnmarshalMetaHandler)

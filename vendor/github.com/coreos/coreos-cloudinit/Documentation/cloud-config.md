@@ -2,12 +2,10 @@
 
 CoreOS allows you to declaratively customize various OS-level items, such as network configuration, user accounts, and systemd units. This document describes the full list of items we can configure. The `coreos-cloudinit` program uses these files as it configures the OS after startup or during runtime.
 
-Your cloud-config is processed during each boot. Invalid cloud-config won't be processed but will be logged in the journal. You can validate your cloud-config with the [CoreOS validator]({{site.url}}/validate) or by running `coreos-cloudinit -validate`.
-
-In addition to `coreos-cloudinit -validate` command and https://coreos.com/validate/ online service you can debug `coreos-cloudinit` system output through the `journalctl` tool:
+Your cloud-config is processed during each boot. Invalid cloud-config won't be processed but will be logged in the journal. You can validate your cloud-config with the [CoreOS online validator](https://coreos.com/validate/) or by running `coreos-cloudinit -validate`.  In addition to these two validation methods you can debug `coreos-cloudinit` system output through the `journalctl` tool:
 
 ```sh
-journalctl _EXE=/usr/bin/coreos-cloudinit
+journalctl --identifier=coreos-cloudinit
 ```
 
 It will show `coreos-cloudinit` run output which was triggered by system boot.
@@ -121,7 +119,7 @@ For more information about the available configuration parameters, see the [etcd
 
 _Note: The `$private_ipv4` and `$public_ipv4` substitution variables referenced in other documents are only supported on Amazon EC2, Google Compute Engine, OpenStack, Rackspace, DigitalOcean, and Vagrant._
 
-[etcd2-config]: https://github.com/coreos/etcd/blob/master/Documentation/configuration.md
+[etcd2-config]: https://github.com/coreos/etcd/blob/v2.3.2/Documentation/configuration.md
 
 #### fleet
 
@@ -225,6 +223,9 @@ List of locksmith configuration parameters:
 - **etcd_cafile**: Path to CA file used for TLS communication with etcd
 - **etcd_certfile**: Path to certificate file used for TLS communication with etcd
 - **etcd_keyfile**: Path to private key file used for TLS communication with etcd
+- **group**: Name of the reboot group in which this instance belongs
+- **window_start**: Start time of the reboot window
+- **window_length**: Duration of the reboot window
 
 For the complete list of locksmith configuration parameters, see the [locksmith documentation][locksmith-readme].
 

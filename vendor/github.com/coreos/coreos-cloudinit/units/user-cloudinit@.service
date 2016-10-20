@@ -8,6 +8,7 @@ ConditionFileNotEmpty=%f
 
 [Service]
 Type=oneshot
+TimeoutSec=10min
 RemainAfterExit=yes
 EnvironmentFile=-/etc/environment
 ExecStart=/usr/bin/coreos-cloudinit --from-file=%f
