@@ -2,15 +2,15 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"net"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"text/template"
-	"fmt"
-	"os"
-	"io/ioutil"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
@@ -818,7 +818,7 @@ func TestNodeDrainerWorkerUserData(t *testing.T) {
 }
 
 func TestRktConfig(t *testing.T) {
-	validChannels := []string {
+	validChannels := []string{
 		"alpha",
 		"beta",
 	}
@@ -862,14 +862,14 @@ releaseChannel: %s
 
 func TestValidateExistingVPC(t *testing.T) {
 	validCases := []struct {
-		vpc string
+		vpc     string
 		subnets []string
 	}{
 		{"10.0.0.0/16", []string{"10.0.3.0/24", "10.0.4.0/24"}},
 	}
 
 	invalidCases := []struct {
-		vpc string
+		vpc     string
 		subnets []string
 	}{
 		// both subnets conflicts
@@ -889,9 +889,9 @@ func TestValidateExistingVPC(t *testing.T) {
 	cluster := newDefaultCluster()
 
 	cluster.VPCCIDR = "10.0.0.0/16"
-	cluster.Subnets = []*Subnet {
-		{ "ap-northeast-1a", "10.0.1.0/24", nil},
-		{ "ap-northeast-1a", "10.0.2.0/24", nil},
+	cluster.Subnets = []*Subnet{
+		{"ap-northeast-1a", "10.0.1.0/24", nil},
+		{"ap-northeast-1a", "10.0.2.0/24", nil},
 	}
 
 	for _, testCase := range validCases {
@@ -926,7 +926,7 @@ func withDummyCredentials(fn func(dir string)) {
 
 	defer os.Remove(dir)
 
-	for _, pairName := range []string {"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
+	for _, pairName := range []string{"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
 		certFile := fmt.Sprintf("%s/%s.pem", dir, pairName)
 
 		if err := ioutil.WriteFile(certFile, []byte("dummycert"), 0644); err != nil {
@@ -951,7 +951,7 @@ func TestValidateUserData(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*Subnet {
+	cluster.Subnets = []*Subnet{
 		{"us-west-1a", "10.0.1.0/16", nil},
 		{"us-west-1b", "10.0.2.0/16", nil},
 	}
@@ -975,7 +975,7 @@ func TestRenderStackTemplate(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*Subnet {
+	cluster.Subnets = []*Subnet{
 		{"us-west-1a", "10.0.1.0/16", nil},
 		{"us-west-1b", "10.0.2.0/16", nil},
 	}
@@ -996,16 +996,16 @@ func TestRenderStackTemplate(t *testing.T) {
 }
 
 func TestWithTrailingDot(t *testing.T) {
-	tests := [][]string {
-		[]string {
+	tests := [][]string{
+		[]string{
 			"",
 			"",
 		},
-		[]string {
+		[]string{
 			"foo.bar.",
 			"foo.bar.",
 		},
-		[]string {
+		[]string{
 			"foo.bar",
 			"foo.bar.",
 		},
