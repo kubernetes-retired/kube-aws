@@ -341,7 +341,7 @@
         "KeyName": "{{$.KeyName}}",
         "NetworkInterfaces": [
           {
-            "AssociatePublicIpAddress": true,
+            "AssociatePublicIpAddress": {{.MapPublicIPs}},
             "DeleteOnTermination": true,
             "DeviceIndex": "0",
             "GroupSet": [
@@ -452,6 +452,11 @@
 	    "Protocol" : "TCP"
 	  }
 	],
+	{{if .MapPublicIPs}}
+	"Scheme": "internet-facing",
+	{{else}}
+	"Scheme": "internal",
+	{{end}}
 	"SecurityGroups" : [
 	  { "Ref" : "SecurityGroupElbAPIServer" }
 	]
@@ -794,7 +799,7 @@
       "Properties": {
         "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": true,
+        "MapPublicIpOnLaunch": {{.MapPublicIPs}},
         "Tags": [
           {
             "Key": "KubernetesCluster",
