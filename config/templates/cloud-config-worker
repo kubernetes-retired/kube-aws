@@ -225,7 +225,7 @@ write_files:
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
         --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
-        --dns=8.8.8.8 --dns=8.8.4.4 \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
         --net=host \
         --trust-keys-from-https \
         quay.io/coreos/awscli --exec=/bin/bash -- \
