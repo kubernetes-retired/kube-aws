@@ -36,6 +36,10 @@ get-log:
 	full_container_id=$$($(SSH_CMD) core@$(MASTER_HOST) 'docker ps -a --no-trunc | grep $(DOCKER_TAG_SANITIZED) | tee /dev/stderr | head -n 1 | awk "{ print \$$1 }"') && \
 	rsync --rsync-path="sudo rsync" -e '$(SSH_CMD)' core@$(MASTER_HOST):/var/lib/docker/containers/$${full_container_id}/$${full_container_id}-json.log .
 
+.PHONY: show-log
+show-log:
+	$(SSH_CMD) core@$(MASTER_HOST) 'sh -c "container_id=$$(docker ps -a | grep $(DOCKER_TAG_SANITIZED) | head -n 1 | cut -d" " -f 1); docker logs -f \$$container_id"'
+
 .PHONY: sh
 sh:
 	docker run -it --rm -v $(KUBE_AWS_ASSETS):/kube $(DOCKER_TAG_SANITIZED) sh
