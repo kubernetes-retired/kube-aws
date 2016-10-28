@@ -6,6 +6,7 @@ KUBE_AWS_ASSETS ?= /missing-kube-aws-assets
 SSH_PRIVATE_KEY ?=
 SSH_CMD ?= ssh -i $(SSH_PRIVATE_KEY)
 MASTER_HOST ?=
+FOCUS ?= \[Conformance\]
 
 .PHONY: build
 build:
@@ -28,7 +29,7 @@ ssh:
 .PHONY: run-remotely
 run-remotely:
 	rsync -a -e 'ssh -i $(SSH_PRIVATE_KEY)' $(KUBE_AWS_ASSETS)/ core@$(MASTER_HOST):/home/core/kube
-	ssh -i $(SSH_PRIVATE_KEY) core@$(MASTER_HOST) 'sh -c "docker pull $(DOCKER_TAG_SANITIZED) && container_id=$$(docker run -d -v /home/core/kube:/kube $(DOCKER_TAG_SANITIZED)) && echo \$$container_id && docker logs -f \$$container_id"'
+	ssh -i $(SSH_PRIVATE_KEY) core@$(MASTER_HOST) 'sh -c "docker pull $(DOCKER_TAG_SANITIZED) && container_id=$$(docker run -d -v /home/core/kube:/kube -e FOCUS='$(FOCUS)' $(DOCKER_TAG_SANITIZED)) && echo \$$container_id && docker logs -f \$$container_id"'
 
 .PHONY: get-log
 get-log:

@@ -17,4 +17,12 @@ export KUBECONFIG=${DIR}/kubeconfig
 
 sed -i -e "s#credentials/#${DIR}/credentials/#g" ${KUBECONFIG}
 
-go run hack/e2e.go -v --test -check_version_skew=false -check_node_count=true --test_args="ginkgo.focus='\[Conformance\]'"
+set -vx
+
+if [ "$FOCUS" != "" ]; then
+  FOCUS=$(echo $FOCUS | sed -e 's/\[/\\[/' -e 's/\]/\\]/')
+fi
+
+FOCUS=${FOCUS:-\[Conformance\]}
+
+go run hack/e2e.go -v --test -check_version_skew=false -check_node_count=true --test_args="--ginkgo.focus=$FOCUS"
