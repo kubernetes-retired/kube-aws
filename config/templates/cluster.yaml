@@ -125,6 +125,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # IP address of Kubernetes dns service (must be contained by serviceCIDR)
 # dnsServiceIP: 10.3.0.10
 
+# Uncomment to provision nodes without a public IP. This assumes your VPC route table is setup to route to the internet via a NAT gateway.
+# If you did not set vpcId and routeTableId the cluster will not bootstrap.
+# mapPublicIPs: false
+
 # Expiration in days from creation time of TLS assets. By default, the CA will
 # expire in 10 years and the server and client certificates will expire in 1
 # year.
