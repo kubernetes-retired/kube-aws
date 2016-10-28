@@ -24,8 +24,12 @@ run-locally:
 ssh:
 	ssh -i $(SSH_PRIVATE_KEY) core@$(MASTER_HOST)
 
-# usage:
-#   DOCKER_REPO=mumoshu/ MASTER_HOST=**.**.**.** SSH_PRIVATE_KEY=path/to/key KUBE_AWS_ASSETS=path/to/where/kube-aws/run sh -c 'make build && make publish && make run-remotely'
+# example usage:
+#   FOCUS='\[HPA\].*\[Conformance\]' DOCKER_REPO=quay.io/mumoshu/ MASTER_HOST=**.**.**.** SSH_PRIVATE_KEY=path/to/key KUBE_AWS_ASSETS=path/to/where/kube-aws/run sh -c 'make build && make publish && make run-remotely'
+#
+#   FOCUS:
+#     a regexp to selectively run e2e tests. Default: \[Conformance\]
+#     see https://github.com/kubernetes/kubernetes/blob/master/docs/devel/e2e-tests.md#conformance-tests for more examples and description
 .PHONY: run-remotely
 run-remotely:
 	rsync -a -e 'ssh -i $(SSH_PRIVATE_KEY)' $(KUBE_AWS_ASSETS)/ core@$(MASTER_HOST):/home/core/kube
