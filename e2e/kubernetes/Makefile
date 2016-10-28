@@ -33,7 +33,7 @@ run-remotely:
 
 .PHONY: get-log
 get-log:
-	full_container_id=$$($(SSH_CMD) core@$(MASTER_HOST) 'docker ps --no-trunc | grep $(DOCKER_TAG_SANITIZED) | tee /dev/stderr | awk "{ print \$$1 }"') && \
+	full_container_id=$$($(SSH_CMD) core@$(MASTER_HOST) 'docker ps -a --no-trunc | grep $(DOCKER_TAG_SANITIZED) | tee /dev/stderr | head -n 1 | awk "{ print \$$1 }"') && \
 	rsync --rsync-path="sudo rsync" -e '$(SSH_CMD)' core@$(MASTER_HOST):/var/lib/docker/containers/$${full_container_id}/$${full_container_id}-json.log .
 
 .PHONY: sh
