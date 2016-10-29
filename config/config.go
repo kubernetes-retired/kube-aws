@@ -132,6 +132,7 @@ type Cluster struct {
 	Region                   string            `yaml:"region,omitempty"`
 	AvailabilityZone         string            `yaml:"availabilityZone,omitempty"`
 	ReleaseChannel           string            `yaml:"releaseChannel,omitempty"`
+	AmiId                    string            `yaml:"amiId,omitempty"`
 	ControllerCount          int               `yaml:"controllerCount,omitempty"`
 	ControllerInstanceType   string            `yaml:"controllerInstanceType,omitempty"`
 	ControllerRootVolumeType string            `yaml:"controllerRootVolumeType,omitempty"`
@@ -225,9 +226,13 @@ func (c Cluster) Config() (*Config, error) {
 		}
 	}
 
-	var err error
-	if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
-		return nil, fmt.Errorf("failed getting AMI for config: %v", err)
+	if c.AmiId == "" {
+		var err error
+		if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
+			return nil, fmt.Errorf("failed getting AMI for config: %v", err)
+		}
+	} else {
+		config.AMI = c.AmiId
 	}
 
 	//Set logical name constants
