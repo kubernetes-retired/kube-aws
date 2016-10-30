@@ -42,6 +42,9 @@ availabilityZone: {{.AvailabilityZone}}
 # ARN of the KMS key used to encrypt TLS assets.
 kmsKeyArn: "{{.KMSKeyARN}}"
 
+# Number of controller nodes to create
+#controllerCount: 1
+
 # Instance type for controller node
 #controllerInstanceType: m3.medium
 
