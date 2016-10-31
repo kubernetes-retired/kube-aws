@@ -121,8 +121,11 @@ There will now be a cluster.yaml file in the asset directory.
   admin.pem      apiserver.pem      etcd-client-key.pem  etcd-key.pem     worker-key.pem
   ```
 
+The next command generates the default set of cluster assets in your asset directory. These assets are templates that are used to create, update and interact with your Kubernetes cluster.
 
-This generates the default set of cluster assets in your asset directory. These assets are templates and credentials that are used to create, update and interact with your Kubernetes cluster.
+  ```sh
+  $ kube-aws render stack
+  ```
 
 You can now customize your cluster by editing asset files:
 
