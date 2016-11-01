@@ -67,6 +67,7 @@ func newDefaultCluster() *Cluster {
 		Subnets:                  []*Subnet{},
 		MapPublicIPs:             true,
 		Experimental:             experimental,
+		IsChinaRegion:            false,
 	}
 }
 
@@ -172,6 +173,7 @@ type Cluster struct {
 	MapPublicIPs             bool              `yaml:"mapPublicIPs,omitempty"`
 	Experimental             Experimental      `yaml:"experimental"`
 	providedEncryptService   encryptService
+	IsChinaRegion            bool
 }
 
 type Subnet struct {
@@ -317,6 +319,8 @@ func (c Cluster) Config() (*Config, error) {
 	}
 	config.EtcdEndpoints = etcdEndpoints.String()
 	config.EtcdInitialCluster = etcdInitialCluster.String()
+
+	config.IsChinaRegion = strings.HasPrefix(config.Region, "cn")
 
 	return &config, nil
 }

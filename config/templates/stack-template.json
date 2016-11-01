@@ -174,7 +174,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com"
+                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
                 ]
               }
             }
@@ -221,7 +221,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com"
+                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
                 ]
               }
             }
@@ -286,7 +286,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com"
+                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
                 ]
               }
             }
