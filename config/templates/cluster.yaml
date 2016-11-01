@@ -13,6 +13,10 @@ externalDNSName: {{.ExternalDNSName}}
 # See coreos.com/releases for more information
 #releaseChannel: stable
 
+# The AMI ID of CoreOS.
+# If omitted, the latest AMI for the releaseChannel is used.
+#amiId: ""
+
 # Set to true if you want kube-aws to create a Route53 A Record for you.
 #createRecordSet: false
 
