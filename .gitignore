@@ -4,3 +4,4 @@
 *~
 /config/templates.go
 .idea/
+.envrc

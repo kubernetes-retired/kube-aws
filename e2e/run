@@ -1,0 +1,171 @@
+#!/bin/bash
+
+KUBE_AWS_CMD=${KUBE_AWS_CMD:-$GOPATH/src/github.com/coreos/kube-aws/bin/kube-aws}
+E2E_DIR=$(cd $(dirname $0); pwd)
+WORK_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}
+KUBECONFIG=${WORK_DIR}/kubeconfig
+
+export KUBECONFIG
+
+USAGE_EXAMPLE="KUBE_AWS_CLUSTER_NAME=kubeawstest1 KUBE_AWS_KEY_NAME=name/of/ec2/key KUBE_AWS_KMS_KEY_ARN=arn:aws:kms:us-west-1:<account id>:key/your-key KUBE_AWS_REGION=us-west-1 KUBE_AWS_AVAILABILITY_ZONE=us-west-1b ./$0 [prepare|configure|start|all]"
+
+if [ "${KUBE_AWS_CLUSTER_NAME}" == "" ]; then
+  echo KUBE_AWS_CLUSTER_NAME is not set. Run this command like $USAGE_EXAMPLE 1>&2
+  exit 1
+fi
+
+if [ "${KUBE_AWS_KEY_NAME}" == "" ]; then
+  echo KUBE_AWS_KEY_NAME is not set. Run this command like $USAGE_EXAMPLE 1>&2
+  exit 1
+fi
+
+if [ "${KUBE_AWS_REGION}" == "" ]; then
+  echo KUBE_AWS_REGION is not set. Run this command like $USAGE_EXAMPLE 1>&2
+  exit 1
+fi
+
+if [ "${KUBE_AWS_AVAILABILITY_ZONE}" == "" ]; then
+  echo KUBE_AWS_REGION is not set. Run this command like $USAGE_EXAMPLE 1>&2
+  exit 1
+fi
+
+if [ ! -e "${KUBE_AWS_CMD}" ]; then
+  echo ${KUBE_AWS_CMD} does not exist. 1>&2
+  exit 1
+fi
+
+KUBE_AWS_VERSION=$($KUBE_AWS_CMD version)
+echo Using the kube-aws command at ${KUBE_AWS_CMD}"($KUBE_AWS_VERSION)". Set KUBE_AWS_CMD=path/to/kube-aws to override.
+
+EXTERNAL_DNS_NAME=${KUBE_AWS_CLUSTER_NAME}.${KUBE_AWS_DOMAIN}
+echo The kubernetes API would be accessible via ${EXTERNAL_DNS_NAME}
+
+prepare() {
+  echo Creating or ensuring existence of the kube-aws assets directory ${WORK_DIR}
+  mkdir -p ${WORK_DIR}
+}
+
+configure() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} init \
+    --cluster-name ${KUBE_AWS_CLUSTER_NAME} \
+    --external-dns-name ${EXTERNAL_DNS_NAME} \
+    --region ${KUBE_AWS_REGION} \
+    --availability-zone ${KUBE_AWS_AVAILABILITY_ZONE} \
+    --key-name ${KUBE_AWS_KEY_NAME} \
+    --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
+
+  echo "hostedZoneId: ${KUBE_AWS_HOSTED_ZONE_ID}" >> cluster.yaml
+  echo 'createRecordSet: true' >> cluster.yaml
+
+  # required to run kube-aws update
+  echo 'workerCount: 4' >> cluster.yaml
+  echo 'controllerCount: 2' >> cluster.yaml
+
+  ${KUBE_AWS_CMD} render
+
+  ${KUBE_AWS_CMD} validate
+
+  echo Generated configuration files in ${WORK_DIR}:
+  find .
+}
+
+clean() {
+  cd ${WORK_DIR}/..
+  if [ -d "${KUBE_AWS_CLUSTER_NAME}" ]; then
+    echo Removing the directory "${WORK_DIR}"
+    rm -Rf ./${KUBE_AWS_CLUSTER_NAME}/*
+  fi
+}
+
+up() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} up
+
+  printf 'Waiting for the Kubernetes API to be accessible'
+
+  while ! kubectl get no 2>/dev/null; do
+    sleep 10
+    printf '.'
+  done
+  echo done
+}
+
+destroy() {
+  aws cloudformation delete-stack --stack-name ${KUBE_AWS_CLUSTER_NAME}
+  aws cloudformation wait stack-delete-complete --stack-name ${KUBE_AWS_CLUSTER_NAME}
+}
+
+test-upgrade() {
+  SED_CMD="sed -e 's/workerCount: 2/workerCount: 4/' -e 's/controllerCount: 2/controllerCount: 3/'"
+  diff --unified cluster.yaml <(cat cluster.yaml | sh -c "${SED_CMD}")
+  sh -c "${SED_CMD} -i bak cluster.yaml"
+  ${KUBE_AWS_CMD} update
+  aws cloudformation wait stack-update-complete --stack-name ${KUBE_AWS_CLUSTER_NAME}
+}
+
+test-destruction() {
+  aws cloudformation wait stack-delete-complete --stack-name ${KUBE_AWS_CLUSTER_NAME}
+}
+
+# Usage: DOCKER_REPO=quay.io/mumoshu/ SSH_PRIVATE_KEY=path/to/private/key ./e2e run conformance
+conformance() {
+  cd ${E2E_DIR}/kubernetes
+
+  if [ "$DOCKER_REPO" == "" ]; then
+    echo DOCKER_REPO is not set.
+    exit 1
+  fi
+
+  if [ "$SSH_PRIVATE_KEY" == "" ]; then
+    echo SSH_PRIVATE_KEY is not set.
+    exit 1
+  fi
+
+  if [ ! -f "$SSH_PRIVATE_KEY" ]; then
+    echo ${SSH_PRIVATE_KEY} does not exist.
+    exit 1
+  fi
+
+  master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
+    | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
+    | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
+    | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
+  )
+
+  echo Connecting to $master_host via SSH
+
+  KUBE_AWS_ASSETS=${WORK_DIR} MASTER_HOST=$master_host make run-remotely
+}
+
+conformance_result() {
+  cd ${E2E_DIR}/kubernetes
+
+  master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
+    | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
+    | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
+    | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
+  )
+
+  echo Connecting to $master_host via SSH
+
+  KUBE_AWS_ASSETS=${WORK_DIR} MASTER_HOST=$master_host make show-log
+}
+
+all() {
+  prepare
+  configure
+  up
+  conformance
+}
+
+if [ "$1" == "" ]; then
+  echo Usage: $USAGE_EXAMPLE
+  exit 1
+fi
+
+set -vxe
+
+"$@"
