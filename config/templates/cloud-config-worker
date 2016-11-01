@@ -172,7 +172,7 @@ coreos:
         [Install]
         RequiredBy=kubelet.service
     {{ end }}
-{{ if $.ElasticFileSystem }}
+{{ if $.ElasticFileSystemID }}
     - name: rpc-statd.service
       command: start
       enable: true
@@ -181,7 +181,7 @@ coreos:
       content: |
         [Service]
         ExecStartPre=-/usr/bin/mkdir -p /efs
-        ExecStart=/bin/sh -c 'grep -qs /efs /proc/mounts || /usr/bin/mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).{{ $.ElasticFileSystem }}.efs.{{ $.Region }}.amazonaws.com:/ /efs'
+        ExecStart=/bin/sh -c 'grep -qs /efs /proc/mounts || /usr/bin/mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone).{{ $.ElasticFileSystemID }}.efs.{{ $.Region }}.amazonaws.com:/ /efs'
         Restart=always
         RestartSec=60
         [Install]

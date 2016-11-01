@@ -792,7 +792,7 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     }
-    {{if $.ElasticFileSystem}}
+    {{if $.ElasticFileSystemID}}
     ,
     "SecurityGroupMountTarget": {
       "Properties": {
@@ -842,11 +842,11 @@
       },
       "Type": "AWS::EC2::Subnet"
     }
-    {{if $.ElasticFileSystem}}
+    {{if $.ElasticFileSystemID}}
     ,
     "{{$subnetLogicalName}}MountTarget": {
       "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystem}}",
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
         "SubnetId": { "Ref": "{{$subnetLogicalName}}" },
         "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
       },

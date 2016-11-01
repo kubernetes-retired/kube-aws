@@ -152,7 +152,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #
 # You can create a new EFS volume using the CLI:
 # $ aws efs create-file-system --creation-token $(uuidgen)
-#elasticFileSystem: fs-47a2c22e
+#elasticFileSystemId: fs-47a2c22e
 
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
 # containerRuntime: docker

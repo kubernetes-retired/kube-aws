@@ -169,7 +169,7 @@ type Cluster struct {
 	UseCalico                bool              `yaml:"useCalico,omitempty"`
 	Subnets                  []*Subnet         `yaml:"subnets,omitempty"`
 	MapPublicIPs             bool              `yaml:"mapPublicIPs,omitempty"`
-	ElasticFileSystem        string            `yaml:"elasticFileSystem,omitempty"`
+	ElasticFileSystemID      string            `yaml:"elasticFileSystemId,omitempty"`
 	Experimental             Experimental      `yaml:"experimental"`
 	providedEncryptService   encryptService
 }
