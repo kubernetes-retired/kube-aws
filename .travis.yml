@@ -4,3 +4,5 @@ go:
 go_import_path: github.com/coreos/kube-aws
 script:
   - make test
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
