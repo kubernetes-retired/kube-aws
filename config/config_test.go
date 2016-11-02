@@ -821,9 +821,6 @@ func TestRktConfig(t *testing.T) {
 	validChannels := []string{
 		"alpha",
 		"beta",
-	}
-
-	invalidChannels := []string{
 		"stable",
 	}
 
@@ -843,19 +840,6 @@ releaseChannel: %s
 		_, err2 := cluster.Config()
 		if err2 != nil {
 			t.Errorf("failed to generate config for %s: %v", channel, err2)
-		}
-	}
-
-	for _, channel := range invalidChannels {
-		confBody := singleAzConfigYaml + conf(channel)
-		cluster, err := ClusterFromBytes([]byte(confBody))
-		if err != nil {
-			t.Errorf("failed to parse config %s: %v", confBody, err)
-		}
-
-		_, err2 := cluster.Config()
-		if err2 == nil {
-			t.Errorf("expcted to fail generating config for %s", channel)
 		}
 	}
 }
