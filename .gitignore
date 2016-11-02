@@ -1,7 +1,9 @@
 /artifacts/template.json
 /bin
-/assets
+/e2e/assets
 *~
 /config/templates.go
 .idea/
 .envrc
+coverage.txt
+profile.out
