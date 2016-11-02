@@ -3,6 +3,6 @@ go:
   - 1.7
 go_import_path: github.com/coreos/kube-aws
 script:
-  - make test
+  - make test-with-cover
 after_success:
   - bash <(curl -s https://codecov.io/bash)
