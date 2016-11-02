@@ -9,6 +9,8 @@ format:
 
 .PHONY: test
 test: build
-	test -z "$$(find . -path ./vendor -prune -type f -o -name '*.go' -exec gofmt -d {} + | tee /dev/stderr)"
-	go test -v $$(go list ./... | grep -v '/vendor/')
-	go vet $$(go list ./... | grep -v '/vendor/')
+	./test
+
+.PHONY: test-with-cover
+test-with-cover: build
+	./test with-cover
