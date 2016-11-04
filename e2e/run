@@ -132,6 +132,7 @@ conformance() {
   master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
     | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
     | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
+    | [?State.Name==\`running\`][]
     | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
   )
 
@@ -146,6 +147,7 @@ conformance_result() {
   master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
     | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
     | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
+    | [?State.Name==\`running\`][]
     | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
   )
 
