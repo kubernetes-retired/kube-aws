@@ -64,7 +64,10 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		return fmt.Errorf("render takes no arguments\n")
 	}
-	renderCredentialsOpts.generateCA = true
+
+	if _, err := os.Stat(renderCredentialsOpts.caKeyPath); os.IsNotExist(err) {
+		renderCredentialsOpts.generateCA = true
+	}
 	if err := runCmdRenderCredentials(cmdRenderCredentials, args); err != nil {
 		return err
 	}
