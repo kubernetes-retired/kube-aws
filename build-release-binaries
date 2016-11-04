@@ -12,7 +12,7 @@ for os in linux darwin;do
 	rm -rf "$output_folder"
 	mkdir "$output_folder"
 	echo "Building kube-aws for GOOS=${os} GOARCH=${arch}"
-	OUTPUT_PATH="$output_folder/kube-aws" GOOS=$os GOARCH=$arch ./build
+	OUTPUT_PATH="$output_folder/kube-aws" BUILD_GOOS=$os BUILD_GOARCH=$arch ./build
 
 	releaseTar=kube-aws-"${os}-${arch}".tar.gz
 	rm -rf "$releaseTar"
