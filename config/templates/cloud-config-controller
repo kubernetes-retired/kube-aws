@@ -44,6 +44,9 @@ coreos:
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+        --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
+        --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume rkt,kind=host,source=/opt/bin/host-rkt \
         --mount volume=rkt,target=/usr/bin/rkt \
@@ -122,13 +125,19 @@ coreos:
         Environment=FELIX_FELIXHOSTNAME=$private_ipv4
         Environment=CALICO_NETWORKING=false
         Environment=NO_DEFAULT_POOLS=true
+        Environment=ETCD_SCHEME=https
+        Environment=ETCD_CA_CERT_FILE=/etc/etcd2/ssl/ca.pem
+        Environment=ETCD_CERT_FILE=/etc/etcd2/ssl/etcd-client.pem
+        Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-client-key.pem
         Environment=ETCD_ENDPOINTS={{ .EtcdEndpoints }}
         ExecStart=/usr/bin/rkt run --inherit-env --stage1-from-dir=stage1-fly.aci \
         --volume=modules,kind=host,source=/lib/modules,readOnly=false \
         --mount=volume=modules,target=/lib/modules \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
         --mount=volume=dns,target=/etc/resolv.conf \
-        --trust-keys-from-https quay.io/calico/node:v0.19.0
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=true \
+        --mount=volume=ssl,target=/etc/etcd2/ssl \
+        --trust-keys-from-https quay.io/calico/node:v0.22.0
         KillMode=mixed
         Restart=always
         TimeoutStartSec=0
@@ -452,22 +461,37 @@ write_files:
         containers:
           # The Calico policy controller.
           - name: kube-policy-controller
-            image: calico/kube-policy-controller:v0.2.0
+            image: calico/kube-policy-controller:v0.3.0
             env:
+              - name: ETCD_SCHEME
+                value: https
+              - name: ETCD_CA_CERT_FILE
+                value: "/etc/etcd2/ssl/ca.pem"
+              - name: ETCD_CERT_FILE
+                value: "/etc/etcd2/ssl/etcd-client.pem"
+              - name: ETCD_KEY_FILE
+                value: "/etc/etcd2/ssl/etcd-client-key.pem"
               - name: ETCD_ENDPOINTS
                 value: "{{ .EtcdEndpoints }}"
               - name: K8S_API
                 value: "http://127.0.0.1:8080"
               - name: LEADER_ELECTION
                 value: "true"
+            volumeMounts:
+            - mountPath: /etc/etcd2/ssl
+              name: ssl
           # Leader election container used by the policy controller.
           - name: leader-elector
-            image: quay.io/calico/leader-elector:v0.1.0
+            image: gcr.io/google_containers/leader-elector:0.5
             imagePullPolicy: IfNotPresent
             args:
               - "--election=calico-policy-election"
               - "--election-namespace=calico-system"
               - "--http=127.0.0.1:4040"
+        volumes:
+        - name: ssl
+          hostPath:
+            path: /etc/kubernetes/ssl
 {{ end }}
 
 {{ if .UseCalico }}
