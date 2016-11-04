@@ -16,20 +16,18 @@ coreos:
         - name: 40-flannel.conf
           content: |
             [Unit]
-            Requires=flanneld.service
-            After=flanneld.service
+            Wants=flanneld.service
             [Service]
             EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+            ExecStartPre=/usr/bin/systemctl is-active flanneld.service
 
     - name: flanneld.service
       drop-ins:
         - name: 10-etcd.conf
           content: |
-            [Unit]
-            Requires=decrypt-tls-assets.service
-            After=decrypt-tls-assets.service
             [Service]
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            ExecStartPre=/opt/bin/decrypt-tls-assets
             ExecStartPre=/usr/bin/etcdctl \
             --ca-file=/etc/kubernetes/ssl/ca.pem \
             --cert-file=/etc/kubernetes/ssl/etcd-client.pem \
@@ -40,6 +38,8 @@ coreos:
       command: start
       runtime: true
       content: |
+        [Unit]
+        Wants=flanneld.service
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
@@ -53,6 +53,7 @@ coreos:
         --mount volume=stage,target=/tmp \
         --volume var-log,kind=host,source=/var/log \
         --mount volume=var-log,target=/var/log"
+        ExecStartPre=/usr/bin/systemctl is-active flanneld.service
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=http://localhost:8080 \
@@ -136,36 +137,19 @@ coreos:
         WantedBy=multi-user.target
 {{ end }}
 
-    - name: decrypt-tls-assets.service
-      enable: true
-      content: |
-        [Unit]
-        Description=decrypt kubelet tls assets using amazon kms
-        Before=kubelet.service flanneld.service
-        After=early-docker.service
-        Requires=early-docker.service
-
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        ExecStart=/opt/bin/decrypt-tls-assets
-
-        [Install]
-        RequiredBy=kubelet.service flanneld.service
-
     - name: install-kube-system.service
       command: start
       runtime: true
       content: |
         [Unit]
-        Requires=kubelet.service docker.service
-        After=kubelet.service docker.service
+        Wants=kubelet.service docker.service
 
         [Service]
         Type=simple
         StartLimitInterval=0
         Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-kube-system
 
@@ -175,13 +159,14 @@ coreos:
       runtime: true
       content: |
         [Unit]
-        Requires=kubelet.service docker.service
-        After=kubelet.service docker.service
+        Wants=kubelet.service docker.service
 
         [Service]
         Type=simple
         StartLimitInterval=0
         Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-calico-system
 {{ end }}
