@@ -792,6 +792,38 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     }
+    {{if $.ElasticFileSystemID}}
+    ,
+    "SecurityGroupMountTarget": {
+      "Properties": {
+        "GroupDescription": {
+          "Ref": "AWS::StackName"
+        },
+        "SecurityGroupIngress": [
+          {
+            "SourceSecurityGroupId": { "Ref": "SecurityGroupWorker" },
+            "FromPort": 2049,
+            "IpProtocol": "tcp",
+            "ToPort": 2049
+          },
+          {
+            "SourceSecurityGroupId": { "Ref": "SecurityGroupController" },
+            "FromPort": 2049,
+            "IpProtocol": "tcp",
+            "ToPort": 2049
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{.ClusterName}}"
+          }
+        ],
+        "VpcId": {{.VPCRef}}
+      },
+      "Type": "AWS::EC2::SecurityGroup"
+    }
+    {{end}}
     {{range $index, $subnet := .Subnets}}
     {{with $subnetLogicalName := printf "Subnet%d" $index}}
     ,
@@ -810,6 +842,17 @@
       },
       "Type": "AWS::EC2::Subnet"
     }
+    {{if $.ElasticFileSystemID}}
+    ,
+    "{{$subnetLogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$subnetLogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
     {{end}}
     {{end}}
     {{if not .VPCID}}
