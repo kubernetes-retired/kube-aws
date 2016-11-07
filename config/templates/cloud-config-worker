@@ -152,7 +152,6 @@ coreos:
         [Service]
         Type=oneshot
         RemainAfterExit=true
-        Restart=on-failure
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStart=/bin/true
