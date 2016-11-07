@@ -477,6 +477,10 @@
         ],
         "Tags": [
           {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-sg-elb-api-server"
+          },
+          {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
           }
@@ -529,7 +533,7 @@
             "IpProtocol": "tcp",
             "ToPort": 443
           },
-	  {
+          {
             "SourceSecurityGroupId" : { "Ref" : "SecurityGroupWorker" },
             "FromPort": 443,
             "IpProtocol": "tcp",
@@ -537,6 +541,10 @@
           }
         ],
         "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-sg-controller"
+          },
           {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
@@ -600,6 +608,10 @@
           }
         ],
         "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-sg-worker"
+          },
           {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
@@ -770,6 +782,10 @@
         ],
         "Tags": [
           {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-sg-etcd"
+          },
+          {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
           }
@@ -815,6 +831,10 @@
         ],
         "Tags": [
           {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-sg-mount-target"
+          },
+          {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
           }
@@ -833,6 +853,10 @@
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
         "MapPublicIpOnLaunch": {{$.MapPublicIPs}},
         "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$subnetLogicalName}}"
+          },
           {
             "Key": "KubernetesCluster",
             "Value": "{{$.ClusterName}}"
@@ -870,7 +894,7 @@
           },
           {
             "Key": "Name",
-            "Value": "kubernetes-{{.ClusterName}}-vpc"
+            "Value": "{{.ClusterName}}-vpc"
           }
         ]
       },
@@ -879,6 +903,10 @@
     "RouteTable": {
       "Properties": {
         "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-route-table"
+          },
           {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
@@ -901,6 +929,10 @@
     "InternetGateway": {
       "Properties": {
         "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-igw"
+          },
           {
             "Key": "KubernetesCluster",
             "Value": "{{.ClusterName}}"
