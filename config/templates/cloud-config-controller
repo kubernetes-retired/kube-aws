@@ -16,20 +16,18 @@ coreos:
         - name: 40-flannel.conf
           content: |
             [Unit]
-            Requires=flanneld.service
-            After=flanneld.service
+            Wants=flanneld.service
             [Service]
             EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+            ExecStartPre=/usr/bin/systemctl is-active flanneld.service
 
     - name: flanneld.service
       drop-ins:
         - name: 10-etcd.conf
           content: |
-            [Unit]
-            Requires=decrypt-tls-assets.service
-            After=decrypt-tls-assets.service
             [Service]
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            ExecStartPre=/opt/bin/decrypt-tls-assets
             ExecStartPre=/usr/bin/etcdctl \
             --ca-file=/etc/kubernetes/ssl/ca.pem \
             --cert-file=/etc/kubernetes/ssl/etcd-client.pem \
@@ -40,10 +38,15 @@ coreos:
       command: start
       runtime: true
       content: |
+        [Unit]
+        Wants=flanneld.service
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+        --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
+        --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume rkt,kind=host,source=/opt/bin/host-rkt \
         --mount volume=rkt,target=/usr/bin/rkt \
@@ -53,6 +56,7 @@ coreos:
         --mount volume=stage,target=/tmp \
         --volume var-log,kind=host,source=/var/log \
         --mount volume=var-log,target=/var/log"
+        ExecStartPre=/usr/bin/systemctl is-active flanneld.service
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=http://localhost:8080 \
@@ -121,13 +125,19 @@ coreos:
         Environment=FELIX_FELIXHOSTNAME=$private_ipv4
         Environment=CALICO_NETWORKING=false
         Environment=NO_DEFAULT_POOLS=true
+        Environment=ETCD_SCHEME=https
+        Environment=ETCD_CA_CERT_FILE=/etc/etcd2/ssl/ca.pem
+        Environment=ETCD_CERT_FILE=/etc/etcd2/ssl/etcd-client.pem
+        Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-client-key.pem
         Environment=ETCD_ENDPOINTS={{ .EtcdEndpoints }}
         ExecStart=/usr/bin/rkt run --inherit-env --stage1-from-dir=stage1-fly.aci \
         --volume=modules,kind=host,source=/lib/modules,readOnly=false \
         --mount=volume=modules,target=/lib/modules \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
         --mount=volume=dns,target=/etc/resolv.conf \
-        --trust-keys-from-https quay.io/calico/node:v0.19.0
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=true \
+        --mount=volume=ssl,target=/etc/etcd2/ssl \
+        --trust-keys-from-https quay.io/calico/node:v0.22.0
         KillMode=mixed
         Restart=always
         TimeoutStartSec=0
@@ -136,36 +146,19 @@ coreos:
         WantedBy=multi-user.target
 {{ end }}
 
-    - name: decrypt-tls-assets.service
-      enable: true
-      content: |
-        [Unit]
-        Description=decrypt kubelet tls assets using amazon kms
-        Before=kubelet.service flanneld.service
-        After=early-docker.service
-        Requires=early-docker.service
-
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        ExecStart=/opt/bin/decrypt-tls-assets
-
-        [Install]
-        RequiredBy=kubelet.service flanneld.service
-
     - name: install-kube-system.service
       command: start
       runtime: true
       content: |
         [Unit]
-        Requires=kubelet.service docker.service
-        After=kubelet.service docker.service
+        Wants=kubelet.service docker.service
 
         [Service]
         Type=simple
         StartLimitInterval=0
         Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-kube-system
 
@@ -175,13 +168,14 @@ coreos:
       runtime: true
       content: |
         [Unit]
-        Requires=kubelet.service docker.service
-        After=kubelet.service docker.service
+        Wants=kubelet.service docker.service
 
         [Service]
         Type=simple
         StartLimitInterval=0
         Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-calico-system
 {{ end }}
@@ -467,22 +461,37 @@ write_files:
         containers:
           # The Calico policy controller.
           - name: kube-policy-controller
-            image: calico/kube-policy-controller:v0.2.0
+            image: calico/kube-policy-controller:v0.3.0
             env:
+              - name: ETCD_SCHEME
+                value: https
+              - name: ETCD_CA_CERT_FILE
+                value: "/etc/etcd2/ssl/ca.pem"
+              - name: ETCD_CERT_FILE
+                value: "/etc/etcd2/ssl/etcd-client.pem"
+              - name: ETCD_KEY_FILE
+                value: "/etc/etcd2/ssl/etcd-client-key.pem"
               - name: ETCD_ENDPOINTS
                 value: "{{ .EtcdEndpoints }}"
               - name: K8S_API
                 value: "http://127.0.0.1:8080"
               - name: LEADER_ELECTION
                 value: "true"
+            volumeMounts:
+            - mountPath: /etc/etcd2/ssl
+              name: ssl
           # Leader election container used by the policy controller.
           - name: leader-elector
-            image: quay.io/calico/leader-elector:v0.1.0
+            image: gcr.io/google_containers/leader-elector:0.5
             imagePullPolicy: IfNotPresent
             args:
               - "--election=calico-policy-election"
               - "--election-namespace=calico-system"
               - "--http=127.0.0.1:4040"
+        volumes:
+        - name: ssl
+          hostPath:
+            path: /etc/kubernetes/ssl
 {{ end }}
 
 {{ if .UseCalico }}

@@ -62,6 +62,8 @@ configure() {
   # required to run kube-aws update
   echo 'workerCount: 4' >> cluster.yaml
   echo 'controllerCount: 2' >> cluster.yaml
+  echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
+  echo 'useCalico: true' >> cluster.yaml
 
   ${KUBE_AWS_CMD} render
 

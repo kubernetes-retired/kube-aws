@@ -14,29 +14,32 @@ coreos:
         - name: 40-flannel.conf
           content: |
             [Unit]
-            Requires=flanneld.service
-            After=flanneld.service
+            Wants=flanneld.service
             [Service]
             EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
+            ExecStartPre=/usr/bin/systemctl is-active flanneld.service
 
     - name: flanneld.service
       drop-ins:
         - name: 10-etcd.conf
           content: |
-            [Unit]
-            Requires=decrypt-tls-assets.service
-            After=decrypt-tls-assets.service
             [Service]
+            ExecStartPre=/opt/bin/decrypt-tls-assets
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
 
     - name: kubelet.service
       command: start
       runtime: true
       content: |
+        [Unit]
+        Wants=flanneld.service
         [Service]
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
+        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+        --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
+        --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume rkt,kind=host,source=/opt/bin/host-rkt \
         --mount volume=rkt,target=/usr/bin/rkt \
@@ -46,6 +49,7 @@ coreos:
         --mount volume=stage,target=/tmp \
         --volume var-log,kind=host,source=/var/log \
         --mount volume=var-log,target=/var/log"
+        ExecStartPre=/usr/bin/systemctl is-active flanneld.service
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers={{.APIServerEndpoint}} \
@@ -116,13 +120,19 @@ coreos:
         Environment=FELIX_FELIXHOSTNAME=$private_ipv4
         Environment=CALICO_NETWORKING=false
         Environment=NO_DEFAULT_POOLS=true
+        Environment=ETCD_SCHEME=https
+        Environment=ETCD_CA_CERT_FILE=/etc/etcd2/ssl/ca.pem
+        Environment=ETCD_CERT_FILE=/etc/etcd2/ssl/etcd-client.pem
+        Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-client-key.pem
         Environment=ETCD_ENDPOINTS={{ .EtcdEndpoints }}
         ExecStart=/usr/bin/rkt run --inherit-env --stage1-from-dir=stage1-fly.aci \
         --volume=modules,kind=host,source=/lib/modules,readOnly=false \
         --mount=volume=modules,target=/lib/modules \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
         --mount=volume=dns,target=/etc/resolv.conf \
-        --trust-keys-from-https quay.io/calico/node:v0.19.0
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=true \
+        --mount=volume=ssl,target=/etc/etcd2/ssl \
+        --trust-keys-from-https quay.io/calico/node:v0.22.0
         KillMode=mixed
         Restart=always
         TimeoutStartSec=0
@@ -131,35 +141,20 @@ coreos:
         WantedBy=multi-user.target
 {{ end }}
 
-    - name: decrypt-tls-assets.service
-      enable: true
-      content: |
-        [Unit]
-        Description=decrypt kubelet tls assets using amazon kms
-        Before=kubelet.service flanneld.service
-        After=early-docker.service
-        Requires=early-docker.service
-
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        ExecStart=/opt/bin/decrypt-tls-assets
-
-        [Install]
-        RequiredBy=kubelet.service flanneld.service
-
     {{ if .Experimental.NodeDrainer.Enabled }}
     - name: kube-node-drainer.service
       enable: true
       content: |
         [Unit]
         Description=drain this k8s node to make running pods time to gracefully shut down before stopping kubelet
-        After=kubelet.service
+        Wants=kubelet.service docker.service
 
         [Service]
         Type=oneshot
         RemainAfterExit=true
+        Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStart=/bin/true
         ExecStop=/bin/sh -c '/usr/bin/docker run --rm -v /etc/kubernetes:/etc/kubernetes {{.HyperkubeImageRepo}}:{{.K8sVer}} \
           /hyperkube kubectl \
