@@ -67,7 +67,7 @@ coreos:
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
         --register-schedulable=false \
         --allow-privileged=true \
-        --config=/etc/kubernetes/manifests \
+        --pod-manifest-path=/etc/kubernetes/manifests \
         --cluster_dns={{.DNSServiceIP}} \
         --cluster_domain=cluster.local \
         --cloud-provider=aws
