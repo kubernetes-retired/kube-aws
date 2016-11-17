@@ -26,6 +26,7 @@ coreos:
             [Service]
             ExecStartPre=/opt/bin/decrypt-tls-assets
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
+            TimeoutStartSec=120
 
     - name: kubelet.service
       command: start

@@ -34,6 +34,8 @@ coreos:
             --key-file=/etc/kubernetes/ssl/etcd-client-key.pem \
             --endpoints="{{.EtcdEndpoints}}" \
             set /coreos.com/network/config '{"Network" : "{{.PodCIDR}}", "Backend" : {"Type" : "vxlan"}}'
+            TimeoutStartSec=120
+
     - name: kubelet.service
       command: start
       runtime: true
