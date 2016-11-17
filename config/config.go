@@ -34,6 +34,9 @@ func newDefaultCluster() *Cluster {
 		NodeDrainer{
 			Enabled: false,
 		},
+		AwsEnvironment{
+			Enabled: false,
+		},
 	}
 
 	return &Cluster{
@@ -184,11 +187,17 @@ type Subnet struct {
 }
 
 type Experimental struct {
-	NodeDrainer NodeDrainer `yaml:"nodeDrainer"`
+	NodeDrainer    NodeDrainer    `yaml:"nodeDrainer"`
+	AwsEnvironment AwsEnvironment `yaml:"awsEnvironment"`
 }
 
 type NodeDrainer struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type AwsEnvironment struct {
+	Enabled     bool              `yaml:"enabled"`
+	Environment map[string]string `yaml:"environment"`
 }
 
 const (

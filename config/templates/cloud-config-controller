@@ -11,6 +11,31 @@ coreos:
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
   units:
+{{if .Experimental.AwsEnvironment.Enabled}}
+    - name: set-aws-environment.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Set AWS environment variables in /etc/aws-environment
+        After=network-online.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStartPre=/bin/touch /etc/aws-environment
+        ExecStart=/usr/bin/rkt run \
+          --uuid-file-save=/var/run/coreos/cfn-init.uuid \
+          --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+          --volume=awsenv,kind=host,source=/etc/aws-environment,readOnly=false --mount volume=awsenv,target=/etc/aws-environment \
+          --net=host \
+          --trust-keys-from-https \
+          quay.io/coreos/awscli:edge -- cfn-init -v \
+              --region {{.Region}} \
+              --resource LaunchConfigurationController \
+              --stack {{.ClusterName}}
+{{end}}
     - name: docker.service
       drop-ins:
         - name: 40-flannel.conf
