@@ -13,6 +13,10 @@ This survey is meant for those who are currently running at least some workloads
 
 ### Download pre-built binary
 
+Go to the [releases](https://github.com/coreos/kube-aws/releases) and download the latest release tarball for your architecture.
+
+Currently, binaries coming from the final release for each version are signed so you should download the corresponding signature (.sig) as well. If you've decided to download a non-final release you can skip down to "Extract the binary:".
+
 Import the [CoreOS Application Signing Public Key](https://coreos.com/security/app-signing-key/):
 
 ```sh
@@ -25,8 +29,6 @@ Validate the key fingerprint:
 gpg2 --fingerprint FC8A365E
 ```
 The correct key fingerprint is `18AD 5014 C99E F7E3 BA5F  6CE9 50BD D3E0 FC8A 365E`
-
-Go to the [releases](https://github.com/coreos/kube-aws/releases) and download the latest release tarball and detached signature (.sig) for your architecture.
 
 Validate the tarball's GPG signature:
 
