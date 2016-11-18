@@ -190,6 +190,9 @@ coreos:
     - name: efs.service
       command: start
       content: |
+        [Unit]
+        After=network-online.target
+        Before=kubelet.service
         [Service]
         Type=oneshot
         ExecStartPre=-/usr/bin/mkdir -p /efs

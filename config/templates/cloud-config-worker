@@ -181,6 +181,8 @@ coreos:
     - name: efs.service
       command: start
       content: |
+        [Unit]
+        After=network-online.target
         [Service]
         Type=oneshot
         ExecStartPre=-/usr/bin/mkdir -p /efs
