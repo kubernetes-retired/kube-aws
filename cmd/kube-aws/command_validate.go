@@ -36,7 +36,7 @@ func init() {
 		&validateOpts.s3URI,
 		"s3-uri",
 		"",
-		"When your template is bigger than the cloudformation limit of 51200 bytes, upload the template to the specified location in S3",
+		"When your template is bigger than the cloudformation limit of 51200 bytes, upload the template to the specified location in S3. S3 location expressed as s3://<bucket>/path/to/dir",
 	)
 }
 
