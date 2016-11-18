@@ -194,6 +194,29 @@ coreos:
         WantedBy=kubelet.service
 {{ end }}
 
+    - name: cfn-signal.service
+      command: start
+      content: |
+        [Unit]
+        Wants=kubelet.service docker.service
+        After=kubelet.service
+
+        [Service]
+        Type=oneshot
+        ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl  --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
+        {{ if .UseCalico }}
+        ExecStartPre=/usr/bin/systemctl is-active calico-node
+        {{ end }}
+        ExecStart=/usr/bin/rkt run \
+          --uuid-file-save=/var/run/coreos/cfn-signal.uuid \
+          --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+          --net=host \
+          --trust-keys-from-https \
+          quay.io/coreos/awscli:edge -- cfn-signal -e 0 \
+              --region {{.Region}} \
+              --resource AutoScaleWorker \
+              --stack {{.ClusterName}}
+
 write_files:
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
