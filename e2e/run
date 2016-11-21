@@ -41,6 +41,9 @@ echo Using the kube-aws command at ${KUBE_AWS_CMD}"($KUBE_AWS_VERSION)". Set KUB
 EXTERNAL_DNS_NAME=${KUBE_AWS_CLUSTER_NAME}.${KUBE_AWS_DOMAIN}
 echo The kubernetes API would be accessible via ${EXTERNAL_DNS_NAME}
 
+KUBE_AWS_S3_URI=${KUBE_AWS_S3_DIR_URI}/${KUBE_AWS_CLUSTER_NAME}
+echo CloudFormation stack template would be uploaded to ${KUBE_AWS_S3_URI}
+
 build() {
   echo Building kube-aws
   cd ${SRC_DIR}
@@ -67,10 +70,12 @@ configure() {
   echo 'createRecordSet: true' >> cluster.yaml
 
   # required to run kube-aws update
-  echo 'workerCount: 4' >> cluster.yaml
+  echo 'workerCount: 2' >> cluster.yaml
   echo 'controllerCount: 2' >> cluster.yaml
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
-  echo 'useCalico: true' >> cluster.yaml
+  if [ "${KUBE_AWS_USE_CALICO}" != "" ]; then
+    echo 'useCalico: true' >> cluster.yaml
+  fi
 
   ${KUBE_AWS_CMD} render
 
@@ -91,7 +96,11 @@ clean() {
 up() {
   cd ${WORK_DIR}
 
+  starttime=$(date +%s)
+
   ${KUBE_AWS_CMD} up --s3-uri ${KUBE_AWS_S3_URI}
+
+  set +vx
 
   printf 'Waiting for the Kubernetes API to be accessible'
 
@@ -99,7 +108,12 @@ up() {
     sleep 10
     printf '.'
   done
-  echo done
+
+  endtime=$(date +%s)
+
+  echo Done. it took $(($endtime - $starttime)) seconds until kubeapiserver to be in service.
+
+  set -vx
 }
 
 destroy() {
@@ -109,7 +123,7 @@ destroy() {
 
 update() {
   cd ${WORK_DIR}
-  SED_CMD="sed -e 's/workerCount: 4/workerCount: 5/' -e 's/controllerCount: 2/controllerCount: 3/'"
+  SED_CMD="sed -e 's/workerCount: 2/workerCount: 3/' -e 's/controllerCount: 2/controllerCount: 3/'"
   diff --unified cluster.yaml <(cat cluster.yaml | sh -c "${SED_CMD}") || true
   sh -c '${SED_CMD} -i bak cluster.yaml' || true
   ${KUBE_AWS_CMD} update --s3-uri ${KUBE_AWS_S3_URI}
@@ -146,12 +160,7 @@ conformance() {
     exit 1
   fi
 
-  master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
-    | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
-    | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
-    | [?State.Name==\`running\`][]
-    | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
-  )
+  master_host=$(controller_host)
 
   echo Connecting to $master_host via SSH
 
@@ -161,16 +170,35 @@ conformance() {
 conformance_result() {
   cd ${E2E_DIR}/kubernetes
 
-  master_host=$(aws ec2 describe-instances --output json --query "Reservations[].Instances[]
-    | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
-    | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`AutoScaleController\`][]
-    | [?State.Name==\`running\`][]
-    | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
-  )
+  master_host=$(controller_host)
 
   echo Connecting to $master_host via SSH
 
   KUBE_AWS_ASSETS=${WORK_DIR} MASTER_HOST=$master_host make show-log
+}
+
+first_host_for_asg() {
+  aws ec2 describe-instances --output json --query "Reservations[].Instances[]
+      | [?Tags[?Key==\`aws:cloudformation:stack-name\`].Value|[0]==\`${KUBE_AWS_CLUSTER_NAME}\`]
+      | [?Tags[?Key==\`aws:cloudformation:logical-id\`].Value|[0]==\`${1}\`][]
+      | [?State.Name==\`running\`][]
+      | []" | jq -r 'map({InstanceId: .InstanceId, PublicIpAddress: .PublicIpAddress}) | first | .PublicIpAddress'
+}
+
+controller_host() {
+  first_host_for_asg AutoScaleController
+}
+
+worker_host() {
+  first_host_for_asg AutoScaleWorker
+}
+
+ssh_controller() {
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${KUBE_AWS_SSH_KEY} core@$(controller_host) "$@"
+}
+
+ssh_worker() {
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${KUBE_AWS_SSH_KEY} core@$(worker_host) "$@"
 }
 
 all() {
