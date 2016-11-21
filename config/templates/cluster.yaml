@@ -165,8 +165,12 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # experimental:
 #   nodeDrainer:
 #     enabled: true
+#   awsEnvironment:
+#     enabled: true
+#     environment:
+#       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
 
-# AWS Tags for cloudformation stack resources 
+# AWS Tags for cloudformation stack resources
 #stackTags:
 #  Name: "Kubernetes"
 #  Environment: "Production"

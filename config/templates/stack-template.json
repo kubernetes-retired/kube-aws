@@ -413,6 +413,23 @@
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
+{{ if .Experimental.AwsEnvironment.Enabled }}
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+"{{$variable}}=", {{$function}} , "\n",
+{{end}}
+"' > /etc/aws-environment" ] ] }
+              }
+            }
+          }
+        }
+      },
+{{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "LaunchConfigurationController": {
@@ -438,6 +455,23 @@
         ],
         "UserData": "{{ .UserDataController }}"
       },
+  {{ if .Experimental.AwsEnvironment.Enabled }}
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+"{{$variable}}=", {{$function}} , "\n",
+{{end}}
+"' > /etc/aws-environment" ] ] }
+              }
+            }
+          }
+        }
+      },
+  {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "ElbAPIServer" : {
