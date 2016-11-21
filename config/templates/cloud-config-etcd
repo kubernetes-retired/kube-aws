@@ -117,7 +117,7 @@ write_files:
 
       for encKey in $(find /etc/etcd2/ssl/*.pem.enc);do
         tmpPath="/tmp/$(basename $encKey).tmp"
-        docker run --net host --rm -v /etc/etcd2/ssl:/etc/etcd2/ssl --rm quay.io/coreos/awscli aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
+        docker run --net host --rm -v /etc/etcd2/ssl:/etc/etcd2/ssl --rm {{.AWSCliImageRepo}}:{{.AWSCliTag}} aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
         mv  $tmpPath /etc/etcd2/ssl/$(basename $encKey .enc)
       done
 

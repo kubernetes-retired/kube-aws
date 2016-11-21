@@ -148,6 +148,12 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
 
+# AWS CLI image repository to use.
+# awsCliImageRepo: quay.io/coreos/awscli
+
+# AWS CLI image tag to use.
+# awsCliTag: master
+
 # Use Calico for network policy.
 # useCalico: false
 

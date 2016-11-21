@@ -48,6 +48,8 @@ func newDefaultCluster() *Cluster {
 		DNSServiceIP:             "10.3.0.10",
 		K8sVer:                   "v1.4.6_coreos.0",
 		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
+		AWSCliImageRepo:          "quay.io/coreos/awscli",
+		AWSCliTag:                "master",
 		TLSCADurationDays:        365 * 10,
 		TLSCertDurationDays:      365,
 		ContainerRuntime:         "docker",
@@ -162,6 +164,8 @@ type Cluster struct {
 	DNSServiceIP             string            `yaml:"dnsServiceIP,omitempty"`
 	K8sVer                   string            `yaml:"kubernetesVersion,omitempty"`
 	HyperkubeImageRepo       string            `yaml:"hyperkubeImageRepo,omitempty"`
+	AWSCliImageRepo          string            `yaml:"awsCliImageRepo,omitempty"`
+	AWSCliTag                string            `yaml:"awsCliTag,omitempty"`
 	ContainerRuntime         string            `yaml:"containerRuntime,omitempty"`
 	KMSKeyARN                string            `yaml:"kmsKeyArn,omitempty"`
 	CreateRecordSet          bool              `yaml:"createRecordSet,omitempty"`
