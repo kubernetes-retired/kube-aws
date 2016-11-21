@@ -281,7 +281,7 @@ write_files:
            for encKey in $(find /etc/kubernetes/ssl/*.pem.enc); do \
              echo decrypting $encKey to $encKey.b64; \
              /usr/bin/aws \
-               --region ap-northeast-1 kms decrypt \
+               --region {{.Region}} kms decrypt \
                --ciphertext-blob fileb://$encKey \
                --output text \
                --query Plaintext \
