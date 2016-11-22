@@ -49,12 +49,14 @@
         ]
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
+      {{if .Experimental.WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.WorkerCount}}",
           "Timeout" : "{{.WorkerCreateTimeout}}"
         }
       },
+      {{end}}
       "UpdatePolicy" : {
         "AutoScalingRollingUpdate" : {
           "MinInstancesInService" :
@@ -63,9 +65,14 @@
           {{else}}
           "{{.WorkerCount}}"
           {{end}},
+          {{if .Experimental.WaitSignal.Enabled}}
+          "WaitOnResourceSignals" : "true",
+          "MaxBatchSize" : "{{.Experimental.WaitSignal.MaxBatchSize}}",
+          "PauseTime": "{{.WorkerCreateTimeout}}"
+          {{else}}
           "MaxBatchSize" : "1",
-          "PauseTime": "{{.WorkerCreateTimeout}}",
-          "WaitOnResourceSignals" : "true"
+          "PauseTime": "PT2M"
+          {{end}}
         }
       },
       "DependsOn" : ["AutoScaleController"]
@@ -113,18 +120,24 @@
 	  { "Ref" : "ElbAPIServer" }
 	]
       },
+      {{if .Experimental.WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.ControllerCount}}",
           "Timeout" : "{{.ControllerCreateTimeout}}"
         }
       },
+      {{end}}
       "UpdatePolicy" : {
         "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : "{{.ControllerCount}}",
           "MaxBatchSize" : "1",
-          "PauseTime": "{{.ControllerCreateTimeout}}",
-          "WaitOnResourceSignals" : "true"
+          {{if .Experimental.WaitSignal.Enabled}}
+          "WaitOnResourceSignals" : "true",
+          "PauseTime": "{{.ControllerCreateTimeout}}"
+          {{else}}
+          "PauseTime": "PT2M"
+          {{end}}
         }
       }
     },
@@ -210,6 +223,7 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{if .Experimental.WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
                   "Effect": "Allow",
@@ -224,6 +238,7 @@
                       "/*" ]
                     ] }
                 },
+                {{end}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
@@ -294,6 +309,7 @@
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },
+                {{if .Experimental.WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
                   "Effect": "Allow",
@@ -308,6 +324,7 @@
                       "/*" ]
                     ] }
                 },
+                {{end}}
                 {
                   "Action": [
                     "ecr:GetAuthorizationToken",

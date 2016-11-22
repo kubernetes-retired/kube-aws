@@ -221,6 +221,7 @@ coreos:
         WantedBy=kubelet.service
 {{ end }}
 
+{{ if .Experimental.WaitSignal.Enabled }}
     - name: cfn-signal.service
       command: start
       content: |
@@ -243,6 +244,7 @@ coreos:
               --region {{.Region}} \
               --resource AutoScaleWorker \
               --stack {{.ClusterName}}
+{{end}}
 
 write_files:
   - path: /etc/kubernetes/cni/docker_opts_cni.env
