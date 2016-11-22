@@ -49,6 +49,9 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Number of controller nodes to create
 #controllerCount: 1
 
+# Maximum time to wait for controller creation
+#controlerCreateTimeout: PT15M
+
 # Instance type for controller node
 #controllerInstanceType: m3.medium
 
@@ -63,6 +66,9 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 
 # Number of worker nodes to create
 #workerCount: 1
+
+# Maximum time to wait for worker creation
+#workerCreateTimeout: PT15M
 
 # Instance type for worker nodes
 #workerInstanceType: m3.medium

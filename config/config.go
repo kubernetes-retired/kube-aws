@@ -52,11 +52,13 @@ func newDefaultCluster() *Cluster {
 		TLSCertDurationDays:      365,
 		ContainerRuntime:         "docker",
 		ControllerCount:          1,
+		ControllerCreateTimeout:  "PT15M",
 		ControllerInstanceType:   "m3.medium",
 		ControllerRootVolumeType: "gp2",
 		ControllerRootVolumeIOPS: 0,
 		ControllerRootVolumeSize: 30,
 		WorkerCount:              1,
+		WorkerCreateTimeout:      "PT15M",
 		WorkerInstanceType:       "m3.medium",
 		WorkerRootVolumeType:     "gp2",
 		WorkerRootVolumeIOPS:     0,
@@ -138,11 +140,13 @@ type Cluster struct {
 	ReleaseChannel           string            `yaml:"releaseChannel,omitempty"`
 	AmiId                    string            `yaml:"amiId,omitempty"`
 	ControllerCount          int               `yaml:"controllerCount,omitempty"`
+	ControllerCreateTimeout  string            `yaml:"controllerCreateTimeout,omitempty"`
 	ControllerInstanceType   string            `yaml:"controllerInstanceType,omitempty"`
 	ControllerRootVolumeType string            `yaml:"controllerRootVolumeType,omitempty"`
 	ControllerRootVolumeIOPS int               `yaml:"controllerRootVolumeIOPS,omitempty"`
 	ControllerRootVolumeSize int               `yaml:"controllerRootVolumeSize,omitempty"`
 	WorkerCount              int               `yaml:"workerCount,omitempty"`
+	WorkerCreateTimeout      string            `yaml:"workerCreateTimeout,omitempty"`
 	WorkerInstanceType       string            `yaml:"workerInstanceType,omitempty"`
 	WorkerRootVolumeType     string            `yaml:"workerRootVolumeType,omitempty"`
 	WorkerRootVolumeIOPS     int               `yaml:"workerRootVolumeIOPS,omitempty"`
