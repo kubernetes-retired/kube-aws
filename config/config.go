@@ -34,6 +34,9 @@ func newDefaultCluster() *Cluster {
 		NodeDrainer{
 			Enabled: false,
 		},
+		NodeLabel{
+			Enabled: false,
+		},
 		AwsEnvironment{
 			Enabled: false,
 		},
@@ -201,11 +204,16 @@ type Subnet struct {
 
 type Experimental struct {
 	NodeDrainer    NodeDrainer    `yaml:"nodeDrainer"`
+	NodeLabel      NodeLabel      `yaml:"nodeLabel"`
 	AwsEnvironment AwsEnvironment `yaml:"awsEnvironment"`
 	WaitSignal     WaitSignal     `yaml:"waitSignal"`
 }
 
 type NodeDrainer struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type NodeLabel struct {
 	Enabled bool `yaml:"enabled"`
 }
 

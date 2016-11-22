@@ -239,6 +239,13 @@
                     ] }
                 },
                 {{end}}
+                {{if .Experimental.NodeLabel.Enabled}}
+                {
+                  "Action": "autoscaling:Describe*",
+                  "Effect": "Allow",
+                  "Resource": [ "*" ]
+                },
+                {{end}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
@@ -323,6 +330,13 @@
                       { "Ref": "AWS::StackName" },
                       "/*" ]
                     ] }
+                },
+                {{end}}
+                {{if .Experimental.NodeLabel.Enabled}}
+                {
+                  "Action": "autoscaling:Describe*",
+                  "Effect": "Allow",
+                  "Resource": [ "*" ]
                 },
                 {{end}}
                 {
