@@ -196,7 +196,7 @@ coreos:
           --volume=awsenv,kind=host,source=/etc/aws-environment,readOnly=false --mount volume=awsenv,target=/etc/aws-environment \
           --net=host \
           --trust-keys-from-https \
-          quay.io/coreos/awscli:edge -- cfn-init -v \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
               --region {{.Region}} \
               --resource LaunchConfigurationWorker \
               --stack {{.ClusterName}}
@@ -298,7 +298,7 @@ write_files:
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
         --net=host \
         --trust-keys-from-https \
-        quay.io/coreos/awscli --exec=/bin/bash -- \
+        {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
           -c \
           'echo decrypting tls assets; \
            for encKey in $(find /etc/kubernetes/ssl/*.pem.enc); do \
