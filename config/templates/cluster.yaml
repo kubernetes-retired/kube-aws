@@ -181,6 +181,8 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#   waitSignal:
+#     enabled: true
 
 # AWS Tags for cloudformation stack resources
 #stackTags:

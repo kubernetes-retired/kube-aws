@@ -73,6 +73,9 @@ configure() {
   echo 'workerCount: 2' >> cluster.yaml
   echo 'controllerCount: 2' >> cluster.yaml
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
+  if [ "${KUBE_AWS_WAIT_SIGNAL_ENABLED}" != "" ]; then
+    echo -e '  waitSignal:\n    enabled: true' >> cluster.yaml
+  fi
   if [ "${KUBE_AWS_USE_CALICO}" != "" ]; then
     echo 'useCalico: true' >> cluster.yaml
   fi
