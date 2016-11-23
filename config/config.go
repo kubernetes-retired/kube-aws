@@ -37,6 +37,10 @@ func newDefaultCluster() *Cluster {
 		AwsEnvironment{
 			Enabled: false,
 		},
+		WaitSignal{
+			Enabled:      false,
+			MaxBatchSize: 1,
+		},
 	}
 
 	return &Cluster{
@@ -197,6 +201,7 @@ type Subnet struct {
 type Experimental struct {
 	NodeDrainer    NodeDrainer    `yaml:"nodeDrainer"`
 	AwsEnvironment AwsEnvironment `yaml:"awsEnvironment"`
+	WaitSignal     WaitSignal     `yaml:"waitSignal"`
 }
 
 type NodeDrainer struct {
@@ -206,6 +211,11 @@ type NodeDrainer struct {
 type AwsEnvironment struct {
 	Enabled     bool              `yaml:"enabled"`
 	Environment map[string]string `yaml:"environment"`
+}
+
+type WaitSignal struct {
+	Enabled      bool `yaml:"enabled"`
+	MaxBatchSize int  `yaml:"maxBatchSize"`
 }
 
 const (

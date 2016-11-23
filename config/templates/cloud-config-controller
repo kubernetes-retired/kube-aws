@@ -230,6 +230,7 @@ coreos:
         WantedBy=kubelet.service
 {{ end }}
 
+{{if .Experimental.WaitSignal.Enabled}}
     - name: cfn-signal.service
       command: start
       content: |
@@ -252,6 +253,7 @@ coreos:
               --region {{.Region}} \
               --resource AutoScaleController \
               --stack {{.ClusterName}}
+{{end}}
 
 write_files:
   - path: /opt/bin/install-kube-system
