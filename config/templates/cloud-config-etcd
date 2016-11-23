@@ -85,6 +85,12 @@ coreos:
         [Install]
         RequiredBy=etcd2.service
 
+{{if .SSHAuthorizedKeys}}
+ssh_authorized_keys:
+  {{range $sshkey := .SSHAuthorizedKeys}}
+  - {{$sshkey}}
+  {{end}}
+{{end}}
 
 write_files:
 

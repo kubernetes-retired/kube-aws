@@ -187,6 +187,7 @@ type Cluster struct {
 	Subnets                  []*Subnet         `yaml:"subnets,omitempty"`
 	MapPublicIPs             bool              `yaml:"mapPublicIPs,omitempty"`
 	ElasticFileSystemID      string            `yaml:"elasticFileSystemId,omitempty"`
+	SSHAuthorizedKeys        []string          `yaml:"sshAuthorizedKeys,omitempty"`
 	Experimental             Experimental      `yaml:"experimental"`
 	providedEncryptService   encryptService
 	IsChinaRegion            bool
