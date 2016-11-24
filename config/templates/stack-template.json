@@ -37,6 +37,14 @@
             "Value": "{{.ClusterName}}-kube-aws-worker"
           }
         ],
+        {{if .Experimental.LoadBalancer.Enabled}}
+        "LoadBalancerNames" : [
+        {{range $index, $elb := .Experimental.LoadBalancer.Names}}
+        {{if $index}},{{end}}
+          "{{$elb}}"
+        {{end}}
+        ],
+        {{end}}
         "VPCZoneIdentifier": [
           {{range $index, $subnet := .Subnets}}
           {{with $subnetLogicalName := printf "Subnet%d" $index}}
@@ -116,9 +124,9 @@
           {{end}}
           {{end}}
         ],
-	"LoadBalancerNames" : [
-	  { "Ref" : "ElbAPIServer" }
-	]
+        "LoadBalancerNames" : [
+          { "Ref" : "ElbAPIServer" }
+        ]
       },
       {{if .Experimental.WaitSignal.Enabled}}
       "CreationPolicy" : {
@@ -477,6 +485,11 @@
         "InstanceType": "{{.WorkerInstanceType}}",
         "KeyName": "{{.KeyName}}",
         "SecurityGroups": [
+          {{if .Experimental.LoadBalancer.Enabled}}
+          {{range $elbsg := .Experimental.LoadBalancer.SecurityGroupIds}}
+            "{{$elbsg}}",
+          {{end}}
+          {{end}}
           {
             "Ref": "SecurityGroupWorker"
           }
