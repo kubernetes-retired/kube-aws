@@ -189,6 +189,9 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
 #   waitSignal:
 #     enabled: true
+#   # This option has not yet been tested with rkt as container runtime
+#   ephemeralImageStorage:
+#     enabled: true
 
 # AWS Tags for cloudformation stack resources
 #stackTags:

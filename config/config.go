@@ -40,6 +40,11 @@ func newDefaultCluster() *Cluster {
 		AwsEnvironment{
 			Enabled: false,
 		},
+		EphemeralImageStorage{
+			Enabled:    false,
+			Disk:       "xvdb",
+			Filesystem: "xfs",
+		},
 		WaitSignal{
 			Enabled:      false,
 			MaxBatchSize: 1,
@@ -203,10 +208,11 @@ type Subnet struct {
 }
 
 type Experimental struct {
-	NodeDrainer    NodeDrainer    `yaml:"nodeDrainer"`
-	NodeLabel      NodeLabel      `yaml:"nodeLabel"`
-	AwsEnvironment AwsEnvironment `yaml:"awsEnvironment"`
-	WaitSignal     WaitSignal     `yaml:"waitSignal"`
+	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
+	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
+	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
+	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
+	WaitSignal            WaitSignal            `yaml:"waitSignal"`
 }
 
 type NodeDrainer struct {
@@ -225,6 +231,12 @@ type AwsEnvironment struct {
 type WaitSignal struct {
 	Enabled      bool `yaml:"enabled"`
 	MaxBatchSize int  `yaml:"maxBatchSize"`
+}
+
+type EphemeralImageStorage struct {
+	Enabled    bool   `yaml:"enabled"`
+	Disk       string `yaml:"disk"`
+	Filesystem string `yaml:"filesystem"`
 }
 
 const (

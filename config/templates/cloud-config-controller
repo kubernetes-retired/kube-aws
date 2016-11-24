@@ -298,6 +298,36 @@ coreos:
           http://localhost:8080/api/v1/nodes/$(hostname)"
 {{end}}
 
+{{if .Experimental.EphemeralImageStorage.Enabled}}
+    - name: format-ephemeral.service
+      command: start
+      content: |
+        [Unit]
+        Description=Formats the ephemeral drive
+        After=dev-{{.Experimental.EphemeralImageStorage.Disk}}.device
+        Requires=dev-{{.Experimental.EphemeralImageStorage.Disk}}.device
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/sbin/wipefs -f /dev/{{.Experimental.EphemeralImageStorage.Disk}}
+        ExecStart=/usr/sbin/mkfs.{{.Experimental.EphemeralImageStorage.Filesystem}} -f /dev/{{.Experimental.EphemeralImageStorage.Disk}}
+    - name: var-lib-docker.mount
+      command: start
+      content: |
+        [Unit]
+        Description=Mount ephemeral to /var/lib/docker
+        Requires=format-ephemeral.service
+        After=format-ephemeral.service
+        [Mount]
+        What=/dev/{{.Experimental.EphemeralImageStorage.Disk}}
+{{if eq .ContainerRuntime "docker"}}
+        Where=/var/lib/docker
+{{else if eq .ContainerRuntime "rkt"}}
+        Where=/var/lib/rkt
+{{end}}
+        Type={{.Experimental.EphemeralImageStorage.Filesystem}}
+{{end}}
+
 {{if .SSHAuthorizedKeys}}
 ssh_authorized_keys:
   {{range $sshkey := .SSHAuthorizedKeys}}
