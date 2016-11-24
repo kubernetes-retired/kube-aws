@@ -181,6 +181,8 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # experimental:
 #   nodeDrainer:
 #     enabled: true
+#   nodeLabel:
+#     enabled: true
 #   awsEnvironment:
 #     enabled: true
 #     environment:

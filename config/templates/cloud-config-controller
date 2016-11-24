@@ -210,7 +210,6 @@ coreos:
         ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-calico-system
 {{ end }}
-
 {{ if $.ElasticFileSystemID }}
     - name: rpc-statd.service
       command: start
@@ -230,7 +229,6 @@ coreos:
         [Install]
         WantedBy=kubelet.service
 {{ end }}
-
 {{if .Experimental.WaitSignal.Enabled}}
     - name: cfn-signal.service
       command: start
@@ -254,6 +252,50 @@ coreos:
               --region {{.Region}} \
               --resource AutoScaleController \
               --stack {{.ClusterName}}
+{{end}}
+{{if .Experimental.NodeLabel.Enabled }}
+    - name: kube-node-label.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Label this kubernetes node with additional AWS parameters
+        After=kubelet.service
+        Before=cfn-signal.service
+
+        [Service]
+        Type=oneshot
+        ExecStop=/bin/true
+        RemainAfterExit=true
+        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment INSTANCE_ID=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/instance-id)"
+        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment SECURITY_GROUPS=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/security-groups | tr '\n' ',')"
+        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment AUTOSCALINGGROUP=$(/usr/bin/docker run --rm --net=host \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} aws \
+          autoscaling describe-auto-scaling-instances \
+          --instance-ids ${INSTANCE_ID} --region {{.Region}} \
+          --query 'AutoScalingInstances[].AutoScalingGroupName' --output text)"
+        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment \
+          LAUNCHCONFIGURATION=$(/usr/bin/docker run --rm --net=host \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} \
+          aws autoscaling describe-auto-scaling-groups \
+          --auto-scaling-group-name $AUTOSCALINGGROUP --region {{.Region}} \
+          --query 'AutoScalingGroups[].LaunchConfigurationName' --output text)"
+        ExecStart=/bin/sh -c "/usr/bin/curl \
+          --request PATCH \
+          -H 'Content-Type: application/strategic-merge-patch+json' \
+          -d'{ \
+          \"metadata\": { \
+            \"labels\": { \
+              \"kube-aws.coreos.com/autoscalinggroup\": \"${AUTOSCALINGGROUP}\", \
+              \"kube-aws.coreos.com/launchconfiguration\": \"${LAUNCHCONFIGURATION}\" \
+            }, \
+            \"annotations\": { \
+              \"kube-aws.coreos.com/securitygroups\": \"${SECURITY_GROUPS}\" \
+            } \
+          } \
+          }\"' \
+          http://localhost:8080/api/v1/nodes/$(hostname)"
 {{end}}
 
 {{if .SSHAuthorizedKeys}}
