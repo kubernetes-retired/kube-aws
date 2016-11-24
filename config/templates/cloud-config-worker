@@ -8,6 +8,7 @@ coreos:
     etcd_cafile: /etc/kubernetes/ssl/ca.pem
     etcd_certfile: /etc/kubernetes/ssl/etcd-client.pem
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
+
   units:
     - name: docker.service
       drop-ins:
@@ -244,6 +245,13 @@ coreos:
               --region {{.Region}} \
               --resource AutoScaleWorker \
               --stack {{.ClusterName}}
+{{end}}
+
+{{if .SSHAuthorizedKeys}}
+ssh_authorized_keys:
+  {{range $sshkey := .SSHAuthorizedKeys}}
+  - {{$sshkey}}
+  {{end}}
 {{end}}
 
 write_files:

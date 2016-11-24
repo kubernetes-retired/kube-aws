@@ -37,6 +37,10 @@ externalDNSName: {{.ExternalDNSName}}
 # account being used to deploy this cluster.
 keyName: {{.KeyName}}
 
+# Additional keys to preload on the coreos account (keep this to a minimum)
+# sshAuthorizedKeys:
+# - "ssh-rsa AAAAEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEY example@example.org"
+
 # Region to provision Kubernetes cluster
 region: {{.Region}}
 

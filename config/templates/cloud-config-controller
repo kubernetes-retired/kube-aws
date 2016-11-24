@@ -2,7 +2,6 @@
 coreos:
   update:
     reboot-strategy: "off"
-
   flannel:
     interface: $private_ipv4
     etcd_endpoints: {{ .EtcdEndpoints }}
@@ -255,6 +254,13 @@ coreos:
               --region {{.Region}} \
               --resource AutoScaleController \
               --stack {{.ClusterName}}
+{{end}}
+
+{{if .SSHAuthorizedKeys}}
+ssh_authorized_keys:
+  {{range $sshkey := .SSHAuthorizedKeys}}
+  - {{$sshkey}}
+  {{end}}
 {{end}}
 
 write_files:
