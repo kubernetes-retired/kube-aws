@@ -186,6 +186,7 @@ coreos:
         [Service]
         Type=simple
         StartLimitInterval=0
+        RestartSec=10
         Restart=on-failure
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
@@ -203,6 +204,7 @@ coreos:
         [Service]
         Type=simple
         StartLimitInterval=0
+        RestartSec=10
         Restart=on-failure
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
