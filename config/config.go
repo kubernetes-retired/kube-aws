@@ -31,12 +31,6 @@ const (
 
 func newDefaultCluster() *Cluster {
 	experimental := Experimental{
-		NodeDrainer{
-			Enabled: false,
-		},
-		NodeLabel{
-			Enabled: false,
-		},
 		AwsEnvironment{
 			Enabled: false,
 		},
@@ -44,6 +38,15 @@ func newDefaultCluster() *Cluster {
 			Enabled:    false,
 			Disk:       "xvdb",
 			Filesystem: "xfs",
+		},
+		LoadBalancer{
+			Enabled: false,
+		},
+		NodeDrainer{
+			Enabled: false,
+		},
+		NodeLabel{
+			Enabled: false,
 		},
 		WaitSignal{
 			Enabled:      false,
@@ -208,11 +211,23 @@ type Subnet struct {
 }
 
 type Experimental struct {
-	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
-	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
 	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
 	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
+	LoadBalancer          LoadBalancer          `yaml:"loadBalancer"`
+	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
+	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
 	WaitSignal            WaitSignal            `yaml:"waitSignal"`
+}
+
+type AwsEnvironment struct {
+	Enabled     bool              `yaml:"enabled"`
+	Environment map[string]string `yaml:"environment"`
+}
+
+type EphemeralImageStorage struct {
+	Enabled    bool   `yaml:"enabled"`
+	Disk       string `yaml:"disk"`
+	Filesystem string `yaml:"filesystem"`
 }
 
 type NodeDrainer struct {
@@ -223,20 +238,15 @@ type NodeLabel struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-type AwsEnvironment struct {
-	Enabled     bool              `yaml:"enabled"`
-	Environment map[string]string `yaml:"environment"`
+type LoadBalancer struct {
+	Enabled          bool     `yaml:"enabled"`
+	Names            []string `yaml:"names"`
+	SecurityGroupIds []string `yaml:"securityGroupIds"`
 }
 
 type WaitSignal struct {
 	Enabled      bool `yaml:"enabled"`
 	MaxBatchSize int  `yaml:"maxBatchSize"`
-}
-
-type EphemeralImageStorage struct {
-	Enabled    bool   `yaml:"enabled"`
-	Disk       string `yaml:"disk"`
-	Filesystem string `yaml:"filesystem"`
 }
 
 const (
