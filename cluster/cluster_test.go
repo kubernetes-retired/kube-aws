@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/coreos/kube-aws/cfnstack"
 	"github.com/coreos/kube-aws/config"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -593,7 +594,7 @@ stackTags:
 			ExpectedTags: testCase.expectedTags,
 		}
 
-		_, err = cluster.createStackFromTemplateBody(cfSvc, "")
+		_, err = cluster.stackProvisioner().CreateStackFromTemplateBody(cfSvc, "")
 
 		if err != nil {
 			t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
@@ -633,11 +634,11 @@ func TestStackCreationErrorMessaging(t *testing.T) {
 		"CREATE_FAILED Computer",
 	}
 
-	outputMsgs := stackEventErrMsgs(events)
+	outputMsgs := cfnstack.StackEventErrMsgs(events)
 	if len(expectedMsgs) != len(outputMsgs) {
 		t.Errorf("Expected %d stack error messages, got %d\n",
 			len(expectedMsgs),
-			len(stackEventErrMsgs(events)))
+			len(cfnstack.StackEventErrMsgs(events)))
 	}
 
 	for i := range expectedMsgs {
@@ -871,7 +872,7 @@ func TestUploadTemplateWithDirectory(t *testing.T) {
 
 	c := &Cluster{Cluster: *clusterConfig}
 
-	suppliedURL, err := c.uploadTemplate(s3Svc, s3URI, body)
+	suppliedURL, err := c.stackProvisioner().UploadTemplate(s3Svc, s3URI, body)
 
 	if err != nil {
 		t.Errorf("error uploading template: %v", err)
@@ -901,7 +902,7 @@ func TestUploadTemplateWithoutDirectory(t *testing.T) {
 
 	c := &Cluster{Cluster: *clusterConfig}
 
-	suppliedURL, err := c.uploadTemplate(s3Svc, s3URI, body)
+	suppliedURL, err := c.stackProvisioner().UploadTemplate(s3Svc, s3URI, body)
 
 	if err != nil {
 		t.Errorf("error uploading template: %v", err)
