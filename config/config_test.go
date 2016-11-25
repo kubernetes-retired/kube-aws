@@ -728,7 +728,7 @@ nodeDrainer:
 }
 
 func newMinimalConfig() (*Config, error) {
-	cluster := newDefaultCluster()
+	cluster := NewDefaultCluster()
 	cluster.ExternalDNSName = "k8s.example.com"
 	cluster.Region = "us-west-1"
 	cluster.Subnets = []*Subnet{
@@ -871,7 +871,7 @@ func TestValidateExistingVPC(t *testing.T) {
 		{"10.1.0.0/16", []string{"1o.1.1.o/24", "10.1.2.0/24"}},
 	}
 
-	cluster := newDefaultCluster()
+	cluster := NewDefaultCluster()
 
 	cluster.VPCCIDR = "10.0.0.0/16"
 	cluster.Subnets = []*Subnet{

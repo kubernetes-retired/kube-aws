@@ -29,7 +29,7 @@ const (
 	userDataDir    = "userdata"
 )
 
-func newDefaultCluster() *Cluster {
+func NewDefaultCluster() *Cluster {
 	experimental := Experimental{
 		AwsEnvironment{
 			Enabled: false,
@@ -55,46 +55,59 @@ func newDefaultCluster() *Cluster {
 	}
 
 	return &Cluster{
-		ClusterName:              "kubernetes",
-		ReleaseChannel:           "stable",
-		VPCCIDR:                  "10.0.0.0/16",
-		PodCIDR:                  "10.2.0.0/16",
-		ServiceCIDR:              "10.3.0.0/24",
-		DNSServiceIP:             "10.3.0.10",
-		K8sVer:                   "v1.4.6_coreos.0",
-		HyperkubeImageRepo:       "quay.io/coreos/hyperkube",
-		AWSCliImageRepo:          "quay.io/coreos/awscli",
-		AWSCliTag:                "master",
-		TLSCADurationDays:        365 * 10,
-		TLSCertDurationDays:      365,
-		ContainerRuntime:         "docker",
-		ControllerCount:          1,
-		ControllerCreateTimeout:  "PT15M",
-		ControllerInstanceType:   "m3.medium",
-		ControllerRootVolumeType: "gp2",
-		ControllerRootVolumeIOPS: 0,
-		ControllerRootVolumeSize: 30,
-		WorkerCount:              1,
-		WorkerCreateTimeout:      "PT15M",
-		WorkerInstanceType:       "m3.medium",
-		WorkerRootVolumeType:     "gp2",
-		WorkerRootVolumeIOPS:     0,
-		WorkerRootVolumeSize:     30,
-		EtcdCount:                1,
-		EtcdInstanceType:         "m3.medium",
-		EtcdRootVolumeSize:       30,
-		EtcdDataVolumeSize:       30,
-		CreateRecordSet:          false,
-		RecordSetTTL:             300,
-		Subnets:                  []*Subnet{},
-		MapPublicIPs:             true,
-		Experimental:             experimental,
-		IsChinaRegion:            false,
+		DeploymentSettings: DeploymentSettings{
+			ClusterName:        "kubernetes",
+			VPCCIDR:            "10.0.0.0/16",
+			ReleaseChannel:     "stable",
+			K8sVer:             "v1.4.6_coreos.0",
+			HyperkubeImageRepo: "quay.io/coreos/hyperkube",
+			AWSCliImageRepo:    "quay.io/coreos/awscli",
+			AWSCliTag:          "master",
+			ContainerRuntime:   "docker",
+			Subnets:            []*Subnet{},
+			MapPublicIPs:       true,
+			Experimental:       experimental,
+		},
+		KubeClusterSettings: KubeClusterSettings{
+			DNSServiceIP: "10.3.0.10",
+		},
+		WorkerSettings: WorkerSettings{
+			WorkerCount:          1,
+			WorkerCreateTimeout:  "PT15M",
+			WorkerInstanceType:   "m3.medium",
+			WorkerRootVolumeType: "gp2",
+			WorkerRootVolumeIOPS: 0,
+			WorkerRootVolumeSize: 30,
+		},
+		ControllerSettings: ControllerSettings{
+			ControllerCount:          1,
+			ControllerCreateTimeout:  "PT15M",
+			ControllerInstanceType:   "m3.medium",
+			ControllerRootVolumeType: "gp2",
+			ControllerRootVolumeIOPS: 0,
+			ControllerRootVolumeSize: 30,
+		},
+		EtcdSettings: EtcdSettings{
+			EtcdCount:          1,
+			EtcdInstanceType:   "m3.medium",
+			EtcdRootVolumeSize: 30,
+			EtcdDataVolumeSize: 30,
+		},
+		FlannelSettings: FlannelSettings{
+			PodCIDR: "10.2.0.0/16",
+		},
+		// for kube-apiserver
+		ServiceCIDR: "10.3.0.0/24",
+		// for base cloudformation stack
+		TLSCADurationDays:   365 * 10,
+		TLSCertDurationDays: 365,
+		CreateRecordSet:     false,
+		RecordSetTTL:        300,
 	}
 }
 
 func newDefaultClusterWithDeps(encSvc EncryptService) *Cluster {
-	cluster := newDefaultCluster()
+	cluster := NewDefaultCluster()
 	cluster.providedEncryptService = encSvc
 	return cluster
 }
@@ -115,7 +128,7 @@ func ClusterFromFile(filename string) (*Cluster, error) {
 
 // ClusterFromBytes Necessary for unit tests, which store configs as hardcoded strings
 func ClusterFromBytes(data []byte) (*Cluster, error) {
-	c := newDefaultCluster()
+	c := NewDefaultCluster()
 	if err := yaml.Unmarshal(data, c); err != nil {
 		return nil, fmt.Errorf("failed to parse cluster: %v", err)
 	}
@@ -148,60 +161,109 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 	return c, nil
 }
 
+// Part of configuration which is shared between controller nodes and worker nodes.
+// Its name is prefixed with `Kube` because it doesn't relate to etcd.
+type KubeClusterSettings struct {
+	// Required by kubelet to locate the kube-apiserver
+	ExternalDNSName string `yaml:"externalDNSName,omitempty"`
+	// Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
+	DNSServiceIP string `yaml:"dnsServiceIP,omitempty"`
+	UseCalico    bool   `yaml:"useCalico,omitempty"`
+}
+
+// Part of configuration which can't be provided via user input but is computed from user input
+type ComputedDeploymentSettings struct {
+	AMI           string
+	IsChinaRegion bool
+}
+
+// Part of configuration which can be customized for each type/group of nodes(etcd/controller/worker/) by its nature.
+//
+// Please beware that it is described as just "by its nature".
+// Whether it can actually be customized or not depends on you use node pools or not.
+// If you've chosen to create a single cluster including all the worker, controller, etcd nodes within a single cfn stack,
+// you can't customize per group of nodes.
+// If you've chosen to create e.g. a separate node pool for each type of worker nodes,
+// you can customize per node pool.
+//
+// Though it is highly configurable, it's basically users' responsibility to provide `correct` values if they're going beyond the defaults.
+type DeploymentSettings struct {
+	ComputedDeploymentSettings
+	ClusterName      string `yaml:"clusterName,omitempty"`
+	KeyName          string `yaml:"keyName,omitempty"`
+	Region           string `yaml:"region,omitempty"`
+	AvailabilityZone string `yaml:"availabilityZone,omitempty"`
+	ReleaseChannel   string `yaml:"releaseChannel,omitempty"`
+	AmiId            string `yaml:"amiId,omitempty"`
+	VPCID            string `yaml:"vpcId,omitempty"`
+	RouteTableID     string `yaml:"routeTableId,omitempty"`
+	// Required for validations like e.g. if instance cidr is contained in vpc cidr
+	VPCCIDR             string            `yaml:"vpcCIDR,omitempty"`
+	InstanceCIDR        string            `yaml:"instanceCIDR,omitempty"`
+	K8sVer              string            `yaml:"kubernetesVersion,omitempty"`
+	HyperkubeImageRepo  string            `yaml:"hyperkubeImageRepo,omitempty"`
+	AWSCliImageRepo     string            `yaml:"awsCliImageRepo,omitempty"`
+	AWSCliTag           string            `yaml:"awsCliTag,omitempty"`
+	ContainerRuntime    string            `yaml:"containerRuntime,omitempty"`
+	KMSKeyARN           string            `yaml:"kmsKeyArn,omitempty"`
+	StackTags           map[string]string `yaml:"stackTags,omitempty"`
+	Subnets             []*Subnet         `yaml:"subnets,omitempty"`
+	MapPublicIPs        bool              `yaml:"mapPublicIPs,omitempty"`
+	ElasticFileSystemID string            `yaml:"elasticFileSystemId,omitempty"`
+	SSHAuthorizedKeys   []string          `yaml:"sshAuthorizedKeys,omitempty"`
+	Experimental        Experimental      `yaml:"experimental"`
+}
+
+// Part of configuration which is specific to worker nodes
+type WorkerSettings struct {
+	WorkerCount          int    `yaml:"workerCount,omitempty"`
+	WorkerCreateTimeout  string `yaml:"workerCreateTimeout,omitempty"`
+	WorkerInstanceType   string `yaml:"workerInstanceType,omitempty"`
+	WorkerRootVolumeType string `yaml:"workerRootVolumeType,omitempty"`
+	WorkerRootVolumeIOPS int    `yaml:"workerRootVolumeIOPS,omitempty"`
+	WorkerRootVolumeSize int    `yaml:"workerRootVolumeSize,omitempty"`
+	WorkerSpotPrice      string `yaml:"workerSpotPrice,omitempty"`
+}
+
+// Part of configuration which is specific to controller nodes
+type ControllerSettings struct {
+	ControllerCount          int    `yaml:"controllerCount,omitempty"`
+	ControllerCreateTimeout  string `yaml:"controllerCreateTimeout,omitempty"`
+	ControllerInstanceType   string `yaml:"controllerInstanceType,omitempty"`
+	ControllerRootVolumeType string `yaml:"controllerRootVolumeType,omitempty"`
+	ControllerRootVolumeIOPS int    `yaml:"controllerRootVolumeIOPS,omitempty"`
+	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize,omitempty"`
+}
+
+// Part of configuration which is specific to etcd nodes
+type EtcdSettings struct {
+	EtcdCount               int    `yaml:"etcdCount"`
+	EtcdInstanceType        string `yaml:"etcdInstanceType,omitempty"`
+	EtcdRootVolumeSize      int    `yaml:"etcdRootVolumeSize,omitempty"`
+	EtcdDataVolumeSize      int    `yaml:"etcdDataVolumeSize,omitempty"`
+	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumEphemeral,omitempty"`
+}
+
+// Part of configuration which is specific to flanneld
+type FlannelSettings struct {
+	PodCIDR string `yaml:"podCIDR,omitempty"`
+}
+
 type Cluster struct {
-	ClusterName              string            `yaml:"clusterName,omitempty"`
-	ExternalDNSName          string            `yaml:"externalDNSName,omitempty"`
-	KeyName                  string            `yaml:"keyName,omitempty"`
-	Region                   string            `yaml:"region,omitempty"`
-	AvailabilityZone         string            `yaml:"availabilityZone,omitempty"`
-	ReleaseChannel           string            `yaml:"releaseChannel,omitempty"`
-	AmiId                    string            `yaml:"amiId,omitempty"`
-	ControllerCount          int               `yaml:"controllerCount,omitempty"`
-	ControllerCreateTimeout  string            `yaml:"controllerCreateTimeout,omitempty"`
-	ControllerInstanceType   string            `yaml:"controllerInstanceType,omitempty"`
-	ControllerRootVolumeType string            `yaml:"controllerRootVolumeType,omitempty"`
-	ControllerRootVolumeIOPS int               `yaml:"controllerRootVolumeIOPS,omitempty"`
-	ControllerRootVolumeSize int               `yaml:"controllerRootVolumeSize,omitempty"`
-	WorkerCount              int               `yaml:"workerCount,omitempty"`
-	WorkerCreateTimeout      string            `yaml:"workerCreateTimeout,omitempty"`
-	WorkerInstanceType       string            `yaml:"workerInstanceType,omitempty"`
-	WorkerRootVolumeType     string            `yaml:"workerRootVolumeType,omitempty"`
-	WorkerRootVolumeIOPS     int               `yaml:"workerRootVolumeIOPS,omitempty"`
-	WorkerRootVolumeSize     int               `yaml:"workerRootVolumeSize,omitempty"`
-	WorkerSpotPrice          string            `yaml:"workerSpotPrice,omitempty"`
-	EtcdCount                int               `yaml:"etcdCount"`
-	EtcdInstanceType         string            `yaml:"etcdInstanceType,omitempty"`
-	EtcdRootVolumeSize       int               `yaml:"etcdRootVolumeSize,omitempty"`
-	EtcdDataVolumeSize       int               `yaml:"etcdDataVolumeSize,omitempty"`
-	EtcdDataVolumeEphemeral  bool              `yaml:"etcdDataVolumEphemeral,omitempty"`
-	VPCID                    string            `yaml:"vpcId,omitempty"`
-	RouteTableID             string            `yaml:"routeTableId,omitempty"`
-	VPCCIDR                  string            `yaml:"vpcCIDR,omitempty"`
-	InstanceCIDR             string            `yaml:"instanceCIDR,omitempty"`
-	PodCIDR                  string            `yaml:"podCIDR,omitempty"`
-	ServiceCIDR              string            `yaml:"serviceCIDR,omitempty"`
-	DNSServiceIP             string            `yaml:"dnsServiceIP,omitempty"`
-	K8sVer                   string            `yaml:"kubernetesVersion,omitempty"`
-	HyperkubeImageRepo       string            `yaml:"hyperkubeImageRepo,omitempty"`
-	AWSCliImageRepo          string            `yaml:"awsCliImageRepo,omitempty"`
-	AWSCliTag                string            `yaml:"awsCliTag,omitempty"`
-	ContainerRuntime         string            `yaml:"containerRuntime,omitempty"`
-	KMSKeyARN                string            `yaml:"kmsKeyArn,omitempty"`
-	CreateRecordSet          bool              `yaml:"createRecordSet,omitempty"`
-	RecordSetTTL             int               `yaml:"recordSetTTL,omitempty"`
-	TLSCADurationDays        int               `yaml:"tlsCADurationDays,omitempty"`
-	TLSCertDurationDays      int               `yaml:"tlsCertDurationDays,omitempty"`
-	HostedZone               string            `yaml:"hostedZone,omitempty"`
-	HostedZoneID             string            `yaml:"hostedZoneId,omitempty"`
-	StackTags                map[string]string `yaml:"stackTags,omitempty"`
-	UseCalico                bool              `yaml:"useCalico,omitempty"`
-	Subnets                  []*Subnet         `yaml:"subnets,omitempty"`
-	MapPublicIPs             bool              `yaml:"mapPublicIPs,omitempty"`
-	ElasticFileSystemID      string            `yaml:"elasticFileSystemId,omitempty"`
-	SSHAuthorizedKeys        []string          `yaml:"sshAuthorizedKeys,omitempty"`
-	Experimental             Experimental      `yaml:"experimental"`
-	providedEncryptService   EncryptService
-	IsChinaRegion            bool
+	KubeClusterSettings    `yaml:",inline"`
+	DeploymentSettings     `yaml:",inline"`
+	WorkerSettings         `yaml:",inline"`
+	ControllerSettings     `yaml:",inline"`
+	EtcdSettings           `yaml:",inline"`
+	FlannelSettings        `yaml:",inline"`
+	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
+	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
+	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
+	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
+	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
+	HostedZone             string `yaml:"hostedZone,omitempty"`
+	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
+	providedEncryptService EncryptService
 }
 
 type Subnet struct {
@@ -259,17 +321,29 @@ var supportedReleaseChannels = map[string]bool{
 	"stable": true,
 }
 
+func (c WorkerSettings) MinWorkerCount() int {
+	return c.WorkerCount - 1
+}
+
+func (c WorkerSettings) MaxWorkerCount() int {
+	return c.WorkerCount + 1
+}
+
+// Required by kubelet to locate the apiserver
+func (c KubeClusterSettings) APIServerEndpoint() string {
+	return fmt.Sprintf("https://%s", c.ExternalDNSName)
+}
+
+// Required by kubelet to use the consistent network plugin with the base cluster
+func (c KubeClusterSettings) K8sNetworkPlugin() string {
+	return "cni"
+}
+
 func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
 
-	config.MinWorkerCount = config.WorkerCount - 1
-	config.MaxWorkerCount = config.WorkerCount + 1
-
 	config.MinControllerCount = config.ControllerCount - 1
 	config.MaxControllerCount = config.ControllerCount + 1
-
-	config.APIServerEndpoint = fmt.Sprintf("https://%s", c.ExternalDNSName)
-	config.K8sNetworkPlugin = "cni"
 
 	// Check if we are running CoreOS 1151.0.0 or greater when using rkt as
 	// runtime. Proceed regardless if running alpha. TODO(pb) delete when rkt
@@ -513,18 +587,12 @@ type etcdInstance struct {
 type Config struct {
 	Cluster
 
-	MinWorkerCount int
-	MaxWorkerCount int
-
 	MinControllerCount int
 	MaxControllerCount int
 
 	EtcdEndpoints      string
 	EtcdInitialCluster string
 	EtcdInstances      []etcdInstance
-
-	APIServerEndpoint string
-	AMI               string
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
@@ -534,20 +602,9 @@ type Config struct {
 
 	//Reference strings for dynamic resources
 	VPCRef string
-
-	K8sNetworkPlugin string
 }
 
 func (c Cluster) valid() error {
-	if c.ExternalDNSName == "" {
-		return errors.New("externalDNSName must be set")
-	}
-
-	releaseChannelSupported := supportedReleaseChannels[c.ReleaseChannel]
-	if !releaseChannelSupported {
-		return fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
-	}
-
 	if c.CreateRecordSet {
 		if c.HostedZone == "" && c.HostedZoneID == "" {
 			return errors.New("hostedZone or hostedZoneID must be specified createRecordSet is true")
@@ -564,82 +621,27 @@ func (c Cluster) valid() error {
 			return errors.New("TTL must be at least 1 second")
 		}
 	} else {
-		if c.RecordSetTTL != newDefaultCluster().RecordSetTTL {
+		if c.RecordSetTTL != NewDefaultCluster().RecordSetTTL {
 			return errors.New(
 				"recordSetTTL should not be modified when createRecordSet is false",
 			)
 		}
 	}
-	if c.KeyName == "" {
-		return errors.New("keyName must be set")
-	}
-	if c.Region == "" {
-		return errors.New("region must be set")
-	}
-	if c.ClusterName == "" {
-		return errors.New("clusterName must be set")
-	}
-	if c.KMSKeyARN == "" {
-		return errors.New("kmsKeyArn must be set")
-	}
 
-	if c.VPCID == "" && c.RouteTableID != "" {
-		return errors.New("vpcId must be specified if routeTableId is specified")
-	}
+	var dnsServiceIPAddr net.IP
 
-	_, vpcNet, err := net.ParseCIDR(c.VPCCIDR)
-	if err != nil {
-		return fmt.Errorf("invalid vpcCIDR: %v", err)
-	}
-
-	if len(c.Subnets) == 0 {
-		if c.AvailabilityZone == "" {
-			return fmt.Errorf("availabilityZone must be set")
-		}
-		_, instanceCIDR, err := net.ParseCIDR(c.InstanceCIDR)
-		if err != nil {
-			return fmt.Errorf("invalid instanceCIDR: %v", err)
-		}
-		if !vpcNet.Contains(instanceCIDR.IP) {
-			return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
-				c.VPCCIDR,
-				c.InstanceCIDR,
-			)
-		}
+	if kubeClusterValidationResult, err := c.KubeClusterSettings.Valid(); err != nil {
+		return err
 	} else {
-		if c.InstanceCIDR != "" {
-			return fmt.Errorf("The top-level instanceCIDR(%s) must be empty when subnets are specified", c.InstanceCIDR)
-		}
-		if c.AvailabilityZone != "" {
-			return fmt.Errorf("The top-level availabilityZone(%s) must be empty when subnets are specified", c.AvailabilityZone)
-		}
+		dnsServiceIPAddr = kubeClusterValidationResult.dnsServiceIPAddr
+	}
 
-		var instanceCIDRs = make([]*net.IPNet, 0)
-		for i, subnet := range c.Subnets {
-			if subnet.AvailabilityZone == "" {
-				return fmt.Errorf("availabilityZone must be set for subnet #%d", i)
-			}
-			_, instanceCIDR, err := net.ParseCIDR(subnet.InstanceCIDR)
-			if err != nil {
-				return fmt.Errorf("invalid instanceCIDR for subnet #%d: %v", i, err)
-			}
-			instanceCIDRs = append(instanceCIDRs, instanceCIDR)
-			if !vpcNet.Contains(instanceCIDR.IP) {
-				return fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s) for subnet #%d",
-					c.VPCCIDR,
-					c.InstanceCIDR,
-					i,
-				)
-			}
-		}
+	var vpcNet *net.IPNet
 
-		for i, a := range instanceCIDRs {
-			for j, b := range instanceCIDRs[i+1:] {
-				if netutil.CidrOverlap(a, b) {
-					return fmt.Errorf("CIDR of subnet %d (%s) overlaps with CIDR of subnet %d (%s)", i, a, j, b)
-				}
-			}
-		}
+	if deploymentValidationResult, err := c.DeploymentSettings.Valid(); err != nil {
+		return err
+	} else {
+		vpcNet = deploymentValidationResult.vpcNet
 	}
 
 	_, podNet, err := net.ParseCIDR(c.PodCIDR)
@@ -666,10 +668,6 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", c.ServiceCIDR, kubernetesServiceIPAddr)
 	}
 
-	dnsServiceIPAddr := net.ParseIP(c.DNSServiceIP)
-	if dnsServiceIPAddr == nil {
-		return fmt.Errorf("Invalid dnsServiceIP: %s", c.DNSServiceIP)
-	}
 	if !serviceNet.Contains(dnsServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", c.ServiceCIDR, c.DNSServiceIP)
 	}
@@ -678,20 +676,121 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("dnsServiceIp conflicts with kubernetesServiceIp (%s)", dnsServiceIPAddr)
 	}
 
-	if c.ControllerRootVolumeType == "io1" {
-		if c.ControllerRootVolumeIOPS < 100 || c.ControllerRootVolumeIOPS > 2000 {
-			return fmt.Errorf("invalid controllerRootVolumeIOPS: %d", c.ControllerRootVolumeIOPS)
+	if err := c.ControllerSettings.Valid(); err != nil {
+		return err
+	}
+
+	if err := c.WorkerSettings.Valid(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type InfrastructureValidationResult struct {
+	dnsServiceIPAddr net.IP
+}
+
+func (c KubeClusterSettings) Valid() (*InfrastructureValidationResult, error) {
+	if c.ExternalDNSName == "" {
+		return nil, errors.New("externalDNSName must be set")
+	}
+
+	dnsServiceIPAddr := net.ParseIP(c.DNSServiceIP)
+	if dnsServiceIPAddr == nil {
+		return nil, fmt.Errorf("Invalid dnsServiceIP: %s", c.DNSServiceIP)
+	}
+
+	return &InfrastructureValidationResult{dnsServiceIPAddr: dnsServiceIPAddr}, nil
+}
+
+type DeploymentValidationResult struct {
+	vpcNet *net.IPNet
+}
+
+func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
+	releaseChannelSupported := supportedReleaseChannels[c.ReleaseChannel]
+	if !releaseChannelSupported {
+		return nil, fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
+	}
+
+	if c.KeyName == "" {
+		return nil, errors.New("keyName must be set")
+	}
+	if c.ClusterName == "" {
+		return nil, errors.New("clusterName must be set")
+	}
+	if c.KMSKeyARN == "" {
+		return nil, errors.New("kmsKeyArn must be set")
+	}
+
+	if c.VPCID == "" && c.RouteTableID != "" {
+		return nil, errors.New("vpcId must be specified if routeTableId is specified")
+	}
+
+	if c.Region == "" {
+		return nil, errors.New("region must be set")
+	}
+
+	_, vpcNet, err := net.ParseCIDR(c.VPCCIDR)
+	if err != nil {
+		return nil, fmt.Errorf("invalid vpcCIDR: %v", err)
+	}
+
+	if len(c.Subnets) == 0 {
+		if c.AvailabilityZone == "" {
+			return nil, fmt.Errorf("availabilityZone must be set")
+		}
+		_, instanceCIDR, err := net.ParseCIDR(c.InstanceCIDR)
+		if err != nil {
+			return nil, fmt.Errorf("invalid instanceCIDR: %v", err)
+		}
+		if !vpcNet.Contains(instanceCIDR.IP) {
+			return nil, fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s)",
+				c.VPCCIDR,
+				c.InstanceCIDR,
+			)
 		}
 	} else {
-		if c.ControllerRootVolumeIOPS != 0 {
-			return fmt.Errorf("invalid controllerRootVolumeIOPS for volume type '%s': %d", c.ControllerRootVolumeType, c.ControllerRootVolumeIOPS)
+		if c.InstanceCIDR != "" {
+			return nil, fmt.Errorf("The top-level instanceCIDR(%s) must be empty when subnets are specified", c.InstanceCIDR)
+		}
+		if c.AvailabilityZone != "" {
+			return nil, fmt.Errorf("The top-level availabilityZone(%s) must be empty when subnets are specified", c.AvailabilityZone)
 		}
 
-		if c.ControllerRootVolumeType != "standard" && c.ControllerRootVolumeType != "gp2" {
-			return fmt.Errorf("invalid controllerRootVolumeType: %s", c.ControllerRootVolumeType)
+		var instanceCIDRs = make([]*net.IPNet, 0)
+		for i, subnet := range c.Subnets {
+			if subnet.AvailabilityZone == "" {
+				return nil, fmt.Errorf("availabilityZone must be set for subnet #%d", i)
+			}
+			_, instanceCIDR, err := net.ParseCIDR(subnet.InstanceCIDR)
+			if err != nil {
+				return nil, fmt.Errorf("invalid instanceCIDR for subnet #%d: %v", i, err)
+			}
+			instanceCIDRs = append(instanceCIDRs, instanceCIDR)
+			if !vpcNet.Contains(instanceCIDR.IP) {
+				return nil, fmt.Errorf("vpcCIDR (%s) does not contain instanceCIDR (%s) for subnet #%d",
+					c.VPCCIDR,
+					c.InstanceCIDR,
+					i,
+				)
+			}
+		}
+
+		for i, a := range instanceCIDRs {
+			for j, b := range instanceCIDRs[i+1:] {
+				if netutil.CidrOverlap(a, b) {
+					return nil, fmt.Errorf("CIDR of subnet %d (%s) overlaps with CIDR of subnet %d (%s)", i, a, j, b)
+				}
+			}
 		}
 	}
 
+	return &DeploymentValidationResult{vpcNet: vpcNet}, nil
+}
+
+func (c WorkerSettings) Valid() error {
 	if c.WorkerRootVolumeType == "io1" {
 		if c.WorkerRootVolumeIOPS < 100 || c.WorkerRootVolumeIOPS > 2000 {
 			return fmt.Errorf("invalid workerRootVolumeIOPS: %d", c.WorkerRootVolumeIOPS)
@@ -703,6 +802,24 @@ func (c Cluster) valid() error {
 
 		if c.WorkerRootVolumeType != "standard" && c.WorkerRootVolumeType != "gp2" {
 			return fmt.Errorf("invalid workerRootVolumeType: %s", c.WorkerRootVolumeType)
+		}
+	}
+
+	return nil
+}
+
+func (c ControllerSettings) Valid() error {
+	if c.ControllerRootVolumeType == "io1" {
+		if c.ControllerRootVolumeIOPS < 100 || c.ControllerRootVolumeIOPS > 2000 {
+			return fmt.Errorf("invalid controllerRootVolumeIOPS: %d", c.ControllerRootVolumeIOPS)
+		}
+	} else {
+		if c.ControllerRootVolumeIOPS != 0 {
+			return fmt.Errorf("invalid controllerRootVolumeIOPS for volume type '%s': %d", c.ControllerRootVolumeType, c.ControllerRootVolumeIOPS)
+		}
+
+		if c.ControllerRootVolumeType != "standard" && c.ControllerRootVolumeType != "gp2" {
+			return fmt.Errorf("invalid controllerRootVolumeType: %s", c.ControllerRootVolumeType)
 		}
 	}
 
