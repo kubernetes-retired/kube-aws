@@ -290,7 +290,7 @@ func (c Cluster) Config() (*Config, error) {
 
 	if c.AmiId == "" {
 		var err error
-		if config.AMI, err = getAMI(config.Region, config.ReleaseChannel); err != nil {
+		if config.AMI, err = coreosutil.GetAMI(config.Region, config.ReleaseChannel); err != nil {
 			return nil, fmt.Errorf("failed getting AMI for config: %v", err)
 		}
 	} else {

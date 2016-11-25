@@ -6,6 +6,26 @@ import (
 	"net/http"
 )
 
+func GetAMI(region, channel string) (string, error) {
+
+	regions, err := GetAMIData(channel)
+
+	if err != nil {
+		return "", fmt.Errorf("error getting ami data for channel %s: %v", channel, err)
+	}
+
+	amis, ok := regions[region]
+	if !ok {
+		return "", fmt.Errorf("could not find region %s for channel %s", region, channel)
+	}
+
+	if ami, ok := amis["hvm"]; ok {
+		return ami, nil
+	}
+
+	return "", fmt.Errorf("could not find hvm image for region %s, channel %s", region, channel)
+}
+
 func GetAMIData(channel string) (map[string]map[string]string, error) {
 	r, err := http.Get(fmt.Sprintf("https://coreos.com/dist/aws/aws-%s.json", channel))
 	if err != nil {
