@@ -15,10 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-
-	"github.com/coreos/coreos-cloudinit/config/validate"
 	"github.com/coreos/go-semver/semver"
-	"github.com/coreos/kube-aws/coreosutil"
+	"github.com/coreos/kube-aws/coreos/amiregistry"
+	"github.com/coreos/kube-aws/coreos/userdatavalidation"
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
 	"github.com/coreos/kube-aws/netutil"
@@ -290,7 +289,7 @@ func (c Cluster) Config() (*Config, error) {
 
 	if c.AmiId == "" {
 		var err error
-		if config.AMI, err = coreosutil.GetAMI(config.Region, config.ReleaseChannel); err != nil {
+		if config.AMI, err = amiregistry.GetAMI(config.Region, config.ReleaseChannel); err != nil {
 			return nil, fmt.Errorf("failed getting AMI for config: %v", err)
 		}
 	} else {
@@ -396,7 +395,7 @@ func (c Cluster) Config() (*Config, error) {
 // or equal to the current CoreOS release indicated by the given release
 // channel.
 func releaseVersionIsGreaterThan(minVersion semver.Version, release string) (bool, error) {
-	metaData, err := coreosutil.GetAMIData(release)
+	metaData, err := amiregistry.GetAMIData(release)
 	if err != nil {
 		return false, fmt.Errorf("Unable to retrieve current release channel version: %v", err)
 	}
@@ -483,49 +482,13 @@ func (c Cluster) ValidateUserData(opts StackTemplateOptions) error {
 		return err
 	}
 
-	errors := []string{}
+	err = userdatavalidation.Execute([]userdatavalidation.Entry{
+		{"UserDataWorker", stackConfig.UserDataWorker},
+		{"UserDataController", stackConfig.UserDataController},
+		{"UserDataEtcd", stackConfig.UserDataEtcd},
+	})
 
-	for _, userData := range []struct {
-		Name    string
-		Content string
-	}{
-		{
-			Content: stackConfig.UserDataWorker,
-			Name:    "UserDataWorker",
-		},
-		{
-			Content: stackConfig.UserDataController,
-			Name:    "UserDataController",
-		},
-		{
-			Content: stackConfig.UserDataEtcd,
-			Name:    "UserDataEtcd",
-		},
-	} {
-		report, err := validate.Validate([]byte(userData.Content))
-
-		if err != nil {
-			errors = append(
-				errors,
-				fmt.Sprintf("cloud-config %s could not be parsed: %v",
-					userData.Name,
-					err,
-				),
-			)
-			continue
-		}
-
-		for _, entry := range report.Entries() {
-			errors = append(errors, fmt.Sprintf("%s: %+v", userData.Name, entry))
-		}
-	}
-
-	if len(errors) > 0 {
-		reportString := strings.Join(errors, "\n")
-		return fmt.Errorf("cloud-config validation errors:\n%s\n", reportString)
-	}
-
-	return nil
+	return err
 }
 
 func (c Cluster) RenderStackTemplate(opts StackTemplateOptions) ([]byte, error) {
