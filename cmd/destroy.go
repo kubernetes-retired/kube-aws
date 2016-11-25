@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ var (
 )
 
 func init() {
-	cmdRoot.AddCommand(cmdDestroy)
+	RootCmd.AddCommand(cmdDestroy)
 	cmdDestroy.Flags().BoolVar(&destroyOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
 }
 

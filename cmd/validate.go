@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	cmdRoot.AddCommand(cmdValidate)
+	RootCmd.AddCommand(cmdValidate)
 	cmdValidate.Flags().BoolVar(
 		&validateOpts.awsDebug,
 		"aws-debug",
