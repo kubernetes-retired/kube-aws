@@ -5,13 +5,11 @@ package config
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"strings"
-	"text/template"
 	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +19,8 @@ import (
 	"github.com/coreos/coreos-cloudinit/config/validate"
 	"github.com/coreos/go-semver/semver"
 	"github.com/coreos/kube-aws/coreosutil"
+	"github.com/coreos/kube-aws/filereader/jsontemplate"
+	"github.com/coreos/kube-aws/filereader/userdatatemplate"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -434,25 +434,6 @@ type stackConfig struct {
 	ControllerSubnetIndex int
 }
 
-func execute(filename string, data interface{}, compress bool) (string, error) {
-	raw, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	tmpl, err := template.New(filename).Parse(string(raw))
-	if err != nil {
-		return "", err
-	}
-	var buff bytes.Buffer
-	if err := tmpl.Execute(&buff, data); err != nil {
-		return "", err
-	}
-	if compress {
-		return compressData(buff.Bytes())
-	}
-	return buff.String(), nil
-}
-
 func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (*stackConfig, error) {
 	assets, err := ReadTLSAssets(opts.TLSAssetsDir)
 	if err != nil {
@@ -483,13 +464,13 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 
 	stackConfig.Config.TLSConfig = compactAssets
 
-	if stackConfig.UserDataWorker, err = execute(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
 	}
-	if stackConfig.UserDataController, err = execute(opts.ControllerTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.UserDataController, err = userdatatemplate.GetString(opts.ControllerTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
 	}
-	if stackConfig.UserDataEtcd, err = execute(opts.EtcdTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.UserDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
 	}
 
@@ -553,50 +534,12 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions) ([]byte, error) 
 		return nil, err
 	}
 
-	rendered, err := execute(opts.StackTemplateTmplFile, stackConfig, false)
+	bytes, err := jsontemplate.GetBytes(opts.StackTemplateTmplFile, stackConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	//Use unmarshal function to do syntax validation
-	renderedBytes := []byte(rendered)
-	var jsonHolder map[string]interface{}
-	if err := json.Unmarshal(renderedBytes, &jsonHolder); err != nil {
-		syntaxError, ok := err.(*json.SyntaxError)
-		if ok {
-			contextString := getContextString(renderedBytes, int(syntaxError.Offset), 3)
-			return nil, fmt.Errorf("%v:\njson syntax error (offset=%d), in this region:\n-------\n%s\n-------\n", err, syntaxError.Offset, contextString)
-		}
-		return nil, err
-	}
-
-	// minify JSON
-	var buff bytes.Buffer
-	if err := json.Compact(&buff, renderedBytes); err != nil {
-		return nil, err
-	}
-	return buff.Bytes(), nil
-}
-
-func getContextString(buf []byte, offset, lineCount int) string {
-
-	linesSeen := 0
-	var leftLimit int
-	for leftLimit = offset; leftLimit > 0 && linesSeen <= lineCount; leftLimit-- {
-		if buf[leftLimit] == '\n' {
-			linesSeen++
-		}
-	}
-
-	linesSeen = 0
-	var rightLimit int
-	for rightLimit = offset + 1; rightLimit < len(buf) && linesSeen <= lineCount; rightLimit++ {
-		if buf[rightLimit] == '\n' {
-			linesSeen++
-		}
-	}
-
-	return string(buf[leftLimit:rightLimit])
+	return bytes, nil
 }
 
 type etcdInstance struct {
