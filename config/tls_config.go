@@ -237,11 +237,11 @@ func (r *RawTLSAssets) WriteToDir(dirname string, includeCAKey bool) error {
 	return nil
 }
 
-type encryptService interface {
+type EncryptService interface {
 	Encrypt(*kms.EncryptInput) (*kms.EncryptOutput, error)
 }
 
-func (r *RawTLSAssets) compact(cfg *Config, kmsSvc encryptService) (*CompactTLSAssets, error) {
+func (r *RawTLSAssets) Compact(kMSKeyARN string, kmsSvc EncryptService) (*CompactTLSAssets, error) {
 	var err error
 	compact := func(data []byte) string {
 		if err != nil {
@@ -249,7 +249,7 @@ func (r *RawTLSAssets) compact(cfg *Config, kmsSvc encryptService) (*CompactTLSA
 		}
 
 		encryptInput := kms.EncryptInput{
-			KeyId:     aws.String(cfg.KMSKeyARN),
+			KeyId:     aws.String(kMSKeyARN),
 			Plaintext: data,
 		}
 

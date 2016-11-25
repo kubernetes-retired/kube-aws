@@ -93,7 +93,7 @@ func newDefaultCluster() *Cluster {
 	}
 }
 
-func newDefaultClusterWithDeps(encSvc encryptService) *Cluster {
+func newDefaultClusterWithDeps(encSvc EncryptService) *Cluster {
 	cluster := newDefaultCluster()
 	cluster.providedEncryptService = encSvc
 	return cluster
@@ -200,7 +200,7 @@ type Cluster struct {
 	ElasticFileSystemID      string            `yaml:"elasticFileSystemId,omitempty"`
 	SSHAuthorizedKeys        []string          `yaml:"sshAuthorizedKeys,omitempty"`
 	Experimental             Experimental      `yaml:"experimental"`
-	providedEncryptService   encryptService
+	providedEncryptService   EncryptService
 	IsChinaRegion            bool
 }
 
@@ -449,14 +449,14 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		WithCredentialsChainVerboseErrors(true)
 
 	// TODO Cleaner way to inject this dependency
-	var kmsSvc encryptService
+	var kmsSvc EncryptService
 	if c.providedEncryptService != nil {
 		kmsSvc = c.providedEncryptService
 	} else {
 		kmsSvc = kms.New(session.New(awsConfig))
 	}
 
-	compactAssets, err := assets.compact(stackConfig.Config, kmsSvc)
+	compactAssets, err := assets.Compact(stackConfig.Config.KMSKeyARN, kmsSvc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compress TLS assets: %v", err)
 	}
