@@ -204,11 +204,25 @@ ssh_worker() {
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${KUBE_AWS_SSH_KEY} core@$(worker_host) "$@"
 }
 
+nodepool() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} node-pools init --node-pool-name ${KUBE_AWS_POOL_NAME} \
+      --availability-zone ${KUBE_AWS_AVAILABILITY_ZONE} \
+      --key-name ${KUBE_AWS_KEY_NAME} \
+      --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
+
+  ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_POOL_NAME}
+  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --export
+  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+}
+
 all() {
   build
   prepare
   configure
   up
+  nodepool
   update
   conformance
 }

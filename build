@@ -19,6 +19,7 @@ fi
 echo Building kube-aws ${VERSION}
 
 go generate ./config
+go generate ./nodepool/config
 
 if [[ ! "${BUILD_GOOS:-}" == "" ]];then
   export GOOS=$BUILD_GOOS

@@ -3,6 +3,7 @@
 /e2e/assets
 *~
 /config/templates.go
+/nodepool/config/templates.go
 .idea/
 .envrc
 coverage.txt

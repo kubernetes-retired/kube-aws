@@ -1,0 +1,120 @@
+# Unique name of the node pool. In order to deploy
+# more than one node pool into the same AWS account, this
+# name must not conflict with an existing cluster.
+nodePoolName: {{.NodePoolName}}
+
+# The name of an existing Kubernetes cluster
+# Required in order to import reused resources' IDs and ARNs from the cluster
+# to this node pool in the CloudFormation layer using Cross Stack References.
+clusterName: {{.ClusterName}}
+
+# DNS name routable to the Kubernetes controller nodes
+# from worker nodes and external clients. Configure the options
+# below if you'd like kube-aws to create a Route53 record sets/hosted zones
+# for you.  Otherwise the deployer is responsible for making this name routable
+externalDNSName: {{.ExternalDNSName}}
+
+# CoreOS release channel to use. Currently supported options: alpha, beta, stable
+# See coreos.com/releases for more information
+releaseChannel: {{.ReleaseChannel}}
+
+# The AMI ID of CoreOS.
+# If omitted, the latest AMI for the releaseChannel is used.
+amiId: {{.AmiId}}
+
+# Name of the SSH keypair already loaded into the AWS
+# account being used to deploy this cluster.
+keyName: {{.KeyName}}
+
+# Region to provision Kubernetes cluster
+region: {{.Region}}
+
+# Availability Zone to provision Kubernetes cluster when placing nodes in a single availability zone (not highly-available) Comment out for multi availability zone setting and use the below `subnets` section instead.
+availabilityZone: {{.AvailabilityZone}}
+
+# ARN of the KMS key used to encrypt TLS assets.
+kmsKeyArn: "{{.KMSKeyARN}}"
+
+# Number of worker nodes to create
+#workerCount: 1
+
+# Instance type for worker nodes
+#workerInstanceType: m3.medium
+
+# Disk size (GiB) for worker nodes
+#workerRootVolumeSize: 30
+
+# Disk type for worker node (one of standard, io1, or gp2)
+#workerRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
+#workerRootVolumeIOPS: 0
+
+# Price (Dollars) to bid for spot instances. Omit for on-demand instances.
+# workerSpotPrice: "0.05"
+
+## Networking config
+
+# ID of existing VPC to create subnet in. Leave blank to import the value from the base cluster
+vpcId: "{{.VPCID}}"
+
+# ID of existing route table in existing VPC to attach subnet to. Leave blank to import the value from the base cluster
+routeTableId: "{{.RouteTableID}}"
+
+# CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
+vpcCIDR: "{{.VPCCIDR}}"
+
+# The security group assigned to worker nodes to allow communication to etcd nodes and controller nodes. Leave blank to import the value from the base cluster
+workerInternalSecurityGroupId: "{{.WorkerInternalSecurityGroupID}}"
+
+# CIDR for Kubernetes subnet when placing nodes in a single availability zone (not highly-available) Leave commented out for multi availability zone setting and use the below `subnets` section instead.
+# instanceCIDR: "10.0.0.0/24"
+
+# Kubernetes subnets with their CIDRs and availability zones. Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
+# subnets:
+#   - availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.0.0/24"
+#   - availabilityZone: us-west-1b
+#     instanceCIDR: "10.0.1.0/24"
+
+etcdEndpoints: "{{.EtcdEndpoints}}"
+
+# Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
+dnsServiceIP: "{{.DNSServiceIP}}"
+
+# Uncomment to provision nodes without a public IP. This assumes your VPC route table is setup to route to the internet via a NAT gateway.
+# If you did not set vpcId and routeTableId the cluster will not bootstrap.
+# mapPublicIPs: false
+
+# Version of hyperkube image to use. This is the tag for the hyperkube image repository.
+# kubernetesVersion: v1.4.5_coreos.0
+
+# Hyperkube image repository to use.
+# hyperkubeImageRepo: quay.io/coreos/hyperkube
+
+# Use Calico for network policy.
+useCalico: {{.UseCalico}}
+
+# Create MountTargets for a pre-existing Elastic File System (Amazon EFS). Enter the resource id, eg "fs-47a2c22e"
+# This is a NFS share that will be available across the entire cluster through a hostPath volume on the "/efs" mountpoint
+#
+# You can create a new EFS volume using the CLI:
+# $ aws efs create-file-system --creation-token $(uuidgen)
+#elasticFileSystemId: fs-47a2c22e
+
+# Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
+# containerRuntime: docker
+
+# Experimental features will change in backward-incompatible ways
+# experimental:
+#   nodeDrainer:
+#     enabled: true
+#   awsEnvironment:
+#     enabled: true
+#     environment:
+#       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+
+# AWS Tags for cloudformation stack resources 
+#stackTags:
+#  Name: "Kubernetes"
+#  Environment: "Production"

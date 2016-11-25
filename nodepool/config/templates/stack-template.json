@@ -1,0 +1,217 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "kube-aws Kubernetes node pool {{.ClusterName}}",
+  "Resources": {
+    "AutoScaleWorker": {
+      "Properties": {
+        "AvailabilityZones": [
+          {{range $index, $subnet := .Subnets}}
+          {{if gt $index 0}},{{end}}
+          "{{$subnet.AvailabilityZone}}"
+          {{end}}
+        ],
+        "DesiredCapacity": "{{.WorkerCount}}",
+        "HealthCheckGracePeriod": 600,
+        "HealthCheckType": "EC2",
+        "LaunchConfigurationName": {
+          "Ref": "LaunchConfigurationWorker"
+        },
+        "MaxSize": "{{.MaxWorkerCount}}",
+        "MinSize": "{{.MinWorkerCount}}",
+        "Tags": [
+          {
+            "Key": "KubernetesCluster",
+            "PropagateAtLaunch": "true",
+            "Value": "{{.ClusterName}}"
+          },
+          {
+            "Key": "Name",
+            "PropagateAtLaunch": "true",
+            "Value": "{{.ClusterName}}-kube-aws-worker"
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {{range $index, $subnet := .Subnets}}
+          {{with $subnetLogicalName := printf "Subnet%d" $index}}
+          {{if gt $index 0}},{{end}}
+          {
+            "Ref": "{{$subnetLogicalName}}"
+          }
+          {{end}}
+          {{end}}
+        ]
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
+          "MinInstancesInService" :
+          {{if .WorkerSpotPrice}}
+          "0"
+          {{else}}
+          "{{.WorkerCount}}"
+          {{end}},
+          "MaxBatchSize" : "1",
+          "PauseTime" : "PT2M"
+        }
+      }
+    },
+    "IAMInstanceProfileWorker": {
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "IAMRoleWorker"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::InstanceProfile"
+    },
+    "IAMRoleWorker": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "ec2:Describe*",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": "ec2:AttachVolume",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": "ec2:DetachVolume",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action" : "kms:Decrypt",
+                  "Effect" : "Allow",
+                  "Resource" : "{{.KMSKeyARN}}"
+                },
+                {
+                  "Action": [
+                    "ecr:GetAuthorizationToken",
+                    "ecr:BatchCheckLayerAvailability",
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:GetRepositoryPolicy",
+                    "ecr:DescribeRepositories",
+                    "ecr:ListImages",
+                    "ecr:BatchGetImage"
+                  ],
+                  "Resource": "*",
+                  "Effect": "Allow"
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "root"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::Role"
+    },
+
+    "LaunchConfigurationWorker": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": "{{.WorkerRootVolumeSize}}",
+              {{if gt .WorkerRootVolumeIOPS 0}}
+              "Iops": "{{.WorkerRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{.WorkerRootVolumeType}}"
+            }
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfileWorker"
+        },
+        "ImageId": "{{.AMI}}",
+        "InstanceType": "{{.WorkerInstanceType}}",
+        "KeyName": "{{.KeyName}}",
+        "SecurityGroups": [
+          {{.WorkerSecurityGroupRef}}
+        ],
+        {{if .WorkerSpotPrice}}
+        "SpotPrice": {{.WorkerSpotPrice}},
+        {{end}}
+        "UserData": "{{ .UserDataWorker }}"
+      },
+      "Type": "AWS::AutoScaling::LaunchConfiguration"
+    }
+    {{range $index, $subnet := .Subnets}}
+    {{with $subnetLogicalName := printf "Subnet%d" $index}}
+    ,
+    "{{$subnetLogicalName}}": {
+      "Properties": {
+        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$subnet.InstanceCIDR}}",
+        "MapPublicIpOnLaunch": {{$.MapPublicIPs}},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$subnetLogicalName}}"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::Subnet"
+    }
+    {{if $.ElasticFileSystemID}}
+    ,
+    "{{$subnetLogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$subnetLogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
+    {{end}}
+    {{end}}
+
+    {{range $index, $subnet := .Subnets}}
+    {{with $subnetLogicalName := printf "Subnet%d" $index}}
+    ,
+    "{{$subnetLogicalName}}RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId": {{$.RouteTableRef}},
+        "SubnetId": {
+          "Ref": "{{$subnetLogicalName}}"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{end}}
+
+  }
+}
