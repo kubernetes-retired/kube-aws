@@ -21,6 +21,7 @@ import (
 	"github.com/coreos/coreos-cloudinit/config/validate"
 	"github.com/coreos/go-semver/semver"
 	"github.com/coreos/kube-aws/coreosutil"
+	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -332,12 +333,12 @@ func (c Cluster) Config() (*Config, error) {
 			ip := subnetCIDR.IP
 			//TODO:(chom) this is sloppy, but "soon-ish" etcd with be self-hosted so we'll leave this be
 			for i := 0; i < 3; i++ {
-				ip = incrementIP(ip)
+				ip = netutil.IncrementIP(ip)
 			}
 			subnet.lastAllocatedAddr = &ip
 		}
 
-		nextAddr := incrementIP(*subnet.lastAllocatedAddr)
+		nextAddr := netutil.IncrementIP(*subnet.lastAllocatedAddr)
 		subnet.lastAllocatedAddr = &nextAddr
 		instance := etcdInstance{
 			IPAddress:   *subnet.lastAllocatedAddr,
@@ -728,7 +729,7 @@ func (c Cluster) valid() error {
 
 		for i, a := range instanceCIDRs {
 			for j, b := range instanceCIDRs[i+1:] {
-				if cidrOverlap(a, b) {
+				if netutil.CidrOverlap(a, b) {
 					return fmt.Errorf("CIDR of subnet %d (%s) overlaps with CIDR of subnet %d (%s)", i, a, j, b)
 				}
 			}
@@ -744,17 +745,17 @@ func (c Cluster) valid() error {
 	if err != nil {
 		return fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
-	if cidrOverlap(serviceNet, vpcNet) {
+	if netutil.CidrOverlap(serviceNet, vpcNet) {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with serviceCIDR (%s)", c.VPCCIDR, c.ServiceCIDR)
 	}
-	if cidrOverlap(podNet, vpcNet) {
+	if netutil.CidrOverlap(podNet, vpcNet) {
 		return fmt.Errorf("vpcCIDR (%s) overlaps with podCIDR (%s)", c.VPCCIDR, c.PodCIDR)
 	}
-	if cidrOverlap(serviceNet, podNet) {
+	if netutil.CidrOverlap(serviceNet, podNet) {
 		return fmt.Errorf("serviceCIDR (%s) overlaps with podCIDR (%s)", c.ServiceCIDR, c.PodCIDR)
 	}
 
-	kubernetesServiceIPAddr := incrementIP(serviceNet.IP)
+	kubernetesServiceIPAddr := netutil.IncrementIP(serviceNet.IP)
 	if !serviceNet.Contains(kubernetesServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", c.ServiceCIDR, kubernetesServiceIPAddr)
 	}
@@ -865,7 +866,7 @@ func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDR
 
 		//Loop through all existing subnets in the VPC and look for conflicting CIDRS
 		for _, existingSubnet := range existingSubnets {
-			if cidrOverlap(instanceNet, existingSubnet) {
+			if netutil.CidrOverlap(instanceNet, existingSubnet) {
 				return fmt.Errorf(
 					"instance cidr (%s) conflicts with existing subnet cidr=%s",
 					instanceNet,
@@ -876,26 +877,6 @@ func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDR
 	}
 
 	return nil
-}
-
-//Return next IP address in network range
-func incrementIP(netIP net.IP) net.IP {
-	ip := make(net.IP, len(netIP))
-	copy(ip, netIP)
-
-	for j := len(ip) - 1; j >= 0; j-- {
-		ip[j]++
-		if ip[j] > 0 {
-			break
-		}
-	}
-
-	return ip
-}
-
-//Does the address space of these networks "a" and "b" overlap?
-func cidrOverlap(a, b *net.IPNet) bool {
-	return a.Contains(b.IP) || b.Contains(a.IP)
 }
 
 func WithTrailingDot(s string) string {

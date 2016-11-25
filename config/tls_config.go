@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/coreos/kube-aws/netutil"
 	"github.com/coreos/kube-aws/tlsutil"
 )
 
@@ -90,7 +91,7 @@ func (c *Cluster) NewTLSAssets(caKey *rsa.PrivateKey, caCert *x509.Certificate) 
 	if err != nil {
 		return nil, fmt.Errorf("invalid serviceCIDR: %v", err)
 	}
-	kubernetesServiceIPAddr := incrementIP(serviceNet.IP)
+	kubernetesServiceIPAddr := netutil.IncrementIP(serviceNet.IP)
 
 	apiServerConfig := tlsutil.ServerCertConfig{
 		CommonName: "kube-apiserver",
