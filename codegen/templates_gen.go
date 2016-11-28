@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -29,16 +30,9 @@ var (
 )
 `))
 
-var files = []struct {
+type Entry struct {
 	Filename string
 	VarName  string
-}{
-	{"cloud-config-controller", "CloudConfigController"},
-	{"cloud-config-worker", "CloudConfigWorker"},
-	{"cloud-config-etcd", "CloudConfigEtcd"},
-	{"cluster.yaml", "DefaultClusterConfig"},
-	{"kubeconfig.tmpl", "KubeConfigTemplate"},
-	{"stack-template.json", "StackTemplateTemplate"},
 }
 
 type Data struct {
@@ -69,6 +63,18 @@ func toGoByteSlice(sli []byte) string {
 }
 
 func main() {
+	files := []Entry{}
+	args := os.Args[1:]
+	for _, arg := range args {
+		parts := strings.Split(arg, "=")
+		varname, filename := parts[0], parts[1]
+		entry := Entry{
+			Filename: filename,
+			VarName:  varname,
+		}
+		files = append(files, entry)
+	}
+
 	tmpls := make([]Var, len(files))
 	for i, file := range files {
 		path := filepath.Join("templates", file.Filename)
