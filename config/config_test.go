@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"github.com/coreos/kube-aws/netutil"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
@@ -198,7 +199,7 @@ dnsServiceIP: 10.6.142.100
 			continue
 		}
 
-		kubernetesServiceIP := incrementIP(serviceNet.IP)
+		kubernetesServiceIP := netutil.IncrementIP(serviceNet.IP)
 		if kubernetesServiceIP.String() != testConfig.KubernetesServiceIP {
 			t.Errorf("KubernetesServiceIP mismatch: got %s, expected %s",
 				kubernetesServiceIP,
