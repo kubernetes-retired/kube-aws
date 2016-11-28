@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	cmdRoot.AddCommand(cmdStatus)
+	RootCmd.AddCommand(cmdStatus)
 }
 
 func runCmdStatus(cmd *cobra.Command, args []string) error {

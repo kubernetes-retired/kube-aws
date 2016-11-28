@@ -1,20 +1,19 @@
-package main
+package cmd
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
-	"text/template"
 
 	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/filegen"
 	"github.com/spf13/cobra"
 )
 
 var (
 	cmdInit = &cobra.Command{
 		Use:          "init",
-		Short:        "Initialize default kube-aws cluster configuration",
+		Short:        "Initialize default node pool configuration",
 		Long:         ``,
 		RunE:         runCmdInit,
 		SilenceUsage: true,
@@ -24,7 +23,7 @@ var (
 )
 
 func init() {
-	cmdRoot.AddCommand(cmdInit)
+	RootCmd.AddCommand(cmdInit)
 	cmdInit.Flags().StringVar(&initOpts.ClusterName, "cluster-name", "", "The name of this cluster. This will be the name of the cloudformation stack")
 	cmdInit.Flags().StringVar(&initOpts.ExternalDNSName, "external-dns-name", "", "The hostname that will route to the api server")
 	cmdInit.Flags().StringVar(&initOpts.Region, "region", "", "The AWS region to deploy to")
@@ -56,18 +55,7 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Missing required flag(s): %s", strings.Join(missing, ", "))
 	}
 
-	// Render the default cluster config.
-	cfgTemplate, err := template.New("cluster.yaml").Parse(string(config.DefaultClusterConfig))
-	if err != nil {
-		return fmt.Errorf("Error parsing default config template: %v", err)
-	}
-
-	out, err := os.OpenFile(configPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0600)
-	if err != nil {
-		return fmt.Errorf("Error opening %s : %v", configPath, err)
-	}
-	defer out.Close()
-	if err := cfgTemplate.Execute(out, initOpts); err != nil {
+	if err := filegen.CreateFileFromTemplate(configPath, initOpts, config.DefaultClusterConfig); err != nil {
 		return fmt.Errorf("Error exec-ing default config template: %v", err)
 	}
 
