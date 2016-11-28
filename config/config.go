@@ -310,6 +310,13 @@ func (c Cluster) Config() (*Config, error) {
 
 	config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
 	var etcdEndpoints, etcdInitialCluster bytes.Buffer
+
+	// Reset lastAllocatedAddr or we'll end up returning different cluster config w/ inconsistent static private ips
+	// for each time we call this function `cluster.Config()`
+	for _, subnet := range config.Subnets {
+		subnet.lastAllocatedAddr = nil
+	}
+
 	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
 
 		//Round-robbin etcd instances across all available subnets
