@@ -37,7 +37,7 @@ func TestCloudConfigTemplating(t *testing.T) {
 		t.Fatalf("Failed to create config: %v", err)
 	}
 
-	compactAssets, err := assets.compact(cfg, &dummyEncryptService{})
+	compactAssets, err := assets.Compact(cfg.KMSKeyARN, &dummyEncryptService{})
 	if err != nil {
 		t.Fatalf("failed to compress TLS assets: %v", err)
 	}
