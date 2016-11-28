@@ -1,4 +1,4 @@
-package coreosutil
+package amiregistry
 
 import (
 	"encoding/json"
