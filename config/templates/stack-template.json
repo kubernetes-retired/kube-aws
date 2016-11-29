@@ -1119,11 +1119,6 @@
   },
 
   "Outputs": {
-    "WorkerSecurityGroup" : {
-      "Description" : "The security group assigned to worker nodes",
-      "Value" :  { "Ref" : "SecurityGroupWorker" },
-      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-WorkerSecurityGroup" }}
-    },
     {{if not .VPCID}}
     "RouteTable" : {
       "Description" : "The route table assigned managed by this stack",
@@ -1134,7 +1129,12 @@
       "Description" : "The VPC managed by this stack",
       "Value" :  { "Ref" : "{{.VPCLogicalName}}" },
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPC" }}
-    }
+    },
     {{end}}
+    "WorkerSecurityGroup" : {
+      "Description" : "The security group assigned to worker nodes",
+      "Value" :  { "Ref" : "SecurityGroupWorker" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-WorkerSecurityGroup" }}
+    }
   }
 }
