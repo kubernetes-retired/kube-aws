@@ -1011,3 +1011,97 @@ func TestWithTrailingDot(t *testing.T) {
 		}
 	}
 }
+
+func TestConfig(t *testing.T) {
+	minimalValidConfigYaml := minimalConfigYaml + `
+availabilityZone: us-west-1c
+`
+	validCases := []struct {
+		context    string
+		configYaml string
+	}{
+		{
+			context:    "WithMinimalValidConfig",
+			configYaml: minimalValidConfigYaml,
+		},
+		{
+			context: "WithVpcIdSpecified",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+`,
+		},
+		{
+			context: "WithVpcIdAndRouteTableIdSpecified",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+`,
+		},
+	}
+
+	for _, validCase := range validCases {
+		t.Run(validCase.context, func(t *testing.T) {
+			configBytes := validCase.configYaml
+			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			if err != nil {
+				t.Errorf("failed to parse config %s: %v", configBytes, err)
+				t.FailNow()
+			}
+			providedConfig.providedEncryptService = &dummyEncryptService{}
+
+			withDummyCredentials(func(dummyTlsAssetsDir string) {
+				var stackTemplateOptions = StackTemplateOptions{
+					TLSAssetsDir:          dummyTlsAssetsDir,
+					ControllerTmplFile:    "templates/cloud-config-controller",
+					WorkerTmplFile:        "templates/cloud-config-worker",
+					EtcdTmplFile:          "templates/cloud-config-etcd",
+					StackTemplateTmplFile: "templates/stack-template.json",
+				}
+
+				t.Run("ValidateUserData", func(t *testing.T) {
+					if err := providedConfig.ValidateUserData(stackTemplateOptions); err != nil {
+						t.Errorf("failed to validate user data: %v", err)
+					}
+				})
+
+				t.Run("RenderStackTemplate", func(t *testing.T) {
+					if _, err := providedConfig.RenderStackTemplate(stackTemplateOptions); err != nil {
+						t.Errorf("failed to render stack template: %v", err)
+					}
+				})
+			})
+		})
+	}
+
+	parseErrorCases := []struct {
+		context    string
+		configYaml string
+	}{
+		{
+			context: "WithVpcIdAndVPCCIDRSpecified",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+# vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
+vpcCIDR: "10.1.0.0/16"
+`,
+		},
+		{
+			context: "WithRouteTableIdSpecified",
+			configYaml: minimalValidConfigYaml + `
+# vpcId must be specified if routeTableId is specified
+routeTableId: rtb-1a2b3c4d
+`,
+		},
+	}
+
+	for _, invalidCase := range parseErrorCases {
+		t.Run(invalidCase.context, func(t *testing.T) {
+			configBytes := invalidCase.configYaml
+			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			if err == nil {
+				t.Errorf("expected to fail parsing config %s: %v", configBytes, providedConfig)
+				t.FailNow()
+			}
+		})
+	}
+}
