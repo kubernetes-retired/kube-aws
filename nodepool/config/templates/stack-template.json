@@ -1,7 +1,12 @@
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "kube-aws Kubernetes node pool {{.ClusterName}}",
-  "Resources": {
+{{define "WorkerSecurityGroups"}}
+[
+  {{range $sgIndex, $sgRef := $.WorkerSecurityGroupRefs}}
+  {{if gt $sgIndex 0}},{{end}}
+  {{$sgRef}}
+  {{end}}
+]
+{{end}}
+{{define "AutoScaling"}}
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
@@ -55,6 +60,41 @@
         }
       }
     },
+
+    "LaunchConfigurationWorker": {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": "{{.WorkerRootVolumeSize}}",
+              {{if gt .WorkerRootVolumeIOPS 0}}
+              "Iops": "{{.WorkerRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{.WorkerRootVolumeType}}"
+            }
+          }
+        ],
+        "IamInstanceProfile": {
+          "Ref": "IAMInstanceProfileWorker"
+        },
+        "ImageId": "{{.AMI}}",
+        "InstanceType": "{{.WorkerInstanceType}}",
+        "KeyName": "{{.KeyName}}",
+        "SecurityGroups": {{template "WorkerSecurityGroups" $}},
+        {{if .WorkerSpotPrice}}
+        "SpotPrice": {{.WorkerSpotPrice}},
+        {{end}}
+        "UserData": "{{ .UserDataWorker }}"
+      },
+      "Type": "AWS::AutoScaling::LaunchConfiguration"
+    },
+{{end}}
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "kube-aws Kubernetes node pool {{.NodePoolName}}",
+  "Resources": {
+    {{template "AutoScaling" .}}
     "IAMInstanceProfileWorker": {
       "Properties": {
         "Path": "/",
@@ -130,37 +170,6 @@
         ]
       },
       "Type": "AWS::IAM::Role"
-    },
-
-    "LaunchConfigurationWorker": {
-      "Properties": {
-        "BlockDeviceMappings": [
-          {
-            "DeviceName": "/dev/xvda",
-            "Ebs": {
-              "VolumeSize": "{{.WorkerRootVolumeSize}}",
-              {{if gt .WorkerRootVolumeIOPS 0}}
-              "Iops": "{{.WorkerRootVolumeIOPS}}",
-              {{end}}
-              "VolumeType": "{{.WorkerRootVolumeType}}"
-            }
-          }
-        ],
-        "IamInstanceProfile": {
-          "Ref": "IAMInstanceProfileWorker"
-        },
-        "ImageId": "{{.AMI}}",
-        "InstanceType": "{{.WorkerInstanceType}}",
-        "KeyName": "{{.KeyName}}",
-        "SecurityGroups": [
-          {{.WorkerSecurityGroupRef}}
-        ],
-        {{if .WorkerSpotPrice}}
-        "SpotPrice": {{.WorkerSpotPrice}},
-        {{end}}
-        "UserData": "{{ .UserDataWorker }}"
-      },
-      "Type": "AWS::AutoScaling::LaunchConfiguration"
     }
     {{range $index, $subnet := .Subnets}}
     {{with $subnetLogicalName := printf "Subnet%d" $index}}

@@ -29,13 +29,12 @@ type ComputedConfig struct {
 }
 
 type ProvidedConfig struct {
-	cfg.KubeClusterSettings       `yaml:",inline"`
-	cfg.WorkerSettings            `yaml:",inline"`
-	cfg.DeploymentSettings        `yaml:",inline"`
-	EtcdEndpoints                 string `yaml:"etcdEndpoints,omitempty"`
-	NodePoolName                  string `yaml:"nodePoolName,omitempty"`
-	WorkerInternalSecurityGroupID string `yaml:"workerInternalSecurityGroupId,omitempty"`
-	providedEncryptService        cfg.EncryptService
+	cfg.KubeClusterSettings `yaml:",inline"`
+	cfg.WorkerSettings      `yaml:",inline"`
+	cfg.DeploymentSettings  `yaml:",inline"`
+	EtcdEndpoints           string `yaml:"etcdEndpoints,omitempty"`
+	NodePoolName            string `yaml:"nodePoolName,omitempty"`
+	providedEncryptService  cfg.EncryptService
 }
 
 type StackTemplateOptions struct {
@@ -212,9 +211,10 @@ func (c ComputedConfig) RouteTableRef() string {
 	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-RouteTable"}}`, c.ClusterName)
 }
 
-func (c ComputedConfig) WorkerSecurityGroupRef() string {
-	if c.WorkerInternalSecurityGroupID != "" {
-		return fmt.Sprintf(`%q`, c.WorkerInternalSecurityGroupID)
+func (c ComputedConfig) WorkerSecurityGroupRefs() []string {
+	return []string{
+		// The security group assigned to worker nodes to allow communication to etcd nodes and controller nodes
+		// which is created and maintained in the main cluster and then imported to node pools.
+		fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-WorkerSecurityGroup"}}`, c.ClusterName),
 	}
-	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-WorkerSecurityGroup"}}`, c.ClusterName)
 }

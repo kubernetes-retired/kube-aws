@@ -64,9 +64,6 @@ routeTableId: "{{.RouteTableID}}"
 # CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
 vpcCIDR: "{{.VPCCIDR}}"
 
-# The security group assigned to worker nodes to allow communication to etcd nodes and controller nodes. Leave blank to import the value from the base cluster
-workerInternalSecurityGroupId: "{{.WorkerInternalSecurityGroupID}}"
-
 # CIDR for Kubernetes subnet when placing nodes in a single availability zone (not highly-available) Leave commented out for multi availability zone setting and use the below `subnets` section instead.
 # instanceCIDR: "10.0.0.0/24"
 
