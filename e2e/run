@@ -3,6 +3,7 @@
 KUBE_AWS_CMD=${KUBE_AWS_CMD:-$GOPATH/src/github.com/coreos/kube-aws/bin/kube-aws}
 E2E_DIR=$(cd $(dirname $0); pwd)
 WORK_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}
+NODE_POOL_ASSETS_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}/node-pools/${KUBE_AWS_POOL_NAME}
 SRC_DIR=$(cd $(dirname $0); cd ..; pwd)
 KUBECONFIG=${WORK_DIR}/kubeconfig
 
@@ -210,13 +211,24 @@ ssh_worker() {
   ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i ${KUBE_AWS_SSH_KEY} core@$(worker_host) "$@"
 }
 
-nodepool() {
+nodepool_init() {
   cd ${WORK_DIR}
 
   ${KUBE_AWS_CMD} node-pools init --node-pool-name ${KUBE_AWS_POOL_NAME} \
       --availability-zone ${KUBE_AWS_AVAILABILITY_ZONE} \
       --key-name ${KUBE_AWS_KEY_NAME} \
       --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
+
+  if [ "${KUBE_AWS_SPOT_FLEET_ENABLED}" != "" ]; then
+    echo Writing ${NODE_POOL_ASSETS_DIR}/cluster.yaml
+    echo -e "worker:\n  spotFleet:\n    targetCapacity: 3\n" >> ${NODE_POOL_ASSETS_DIR}/cluster.yaml
+  fi
+}
+
+nodepool() {
+  cd ${WORK_DIR}
+
+  nodepool_init
 
   ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_POOL_NAME}
   ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --export
