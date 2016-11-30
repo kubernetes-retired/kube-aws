@@ -30,9 +30,14 @@
             "Value": "{{.ClusterName}}"
           },
           {
+            "Key": "KubernetesNodePool",
+            "PropagateAtLaunch": "true",
+            "Value": "{{.NodePoolName}}"
+          },
+          {
             "Key": "Name",
             "PropagateAtLaunch": "true",
-            "Value": "{{.ClusterName}}-kube-aws-worker"
+            "Value": "{{.NodePoolName}}-kube-aws-worker"
           }
         ],
         "VPCZoneIdentifier": [
