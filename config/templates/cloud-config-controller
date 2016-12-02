@@ -37,6 +37,13 @@ coreos:
 {{end}}
     - name: docker.service
       drop-ins:
+{{if .Experimental.EphemeralImageStorage.Enabled}}
+        - name: 10-docker-mount.conf
+          content: |
+            [Unit]
+            After=var-lib-docker.mount
+            Wants=var-lib-docker.mount
+{{end}}
         - name: 40-flannel.conf
           content: |
             [Unit]
