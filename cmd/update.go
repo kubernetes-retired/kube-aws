@@ -61,6 +61,7 @@ func runCmdUpdate(cmd *cobra.Command, args []string) error {
 
 	successMsg :=
 		`Success! Your AWS resources are being updated:
+%s
 `
 	fmt.Printf(successMsg, info.String())
 
