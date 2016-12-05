@@ -132,6 +132,6 @@ Next steps:
 2. Use the "kube-aws nodepool render" command to render the stack template.
 `
 
-	fmt.Printf(successMsg, nodePoolClusterConfigFilePath, nodePoolClusterConfigFilePath)
+	fmt.Printf(successMsg, nodePoolClusterConfigFilePath(), nodePoolClusterConfigFilePath())
 	return nil
 }
