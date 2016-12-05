@@ -187,6 +187,13 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#   plugins:
+#     rbac:
+#       enabled: true
+#   auditLog:
+#     enabled: true
+#     maxage: 30
+#     logpath: /dev/stdout
 #   waitSignal:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime

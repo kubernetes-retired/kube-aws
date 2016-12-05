@@ -31,6 +31,11 @@ const (
 
 func NewDefaultCluster() *Cluster {
 	experimental := Experimental{
+		AuditLog{
+			Enabled: false,
+			MaxAge:  30,
+			LogPath: "/dev/stdout",
+		},
 		AwsEnvironment{
 			Enabled: false,
 		},
@@ -47,6 +52,11 @@ func NewDefaultCluster() *Cluster {
 		},
 		NodeLabel{
 			Enabled: false,
+		},
+		Plugins{
+			Rbac{
+				Enabled: false,
+			},
 		},
 		WaitSignal{
 			Enabled:      false,
@@ -273,17 +283,25 @@ type Subnet struct {
 }
 
 type Experimental struct {
+	AuditLog              AuditLog              `yaml:"auditLog"`
 	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
 	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
 	LoadBalancer          LoadBalancer          `yaml:"loadBalancer"`
 	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
 	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
+	Plugins               Plugins               `yaml:"plugins"`
 	WaitSignal            WaitSignal            `yaml:"waitSignal"`
 }
 
 type AwsEnvironment struct {
 	Enabled     bool              `yaml:"enabled"`
 	Environment map[string]string `yaml:"environment"`
+}
+
+type AuditLog struct {
+	Enabled bool   `yaml:"enabled"`
+	MaxAge  int    `yaml:"maxage"`
+	LogPath string `yaml:"logpath"`
 }
 
 type EphemeralImageStorage struct {
@@ -304,6 +322,14 @@ type LoadBalancer struct {
 	Enabled          bool     `yaml:"enabled"`
 	Names            []string `yaml:"names"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
+}
+
+type Plugins struct {
+	Rbac Rbac `yaml:"rbac"`
+}
+
+type Rbac struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type WaitSignal struct {
