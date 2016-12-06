@@ -97,6 +97,7 @@ etcdEndpoints: "10.0.0.1"
 			NodeLabel: cfg.NodeLabel{
 				Enabled: false,
 			},
+			Taints: []cfg.Taint{},
 			WaitSignal: cfg.WaitSignal{
 				Enabled:      false,
 				MaxBatchSize: 1,
@@ -135,6 +136,10 @@ experimental:
     enabled: true
   nodeLabel:
     enabled: true
+  taints:
+    - key: reservation
+      value: spot
+      effect: NoSchedule
   waitSignal:
     enabled: true
 `,
@@ -168,6 +173,9 @@ experimental:
 						},
 						NodeLabel: cfg.NodeLabel{
 							Enabled: true,
+						},
+						Taints: []cfg.Taint{
+							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 						WaitSignal: cfg.WaitSignal{
 							Enabled:      true,
@@ -432,6 +440,17 @@ experimental:
 		configYaml           string
 		expectedErrorMessage string
 	}{
+		{
+			context: "WithInvalidTaint",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  taints:
+    - key: foo
+      value: bar
+      effect: UnknownEffect
+`,
+			expectedErrorMessage: "Effect must be NoSchdule or PreferNoSchedule, but was UnknownEffect",
+		},
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
 			configYaml: minimalValidConfigYaml + `

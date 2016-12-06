@@ -105,6 +105,10 @@ experimental:
     enabled: true
   nodeLabel:
     enabled: true
+  taints:
+    - key: reservation
+      value: spot
+      effect: NoSchedule
   waitSignal:
     enabled: true
 `,

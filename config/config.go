@@ -55,6 +55,7 @@ func NewDefaultCluster() *Cluster {
 				Enabled: false,
 			},
 		},
+		[]Taint{},
 		WaitSignal{
 			Enabled:      false,
 			MaxBatchSize: 1,
@@ -297,6 +298,7 @@ type Experimental struct {
 	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
 	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
 	Plugins               Plugins               `yaml:"plugins"`
+	Taints                []Taint               `yaml:"taints"`
 	WaitSignal            WaitSignal            `yaml:"waitSignal"`
 }
 
@@ -337,6 +339,16 @@ type Plugins struct {
 
 type Rbac struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type Taint struct {
+	Key    string `yaml:"key"`
+	Value  string `yaml:"value"`
+	Effect string `yaml:"effect"`
+}
+
+func (t Taint) String() string {
+	return fmt.Sprintf("%s=%s:%s", t.Key, t.Value, t.Effect)
 }
 
 type WaitSignal struct {
@@ -810,6 +822,10 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		}
 	}
 
+	if err := c.Experimental.Valid(); err != nil {
+		return nil, err
+	}
+
 	return &DeploymentValidationResult{vpcNet: vpcNet}, nil
 }
 
@@ -843,6 +859,16 @@ func (c ControllerSettings) Valid() error {
 
 		if c.ControllerRootVolumeType != "standard" && c.ControllerRootVolumeType != "gp2" {
 			return fmt.Errorf("invalid controllerRootVolumeType: %s", c.ControllerRootVolumeType)
+		}
+	}
+
+	return nil
+}
+
+func (c Experimental) Valid() error {
+	for _, taint := range c.Taints {
+		if taint.Effect != "NoSchedule" && taint.Effect != "PreferNoSchedule" {
+			return fmt.Errorf("Effect must be NoSchdule or PreferNoSchedule, but was %s", taint.Effect)
 		}
 	}
 
