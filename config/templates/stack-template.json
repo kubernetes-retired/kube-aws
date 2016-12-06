@@ -493,10 +493,8 @@
         "InstanceType": "{{.WorkerInstanceType}}",
         "KeyName": "{{.KeyName}}",
         "SecurityGroups": [
-          {{if .Experimental.LoadBalancer.Enabled}}
-          {{range $elbsg := .Experimental.LoadBalancer.SecurityGroupIds}}
-            "{{$elbsg}}",
-          {{end}}
+          {{range $sgRef := .WorkerSecurityGroupRefs}}
+            {{$sgRef}},
           {{end}}
           {
             "Ref": "SecurityGroupWorker"

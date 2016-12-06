@@ -217,9 +217,17 @@ func (c ComputedConfig) RouteTableRef() string {
 }
 
 func (c ComputedConfig) WorkerSecurityGroupRefs() []string {
-	return []string{
+	refs := cfg.WorkerDeploymentSettings{
+		WorkerSettings:     c.WorkerSettings,
+		DeploymentSettings: c.DeploymentSettings,
+	}.WorkerSecurityGroupRefs()
+
+	refs = append(
+		refs,
 		// The security group assigned to worker nodes to allow communication to etcd nodes and controller nodes
 		// which is created and maintained in the main cluster and then imported to node pools.
 		fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-WorkerSecurityGroup"}}`, c.ClusterName),
-	}
+	)
+
+	return refs
 }
