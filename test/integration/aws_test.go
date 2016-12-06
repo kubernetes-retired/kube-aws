@@ -103,6 +103,20 @@ routeTableId: rtb-1a2b3c4d
 `,
 		},
 		{
+			context: "WithEtcdNodesWithCustomEBSVolumes",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+etcdCount: 2
+etcdRootVolumeSize: 101
+etcdRootVolumeType: io1
+etcdRootVolumeIOPS: 102
+etcdDataVolumeSize: 103
+etcdDataVolumeType: io1
+etcdDataVolumeIOPS: 104
+`,
+		},
+		{
 			context: "WithSpotFleetEnabled",
 			configYaml: minimalValidConfigYaml + `
 worker:

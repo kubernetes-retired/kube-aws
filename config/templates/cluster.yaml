@@ -101,16 +101,28 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Instance type for etcd node
 # etcdInstanceType: m3.medium
 
-# Root volume disk size (GiB) for etcd node
+# Root volume size (GiB) for etcd node
 # etcdRootVolumeSize: 30
+
+# Root volume type for etcd node (one of standard, io1, or gp2)
+# etcdRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the etcd node's root volume supports. Leave blank if etcdRootVolumeType is not io1
+# etcdRootVolumeIOPS: 0
 
 # Use ephemeral instance storage for etcd data volume instead of EBS?
 # (Recommended set to true for high-throughput control planes)
 # etcdDataVolumeEphemeral: false
 
-# Data EBS volume disk size (GiB) for etcd node
+# Data volume size (GiB) for etcd node
 # if etcdDataVolumeEphemeral=true, this value is ignored. The size of ephemeral volumes is not configurable.
 # etcdDataVolumeSize: 30
+
+# Data volume type for etcd node (one of standard, io1, or gp2)
+# etcdDataVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the etcd node's data volume supports. Leave blank if etcdDataVolumeType is not io1
+# etcdDataVolumeIOPS: 0
 
 ## Networking config
 
