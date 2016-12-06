@@ -1,3 +1,14 @@
+#
+# WARNING!
+#
+# Node Pool is still an experimental feature.
+#
+# Experimental features will change in backward-incompatible ways.
+# Though it would be just a matter of re-creating node pools in case of breaking changes,
+# we at least assume you well understand common VPC, KMS, EC2, ELB, CloudFormation, etc. gotchas.
+#
+# Please use this feature at your own risk.
+
 # Unique name of the node pool. In order to deploy
 # more than one node pool into the same AWS account, this
 # name must not conflict with an existing cluster.
