@@ -53,6 +53,61 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
 
+# Experimental worker config which can be changed in backward-incompatible ways
+#worker:
+#  # Spot fleet config for worker nodes
+#  spotFleet:
+#    # Total desired number of units to maintain
+#    # An unit is chosen by you and can be a vCPU, specific amount of memory, size of instance store, etc., according to your requirement.
+#    # Omit or put zero to disable the spot fleet support and use an autoscaling group to manage nodes.
+#    #targetCapacity: 10
+#
+#    # IAM role to grant the Spot fleet permission to bid on, launch, and terminate instances on your behalf
+#    # See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites
+#    #
+#    # Defaults to "arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-role" assuming you've arrived "Spot Requests" in EC2 Dashboard
+#    # hence the role is automatically created for you
+#    #iamFleetRoleArn: "arn:aws:iam::youraccountid:role/kube-aws-doesnt-create-this-for-you"
+#
+#    # Price per unit hour = Price per instance hour / num of weighted capacity for the instance
+#    # Defaults to "0.06"
+#    #spotPrice: 0.06
+#
+#    # Disk size (GiB) per unit
+#    # Disk size for each launch specification defaults to unitRootVolumeSize * weightedCapacity
+#    #unitRootVolumeSize: 30
+#
+#    # Disk type for worker node (one of standard, io1, or gp2)
+#    # Can be overridden in each launch specification
+#    #rootVolumeType: gp2
+#
+#    # Number of I/O operations per second (IOPS) per unit. Leave blank if rootVolumeType is not io1
+#    # IOPS for each launch specification defaults to unitRootVolumeIOPS * weightedCapacity
+#    #unitRootVolumeIOPS: 0
+#
+#    launchSpecifications:
+#    - # Number of units provided by an EC2 instance of the instanceType.
+#      weightedCapacity: 1
+#      instanceType: m3.medium
+#
+#      # Price per unit hour = Price per instance hour / num of weighted capacity for the instance
+#      #spotPrice:
+#
+#      # Defaults to worker.spotFleet.rootVolumeType if omitted
+#      #rootVolumeType:
+#
+#      # Defaults to worker.spotFleet.unitRootVolumeSize * weightedCapacity if omitted
+#      #rootVolumeSize:
+#
+#      # Number of provisioned IOPS when rootVlumeType is io1
+#      # Must be within the range between 100 and 2000
+#      # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
+#      #rootVolumeIOPS:
+#    - weightedCapacity: 2
+#      instanceType: m3.large
+#    - weightedCapacity: 2
+#      instanceType: m4.large
+
 ## Networking config
 
 # ID of existing VPC to create subnet in. Leave blank to import the value from the base cluster

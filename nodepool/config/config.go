@@ -32,6 +32,7 @@ type ProvidedConfig struct {
 	cfg.KubeClusterSettings `yaml:",inline"`
 	cfg.WorkerSettings      `yaml:",inline"`
 	cfg.DeploymentSettings  `yaml:",inline"`
+	Worker                  `yaml:"worker,omitempty"`
 	EtcdEndpoints           string `yaml:"etcdEndpoints,omitempty"`
 	NodePoolName            string `yaml:"nodePoolName,omitempty"`
 	providedEncryptService  cfg.EncryptService
@@ -133,6 +134,7 @@ func NewDefaultCluster() *ProvidedConfig {
 	return &ProvidedConfig{
 		DeploymentSettings: defaults.DeploymentSettings,
 		WorkerSettings:     defaults.WorkerSettings,
+		Worker:             NewDefaultWorker(),
 	}
 }
 
@@ -147,6 +149,22 @@ func ClusterFromBytes(data []byte) (*ProvidedConfig, error) {
 	if len(c.Subnets) == 0 && c.InstanceCIDR == "" {
 		c.InstanceCIDR = "10.0.1.0/24"
 	}
+
+	//Computed defaults
+	launchSpecs := []LaunchSpecification{}
+	for _, spec := range c.Worker.SpotFleet.LaunchSpecifications {
+		if spec.RootVolumeType == "" {
+			spec.RootVolumeType = c.Worker.SpotFleet.RootVolumeType
+		}
+		if spec.RootVolumeSize == 0 {
+			spec.RootVolumeSize = c.Worker.SpotFleet.UnitRootVolumeSize * spec.WeightedCapacity
+		}
+		if spec.RootVolumeType == "io1" && spec.RootVolumeIOPS == 0 {
+			spec.RootVolumeIOPS = c.Worker.SpotFleet.UnitRootVolumeIOPS * spec.WeightedCapacity
+		}
+		launchSpecs = append(launchSpecs, spec)
+	}
+	c.Worker.SpotFleet.LaunchSpecifications = launchSpecs
 
 	if err := c.valid(); err != nil {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
@@ -190,6 +208,10 @@ func (c ProvidedConfig) valid() error {
 	}
 
 	if err := c.WorkerSettings.Valid(); err != nil {
+		return err
+	}
+
+	if err := c.Worker.Valid(); err != nil {
 		return err
 	}
 
