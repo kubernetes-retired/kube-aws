@@ -1,10 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"io/ioutil"
-	"os"
+	"github.com/coreos/kube-aws/test/helper"
+	"reflect"
 	"testing"
 )
 
@@ -29,43 +28,7 @@ const availabilityZoneConfig = `
 availabilityZone: us-west-1c
 `
 
-const singleAzConfigYaml = insufficientConfigYaml + availabilityZoneConfig
-
-func withDummyCredentials(fn func(dir string)) {
-	if _, err := ioutil.ReadDir("temp"); err != nil {
-		if err := os.Mkdir("temp", 0755); err != nil {
-			panic(err)
-		}
-	}
-
-	dir, err := ioutil.TempDir("temp", "dummy-credentials")
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer os.Remove(dir)
-
-	for _, pairName := range []string{"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
-		certFile := fmt.Sprintf("%s/%s.pem", dir, pairName)
-
-		if err := ioutil.WriteFile(certFile, []byte("dummycert"), 0644); err != nil {
-			panic(err)
-		}
-
-		defer os.Remove(certFile)
-
-		keyFile := fmt.Sprintf("%s/%s-key.pem", dir, pairName)
-
-		if err := ioutil.WriteFile(keyFile, []byte("dummykey"), 0644); err != nil {
-			panic(err)
-		}
-
-		defer os.Remove(keyFile)
-	}
-
-	fn(dir)
-}
+type ConfigTester func(c *ProvidedConfig, t *testing.T)
 
 func TestConfig(t *testing.T) {
 	minimalValidConfigYaml := insufficientConfigYaml + `
@@ -73,19 +36,59 @@ availabilityZone: us-west-1c
 dnsServiceIP: "10.3.0.10"
 etcdEndpoints: "10.0.0.1"
 `
+	hasDefaultLaunchSpecifications := func(c *ProvidedConfig, t *testing.T) {
+		expected := []LaunchSpecification{
+			{
+				WeightedCapacity: 1,
+				InstanceType:     "m3.medium",
+				RootVolumeSize:   30,
+				RootVolumeIOPS:   0,
+				RootVolumeType:   "gp2",
+			},
+			{
+				WeightedCapacity: 2,
+				InstanceType:     "m3.large",
+				RootVolumeSize:   60,
+				RootVolumeIOPS:   0,
+				RootVolumeType:   "gp2",
+			},
+			{
+				WeightedCapacity: 2,
+				InstanceType:     "m4.large",
+				RootVolumeSize:   60,
+				RootVolumeIOPS:   0,
+				RootVolumeType:   "gp2",
+			},
+		}
+		actual := c.Worker.SpotFleet.LaunchSpecifications
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf(
+				"LaunchSpecifications didn't match: expected=%v actual=%v",
+				expected,
+				actual,
+			)
+		}
+	}
+
 	validCases := []struct {
-		context    string
-		configYaml string
+		context              string
+		configYaml           string
+		assertProvidedConfig []ConfigTester
 	}{
 		{
 			context:    "WithMinimalValidConfig",
 			configYaml: minimalValidConfigYaml,
-		},
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+			}},
 		{
 			context: "WithVpcIdSpecified",
 			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
 `,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+			},
 		},
 		{
 			context: "WithVpcIdAndRouteTableIdSpecified",
@@ -93,6 +96,114 @@ vpcId: vpc-1a2b3c4d
 vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+			},
+		},
+		{
+			context: "WithSpotFleetEnabled",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+			},
+		},
+		{
+			context: "WithSpotFleetWithCustomGp2RootVolumeSettings",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    unitRootVolumeSize: 40
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m3.medium
+    - weightedCapacity: 2
+      instanceType: m3.large
+      rootVolumeSize: 100
+`,
+			assertProvidedConfig: []ConfigTester{
+				func(c *ProvidedConfig, t *testing.T) {
+					expected := []LaunchSpecification{
+						{
+							WeightedCapacity: 1,
+							InstanceType:     "m3.medium",
+							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
+							RootVolumeSize: 40,
+							RootVolumeIOPS: 0,
+							// RootVolumeType was not specified in the configYaml but should default to:
+							RootVolumeType: "gp2",
+						},
+						{
+							WeightedCapacity: 2,
+							InstanceType:     "m3.large",
+							RootVolumeSize:   100,
+							RootVolumeIOPS:   0,
+							RootVolumeType:   "gp2",
+						},
+					}
+					actual := c.Worker.SpotFleet.LaunchSpecifications
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"LaunchSpecifications didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithSpotFleetWithCustomIo1RootVolumeSettings",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    rootVolumeType: io1
+    unitRootVolumeSize: 40
+    unitRootVolumeIOPS: 100
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m3.medium
+    - weightedCapacity: 2
+      instanceType: m3.large
+      rootVolumeIOPS: 500
+`,
+			assertProvidedConfig: []ConfigTester{
+				func(c *ProvidedConfig, t *testing.T) {
+					expected := []LaunchSpecification{
+						{
+							WeightedCapacity: 1,
+							InstanceType:     "m3.medium",
+							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
+							RootVolumeSize: 40,
+							// RootVolumeIOPS was not specified in the configYaml but should default to workerRootVolumeIOPS * weightedCapacity hence:
+							RootVolumeIOPS: 100,
+							// RootVolumeType was not specified in the configYaml but should default to:
+							RootVolumeType: "io1",
+						},
+						{
+							WeightedCapacity: 2,
+							InstanceType:     "m3.large",
+							RootVolumeSize:   80,
+							RootVolumeIOPS:   500,
+							// RootVolumeType was not specified in the configYaml but should default to:
+							RootVolumeType: "io1",
+						},
+					}
+					actual := c.Worker.SpotFleet.LaunchSpecifications
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"LaunchSpecifications didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
+			},
 		},
 	}
 
@@ -106,7 +217,13 @@ routeTableId: rtb-1a2b3c4d
 			}
 			providedConfig.providedEncryptService = dummyEncryptService{}
 
-			withDummyCredentials(func(dummyTlsAssetsDir string) {
+			t.Run("AssertProvidedConfig", func(t *testing.T) {
+				for _, assertion := range validCase.assertProvidedConfig {
+					assertion(providedConfig, t)
+				}
+			})
+
+			helper.WithDummyCredentials(func(dummyTlsAssetsDir string) {
 				var stackTemplateOptions = StackTemplateOptions{
 					TLSAssetsDir:          dummyTlsAssetsDir,
 					WorkerTmplFile:        "../../config/templates/cloud-config-worker",
@@ -138,6 +255,45 @@ routeTableId: rtb-1a2b3c4d
 vpcId: vpc-1a2b3c4d
 # vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
 vpcCIDR: "10.1.0.0/16"
+`,
+		},
+		{
+			context: "WithSpotFleetWithInvalidRootVolumeType",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m3.medium
+      rootVolumeType: foo
+`,
+		},
+		{
+			context: "WithSpotFleetWithInvalidRootVolumeIOPS",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m3.medium
+      rootVolumeType: io1
+      # must be 100~2000
+      rootVolumeIOPS: 50
+`,
+		},
+		{
+			context: "WithSpotFleetWithInvalidRootVolumeTypeAndIOPSCombination",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m3.medium
+      rootVolumeType: gp2
+      rootVolumeIOPS: 1000
 `,
 		},
 	}

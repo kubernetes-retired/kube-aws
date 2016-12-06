@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/coreos/kube-aws/netutil"
+	"github.com/coreos/kube-aws/test/helper"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"net"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -896,42 +895,6 @@ func TestValidateExistingVPC(t *testing.T) {
 	}
 }
 
-func withDummyCredentials(fn func(dir string)) {
-	if _, err := ioutil.ReadDir("temp"); err != nil {
-		if err := os.Mkdir("temp", 0755); err != nil {
-			panic(err)
-		}
-	}
-
-	dir, err := ioutil.TempDir("temp", "dummy-credentials")
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer os.Remove(dir)
-
-	for _, pairName := range []string{"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
-		certFile := fmt.Sprintf("%s/%s.pem", dir, pairName)
-
-		if err := ioutil.WriteFile(certFile, []byte("dummycert"), 0644); err != nil {
-			panic(err)
-		}
-
-		defer os.Remove(certFile)
-
-		keyFile := fmt.Sprintf("%s/%s-key.pem", dir, pairName)
-
-		if err := ioutil.WriteFile(keyFile, []byte("dummykey"), 0644); err != nil {
-			panic(err)
-		}
-
-		defer os.Remove(keyFile)
-	}
-
-	fn(dir)
-}
-
 func TestValidateUserData(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
@@ -941,7 +904,7 @@ func TestValidateUserData(t *testing.T) {
 		{"us-west-1b", "10.0.2.0/16", nil},
 	}
 
-	withDummyCredentials(func(dir string) {
+	helper.WithDummyCredentials(func(dir string) {
 		var stackTemplateOptions = StackTemplateOptions{
 			TLSAssetsDir:          dir,
 			ControllerTmplFile:    "templates/cloud-config-controller",
@@ -965,7 +928,7 @@ func TestRenderStackTemplate(t *testing.T) {
 		{"us-west-1b", "10.0.2.0/16", nil},
 	}
 
-	withDummyCredentials(func(dir string) {
+	helper.WithDummyCredentials(func(dir string) {
 		var stackTemplateOptions = StackTemplateOptions{
 			TLSAssetsDir:          dir,
 			ControllerTmplFile:    "templates/cloud-config-controller",
@@ -1049,7 +1012,7 @@ routeTableId: rtb-1a2b3c4d
 			}
 			providedConfig.providedEncryptService = &dummyEncryptService{}
 
-			withDummyCredentials(func(dummyTlsAssetsDir string) {
+			helper.WithDummyCredentials(func(dummyTlsAssetsDir string) {
 				var stackTemplateOptions = StackTemplateOptions{
 					TLSAssetsDir:          dummyTlsAssetsDir,
 					ControllerTmplFile:    "templates/cloud-config-controller",

@@ -58,6 +58,10 @@ func (c *Cluster) Create(stackBody string, s3URI string) error {
 	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackBody, s3URI)
 }
 
+func (c *Cluster) ValidateStack(stackBody string, s3URI string) (string, error) {
+	return c.stackProvisioner().Validate(stackBody, s3URI)
+}
+
 func (c *Cluster) Info() (*Info, error) {
 	var info Info
 	{

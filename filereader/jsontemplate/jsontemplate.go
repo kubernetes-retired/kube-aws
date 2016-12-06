@@ -34,6 +34,15 @@ func GetBytes(filename string, data interface{}) ([]byte, error) {
 }
 
 func getContextString(buf []byte, offset, lineCount int) string {
+	// Prevent index out of range errors when we meet errors at the very end of json
+	bufsize := len(buf)
+	if offset >= bufsize {
+		if bufsize > 0 {
+			offset = bufsize - 1
+		} else {
+			offset = 0
+		}
+	}
 
 	linesSeen := 0
 	var leftLimit int
