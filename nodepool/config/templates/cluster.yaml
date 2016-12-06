@@ -177,10 +177,18 @@ useCalico: {{.UseCalico}}
 # experimental:
 #   nodeDrainer:
 #     enabled: true
+#   nodeLabel:
+#     enabled: true
 #   awsEnvironment:
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#   waitSignal:
+#     enabled: true
+#   loadBalancer:
+#     enabled: true
+#     names: [ "manuallymanagedelb" ]
+#     securityGroupIds: [ "sg-87654321" ]
 
 # AWS Tags for cloudformation stack resources 
 #stackTags:

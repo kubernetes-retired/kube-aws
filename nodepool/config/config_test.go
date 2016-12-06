@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/kms"
+	cfg "github.com/coreos/kube-aws/config"
 	"github.com/coreos/kube-aws/test/helper"
 	"reflect"
 	"strings"
@@ -72,15 +73,121 @@ etcdEndpoints: "10.0.0.1"
 		}
 	}
 
+	hasDefaultExperimentalFeatures := func(c *ProvidedConfig, t *testing.T) {
+		expected := cfg.Experimental{
+			AuditLog: cfg.AuditLog{
+				Enabled: false,
+				MaxAge:  30,
+				LogPath: "/dev/stdout",
+			},
+			AwsEnvironment: cfg.AwsEnvironment{
+				Enabled: false,
+			},
+			EphemeralImageStorage: cfg.EphemeralImageStorage{
+				Enabled:    false,
+				Disk:       "xvdb",
+				Filesystem: "xfs",
+			},
+			LoadBalancer: cfg.LoadBalancer{
+				Enabled: false,
+			},
+			NodeDrainer: cfg.NodeDrainer{
+				Enabled: false,
+			},
+			NodeLabel: cfg.NodeLabel{
+				Enabled: false,
+			},
+			WaitSignal: cfg.WaitSignal{
+				Enabled:      false,
+				MaxBatchSize: 1,
+			},
+		}
+
+		actual := c.Experimental
+
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("experimental settings didn't match :\nexpected=%v\nactual=%v", expected, actual)
+		}
+	}
+
 	validCases := []struct {
 		context              string
 		configYaml           string
 		assertProvidedConfig []ConfigTester
 	}{
 		{
+			context: "WithExperimentalFeatures",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  awsEnvironment:
+    enabled: true
+    environment:
+      CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+  ephemeralImageStorage:
+    enabled: true
+  loadBalancer:
+    enabled: true
+    names:
+      - manuallymanagedlb
+    securityGroupIds:
+      - sg-12345678
+  nodeDrainer:
+    enabled: true
+  nodeLabel:
+    enabled: true
+  waitSignal:
+    enabled: true
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+				func(c *ProvidedConfig, t *testing.T) {
+					expected := cfg.Experimental{
+						AuditLog: cfg.AuditLog{
+							Enabled: false,
+							MaxAge:  30,
+							LogPath: "/dev/stdout",
+						},
+						AwsEnvironment: cfg.AwsEnvironment{
+							Enabled: true,
+							Environment: map[string]string{
+								"CFNSTACK": `{ "Ref" : "AWS::StackId" }`,
+							},
+						},
+						EphemeralImageStorage: cfg.EphemeralImageStorage{
+							Enabled:    true,
+							Disk:       "xvdb",
+							Filesystem: "xfs",
+						},
+						LoadBalancer: cfg.LoadBalancer{
+							Enabled:          true,
+							Names:            []string{"manuallymanagedlb"},
+							SecurityGroupIds: []string{"sg-12345678"},
+						},
+						NodeDrainer: cfg.NodeDrainer{
+							Enabled: true,
+						},
+						NodeLabel: cfg.NodeLabel{
+							Enabled: true,
+						},
+						WaitSignal: cfg.WaitSignal{
+							Enabled:      true,
+							MaxBatchSize: 1,
+						},
+					}
+
+					actual := c.Experimental
+
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf("experimental settings didn't match : expected=%v actual=%v", expected, actual)
+					}
+				},
+			},
+		},
+		{
 			context:    "WithMinimalValidConfig",
 			configYaml: minimalValidConfigYaml,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				hasDefaultLaunchSpecifications,
 			}},
 		{
@@ -89,6 +196,7 @@ etcdEndpoints: "10.0.0.1"
 vpcId: vpc-1a2b3c4d
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				hasDefaultLaunchSpecifications,
 			},
 		},
@@ -99,6 +207,7 @@ vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				hasDefaultLaunchSpecifications,
 			},
 		},
@@ -110,6 +219,7 @@ worker:
     targetCapacity: 10
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				hasDefaultLaunchSpecifications,
 			},
 		},
@@ -128,6 +238,7 @@ worker:
       rootVolumeSize: 100
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				func(c *ProvidedConfig, t *testing.T) {
 					expected := []LaunchSpecification{
 						{
@@ -175,6 +286,7 @@ worker:
       rootVolumeIOPS: 500
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				func(c *ProvidedConfig, t *testing.T) {
 					expected := []LaunchSpecification{
 						{
@@ -217,6 +329,7 @@ workerSecurityGroupIds:
   - sg-bcdefabc
 `,
 			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				hasDefaultLaunchSpecifications,
 				func(c *ProvidedConfig, t *testing.T) {
 					expectedWorkerSecurityGroupIds := []string{

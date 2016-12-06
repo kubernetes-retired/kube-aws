@@ -1000,6 +1000,43 @@ func TestConfig(t *testing.T) {
 		}
 	}
 
+	hasDefaultExperimentalFeatures := func(c *Cluster, t *testing.T) {
+		expected := Experimental{
+			AuditLog: AuditLog{
+				Enabled: false,
+				MaxAge:  30,
+				LogPath: "/dev/stdout",
+			},
+			AwsEnvironment: AwsEnvironment{
+				Enabled: false,
+			},
+			EphemeralImageStorage: EphemeralImageStorage{
+				Enabled:    false,
+				Disk:       "xvdb",
+				Filesystem: "xfs",
+			},
+			LoadBalancer: LoadBalancer{
+				Enabled: false,
+			},
+			NodeDrainer: NodeDrainer{
+				Enabled: false,
+			},
+			NodeLabel: NodeLabel{
+				Enabled: false,
+			},
+			WaitSignal: WaitSignal{
+				Enabled:      false,
+				MaxBatchSize: 1,
+			},
+		}
+
+		actual := c.Experimental
+
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("experimental settings didn't match :\nexpected=%v\nactual=%v", expected, actual)
+		}
+	}
+
 	minimalValidConfigYaml := minimalConfigYaml + `
 availabilityZone: us-west-1c
 `
@@ -1009,10 +1046,91 @@ availabilityZone: us-west-1c
 		assertConfig []ConfigTester
 	}{
 		{
+			context: "WithExperimentalFeatures",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  auditLog:
+    enabled: true
+    maxage: 100
+    logpath: "/var/log/audit.log"
+  awsEnvironment:
+    enabled: true
+    environment:
+      CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+  ephemeralImageStorage:
+    enabled: true
+  loadBalancer:
+    enabled: true
+    names:
+      - manuallymanagedlb
+    securityGroupIds:
+      - sg-12345678
+  nodeDrainer:
+    enabled: true
+  nodeLabel:
+    enabled: true
+  plugins:
+    rbac:
+      enabled: true
+  waitSignal:
+    enabled: true
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				func(c *Cluster, t *testing.T) {
+					expected := Experimental{
+						AuditLog: AuditLog{
+							Enabled: true,
+							MaxAge:  100,
+							LogPath: "/var/log/audit.log",
+						},
+						AwsEnvironment: AwsEnvironment{
+							Enabled: true,
+							Environment: map[string]string{
+								"CFNSTACK": `{ "Ref" : "AWS::StackId" }`,
+							},
+						},
+						EphemeralImageStorage: EphemeralImageStorage{
+							Enabled:    true,
+							Disk:       "xvdb",
+							Filesystem: "xfs",
+						},
+						LoadBalancer: LoadBalancer{
+							Enabled:          true,
+							Names:            []string{"manuallymanagedlb"},
+							SecurityGroupIds: []string{"sg-12345678"},
+						},
+						NodeDrainer: NodeDrainer{
+							Enabled: true,
+						},
+						NodeLabel: NodeLabel{
+							Enabled: true,
+						},
+						Plugins: Plugins{
+							Rbac: Rbac{
+								Enabled: true,
+							},
+						},
+						WaitSignal: WaitSignal{
+							Enabled:      true,
+							MaxBatchSize: 1,
+						},
+					}
+
+					actual := c.Experimental
+
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf("experimental settings didn't match : expected=%v actual=%v", expected, actual)
+					}
+				},
+			},
+		},
+		{
 			context:    "WithMinimalValidConfig",
 			configYaml: minimalValidConfigYaml,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
 			},
 		},
 		{
@@ -1022,6 +1140,7 @@ vpcId: vpc-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
 			},
 		},
 		{
@@ -1032,6 +1151,7 @@ routeTableId: rtb-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
 			},
 		},
 		{
@@ -1045,6 +1165,7 @@ workerSecurityGroupIds:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
 				func(c *Cluster, t *testing.T) {
 					expectedWorkerSecurityGroupIds := []string{
 						`sg-12345678`, `sg-abcdefab`, `sg-23456789`, `sg-bcdefabc`,
@@ -1115,6 +1236,7 @@ etcdDataVolumeType: io1
 etcdDataVolumeIOPS: 104
 `,
 			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
 				func(c *Cluster, t *testing.T) {
 					expected := EtcdSettings{
 						EtcdCount:               2,
