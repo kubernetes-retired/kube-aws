@@ -246,7 +246,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$subnetLogicalName}}"
+            "Value": "{{$.NodePoolName}}-{{$subnetLogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
