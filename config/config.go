@@ -12,9 +12,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/coreos/go-semver/semver"
 	"github.com/coreos/kube-aws/coreos/amiregistry"
 	"github.com/coreos/kube-aws/coreos/userdatavalidation"
@@ -542,32 +539,18 @@ type stackConfig struct {
 }
 
 func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (*stackConfig, error) {
-	assets, err := ReadTLSAssets(opts.TLSAssetsDir)
-	if err != nil {
-		return nil, err
-	}
+	var err error
 	stackConfig := stackConfig{}
 
 	if stackConfig.Config, err = c.Config(); err != nil {
 		return nil, err
 	}
 
-	awsConfig := aws.NewConfig().
-		WithRegion(stackConfig.Config.Region).
-		WithCredentialsChainVerboseErrors(true)
-
-	// TODO Cleaner way to inject this dependency
-	var kmsSvc EncryptService
-	if c.providedEncryptService != nil {
-		kmsSvc = c.providedEncryptService
-	} else {
-		kmsSvc = kms.New(session.New(awsConfig))
-	}
-
-	compactAssets, err := assets.Compact(stackConfig.Config.KMSKeyARN, kmsSvc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compress TLS assets: %v", err)
-	}
+	compactAssets, err := ReadOrCreateCompactTLSAssets(opts.TLSAssetsDir, KMSConfig{
+		Region:         stackConfig.Config.Region,
+		KMSKeyARN:      c.KMSKeyARN,
+		EncryptService: c.providedEncryptService,
+	})
 
 	stackConfig.Config.TLSConfig = compactAssets
 
