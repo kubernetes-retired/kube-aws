@@ -86,6 +86,30 @@ etcdEndpoints: "10.0.0.1"
 		configYaml string
 	}{
 		{
+			context: "WithExperimentalFeatures",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  awsEnvironment:
+    enabled: true
+    environment:
+      CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+  ephemeralImageStorage:
+    enabled: true
+  loadBalancer:
+    enabled: true
+    names:
+      - manuallymanagedlb
+    securityGroupIds:
+      - sg-12345678
+  nodeDrainer:
+    enabled: true
+  nodeLabel:
+    enabled: true
+  waitSignal:
+    enabled: true
+`,
+		},
+		{
 			context:    "WithMinimalValidConfig",
 			configYaml: minimalValidConfigYaml,
 		},
