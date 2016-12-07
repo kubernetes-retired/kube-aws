@@ -703,6 +703,10 @@ func (c Cluster) valid() error {
 		return err
 	}
 
+	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -921,16 +925,20 @@ func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDR
 	return nil
 }
 
+func (c *Cluster) WorkerDeploymentSettings() WorkerDeploymentSettings {
+	return WorkerDeploymentSettings{
+		WorkerSettings:     c.WorkerSettings,
+		DeploymentSettings: c.DeploymentSettings,
+	}
+}
+
 type WorkerDeploymentSettings struct {
 	WorkerSettings
 	DeploymentSettings
 }
 
 func (c *Cluster) WorkerSecurityGroupRefs() []string {
-	return WorkerDeploymentSettings{
-		WorkerSettings:     c.WorkerSettings,
-		DeploymentSettings: c.DeploymentSettings,
-	}.WorkerSecurityGroupRefs()
+	return c.WorkerDeploymentSettings().WorkerSecurityGroupRefs()
 }
 
 func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
@@ -947,6 +955,17 @@ func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
 	}
 
 	return refs
+}
+
+func (c WorkerDeploymentSettings) Valid() error {
+	sgRefs := c.WorkerSecurityGroupRefs()
+	numSGs := len(sgRefs)
+
+	if numSGs > 4 {
+		return fmt.Errorf("number of user provided security groups must be less than or equal to 4 but was %d (actual EC2 limit is 5 but one of them is reserved for kube-aws) : %v", numSGs, sgRefs)
+	}
+
+	return nil
 }
 
 func WithTrailingDot(s string) string {

@@ -181,6 +181,13 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 	return &config, nil
 }
 
+func (c ProvidedConfig) WorkerDeploymentSettings() cfg.WorkerDeploymentSettings {
+	return cfg.WorkerDeploymentSettings{
+		WorkerSettings:     c.WorkerSettings,
+		DeploymentSettings: c.DeploymentSettings,
+	}
+}
+
 func (c ProvidedConfig) valid() error {
 	if _, err := c.DeploymentSettings.Valid(); err != nil {
 		return err
@@ -195,6 +202,10 @@ func (c ProvidedConfig) valid() error {
 	}
 
 	if err := c.Worker.Valid(); err != nil {
+		return err
+	}
+
+	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
 		return err
 	}
 
@@ -217,10 +228,7 @@ func (c ComputedConfig) RouteTableRef() string {
 }
 
 func (c ComputedConfig) WorkerSecurityGroupRefs() []string {
-	refs := cfg.WorkerDeploymentSettings{
-		WorkerSettings:     c.WorkerSettings,
-		DeploymentSettings: c.DeploymentSettings,
-	}.WorkerSecurityGroupRefs()
+	refs := c.WorkerDeploymentSettings().WorkerSecurityGroupRefs()
 
 	refs = append(
 		refs,

@@ -1035,6 +1035,73 @@ routeTableId: rtb-1a2b3c4d
 			},
 		},
 		{
+			context: "WithWorkerSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+  - sg-bcdefabc
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				func(c *Cluster, t *testing.T) {
+					expectedWorkerSecurityGroupIds := []string{
+						`sg-12345678`, `sg-abcdefab`, `sg-23456789`, `sg-bcdefabc`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupIds, expectedWorkerSecurityGroupIds) {
+						t.Errorf("WorkerSecurityGroupIds didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupIds, c.WorkerSecurityGroupIds)
+					}
+
+					expectedWorkerSecurityGroupRefs := []string{
+						`"sg-12345678"`, `"sg-abcdefab"`, `"sg-23456789"`, `"sg-bcdefabc"`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupRefs(), expectedWorkerSecurityGroupRefs) {
+						t.Errorf("WorkerSecurityGroupRefs didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupRefs, c.WorkerSecurityGroupRefs())
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerAndLBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+experimental:
+  loadBalancer:
+    enabled: true
+    securityGroupIds:
+      - sg-23456789
+      - sg-bcdefabc
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				func(c *Cluster, t *testing.T) {
+					expectedWorkerSecurityGroupIds := []string{
+						`sg-12345678`, `sg-abcdefab`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupIds, expectedWorkerSecurityGroupIds) {
+						t.Errorf("WorkerSecurityGroupIds didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupIds, c.WorkerSecurityGroupIds)
+					}
+
+					expectedLBSecurityGroupIds := []string{
+						`sg-23456789`, `sg-bcdefabc`,
+					}
+					if !reflect.DeepEqual(c.Experimental.LoadBalancer.SecurityGroupIds, expectedLBSecurityGroupIds) {
+						t.Errorf("LBSecurityGroupIds didn't match: expected=%v actual=%v", expectedLBSecurityGroupIds, c.Experimental.LoadBalancer.SecurityGroupIds)
+					}
+
+					expectedWorkerSecurityGroupRefs := []string{
+						`"sg-23456789"`, `"sg-bcdefabc"`, `"sg-12345678"`, `"sg-abcdefab"`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupRefs(), expectedWorkerSecurityGroupRefs) {
+						t.Errorf("WorkerSecurityGroupRefs didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupRefs, c.WorkerSecurityGroupRefs())
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdNodesWithCustomEBSVolumes",
 			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
@@ -1114,8 +1181,9 @@ etcdDataVolumeIOPS: 104
 	}
 
 	parseErrorCases := []struct {
-		context    string
-		configYaml string
+		context              string
+		configYaml           string
+		expectedErrorMessage string
 	}{
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
@@ -1132,6 +1200,34 @@ vpcCIDR: "10.1.0.0/16"
 routeTableId: rtb-1a2b3c4d
 `,
 		},
+		{
+			context: "WithWorkerSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+  - sg-bcdefabc
+  - sg-34567890
+`,
+			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
+		{
+			context: "WithWorkerAndLBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+experimental:
+  loadBalancer:
+    enabled: true
+    securityGroupIds:
+      - sg-bcdefabc
+      - sg-34567890
+`,
+			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
 	}
 
 	for _, invalidCase := range parseErrorCases {
@@ -1141,6 +1237,11 @@ routeTableId: rtb-1a2b3c4d
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %v", configBytes, providedConfig)
 				t.FailNow()
+			}
+
+			errorMsg := fmt.Sprintf("%v", err)
+			if !strings.Contains(errorMsg, invalidCase.expectedErrorMessage) {
+				t.Errorf(`expected "%s" to be contained in the errror message : %s`, invalidCase.expectedErrorMessage, errorMsg)
 			}
 		})
 	}
