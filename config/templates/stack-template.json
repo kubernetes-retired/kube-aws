@@ -24,6 +24,11 @@
           "Ref": "LaunchConfigurationWorker"
         },
         "MaxSize": "{{.MaxWorkerCount}}",
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute"
+          }
+        ],
         "MinSize": "{{.MinWorkerCount}}",
         "Tags": [
           {
@@ -101,6 +106,11 @@
           "Ref": "LaunchConfigurationController"
         },
         "MaxSize": "{{.MaxControllerCount}}",
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute"
+          }
+        ],
         "MinSize": "{{.MinControllerCount}}",
         "Tags": [
           {

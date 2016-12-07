@@ -72,6 +72,11 @@
           "Ref": "LaunchConfigurationWorker"
         },
         "MaxSize": "{{.MaxWorkerCount}}",
+        "MetricsCollection": [
+          {
+            "Granularity": "1Minute"
+          }
+        ],
         "MinSize": "{{.MinWorkerCount}}",
         "Tags": [
           {
