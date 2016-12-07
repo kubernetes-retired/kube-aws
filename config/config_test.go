@@ -1024,6 +1024,7 @@ func TestConfig(t *testing.T) {
 			NodeLabel: NodeLabel{
 				Enabled: false,
 			},
+			Taints: []Taint{},
 			WaitSignal: WaitSignal{
 				Enabled:      false,
 				MaxBatchSize: 1,
@@ -1072,6 +1073,10 @@ experimental:
   plugins:
     rbac:
       enabled: true
+  taints:
+    - key: reservation
+      value: spot
+      effect: NoSchedule
   waitSignal:
     enabled: true
 `,
@@ -1110,6 +1115,9 @@ experimental:
 							Rbac: Rbac{
 								Enabled: true,
 							},
+						},
+						Taints: []Taint{
+							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 						WaitSignal: WaitSignal{
 							Enabled:      true,
@@ -1307,6 +1315,17 @@ etcdDataVolumeIOPS: 104
 		configYaml           string
 		expectedErrorMessage string
 	}{
+		{
+			context: "WithInvalidTaint",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  taints:
+    - key: foo
+      value: bar
+      effect: UnknownEffect
+`,
+			expectedErrorMessage: "Effect must be NoSchdule or PreferNoSchedule, but was UnknownEffect",
+		},
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
 			configYaml: minimalValidConfigYaml + `

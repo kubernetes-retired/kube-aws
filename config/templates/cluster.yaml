@@ -211,6 +211,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     enabled: true
 #     maxage: 30
 #     logpath: /dev/stdout
+#   taints:
+#     - key: dedicated
+#       value: search
+#       effect: NoSchedule
 #   waitSignal:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
