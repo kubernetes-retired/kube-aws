@@ -413,7 +413,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{$.EtcdRootVolumeSize}}"
+              "VolumeSize": "{{$.EtcdRootVolumeSize}}",
+              {{if gt $.EtcdRootVolumeIOPS 0}}
+              "Iops": "{{$.EtcdRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{$.EtcdRootVolumeType}}"
             }
           },
 	  {
@@ -422,7 +426,11 @@
 	    "VirtualName" : "ephemeral0"
 	    {{else}}
             "Ebs": {
-              "VolumeSize": "{{$.EtcdDataVolumeSize}}"
+              "VolumeSize": "{{$.EtcdDataVolumeSize}}",
+              {{if gt $.EtcdDataVolumeIOPS 0}}
+              "Iops": "{{$.EtcdDataVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{$.EtcdDataVolumeType}}"
             }
 	    {{end}}
           }
@@ -524,7 +532,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{.ControllerRootVolumeSize}}"
+              "VolumeSize": "{{.ControllerRootVolumeSize}}",
+              {{if gt .ControllerRootVolumeIOPS 0}}
+              "Iops": "{{.ControllerRootVolumeIOPS}}",
+              {{end}}
+              "VolumeType": "{{.ControllerRootVolumeType}}"
             }
           }
         ],

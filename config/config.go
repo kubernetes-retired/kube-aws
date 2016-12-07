@@ -101,7 +101,11 @@ func NewDefaultCluster() *Cluster {
 			EtcdCount:          1,
 			EtcdInstanceType:   "m3.medium",
 			EtcdRootVolumeSize: 30,
+			EtcdRootVolumeType: "gp2",
+			EtcdRootVolumeIOPS: 0,
 			EtcdDataVolumeSize: 30,
+			EtcdDataVolumeType: "gp2",
+			EtcdDataVolumeIOPS: 0,
 		},
 		FlannelSettings: FlannelSettings{
 			PodCIDR: "10.2.0.0/16",
@@ -250,7 +254,11 @@ type EtcdSettings struct {
 	EtcdCount               int    `yaml:"etcdCount"`
 	EtcdInstanceType        string `yaml:"etcdInstanceType,omitempty"`
 	EtcdRootVolumeSize      int    `yaml:"etcdRootVolumeSize,omitempty"`
+	EtcdRootVolumeType      string `yaml:"etcdRootVolumeType,omitempty"`
+	EtcdRootVolumeIOPS      int    `yaml:"etcdRootVolumeIOPS,omitempty"`
 	EtcdDataVolumeSize      int    `yaml:"etcdDataVolumeSize,omitempty"`
+	EtcdDataVolumeType      string `yaml:"etcdDataVolumeType,omitempty"`
+	EtcdDataVolumeIOPS      int    `yaml:"etcdDataVolumeIOPS,omitempty"`
 	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumEphemeral,omitempty"`
 }
 

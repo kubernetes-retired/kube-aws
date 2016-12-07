@@ -975,23 +975,54 @@ func TestWithTrailingDot(t *testing.T) {
 	}
 }
 
+type ConfigTester func(c *Cluster, t *testing.T)
+
 func TestConfig(t *testing.T) {
+	hasDefaultEtcdSettings := func(c *Cluster, t *testing.T) {
+		expected := EtcdSettings{
+			EtcdCount:               1,
+			EtcdInstanceType:        "m3.medium",
+			EtcdRootVolumeSize:      30,
+			EtcdRootVolumeType:      "gp2",
+			EtcdRootVolumeIOPS:      0,
+			EtcdDataVolumeSize:      30,
+			EtcdDataVolumeType:      "gp2",
+			EtcdDataVolumeIOPS:      0,
+			EtcdDataVolumeEphemeral: false,
+		}
+		actual := c.EtcdSettings
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf(
+				"EtcdSettings didn't match: expected=%v actual=%v",
+				expected,
+				actual,
+			)
+		}
+	}
+
 	minimalValidConfigYaml := minimalConfigYaml + `
 availabilityZone: us-west-1c
 `
 	validCases := []struct {
-		context    string
-		configYaml string
+		context      string
+		configYaml   string
+		assertConfig []ConfigTester
 	}{
 		{
 			context:    "WithMinimalValidConfig",
 			configYaml: minimalValidConfigYaml,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+			},
 		},
 		{
 			context: "WithVpcIdSpecified",
 			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
 `,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+			},
 		},
 		{
 			context: "WithVpcIdAndRouteTableIdSpecified",
@@ -999,6 +1030,46 @@ vpcId: vpc-1a2b3c4d
 vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+			},
+		},
+		{
+			context: "WithEtcdNodesWithCustomEBSVolumes",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+etcdCount: 2
+etcdRootVolumeSize: 101
+etcdRootVolumeType: io1
+etcdRootVolumeIOPS: 102
+etcdDataVolumeSize: 103
+etcdDataVolumeType: io1
+etcdDataVolumeIOPS: 104
+`,
+			assertConfig: []ConfigTester{
+				func(c *Cluster, t *testing.T) {
+					expected := EtcdSettings{
+						EtcdCount:               2,
+						EtcdInstanceType:        "m3.medium",
+						EtcdRootVolumeSize:      101,
+						EtcdRootVolumeType:      "io1",
+						EtcdRootVolumeIOPS:      102,
+						EtcdDataVolumeSize:      103,
+						EtcdDataVolumeType:      "io1",
+						EtcdDataVolumeIOPS:      104,
+						EtcdDataVolumeEphemeral: false,
+					}
+					actual := c.EtcdSettings
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"EtcdSettings didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
+			},
 		},
 	}
 
@@ -1011,6 +1082,12 @@ routeTableId: rtb-1a2b3c4d
 				t.FailNow()
 			}
 			providedConfig.providedEncryptService = &dummyEncryptService{}
+
+			t.Run("AssertConfig", func(t *testing.T) {
+				for _, assertion := range validCase.assertConfig {
+					assertion(providedConfig, t)
+				}
+			})
 
 			helper.WithDummyCredentials(func(dummyTlsAssetsDir string) {
 				var stackTemplateOptions = StackTemplateOptions{
