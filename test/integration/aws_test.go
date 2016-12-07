@@ -156,6 +156,20 @@ worker:
       rootVolumeIOPS: 500
 `,
 		},
+		{
+			context: "WithWorkerAndLBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+experimental:
+  loadBalancer:
+    enabled: true
+    securityGroupIds:
+      - sg-23456789
+      - sg-bcdefabc
+`,
+		},
 	}
 
 	for _, validCase := range validCases {

@@ -181,6 +181,13 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 	return &config, nil
 }
 
+func (c ProvidedConfig) WorkerDeploymentSettings() cfg.WorkerDeploymentSettings {
+	return cfg.WorkerDeploymentSettings{
+		WorkerSettings:     c.WorkerSettings,
+		DeploymentSettings: c.DeploymentSettings,
+	}
+}
+
 func (c ProvidedConfig) valid() error {
 	if _, err := c.DeploymentSettings.Valid(); err != nil {
 		return err
@@ -195,6 +202,10 @@ func (c ProvidedConfig) valid() error {
 	}
 
 	if err := c.Worker.Valid(); err != nil {
+		return err
+	}
+
+	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
 		return err
 	}
 
@@ -217,9 +228,14 @@ func (c ComputedConfig) RouteTableRef() string {
 }
 
 func (c ComputedConfig) WorkerSecurityGroupRefs() []string {
-	return []string{
+	refs := c.WorkerDeploymentSettings().WorkerSecurityGroupRefs()
+
+	refs = append(
+		refs,
 		// The security group assigned to worker nodes to allow communication to etcd nodes and controller nodes
 		// which is created and maintained in the main cluster and then imported to node pools.
 		fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-WorkerSecurityGroup"}}`, c.ClusterName),
-	}
+	)
+
+	return refs
 }

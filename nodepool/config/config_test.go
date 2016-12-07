@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/coreos/kube-aws/test/helper"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -205,6 +207,73 @@ worker:
 				},
 			},
 		},
+		{
+			context: "WithWorkerSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+  - sg-bcdefabc
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+				func(c *ProvidedConfig, t *testing.T) {
+					expectedWorkerSecurityGroupIds := []string{
+						`sg-12345678`, `sg-abcdefab`, `sg-23456789`, `sg-bcdefabc`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupIds, expectedWorkerSecurityGroupIds) {
+						t.Errorf("WorkerSecurityGroupIds didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupIds, c.WorkerSecurityGroupIds)
+					}
+
+					expectedWorkerSecurityGroupRefs := []string{
+						`"sg-12345678"`, `"sg-abcdefab"`, `"sg-23456789"`, `"sg-bcdefabc"`,
+					}
+					if !reflect.DeepEqual(c.WorkerDeploymentSettings().WorkerSecurityGroupRefs(), expectedWorkerSecurityGroupRefs) {
+						t.Errorf("WorkerSecurityGroupRefs didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupRefs, c.WorkerDeploymentSettings().WorkerSecurityGroupRefs())
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerAndLBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+experimental:
+  loadBalancer:
+    enabled: true
+    securityGroupIds:
+      - sg-23456789
+      - sg-bcdefabc
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultLaunchSpecifications,
+				func(c *ProvidedConfig, t *testing.T) {
+					expectedWorkerSecurityGroupIds := []string{
+						`sg-12345678`, `sg-abcdefab`,
+					}
+					if !reflect.DeepEqual(c.WorkerSecurityGroupIds, expectedWorkerSecurityGroupIds) {
+						t.Errorf("WorkerSecurityGroupIds didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupIds, c.WorkerSecurityGroupIds)
+					}
+
+					expectedLBSecurityGroupIds := []string{
+						`sg-23456789`, `sg-bcdefabc`,
+					}
+					if !reflect.DeepEqual(c.Experimental.LoadBalancer.SecurityGroupIds, expectedLBSecurityGroupIds) {
+						t.Errorf("LBSecurityGroupIds didn't match: expected=%v actual=%v", expectedLBSecurityGroupIds, c.Experimental.LoadBalancer.SecurityGroupIds)
+					}
+
+					expectedWorkerSecurityGroupRefs := []string{
+						`"sg-23456789"`, `"sg-bcdefabc"`, `"sg-12345678"`, `"sg-abcdefab"`,
+					}
+					if !reflect.DeepEqual(c.WorkerDeploymentSettings().WorkerSecurityGroupRefs(), expectedWorkerSecurityGroupRefs) {
+						t.Errorf("WorkerSecurityGroupRefs didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupRefs, c.WorkerDeploymentSettings().WorkerSecurityGroupRefs())
+					}
+				},
+			},
+		},
 	}
 
 	for _, validCase := range validCases {
@@ -246,8 +315,9 @@ worker:
 	}
 
 	parseErrorCases := []struct {
-		context    string
-		configYaml string
+		context              string
+		configYaml           string
+		expectedErrorMessage string
 	}{
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
@@ -296,6 +366,34 @@ worker:
       rootVolumeIOPS: 1000
 `,
 		},
+		{
+			context: "WithWorkerSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+  - sg-bcdefabc
+  - sg-34567890
+`,
+			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
+		{
+			context: "WithWorkerAndLBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+workerSecurityGroupIds:
+  - sg-12345678
+  - sg-abcdefab
+  - sg-23456789
+experimental:
+  loadBalancer:
+    enabled: true
+    securityGroupIds:
+      - sg-bcdefabc
+      - sg-34567890
+`,
+			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
 	}
 
 	for _, invalidCase := range parseErrorCases {
@@ -305,6 +403,11 @@ worker:
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %v", configBytes, providedConfig)
 				t.FailNow()
+			}
+
+			errorMsg := fmt.Sprintf("%v", err)
+			if !strings.Contains(errorMsg, invalidCase.expectedErrorMessage) {
+				t.Errorf(`expected "%s" to be contained in the errror message : %s`, invalidCase.expectedErrorMessage, errorMsg)
 			}
 		})
 	}

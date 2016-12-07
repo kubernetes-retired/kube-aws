@@ -79,12 +79,13 @@ func NewDefaultCluster() *Cluster {
 			DNSServiceIP: "10.3.0.10",
 		},
 		WorkerSettings: WorkerSettings{
-			WorkerCount:          1,
-			WorkerCreateTimeout:  "PT15M",
-			WorkerInstanceType:   "m3.medium",
-			WorkerRootVolumeType: "gp2",
-			WorkerRootVolumeIOPS: 0,
-			WorkerRootVolumeSize: 30,
+			WorkerCount:            1,
+			WorkerCreateTimeout:    "PT15M",
+			WorkerInstanceType:     "m3.medium",
+			WorkerRootVolumeType:   "gp2",
+			WorkerRootVolumeIOPS:   0,
+			WorkerRootVolumeSize:   30,
+			WorkerSecurityGroupIds: []string{},
 		},
 		ControllerSettings: ControllerSettings{
 			ControllerCount:          1,
@@ -227,13 +228,14 @@ type DeploymentSettings struct {
 
 // Part of configuration which is specific to worker nodes
 type WorkerSettings struct {
-	WorkerCount          int    `yaml:"workerCount,omitempty"`
-	WorkerCreateTimeout  string `yaml:"workerCreateTimeout,omitempty"`
-	WorkerInstanceType   string `yaml:"workerInstanceType,omitempty"`
-	WorkerRootVolumeType string `yaml:"workerRootVolumeType,omitempty"`
-	WorkerRootVolumeIOPS int    `yaml:"workerRootVolumeIOPS,omitempty"`
-	WorkerRootVolumeSize int    `yaml:"workerRootVolumeSize,omitempty"`
-	WorkerSpotPrice      string `yaml:"workerSpotPrice,omitempty"`
+	WorkerCount            int      `yaml:"workerCount,omitempty"`
+	WorkerCreateTimeout    string   `yaml:"workerCreateTimeout,omitempty"`
+	WorkerInstanceType     string   `yaml:"workerInstanceType,omitempty"`
+	WorkerRootVolumeType   string   `yaml:"workerRootVolumeType,omitempty"`
+	WorkerRootVolumeIOPS   int      `yaml:"workerRootVolumeIOPS,omitempty"`
+	WorkerRootVolumeSize   int      `yaml:"workerRootVolumeSize,omitempty"`
+	WorkerSpotPrice        string   `yaml:"workerSpotPrice,omitempty"`
+	WorkerSecurityGroupIds []string `yaml:"workerSecurityGroupIds,omitempty"`
 }
 
 // Part of configuration which is specific to controller nodes
@@ -701,6 +703,10 @@ func (c Cluster) valid() error {
 		return err
 	}
 
+	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -914,6 +920,49 @@ func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDR
 				)
 			}
 		}
+	}
+
+	return nil
+}
+
+func (c *Cluster) WorkerDeploymentSettings() WorkerDeploymentSettings {
+	return WorkerDeploymentSettings{
+		WorkerSettings:     c.WorkerSettings,
+		DeploymentSettings: c.DeploymentSettings,
+	}
+}
+
+type WorkerDeploymentSettings struct {
+	WorkerSettings
+	DeploymentSettings
+}
+
+func (c *Cluster) WorkerSecurityGroupRefs() []string {
+	return c.WorkerDeploymentSettings().WorkerSecurityGroupRefs()
+}
+
+func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
+	refs := []string{}
+
+	if c.Experimental.LoadBalancer.Enabled {
+		for _, sgId := range c.Experimental.LoadBalancer.SecurityGroupIds {
+			refs = append(refs, fmt.Sprintf(`"%s"`, sgId))
+		}
+	}
+
+	for _, sgId := range c.WorkerSecurityGroupIds {
+		refs = append(refs, fmt.Sprintf(`"%s"`, sgId))
+	}
+
+	return refs
+}
+
+func (c WorkerDeploymentSettings) Valid() error {
+	sgRefs := c.WorkerSecurityGroupRefs()
+	numSGs := len(sgRefs)
+
+	if numSGs > 4 {
+		return fmt.Errorf("number of user provided security groups must be less than or equal to 4 but was %d (actual EC2 limit is 5 but one of them is reserved for kube-aws) : %v", numSGs, sgRefs)
 	}
 
 	return nil
