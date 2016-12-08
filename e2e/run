@@ -71,6 +71,17 @@ configure() {
   echo 'createRecordSet: true' >> cluster.yaml
 
   # required to run kube-aws update
+  customize_worker
+
+  ${KUBE_AWS_CMD} render
+
+  ${KUBE_AWS_CMD} validate --s3-uri ${KUBE_AWS_S3_URI}
+
+  echo Generated configuration files in ${WORK_DIR}:
+  find .
+}
+
+customize_worker() {
   echo 'workerCount: 2' >> cluster.yaml
   echo 'controllerCount: 2' >> cluster.yaml
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
@@ -86,13 +97,6 @@ configure() {
   if [ "${KUBE_AWS_USE_CALICO}" != "" ]; then
     echo 'useCalico: true' >> cluster.yaml
   fi
-
-  ${KUBE_AWS_CMD} render
-
-  ${KUBE_AWS_CMD} validate --s3-uri ${KUBE_AWS_S3_URI}
-
-  echo Generated configuration files in ${WORK_DIR}:
-  find .
 }
 
 clean() {
@@ -228,20 +232,50 @@ nodepool_init() {
   fi
 }
 
-nodepool() {
+nodepool_render() {
   cd ${WORK_DIR}
 
-  nodepool_init
-
   ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_POOL_NAME}
+}
+
+nodepool_up() {
+  cd ${WORK_DIR}
+
   ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --export
   ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+}
+
+nodepool_update() {
+  cd ${WORK_DIR}
+
+  pushd ${NODE_POOL_ASSETS_DIR}
+
+  if [ "${KUBE_AWS_SPOT_FLEET_ENABLED}" ]; then
+    SED_CMD="sed -e 's/targetCapacity: 3/targetCapacity: 5/'"
+    diff --unified cluster.yaml <(cat cluster.yaml | sh -c "${SED_CMD}") || true
+    sh -c "${SED_CMD} -i bak cluster.yaml"
+  else
+    echo 'workerCount: 2' >> cluster.yaml
+  fi
+
+  popd
+
+  ${KUBE_AWS_CMD} node-pools update --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
 }
 
 nodepool_destroy() {
   cd ${WORK_DIR}
 
   ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_POOL_NAME}
+}
+
+nodepool() {
+  cd ${WORK_DIR}
+
+  nodepool_init
+  nodepool_render
+  nodepool_up
+  nodepool_update
 }
 
 all() {
