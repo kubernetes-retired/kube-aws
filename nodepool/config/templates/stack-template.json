@@ -280,6 +280,13 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
+                {{if .Worker.SpotFleet.Enabled}}
+                {
+                  "Action": "ec2:CreateTags",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {{end}}
                 {
                   "Action": [
                     "ecr:GetAuthorizationToken",

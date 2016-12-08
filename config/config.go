@@ -281,6 +281,7 @@ type Cluster struct {
 	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
 	HostedZone             string `yaml:"hostedZone,omitempty"`
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
+	Worker                 Worker
 	providedEncryptService EncryptService
 }
 
@@ -288,6 +289,17 @@ type Subnet struct {
 	AvailabilityZone  string `yaml:"availabilityZone,omitempty"`
 	InstanceCIDR      string `yaml:"instanceCIDR,omitempty"`
 	lastAllocatedAddr *net.IP
+}
+
+// Just a place-holder to keep compatibility of cloud-config-worker between main cluster and node pool
+// Without this, {{if .Worker.SpotFleet.Enabled}} in the cloud-config-worker template fails with an obvious error like
+// "executing "CloudConfigWorker" at <.Worker>: can't evaluate field Worker in type *config.Config"
+type Worker struct {
+	SpotFleet SpotFleet
+}
+
+type SpotFleet struct {
+	Enabled bool
 }
 
 type Experimental struct {
