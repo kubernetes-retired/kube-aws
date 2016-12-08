@@ -211,6 +211,22 @@ coreos:
               --stack {{.ClusterName}}
 {{end}}
 
+{{if .Worker.SpotFleet.Enabled}}
+    - name: tag-spot-instance.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Tag this spot instance with cluster name
+        After=network-online.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStart=/opt/bin/tag-spot-instance
+{{end}}
+
 {{ if $.ElasticFileSystemID }}
     - name: rpc-statd.service
       command: start
@@ -436,6 +452,36 @@ write_files:
         base64 --decode < $encKey.b64 > ${encKey%.enc}
       done
       echo done.
+
+{{if .Worker.SpotFleet.Enabled}}
+  - path: /opt/bin/tag-spot-instance
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+
+      sudo rkt run \
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
+        --mount=volume=ssl,target=/etc/kubernetes/ssl \
+        --uuid-file-save=/var/run/coreos/tag-spot-instance.uuid \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+        --net=host \
+        --trust-keys-from-https \
+        --insecure-options=ondisk \
+        {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
+          -vxc \
+          'echo tagging this spot instance; \
+           instance_id="'$instance_id'"; \
+           /usr/bin/aws \
+             --region {{.Region}} ec2 create-tags \
+             --resource $instance_id \
+             --tags "Key=KubernetesCluster,Value={{.ClusterName}}"; \
+           echo done.'
+
+      sudo rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
+{{end}}
 
   - path: /opt/bin/taint-and-uncordon
     owner: root:root
