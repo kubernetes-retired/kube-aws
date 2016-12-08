@@ -238,6 +238,12 @@ nodepool() {
   ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
 }
 
+nodepool_destroy() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_POOL_NAME}
+}
+
 all() {
   build
   prepare
