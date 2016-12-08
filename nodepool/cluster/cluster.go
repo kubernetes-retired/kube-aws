@@ -78,3 +78,7 @@ func (c *Cluster) Info() (*Info, error) {
 	}
 	return &info, nil
 }
+
+func (c *Cluster) Destroy() error {
+	return c.stackProvisioner().Destroy()
+}
