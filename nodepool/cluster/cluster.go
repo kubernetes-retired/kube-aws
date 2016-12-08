@@ -48,7 +48,18 @@ func New(cfg *config.ProvidedConfig, awsDebug bool) *Cluster {
 }
 
 func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
-	return cfnstack.NewProvisioner(c.NodePoolName, c.StackTags, "{}", c.session)
+	stackPolicyBody := `{
+  "Statement" : [
+    {
+       "Effect" : "Allow",
+       "Principal" : "*",
+       "Action" : "Update:*",
+       "Resource" : "*"
+     }
+  ]
+}`
+
+	return cfnstack.NewProvisioner(c.NodePoolName, c.StackTags, stackPolicyBody, c.session)
 }
 
 func (c *Cluster) Create(stackBody string, s3URI string) error {
