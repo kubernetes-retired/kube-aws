@@ -989,6 +989,7 @@ func TestConfig(t *testing.T) {
 			EtcdDataVolumeType:      "gp2",
 			EtcdDataVolumeIOPS:      0,
 			EtcdDataVolumeEphemeral: false,
+			EtcdTenancy:             "default",
 		}
 		actual := c.EtcdSettings
 		if !reflect.DeepEqual(expected, actual) {
@@ -1237,6 +1238,27 @@ experimental:
 			},
 		},
 		{
+			context: "WithDedicatedInstanceTenancy",
+			configYaml: minimalValidConfigYaml + `
+workerTenancy: dedicated
+controllerTenancy: dedicated
+etcdTenancy: dedicated
+`,
+			assertConfig: []ConfigTester{
+				func(c *Cluster, t *testing.T) {
+					if c.EtcdSettings.EtcdTenancy != "dedicated" {
+						t.Errorf("EtcdSettings.EtcdTenancy didn't match: expected=dedicated actual=%s", c.EtcdSettings.EtcdTenancy)
+					}
+					if c.WorkerTenancy != "dedicated" {
+						t.Errorf("WorkerTenancy didn't match: expected=dedicated actual=%s", c.WorkerTenancy)
+					}
+					if c.ControllerTenancy != "dedicated" {
+						t.Errorf("ControllerTenancy didn't match: expected=dedicated actual=%s", c.ControllerTenancy)
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdNodesWithCustomEBSVolumes",
 			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
@@ -1262,6 +1284,7 @@ etcdDataVolumeIOPS: 104
 						EtcdDataVolumeType:      "io1",
 						EtcdDataVolumeIOPS:      104,
 						EtcdDataVolumeEphemeral: false,
+						EtcdTenancy:             "default",
 					}
 					actual := c.EtcdSettings
 					if !reflect.DeepEqual(expected, actual) {
