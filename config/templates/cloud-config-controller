@@ -236,6 +236,24 @@ coreos:
         [Install]
         WantedBy=kubelet.service
 {{ end }}
+    - name: kube-node-taint-and-uncordon.service
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Taint this kubernetes node with its role and then uncordon it
+        Wants=kubelet.service
+        After=kubelet.service
+        Before=cfn-signal.service
+
+        [Service]
+        Type=simple
+        StartLimitInterval=0
+        RestartSec=10
+        Restart=on-failure
+        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
+        ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl -s -m 20 -f  http://127.0.0.1:8080/healthz > /dev/null &&  /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10252/healthz > /dev/null && /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10251/healthz > /dev/null &&  /usr/bin/curl --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
+        ExecStart=/opt/bin/taint-and-uncordon
 {{if .Experimental.WaitSignal.Enabled}}
     - name: cfn-signal.service
       command: start
@@ -431,6 +449,39 @@ write_files:
       for encKey in $(find /etc/kubernetes/ssl/*.pem.enc);do
         base64 --decode < $encKey.b64 > ${encKey%.enc}
       done
+      echo done.
+
+  - path: /opt/bin/taint-and-uncordon
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      hostname=$(hostname)
+
+      sudo rkt run \
+        --volume=kube,kind=host,source=/etc/kubernetes,readOnly=true \
+        --mount=volume=kube,target=/etc/kubernetes \
+        --uuid-file-save=/var/run/coreos/taint-and-uncordon.uuid \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+        --net=host \
+        --trust-keys-from-https \
+        {{.HyperkubeImageRepo}}:{{.K8sVer}} --exec=/bin/bash -- \
+          -vxc \
+          'echo tainting this node; \
+           hostname="'${hostname}'"; \
+           kubectl="/kubectl --server=http://127.0.0.1:8080"; \
+           taint="$kubectl taint node $hostname"; \
+           $taint "node.alpha.kubernetes.io/role:master:NoSchedule"; \
+           echo done. ;\
+           echo uncordoning this node; \
+           $kubectl uncordon $hostname;\
+           echo done.'
+
+      echo cleaning pod resources.
+
+      sudo rkt rm --uuid-file=/var/run/coreos/taint-and-uncordon.uuid
+
       echo done.
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
