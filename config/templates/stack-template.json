@@ -255,7 +255,7 @@
                     ] }
                 },
                 {{end}}
-                {{if .Experimental.NodeLabel.Enabled}}
+                {{if .Experimental.AwsNodeLabels.Enabled}}
                 {
                   "Action": "autoscaling:Describe*",
                   "Effect": "Allow",
@@ -348,7 +348,7 @@
                     ] }
                 },
                 {{end}}
-                {{if .Experimental.NodeLabel.Enabled}}
+                {{if .Experimental.AwsNodeLabels.Enabled}}
                 {
                   "Action": "autoscaling:Describe*",
                   "Effect": "Allow",

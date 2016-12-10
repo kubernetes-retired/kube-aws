@@ -260,7 +260,7 @@ coreos:
               --resource AutoScaleController \
               --stack {{.ClusterName}}
 {{end}}
-{{if .Experimental.NodeLabel.Enabled }}
+{{if .Experimental.AwsNodeLabels.Enabled }}
     - name: kube-node-label.service
       enable: true
       command: start

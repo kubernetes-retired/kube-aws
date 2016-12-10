@@ -1010,6 +1010,9 @@ func TestConfig(t *testing.T) {
 			AwsEnvironment: AwsEnvironment{
 				Enabled: false,
 			},
+			AwsNodeLabels: AwsNodeLabels{
+				Enabled: false,
+			},
 			EphemeralImageStorage: EphemeralImageStorage{
 				Enabled:    false,
 				Disk:       "xvdb",
@@ -1021,10 +1024,8 @@ func TestConfig(t *testing.T) {
 			NodeDrainer: NodeDrainer{
 				Enabled: false,
 			},
-			NodeLabel: NodeLabel{
-				Enabled: false,
-			},
-			Taints: []Taint{},
+			NodeLabels: NodeLabels{},
+			Taints:     []Taint{},
 			WaitSignal: WaitSignal{
 				Enabled:      false,
 				MaxBatchSize: 1,
@@ -1058,6 +1059,8 @@ experimental:
     enabled: true
     environment:
       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+  awsNodeLabels:
+    enabled: true
   ephemeralImageStorage:
     enabled: true
   loadBalancer:
@@ -1068,8 +1071,8 @@ experimental:
       - sg-12345678
   nodeDrainer:
     enabled: true
-  nodeLabel:
-    enabled: true
+  nodeLabels:
+    kube-aws.coreos.com/role: worker
   plugins:
     rbac:
       enabled: true
@@ -1095,6 +1098,9 @@ experimental:
 								"CFNSTACK": `{ "Ref" : "AWS::StackId" }`,
 							},
 						},
+						AwsNodeLabels: AwsNodeLabels{
+							Enabled: true,
+						},
 						EphemeralImageStorage: EphemeralImageStorage{
 							Enabled:    true,
 							Disk:       "xvdb",
@@ -1108,8 +1114,8 @@ experimental:
 						NodeDrainer: NodeDrainer{
 							Enabled: true,
 						},
-						NodeLabel: NodeLabel{
-							Enabled: true,
+						NodeLabels: NodeLabels{
+							"kube-aws.coreos.com/role": "worker",
 						},
 						Plugins: Plugins{
 							Rbac: Rbac{

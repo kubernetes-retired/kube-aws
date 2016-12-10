@@ -88,8 +88,11 @@ customize_worker() {
   if [ "${KUBE_AWS_WAIT_SIGNAL_ENABLED}" != "" ]; then
     echo -e '  waitSignal:\n    enabled: true' >> cluster.yaml
   fi
-  if [ "${KUBE_AWS_NODE_LABEL_ENABLED}" != "" ]; then
-    echo -e '  nodeLabel:\n    enabled: true' >> cluster.yaml
+  if [ "${KUBE_AWS_AWS_NODE_LABELS_ENABLED}" != "" ]; then
+    echo -e '  awsNodeLabels:\n    enabled: true' >> cluster.yaml
+  fi
+  if [ "${KUBE_AWS_NODE_LABELS_ENABLED}" != "" ]; then
+    echo -e '  nodeLabels:\n    kube-aws.coreos.com/role: worker' >> cluster.yaml
   fi
   if [ "${KUBE_AWS_AWS_ENV_ENABLED}" != "" ]; then
     echo -e "  awsEnvironment:\n    enabled: true\n    environment:\n      CFNSTACK: '{\"Ref\":\"AWS::StackId\"}'" >> cluster.yaml
