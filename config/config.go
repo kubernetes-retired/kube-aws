@@ -20,6 +20,7 @@ import (
 	model "github.com/coreos/kube-aws/model"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
+	"strconv"
 )
 
 const (
@@ -82,6 +83,7 @@ func NewDefaultCluster() *Cluster {
 			DNSServiceIP: "10.3.0.10",
 		},
 		WorkerSettings: WorkerSettings{
+			Worker:                 model.NewDefaultWorker(),
 			WorkerCount:            1,
 			WorkerCreateTimeout:    "PT15M",
 			WorkerInstanceType:     "m3.medium",
@@ -1071,6 +1073,22 @@ func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
 	}
 
 	return refs
+}
+
+func (c WorkerDeploymentSettings) StackTags() map[string]string {
+	tags := map[string]string{}
+
+	for k, v := range c.DeploymentSettings.StackTags {
+		tags[k] = v
+	}
+
+	if c.Worker.ClusterAutoscaler.Enabled() {
+		tags["kube-aws:cluster-autoscaler:logical-name"] = "AutoScaleWorker"
+		tags["kube-aws:cluster-autoscaler:min-size"] = strconv.Itoa(c.Worker.ClusterAutoscaler.MinSize)
+		tags["kube-aws:cluster-autoscaler:max-size"] = strconv.Itoa(c.Worker.ClusterAutoscaler.MaxSize)
+	}
+
+	return tags
 }
 
 func (c WorkerDeploymentSettings) Valid() error {

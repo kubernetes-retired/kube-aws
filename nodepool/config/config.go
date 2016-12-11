@@ -114,12 +114,9 @@ func ClusterFromFile(filename string) (*ProvidedConfig, error) {
 func NewDefaultCluster() *ProvidedConfig {
 	defaults := cfg.NewDefaultCluster()
 
-	workerSettings := defaults.WorkerSettings
-	workerSettings.Worker = model.NewDefaultWorker()
-
 	return &ProvidedConfig{
 		DeploymentSettings: defaults.DeploymentSettings,
-		WorkerSettings:     workerSettings,
+		WorkerSettings:     defaults.WorkerSettings,
 	}
 }
 

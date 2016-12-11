@@ -91,6 +91,24 @@ configure() {
 }
 
 customize_worker() {
+  echo Writing to $(pwd)/cluster.yaml
+
+  #
+  # Optionally enable experimental worker features
+  #
+
+  echo -e "worker:" >> cluster.yaml
+  if [ "${KUBE_AWS_SPOT_FLEET_ENABLED}" != "" ]; then
+    echo -e "  spotFleet:\n    targetCapacity: 3\n" >> cluster.yaml
+  fi
+  if [ "${KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED}" != "" ]; then
+    echo -e "  clusterAutoscaler:\n    minSize: 1\n    maxSize: 2" >> cluster.yaml
+  fi
+
+  #
+  # Optionally enable experimental other features
+  #
+
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
   if [ "${KUBE_AWS_WAIT_SIGNAL_ENABLED}" != "" ]; then
     echo -e '  waitSignal:\n    enabled: true' >> cluster.yaml
@@ -234,11 +252,6 @@ nodepool_init() {
       --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
 
   cd ${NODE_POOL_ASSETS_DIR}
-
-  if [ "${KUBE_AWS_SPOT_FLEET_ENABLED}" != "" ]; then
-    echo Writing ${NODE_POOL_ASSETS_DIR}/cluster.yaml
-    echo -e "worker:\n  spotFleet:\n    targetCapacity: 3\n" >> ${NODE_POOL_ASSETS_DIR}/cluster.yaml
-  fi
 
   echo -e "instanceCIDR: 10.0.${KUBE_AWS_NODE_POOL_INDEX}.0/24" >> ${NODE_POOL_ASSETS_DIR}/cluster.yaml
 
