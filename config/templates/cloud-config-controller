@@ -311,6 +311,7 @@ coreos:
       content: |
         [Unit]
         Description=Formats the ephemeral drive
+        ConditionFirstBoot=yes
         After=dev-{{.Experimental.EphemeralImageStorage.Disk}}.device
         Requires=dev-{{.Experimental.EphemeralImageStorage.Disk}}.device
         [Service]
