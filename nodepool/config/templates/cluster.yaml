@@ -180,20 +180,22 @@ useCalico: {{.UseCalico}}
 
 # Experimental features will change in backward-incompatible ways
 # experimental:
-#   nodeDrainer:
-#     enabled: true
-#   nodeLabel:
-#     enabled: true
 #   awsEnvironment:
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
-#   waitSignal:
+#   awsNodeLabels:
 #     enabled: true
 #   loadBalancer:
 #     enabled: true
 #     names: [ "manuallymanagedelb" ]
 #     securityGroupIds: [ "sg-87654321" ]
+#   nodeDrainer:
+#     enabled: true
+#   nodeLabels:
+#     kube-aws.coreos.com/role: worker
+#   waitSignal:
+#     enabled: true
 
 # AWS Tags for cloudformation stack resources 
 #stackTags:

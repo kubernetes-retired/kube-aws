@@ -70,7 +70,8 @@ coreos:
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
-        --register-node=true \
+        {{if .Experimental.NodeLabels.Enabled}}--node-labels {{.Experimental.NodeLabels.String}} \
+        {{end}}--register-node=true \
         {{if .Experimental.Taints}}--register-schedulable=false \
         {{end}}--allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
@@ -292,7 +293,7 @@ coreos:
               --stack {{.ClusterName}}
 {{end}}
 
-{{if .Experimental.NodeLabel.Enabled }}
+{{if .Experimental.AwsNodeLabels.Enabled }}
     - name: kube-node-label.service
       enable: true
       command: start

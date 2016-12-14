@@ -210,26 +210,15 @@ worker:
 
 # Experimental features will change in backward-incompatible ways
 # experimental:
-#   nodeDrainer:
-#     enabled: true
-#   nodeLabel:
-#     enabled: true
 #   awsEnvironment:
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
-#   plugins:
-#     rbac:
-#       enabled: true
 #   auditLog:
 #     enabled: true
 #     maxage: 30
 #     logpath: /dev/stdout
-#   taints:
-#     - key: dedicated
-#       value: search
-#       effect: NoSchedule
-#   waitSignal:
+#   awsNodeLabels:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
 #   ephemeralImageStorage:
@@ -238,6 +227,19 @@ worker:
 #     enabled: true
 #     names: [ "manuallymanagedelb" ]
 #     securityGroupIds: [ "sg-87654321" ]
+#   nodeDrainer:
+#     enabled: true
+#   nodeLabels:
+#     kube-aws.coreos.com/role: worker
+#   taints:
+#     - key: dedicated
+#       value: search
+#       effect: NoSchedule
+#   waitSignal:
+#     enabled: true
+#   plugins:
+#     rbac:
+#       enabled: true
 
 # AWS Tags for cloudformation stack resources
 #stackTags:
