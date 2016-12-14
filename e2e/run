@@ -241,6 +241,12 @@ nodepool_render() {
   ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_POOL_NAME}
 }
 
+nodepool_validate() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} node-pools validate --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+}
+
 nodepool_up() {
   cd ${WORK_DIR}
 
@@ -277,6 +283,7 @@ nodepool() {
 
   nodepool_init
   nodepool_render
+  nodepool_validate
   nodepool_up
   nodepool_update
 }
