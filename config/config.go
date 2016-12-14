@@ -17,6 +17,7 @@ import (
 	"github.com/coreos/kube-aws/coreos/userdatavalidation"
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
+	model "github.com/coreos/kube-aws/model"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -229,6 +230,7 @@ type DeploymentSettings struct {
 
 // Part of configuration which is specific to worker nodes
 type WorkerSettings struct {
+	model.Worker           `yaml:"worker,omitempty"`
 	WorkerCount            int      `yaml:"workerCount,omitempty"`
 	WorkerCreateTimeout    string   `yaml:"workerCreateTimeout,omitempty"`
 	WorkerInstanceType     string   `yaml:"workerInstanceType,omitempty"`
@@ -241,6 +243,7 @@ type WorkerSettings struct {
 
 // Part of configuration which is specific to controller nodes
 type ControllerSettings struct {
+	model.Controller         `yaml:"controller,omitempty"`
 	ControllerCount          int    `yaml:"controllerCount,omitempty"`
 	ControllerCreateTimeout  string `yaml:"controllerCreateTimeout,omitempty"`
 	ControllerInstanceType   string `yaml:"controllerInstanceType,omitempty"`
@@ -281,7 +284,6 @@ type Cluster struct {
 	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
 	HostedZone             string `yaml:"hostedZone,omitempty"`
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
-	Worker                 Worker
 	providedEncryptService EncryptService
 }
 
@@ -289,17 +291,6 @@ type Subnet struct {
 	AvailabilityZone  string `yaml:"availabilityZone,omitempty"`
 	InstanceCIDR      string `yaml:"instanceCIDR,omitempty"`
 	lastAllocatedAddr *net.IP
-}
-
-// Just a place-holder to keep compatibility of cloud-config-worker between main cluster and node pool
-// Without this, {{if .Worker.SpotFleet.Enabled}} in the cloud-config-worker template fails with an obvious error like
-// "executing "CloudConfigWorker" at <.Worker>: can't evaluate field Worker in type *config.Config"
-type Worker struct {
-	SpotFleet SpotFleet
-}
-
-type SpotFleet struct {
-	Enabled bool
 }
 
 type Experimental struct {
@@ -379,11 +370,45 @@ var supportedReleaseChannels = map[string]bool{
 }
 
 func (c WorkerSettings) MinWorkerCount() int {
-	return c.WorkerCount - 1
+	if c.Worker.AutoScalingGroup.MinSize == 0 {
+		return c.WorkerCount
+	}
+	return c.Worker.AutoScalingGroup.MinSize
 }
 
 func (c WorkerSettings) MaxWorkerCount() int {
-	return c.WorkerCount + 1
+	if c.Worker.AutoScalingGroup.MaxSize == 0 {
+		return c.WorkerCount
+	}
+	return c.Worker.AutoScalingGroup.MaxSize
+}
+
+func (c WorkerSettings) WorkerRollingUpdateMinInstancesInService() int {
+	if c.AutoScalingGroup.RollingUpdateMinInstancesInService == 0 {
+		return c.MaxWorkerCount() - 1
+	}
+	return c.AutoScalingGroup.RollingUpdateMinInstancesInService
+}
+
+func (c ControllerSettings) MinControllerCount() int {
+	if c.Controller.AutoScalingGroup.MinSize == 0 {
+		return c.ControllerCount
+	}
+	return c.Controller.AutoScalingGroup.MinSize
+}
+
+func (c ControllerSettings) MaxControllerCount() int {
+	if c.Controller.AutoScalingGroup.MaxSize == 0 {
+		return c.ControllerCount
+	}
+	return c.Controller.AutoScalingGroup.MaxSize
+}
+
+func (c ControllerSettings) ControllerRollingUpdateMinInstancesInService() int {
+	if c.AutoScalingGroup.RollingUpdateMinInstancesInService == 0 {
+		return c.MaxControllerCount() - 1
+	}
+	return c.AutoScalingGroup.RollingUpdateMinInstancesInService
 }
 
 // Required by kubelet to locate the apiserver
@@ -398,9 +423,6 @@ func (c KubeClusterSettings) K8sNetworkPlugin() string {
 
 func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
-
-	config.MinControllerCount = config.ControllerCount - 1
-	config.MaxControllerCount = config.ControllerCount + 1
 
 	// Check if we are running CoreOS 1151.0.0 or greater when using rkt as
 	// runtime. Proceed regardless if running alpha. TODO(pb) delete when rkt
@@ -630,9 +652,6 @@ type etcdInstance struct {
 type Config struct {
 	Cluster
 
-	MinControllerCount int
-	MaxControllerCount int
-
 	EtcdEndpoints      string
 	EtcdInitialCluster string
 	EtcdInstances      []etcdInstance
@@ -856,6 +875,17 @@ func (c WorkerSettings) Valid() error {
 		}
 	}
 
+	if c.WorkerCount < 0 {
+		return fmt.Errorf("`workerCount` must be zero or greater if specified")
+	}
+	// one is the default WorkerCount
+	if c.WorkerCount != 1 && (c.AutoScalingGroup.MinSize != 0 || c.AutoScalingGroup.MaxSize != 0) {
+		return fmt.Errorf("`worker.autoScalingGroup.minSize` and `worker.autoScalingGroup.maxSize` can only be specified without `workerCount`")
+	}
+	if err := c.AutoScalingGroup.Valid(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -872,6 +902,17 @@ func (c ControllerSettings) Valid() error {
 		if c.ControllerRootVolumeType != "standard" && c.ControllerRootVolumeType != "gp2" {
 			return fmt.Errorf("invalid controllerRootVolumeType: %s", c.ControllerRootVolumeType)
 		}
+	}
+
+	if c.ControllerCount < 0 {
+		return fmt.Errorf("`controllerCount` must be zero or greater if specified")
+	}
+	// one is the default ControllerCount
+	if c.ControllerCount != 1 && (c.AutoScalingGroup.MinSize != 0 || c.AutoScalingGroup.MaxSize != 0) {
+		return fmt.Errorf("`controller.autoScalingGroup.minSize` and `controller.autoScalingGroup.maxSize` can only be specified without `controllerCount`")
+	}
+	if err := c.AutoScalingGroup.Valid(); err != nil {
+		return err
 	}
 
 	return nil
