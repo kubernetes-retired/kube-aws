@@ -84,6 +84,9 @@ etcdEndpoints: "10.0.0.1"
 			AwsEnvironment: cfg.AwsEnvironment{
 				Enabled: false,
 			},
+			AwsNodeLabels: cfg.AwsNodeLabels{
+				Enabled: false,
+			},
 			EphemeralImageStorage: cfg.EphemeralImageStorage{
 				Enabled:    false,
 				Disk:       "xvdb",
@@ -95,10 +98,8 @@ etcdEndpoints: "10.0.0.1"
 			NodeDrainer: cfg.NodeDrainer{
 				Enabled: false,
 			},
-			NodeLabel: cfg.NodeLabel{
-				Enabled: false,
-			},
-			Taints: []cfg.Taint{},
+			NodeLabels: cfg.NodeLabels{},
+			Taints:     []cfg.Taint{},
 			WaitSignal: cfg.WaitSignal{
 				Enabled:      false,
 				MaxBatchSize: 1,
@@ -125,6 +126,8 @@ experimental:
     enabled: true
     environment:
       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+  awsNodeLabels:
+    enabled: true
   ephemeralImageStorage:
     enabled: true
   loadBalancer:
@@ -135,8 +138,8 @@ experimental:
       - sg-12345678
   nodeDrainer:
     enabled: true
-  nodeLabel:
-    enabled: true
+  nodeLabels:
+    kube-aws.coreos.com/role: worker
   taints:
     - key: reservation
       value: spot
@@ -159,6 +162,9 @@ experimental:
 								"CFNSTACK": `{ "Ref" : "AWS::StackId" }`,
 							},
 						},
+						AwsNodeLabels: cfg.AwsNodeLabels{
+							Enabled: true,
+						},
 						EphemeralImageStorage: cfg.EphemeralImageStorage{
 							Enabled:    true,
 							Disk:       "xvdb",
@@ -172,8 +178,8 @@ experimental:
 						NodeDrainer: cfg.NodeDrainer{
 							Enabled: true,
 						},
-						NodeLabel: cfg.NodeLabel{
-							Enabled: true,
+						NodeLabels: cfg.NodeLabels{
+							"kube-aws.coreos.com/role": "worker",
 						},
 						Taints: []cfg.Taint{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},

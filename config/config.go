@@ -37,6 +37,9 @@ func NewDefaultCluster() *Cluster {
 		AwsEnvironment{
 			Enabled: false,
 		},
+		AwsNodeLabels{
+			Enabled: false,
+		},
 		EphemeralImageStorage{
 			Enabled:    false,
 			Disk:       "xvdb",
@@ -48,9 +51,7 @@ func NewDefaultCluster() *Cluster {
 		NodeDrainer{
 			Enabled: false,
 		},
-		NodeLabel{
-			Enabled: false,
-		},
+		NodeLabels{},
 		Plugins{
 			Rbac{
 				Enabled: false,
@@ -296,10 +297,11 @@ type Subnet struct {
 type Experimental struct {
 	AuditLog              AuditLog              `yaml:"auditLog"`
 	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
+	AwsNodeLabels         AwsNodeLabels         `yaml:"awsNodeLabels"`
 	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
 	LoadBalancer          LoadBalancer          `yaml:"loadBalancer"`
 	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
-	NodeLabel             NodeLabel             `yaml:"nodeLabel"`
+	NodeLabels            NodeLabels            `yaml:"nodeLabels"`
 	Plugins               Plugins               `yaml:"plugins"`
 	Taints                []Taint               `yaml:"taints"`
 	WaitSignal            WaitSignal            `yaml:"waitSignal"`
@@ -316,6 +318,10 @@ type AuditLog struct {
 	LogPath string `yaml:"logpath"`
 }
 
+type AwsNodeLabels struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type EphemeralImageStorage struct {
 	Enabled    bool   `yaml:"enabled"`
 	Disk       string `yaml:"disk"`
@@ -326,8 +332,19 @@ type NodeDrainer struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-type NodeLabel struct {
-	Enabled bool `yaml:"enabled"`
+type NodeLabels map[string]string
+
+func (l NodeLabels) Enabled() bool {
+	return len(l) > 0
+}
+
+// Returns key=value pairs separated by ',' to be passed to kubelet's `--node-labels` flag
+func (l NodeLabels) String() string {
+	labels := []string{}
+	for k, v := range l {
+		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
+	}
+	return strings.Join(labels, ",")
 }
 
 type LoadBalancer struct {
