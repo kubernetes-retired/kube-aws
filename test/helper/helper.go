@@ -7,13 +7,7 @@ import (
 )
 
 func WithDummyCredentials(fn func(dir string)) {
-	if _, err := ioutil.ReadDir("temp"); err != nil {
-		if err := os.Mkdir("temp", 0755); err != nil {
-			panic(err)
-		}
-	}
-
-	dir, err := ioutil.TempDir("temp", "dummy-credentials")
+	dir, err := ioutil.TempDir("", "dummy-credentials")
 
 	if err != nil {
 		panic(err)
