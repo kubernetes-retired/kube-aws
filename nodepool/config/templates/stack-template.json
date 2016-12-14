@@ -65,7 +65,6 @@
           "{{$subnet.AvailabilityZone}}"
           {{end}}
         ],
-        "DesiredCapacity": "{{.WorkerCount}}",
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -118,7 +117,7 @@
       {{if .Experimental.WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
-          "Count" : "{{.WorkerCount}}",
+          "Count" : "{{.MinWorkerCount}}",
           "Timeout" : "{{.WorkerCreateTimeout}}"
         }
       },
@@ -129,7 +128,7 @@
           {{if .WorkerSpotPrice}}
           "0"
           {{else}}
-          "{{.WorkerCount}}"
+          "{{.WorkerRollingUpdateMinInstancesInService}}"
           {{end}},
           {{if .Experimental.WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
