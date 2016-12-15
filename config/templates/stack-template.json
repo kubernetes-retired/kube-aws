@@ -475,6 +475,7 @@
             "Value": "{{$.ClusterName}}-kube-aws-etcd-{{$etcdIndex}}"
           }
         ],
+        "Tenancy": "{{$.EtcdTenancy}}",
         "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
       },
       "Type": "AWS::EC2::Instance"
@@ -510,6 +511,8 @@
         ],
         {{if .WorkerSpotPrice}}
         "SpotPrice": {{.WorkerSpotPrice}},
+        {{else}}
+        "PlacementTenancy": "{{.WorkerTenancy}}",
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
@@ -557,6 +560,7 @@
             "Ref": "SecurityGroupController"
           }
         ],
+        "PlacementTenancy": "{{ .ControllerTenancy }}",
         "UserData": "{{ .UserDataController }}"
       },
   {{ if .Experimental.AwsEnvironment.Enabled }}

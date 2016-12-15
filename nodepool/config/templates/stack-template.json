@@ -170,6 +170,8 @@
         ],
         {{if .WorkerSpotPrice}}
         "SpotPrice": {{.WorkerSpotPrice}},
+        {{else}}
+        "PlacementTenancy": "{{.WorkerTenancy}}",
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
