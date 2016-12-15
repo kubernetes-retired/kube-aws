@@ -100,6 +100,10 @@ worker:
 # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
 #workerRootVolumeIOPS: 0
 
+# Tenancy of the worker nodes. Options are "default" and "dedicated"
+# Documentation: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html
+# workerTenancy: default
+
 # Price (Dollars) to bid for spot instances. Omit for on-demand instances.
 # workerSpotPrice: "0.05"
 
@@ -142,6 +146,10 @@ worker:
 
 # Number of I/O operations per second (IOPS) that the etcd node's data volume supports. Leave blank if etcdDataVolumeType is not io1
 # etcdDataVolumeIOPS: 0
+
+# Tenancy of the etcd instances. Options are "default" and "dedicated"
+# Documentation: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html
+# etcdTenancy: default
 
 ## Networking config
 

@@ -69,6 +69,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #   - sg-1234abcd
 #   - sg-5678efab
 
+# Tenancy of the worker nodes. Options are "default" and "dedicated"
+# Documentation: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html
+# workerTenancy: default
+
 # Experimental worker config which can be changed in backward-incompatible ways
 # worker:
 #   # Auto Scaling Group definition for workers. If only `workerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
@@ -197,7 +201,7 @@ useCalico: {{.UseCalico}}
 #   waitSignal:
 #     enabled: true
 
-# AWS Tags for cloudformation stack resources 
+# AWS Tags for cloudformation stack resources
 #stackTags:
 #  Name: "Kubernetes"
 #  Environment: "Production"

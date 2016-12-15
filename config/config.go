@@ -89,6 +89,7 @@ func NewDefaultCluster() *Cluster {
 			WorkerRootVolumeIOPS:   0,
 			WorkerRootVolumeSize:   30,
 			WorkerSecurityGroupIds: []string{},
+			WorkerTenancy:          "default",
 		},
 		ControllerSettings: ControllerSettings{
 			ControllerCount:          1,
@@ -97,6 +98,7 @@ func NewDefaultCluster() *Cluster {
 			ControllerRootVolumeType: "gp2",
 			ControllerRootVolumeIOPS: 0,
 			ControllerRootVolumeSize: 30,
+			ControllerTenancy:        "default",
 		},
 		EtcdSettings: EtcdSettings{
 			EtcdCount:          1,
@@ -107,6 +109,7 @@ func NewDefaultCluster() *Cluster {
 			EtcdDataVolumeSize: 30,
 			EtcdDataVolumeType: "gp2",
 			EtcdDataVolumeIOPS: 0,
+			EtcdTenancy:        "default",
 		},
 		FlannelSettings: FlannelSettings{
 			PodCIDR: "10.2.0.0/16",
@@ -240,6 +243,7 @@ type WorkerSettings struct {
 	WorkerRootVolumeSize   int      `yaml:"workerRootVolumeSize,omitempty"`
 	WorkerSpotPrice        string   `yaml:"workerSpotPrice,omitempty"`
 	WorkerSecurityGroupIds []string `yaml:"workerSecurityGroupIds,omitempty"`
+	WorkerTenancy          string   `yaml:"workerTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to controller nodes
@@ -251,6 +255,7 @@ type ControllerSettings struct {
 	ControllerRootVolumeType string `yaml:"controllerRootVolumeType,omitempty"`
 	ControllerRootVolumeIOPS int    `yaml:"controllerRootVolumeIOPS,omitempty"`
 	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize,omitempty"`
+	ControllerTenancy        string `yaml:"controllerTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to etcd nodes
@@ -264,6 +269,7 @@ type EtcdSettings struct {
 	EtcdDataVolumeType      string `yaml:"etcdDataVolumeType,omitempty"`
 	EtcdDataVolumeIOPS      int    `yaml:"etcdDataVolumeIOPS,omitempty"`
 	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumEphemeral,omitempty"`
+	EtcdTenancy             string `yaml:"etcdTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to flanneld
@@ -771,6 +777,14 @@ func (c Cluster) valid() error {
 
 	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
 		return err
+	}
+
+	if c.WorkerTenancy != "default" && c.Worker.SpotFleet.Enabled() {
+		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot fleet", c.WorkerTenancy)
+	}
+
+	if c.WorkerTenancy != "default" && c.WorkerSpotPrice != "" {
+		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot instances", c.WorkerTenancy)
 	}
 
 	return nil
