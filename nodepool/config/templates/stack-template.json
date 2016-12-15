@@ -84,14 +84,14 @@
             "Value": "{{.ClusterName}}"
           },
           {
-            "Key": "KubernetesNodePool",
+            "Key": "kube-aws:node-pool:name",
             "PropagateAtLaunch": "true",
             "Value": "{{.NodePoolName}}"
           },
           {
             "Key": "Name",
             "PropagateAtLaunch": "true",
-            "Value": "{{.NodePoolName}}-kube-aws-worker"
+            "Value": "{{.StackName}}-kube-aws-worker"
           }
         ],
         {{if .Experimental.LoadBalancer.Enabled}}
