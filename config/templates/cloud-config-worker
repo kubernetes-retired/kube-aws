@@ -209,7 +209,7 @@ coreos:
           {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
               --region {{.Region}} \
               --resource LaunchConfigurationWorker \
-              --stack {{.ClusterName}}
+              --stack {{.StackName}}
 {{end}}
 
 {{if .Worker.SpotFleet.Enabled}}
@@ -290,7 +290,7 @@ coreos:
           {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-signal -e 0 \
               --region {{.Region}} \
               --resource AutoScaleWorker \
-              --stack {{.ClusterName}}
+              --stack {{.StackName}}
 {{end}}
 
 {{if .Experimental.AwsNodeLabels.Enabled }}
