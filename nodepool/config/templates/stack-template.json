@@ -287,6 +287,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{if .Experimental.LoadBalancer.Enabled}}
+                {
+                  "Action": "elasticloadbalancing:*",
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {{end}}
                 {{end}}
                 {
                   "Action": [
