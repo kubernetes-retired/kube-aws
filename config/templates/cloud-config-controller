@@ -552,6 +552,7 @@ write_files:
           {{ end }}
           - --advertise-address=$private_ipv4
           - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+          - --anonymous-auth=false
           - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
