@@ -683,6 +683,12 @@ type Config struct {
 	VPCRef string
 }
 
+// CloudFormation stack name which is unique in an AWS account.
+// This is intended to be used to reference stack name from cloud-config as the target of awscli or cfn-bootstrap-tools commands e.g. `cfn-init` and `cfn-signal`
+func (c Config) StackName() string {
+	return c.ClusterName
+}
+
 func (c Cluster) valid() error {
 	if c.CreateRecordSet {
 		if c.HostedZone == "" && c.HostedZoneID == "" {

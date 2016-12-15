@@ -3,7 +3,9 @@
 KUBE_AWS_CMD=${KUBE_AWS_CMD:-$GOPATH/src/github.com/coreos/kube-aws/bin/kube-aws}
 E2E_DIR=$(cd $(dirname $0); pwd)
 WORK_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}
-NODE_POOL_ASSETS_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}/node-pools/${KUBE_AWS_POOL_NAME}
+KUBE_AWS_NODE_POOL_INDEX=${KUBE_AWS_NODE_POOL_INDEX:-1}
+KUBE_AWS_NODE_POOL_NAME=${KUBE_AWS_CLUSTER_NAME}-nodepool${KUBE_AWS_NODE_POOL_INDEX}
+NODE_POOL_ASSETS_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}/node-pools/${KUBE_AWS_NODE_POOL_NAME}
 SRC_DIR=$(cd $(dirname $0); cd ..; pwd)
 KUBECONFIG=${WORK_DIR}/kubeconfig
 
@@ -71,6 +73,13 @@ configure() {
   echo 'createRecordSet: true' >> cluster.yaml
 
   # required to run kube-aws update
+  echo 'workerCount: 2' >> cluster.yaml
+  echo 'controllerCount: 2' >> cluster.yaml
+
+  if [ "${KUBE_AWS_USE_CALICO}" != "" ]; then
+    echo 'useCalico: true' >> cluster.yaml
+  fi
+
   customize_worker
 
   ${KUBE_AWS_CMD} render
@@ -82,8 +91,6 @@ configure() {
 }
 
 customize_worker() {
-  echo 'workerCount: 2' >> cluster.yaml
-  echo 'controllerCount: 2' >> cluster.yaml
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
   if [ "${KUBE_AWS_WAIT_SIGNAL_ENABLED}" != "" ]; then
     echo -e '  waitSignal:\n    enabled: true' >> cluster.yaml
@@ -96,9 +103,6 @@ customize_worker() {
   fi
   if [ "${KUBE_AWS_AWS_ENV_ENABLED}" != "" ]; then
     echo -e "  awsEnvironment:\n    enabled: true\n    environment:\n      CFNSTACK: '{\"Ref\":\"AWS::StackId\"}'" >> cluster.yaml
-  fi
-  if [ "${KUBE_AWS_USE_CALICO}" != "" ]; then
-    echo 'useCalico: true' >> cluster.yaml
   fi
 }
 
@@ -224,34 +228,40 @@ ssh_worker() {
 nodepool_init() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools init --node-pool-name ${KUBE_AWS_POOL_NAME} \
+  ${KUBE_AWS_CMD} node-pools init --node-pool-name ${KUBE_AWS_NODE_POOL_NAME} \
       --availability-zone ${KUBE_AWS_AVAILABILITY_ZONE} \
       --key-name ${KUBE_AWS_KEY_NAME} \
       --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
+
+  cd ${NODE_POOL_ASSETS_DIR}
 
   if [ "${KUBE_AWS_SPOT_FLEET_ENABLED}" != "" ]; then
     echo Writing ${NODE_POOL_ASSETS_DIR}/cluster.yaml
     echo -e "worker:\n  spotFleet:\n    targetCapacity: 3\n" >> ${NODE_POOL_ASSETS_DIR}/cluster.yaml
   fi
+
+  echo -e "instanceCIDR: 10.0.${KUBE_AWS_NODE_POOL_INDEX}.0/24" >> ${NODE_POOL_ASSETS_DIR}/cluster.yaml
+
+  customize_worker
 }
 
 nodepool_render() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_POOL_NAME}
+  ${KUBE_AWS_CMD} node-pools render stack --node-pool-name ${KUBE_AWS_NODE_POOL_NAME}
 }
 
 nodepool_validate() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools validate --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+  ${KUBE_AWS_CMD} node-pools validate --node-pool-name ${KUBE_AWS_NODE_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
 }
 
 nodepool_up() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --export
-  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_NODE_POOL_NAME} --export
+  ${KUBE_AWS_CMD} node-pools up --node-pool-name ${KUBE_AWS_NODE_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
 }
 
 nodepool_update() {
@@ -269,13 +279,13 @@ nodepool_update() {
 
   popd
 
-  ${KUBE_AWS_CMD} node-pools update --node-pool-name ${KUBE_AWS_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
+  ${KUBE_AWS_CMD} node-pools update --node-pool-name ${KUBE_AWS_NODE_POOL_NAME} --s3-uri ${KUBE_AWS_S3_URI}
 }
 
 nodepool_destroy() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_POOL_NAME}
+  ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_NODE_POOL_NAME}
 }
 
 nodepool() {
