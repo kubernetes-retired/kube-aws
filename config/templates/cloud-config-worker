@@ -226,6 +226,22 @@ coreos:
         Type=oneshot
         RemainAfterExit=true
         ExecStart=/opt/bin/tag-spot-instance
+
+{{if .Experimental.LoadBalancer.Enabled}}
+    - name: add-to-load-balancers.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Add this spot instance to load balancers
+        After=network-online.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStart=/opt/bin/add-to-load-balancers
+{{end}}
 {{end}}
 
 {{ if $.ElasticFileSystemID }}
@@ -479,10 +495,41 @@ write_files:
            /usr/bin/aws \
              --region {{.Region}} ec2 create-tags \
              --resource $instance_id \
-             --tags "Key=KubernetesCluster,Value={{.ClusterName}}"; \
+             --tags '"'"'Key=KubernetesCluster,Value="{{.ClusterName}}"'"'"' '"'"'Key=Name,Value="{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'; \
            echo done.'
 
       sudo rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
+{{if .Experimental.LoadBalancer.Enabled}}
+  - path: /opt/bin/add-to-load-balancers
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+
+      sudo rkt run \
+        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
+        --mount=volume=ssl,target=/etc/kubernetes/ssl \
+        --uuid-file-save=/var/run/coreos/add-to-load-balancers.uuid \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+        --net=host \
+        --trust-keys-from-https \
+        --insecure-options=ondisk \
+        {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
+          -vxc \
+          'echo adding this spot instance to load balancers; \
+           instance_id="'$instance_id'"; \
+           lbs=({{range $i, $lb := .Experimental.LoadBalancer.Names}}"{{$lb}}" {{end}}); \
+           add_to_lb="/usr/bin/aws --region {{.Region}} elb register-instances-with-load-balancer --instances $instance_id --load-balancer-name"; \
+           for lb in ${lbs[@]}; do \
+             echo "$lb"; \
+             $add_to_lb "$lb"; \
+           done; \
+           echo done.'
+
+      sudo rkt rm --uuid-file=/var/run/coreos/add-to-load-balancers.uuid
+{{end}}
 {{end}}
 
   - path: /opt/bin/taint-and-uncordon
