@@ -148,7 +148,7 @@ func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
   ]
 }
 `
-	return cfnstack.NewProvisioner(c.ClusterName, c.StackTags, stackPolicyBody, c.session)
+	return cfnstack.NewProvisioner(c.ClusterName, c.WorkerDeploymentSettings().StackTags(), stackPolicyBody, c.session)
 }
 
 func (c *Cluster) Create(stackBody string, s3URI string) error {
