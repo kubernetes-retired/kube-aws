@@ -39,7 +39,7 @@ func init() {
 }
 
 func runCmdRender(cmd *cobra.Command, args []string) error {
-	fmt.Printf("WARNING: 'kube-aws render' is deprecated. See 'kube-aws render --help' for usage\n")
+	fmt.Printf("WARNING: 'kube-aws node-pools render' is deprecated. See 'kube-aws render --help' for usage\n")
 
 	if len(args) != 0 {
 		return fmt.Errorf("render takes no arguments\n")
@@ -95,7 +95,7 @@ func runCmdRenderStack(cmd *cobra.Command, args []string) error {
 		`Success! Stack rendered to nodepools/%s/stack-template.json.
 
 Next steps:
-1. (Optional) Validate your changes to %s with "kube-aws nodepool validate --pool-name %s"
+1. (Optional) Validate your changes to %s with "kube-aws node-pools validate --node-pool-name %s"
 2. (Optional) Further customize the cluster by modifying stack-template.json or files in ./userdata.
 3. Start the cluster with "kube-aws up".
 `
