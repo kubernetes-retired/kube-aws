@@ -3,8 +3,18 @@ package model
 import "fmt"
 
 type Worker struct {
-	AutoScalingGroup `yaml:"autoScalingGroup,omitempty"`
-	SpotFleet        `yaml:"spotFleet,omitempty"`
+	AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
+	ClusterAutoscaler ClusterAutoscaler `yaml:"clusterAutoscaler"`
+	SpotFleet         `yaml:"spotFleet,omitempty"`
+}
+
+type ClusterAutoscaler struct {
+	MinSize int `yaml:"minSize"`
+	MaxSize int `yaml:"maxSize"`
+}
+
+func (a ClusterAutoscaler) Enabled() bool {
+	return a.MinSize > 0
 }
 
 // UnitRootVolumeSize/IOPS are used for spot fleets instead of WorkerRootVolumeSize/IOPS,
