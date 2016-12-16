@@ -17,7 +17,7 @@ This survey is meant for those who are currently running at least some workloads
 * Create, update and destroy Kubernetes clusters on AWS
 * Highly available and scalable Kubernetes clusters backed by multi-AZ deployment and Node Pools
 * Deployment to an existing VPC
-* Powered on various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
+* Powered by various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
 
 ## Getting Started
 
