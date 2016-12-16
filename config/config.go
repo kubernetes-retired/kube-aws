@@ -789,6 +789,12 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot instances", c.WorkerTenancy)
 	}
 
+	if c.Worker.ClusterAutoscaler.Enabled() {
+		return fmt.Errorf("cluster-autoscaler support can't be enabled for a main cluster because allowing so" +
+			"results in unreliability while scaling nodes out. " +
+			"Use experimental node pools instead to deploy worker nodes with cluster-autoscaler support.")
+	}
+
 	return nil
 }
 
