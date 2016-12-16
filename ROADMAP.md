@@ -22,7 +22,7 @@ Please file an issue to make suggestions on this roadmap!
     * Including partial support for auto-scaling worker nodes, kube-dns
   * Self-hosted Calico
 
-# Stage 3: v0.9.4
+## Stage 3: v0.9.4
 
   * etcd improvements
     * Backups
