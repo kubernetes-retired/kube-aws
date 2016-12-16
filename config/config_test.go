@@ -1345,6 +1345,16 @@ etcdDataVolumeIOPS: 104
 		expectedErrorMessage string
 	}{
 		{
+			context: "WithClusterAutoscalerEnabledForWorkers",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  clusterAutoscaler:
+    minSize: 1
+    maxSize: 2
+`,
+			expectedErrorMessage: "cluster-autoscaler support can't be enabled for a main cluster",
+		},
+		{
 			context: "WithInvalidTaint",
 			configYaml: minimalValidConfigYaml + `
 experimental:

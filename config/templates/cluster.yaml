@@ -84,13 +84,6 @@ controller:
 #     minSize: 1
 #     maxSize: 3
 #     rollingUpdateMinInstancesInService: 2
-#   # Tag the cloudformation stack with the key `kube-aws:cluster-autoscaler:scale-specs` with the value containing
-#   # source of truth for cluster-autoscaler to update their autoscaling target and its min/max size.
-#   # Currently, enabling this configuration doesn't automatically deploy cluster-autoscaler itself.
-#   # Please read [the original issue](https://github.com/coreos/kube-aws/issues/148) carefully for more information.
-#   clusterAutoscaler:
-#     minSize: 1
-#     maxSize: 3
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
