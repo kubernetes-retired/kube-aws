@@ -38,7 +38,7 @@ $ kube-aws node-pools init --node-pool-name first-pool-in-1a \
   --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
 
 $ kube-aws node-pools init --node-pool-name second-pool-in-1b \
-  --availability-zone us-west-1a \
+  --availability-zone us-west-1b \
   --key-name ${KUBE_AWS_KEY_NAME} \
   --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
 ```
