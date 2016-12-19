@@ -19,13 +19,12 @@ var (
 		Use:          "render",
 		Short:        "Render deployment artifacts",
 		Long:         ``,
-		RunE:         runCmdRender,
 		SilenceUsage: true,
 	}
 
 	cmdRenderStack = &cobra.Command{
 		Use:          "stack",
-		Short:        "Render CloudFormation stack",
+		Short:        "Render CloudFormation stack template and coreos-cloudinit userdata",
 		Long:         ``,
 		RunE:         runCmdRenderStack,
 		SilenceUsage: true,
@@ -38,19 +37,6 @@ func init() {
 	cmdRender.AddCommand(cmdRenderStack)
 }
 
-func runCmdRender(cmd *cobra.Command, args []string) error {
-	fmt.Printf("WARNING: 'kube-aws node-pools render' is deprecated. See 'kube-aws render --help' for usage\n")
-
-	if len(args) != 0 {
-		return fmt.Errorf("render takes no arguments\n")
-	}
-
-	if err := runCmdRenderStack(cmd, args); err != nil {
-		return err
-	}
-
-	return nil
-}
 func runCmdRenderStack(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		return fmt.Errorf("render stack takes no arguments\n")
