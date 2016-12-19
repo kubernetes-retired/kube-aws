@@ -115,9 +115,18 @@ Spot Fleet support may change in backward-incompatible ways as it is still an ex
 So, please use this feature at your own risk.
 However, we'd greatly appreciate your feedbacks because they do accelerate improvements in this area!
 
+### Known Limitations
+
+* Running `kube-aws node-pools update` to increase or decrease `targetCapacity` of a spot fleet resulst in a complete replacement of the Spot Fleet hence some downtime. [This is due to how CloudFormation works for updating a Spot Fleet](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520)
+   * It is recommented to temporarily bring up an another, spare node pool to maintain the whole cluster capacity at a certain level while replacing the spot fleet
+
+### Pre-requisites
+
 This feature assumes you already have the IAM role with ARN like "arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-role" in your own AWS account.
 It implies that you've arrived "Spot Requests" in EC2 Dashboard in the AWS console at least once.
 See [the AWS documentation describing pre-requisites for Spot Fleet](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites) for details.
+
+### Steps
 
 To add a node pool powered by Spot Fleet, edit node pool's `cluster.yaml`:
 
