@@ -16,16 +16,23 @@ Node Pool allows you to bring up additional pools of worker nodes each with a se
 Edit the `cluster.yaml` file to decrease `workerCount`, which is meant to be number of worker nodes in the "main" cluster, down to zero:
 
 ```yaml
-workerCount: 0
+# workerCount: should be commented out and instead the below should be added before `kube-aws up`
+worker:
+  autoScalingGroup:
+    minSize: 0
+    rollingUpdateMinInstancesInService: 0
+
 subnets:
   - availabilityZone: us-west-1a
     instanceCIDR: "10.0.0.0/24"
 ```
 
-Update the main cluster to catch up changes made in `cluster.yaml`:
+`kube-aws update` doesn't work when decreasing number of workers down to zero as of today.
+Therefore, don't update but recreate the main cluster to catch up changes made in `cluster.yaml`:
 
 ```
-$ kube-aws update \
+$ kube-aws destroy
+$ kube-aws up \
   --s3-uri s3://<my-bucket>/<optional-prefix>
 ```
 
