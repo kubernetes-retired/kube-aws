@@ -311,7 +311,14 @@ nodepool_update() {
 nodepool_destroy() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_NODE_POOL_NAME}
+  status=$(aws cloudformation describe-stacks --stack-name ${KUBE_AWS_NODE_POOL_NAME} --output json | jq -rc '.Stacks[0].StackStatus')
+
+  if [ "$status" != "DELETE_IN_PROGRESS" ]; then
+    ${KUBE_AWS_CMD} node-pools destroy --node-pool-name ${KUBE_AWS_NODE_POOL_NAME}
+  else
+    aws cloudformation wait stack-delete-complete \
+        --stack-name ${KUBE_AWS_NODE_POOL_NAME}
+  fi
 }
 
 nodepool() {
