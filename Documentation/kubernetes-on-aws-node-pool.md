@@ -69,6 +69,14 @@ subnets:
     instanceCIDR: "10.0.2.0/24"
 ```
 
+Render the assets for the node pools including [cloud-init](https://github.com/coreos/coreos-cloudinit) cloud-config userdata and [AWS CloudFormation](https://aws.amazon.com/cloudformation/) template:
+
+```
+$ kube-aws node-pools render stack --node-pool-name first-pool-in-1a
+
+$ kube-aws node-pools render stack --node-pool-name second-pool-in-1b
+```
+
 Launch the node pools:
 
 ```
