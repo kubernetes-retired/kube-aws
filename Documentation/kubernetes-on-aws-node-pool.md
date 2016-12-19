@@ -16,7 +16,9 @@ Node Pool allows you to bring up additional pools of worker nodes each with a se
 Edit the `cluster.yaml` file to decrease `workerCount`, which is meant to be number of worker nodes in the "main" cluster, down to zero:
 
 ```yaml
-# workerCount: should be commented out and instead the below should be added before `kube-aws up`
+# `workerCount` should be set to zero explicitly
+workerCount: 0
+# And the below should be added before recreating the cluster
 worker:
   autoScalingGroup:
     minSize: 0
