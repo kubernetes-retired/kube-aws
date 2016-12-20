@@ -1105,6 +1105,14 @@ func (c WorkerDeploymentSettings) Valid() error {
 		return fmt.Errorf("number of user provided security groups must be less than or equal to 4 but was %d (actual EC2 limit is 5 but one of them is reserved for kube-aws) : %v", numSGs, sgRefs)
 	}
 
+	if c.SpotFleet.Enabled() && c.Experimental.AwsEnvironment.Enabled {
+		return fmt.Errorf("The experimental feature `awsEnvironment` assumes a node pool is managed by an ASG rather than a Spot Fleet.")
+	}
+
+	if c.SpotFleet.Enabled() && c.Experimental.WaitSignal.Enabled {
+		return fmt.Errorf("The experimental feature `waitSignal` assumes a node pool is managed by an ASG rather than a Spot Fleet.")
+	}
+
 	return nil
 }
 
