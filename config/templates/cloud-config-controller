@@ -372,6 +372,10 @@ write_files:
       "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
 
       /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
+      -d"$(cat /srv/kubernetes/manifests/kube-dns-autoscaler-de.yaml)" \
+      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+
+      /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
       -d"$(cat /srv/kubernetes/manifests/kube-dashboard-rc.yaml)" \
       "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers"
 
@@ -718,6 +722,42 @@ write_files:
           }
         }
 {{ end }}
+
+  - path: /srv/kubernetes/manifests/kube-dns-autoscaler-de.yaml
+    content: |
+        apiVersion: extensions/v1beta1
+        kind: Deployment
+        metadata:
+          name: kube-dns-autoscaler
+          namespace: kube-system
+          labels:
+            k8s-app: kube-dns-autoscaler
+            kubernetes.io/cluster-service: "true"
+        spec:
+          template:
+            metadata:
+              labels:
+                k8s-app: kube-dns-autoscaler
+              annotations:
+                scheduler.alpha.kubernetes.io/critical-pod: ''
+                scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+            spec:
+              containers:
+              - name: autoscaler
+                image: gcr.io/google_containers/cluster-proportional-autoscaler-amd64:1.0.0
+                resources:
+                    requests:
+                        cpu: "20m"
+                        memory: "10Mi"
+                command:
+                  - /cluster-proportional-autoscaler
+                  - --namespace=kube-system
+                  - --configmap=kube-dns-autoscaler
+                  - --mode=linear
+                  - --target=Deployment/kube-dns
+                  - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":2}}
+                  - --logtostderr=true
+                  - --v=2
 
   - path: /srv/kubernetes/manifests/kube-dns-de.yaml
     content: |
