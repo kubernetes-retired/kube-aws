@@ -353,6 +353,67 @@
     {{end}}
     {{end}}
 
+    {{/*TODO: Add worker subnet specific logic */}}
+    {{if $.Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Subnets}}
+    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
+    {{if not $subnet.RouteTableID}}
+    ,
+    "{{$workerSubnetLogicalName}}RouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}-route-table"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::RouteTable"
+    }
+    {{end}}
+    ,
+    {{if not $subnet.NatGateway.ID && not $subnet.RouteTableID}}
+    "{{$workerSubnetLogicalName}}RouteToNatGateway": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId":
+          {{if not $subnet.NatGateway.ID}}
+          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
+          {{else}}
+          "{{$subnet.NatGateway.ID}}",
+          {{end}}
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"}
+          {{else}}
+          "{{$subnet.RouteTableID}}"
+          {{end}}
+      },
+      "Type": "AWS::EC2::Route"
+    },
+    {{end}}
+    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"},
+          {{else}}
+          "{{$subnet.RouteTableID}}",
+          {{end}}
+        "SubnetId": {
+          "Ref": "{{$workerSubnetLogicalName}}"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{end}}
+
     {{range $index, $subnet := .Subnets}}
     {{with $subnetLogicalName := printf "Subnet%d" $index}}
     ,

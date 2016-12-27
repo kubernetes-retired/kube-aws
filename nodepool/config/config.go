@@ -154,7 +154,7 @@ func ClusterFromBytes(data []byte) (*ProvidedConfig, error) {
 
 	// For backward-compatibility
 	if len(c.Subnets) == 0 {
-		c.Subnets = []*cfg.Subnet{
+		c.Subnets = []*model.Subnet{
 			{
 				AvailabilityZone: c.AvailabilityZone,
 				InstanceCIDR:     c.InstanceCIDR,

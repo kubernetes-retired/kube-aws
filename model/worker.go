@@ -6,6 +6,7 @@ type Worker struct {
 	AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
 	ClusterAutoscaler ClusterAutoscaler `yaml:"clusterAutoscaler"`
 	SpotFleet         `yaml:"spotFleet,omitempty"`
+	TopologyPrivate    bool `yaml:"topologyPrivate,omitempty"`
 }
 
 type ClusterAutoscaler struct {
