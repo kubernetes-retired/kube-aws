@@ -86,7 +86,7 @@ func NewDefaultCluster() *Cluster {
 			Worker:                 model.NewDefaultWorker(),
 			WorkerCount:            1,
 			WorkerCreateTimeout:    "PT15M",
-			WorkerInstanceType:     "m3.medium",
+			WorkerInstanceType:     "t2.medium",
 			WorkerRootVolumeType:   "gp2",
 			WorkerRootVolumeIOPS:   0,
 			WorkerRootVolumeSize:   30,
@@ -96,7 +96,7 @@ func NewDefaultCluster() *Cluster {
 		ControllerSettings: ControllerSettings{
 			ControllerCount:          1,
 			ControllerCreateTimeout:  "PT15M",
-			ControllerInstanceType:   "m3.medium",
+			ControllerInstanceType:   "t2.medium",
 			ControllerRootVolumeType: "gp2",
 			ControllerRootVolumeIOPS: 0,
 			ControllerRootVolumeSize: 30,
@@ -104,7 +104,7 @@ func NewDefaultCluster() *Cluster {
 		},
 		EtcdSettings: EtcdSettings{
 			EtcdCount:          1,
-			EtcdInstanceType:   "m3.medium",
+			EtcdInstanceType:   "t2.medium",
 			EtcdRootVolumeSize: 30,
 			EtcdRootVolumeType: "gp2",
 			EtcdRootVolumeIOPS: 0,
