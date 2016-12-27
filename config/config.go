@@ -473,26 +473,6 @@ func (c Cluster) Config() (*Config, error) {
 		config.AMI = c.AmiId
 	}
 
-	//Set logical name constants
-	config.VPCLogicalName = vpcLogicalName
-	config.InternetGatewayLogicalName = internetGatewayLogicalName
-
-	//Set reference strings
-
-	//Assume VPC does not exist, reference by logical name
-	config.VPCRef = fmt.Sprintf(`{ "Ref" : %q }`, config.VPCLogicalName)
-	if config.VPCID != "" {
-		//This means this VPC already exists, and we can reference it directly by ID
-		config.VPCRef = fmt.Sprintf("%q", config.VPCID)
-	}
-
-	//Assume Internet Gateway does not exist, reference by logical name
-	config.InternetGatewayRef = fmt.Sprintf(`{ "Ref" : %q }`, config.InternetGatewayLogicalName)
-	if config.InternetGatewayID != "" {
-		//This means this Internet Gateway already exists, and we can reference it directly by ID
-		config.InternetGatewayRef = fmt.Sprintf("%q", config.InternetGatewayID)
-	}
-
 	config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
 	var etcdEndpoints, etcdInitialCluster bytes.Buffer
 
@@ -688,20 +668,36 @@ type Config struct {
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
-
-	//Logical names of dynamic resources
-	VPCLogicalName string
-	InternetGatewayLogicalName string
-
-	//Reference strings for dynamic resources
-	VPCRef string
-	InternetGatewayRef string
 }
 
 // CloudFormation stack name which is unique in an AWS account.
 // This is intended to be used to reference stack name from cloud-config as the target of awscli or cfn-bootstrap-tools commands e.g. `cfn-init` and `cfn-signal`
 func (c Config) StackName() string {
 	return c.ClusterName
+}
+
+func (c Config) VPCLogicalName() string {
+	return vpcLogicalName
+}
+
+func (c Config) VPCRef() string {
+	if c.VPCID != "" {
+		return fmt.Sprintf("%q", c.VPCID)
+	} else {
+		return fmt.Sprintf(`{ "Ref" : %q }`, c.VPCLogicalName())
+	}
+}
+
+func (c Config) InternetGatewayLogicalName() string {
+	return internetGatewayLogicalName
+}
+
+func (c Config) InternetGatewayRef() string {
+	if c.InternetGatewayID != "" {
+		return fmt.Sprintf("%q", c.InternetGatewayID);
+	} else {
+		return fmt.Sprintf(`{ "Ref" : %q }`, c.InternetGatewayLogicalName())
+	}
 }
 
 func (c Cluster) valid() error {
