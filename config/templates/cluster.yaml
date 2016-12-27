@@ -59,6 +59,12 @@ controller:
   #   minSize: 1
   #   maxSize: 3
   #   rollingUpdateMinInstancesInService: 2
+  # privateSubnets:
+  #   - availabilityZone: us-west-1a
+  #     instanceCIDR: "10.0.4.0/24"
+  #   - availabilityZone: us-west-1b
+  #     instanceCIDR: "10.0.5.0/24"
+
 
 # Maximum time to wait for controller creation
 #controlerCreateTimeout: PT15M
@@ -84,6 +90,9 @@ controller:
 #     minSize: 1
 #     maxSize: 3
 #     rollingUpdateMinInstancesInService: 2
+#   # Network topology Public or Private with NAT Gateway
+#   # A private subnet can be defined in the node pool.
+#   topologyPrivate: true
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
@@ -121,6 +130,18 @@ controller:
 # (Set to an odd number >= 3 for HA control plane)
 # etcdCount: 1
 
+# etcd:
+#   privateSubnets:
+#     - availabilityZone: us-west-1a
+#       instanceCIDR: "10.0.2.0/24"
+#     - availabilityZone: us-west-1b
+#       instanceCIDR: "10.0.3.0/24"
+#       # natGateway:
+#       #   # Pre-allocated NAT Gateway. Used with private subnets.
+#       #   id: "ngw-abcdef12"
+#       #   # Pre-allocated EIP for NAT Gateways. Used with private subnets.
+#       #   eipAllocationIDs: "eipalloc-abcdef12"
+
 # Instance type for etcd node
 # etcdInstanceType: m3.medium
 
@@ -156,6 +177,9 @@ controller:
 # ID of existing VPC to create subnet in. Leave blank to create a new VPC
 # vpcId:
 
+# ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+# internetGatewayId:
+
 # ID of existing route table in existing VPC to attach subnet to. Leave blank to use the VPC's main route table.
 # routeTableId:
 
@@ -171,6 +195,11 @@ controller:
 #     instanceCIDR: "10.0.0.0/24"
 #   - availabilityZone: us-west-1b
 #     instanceCIDR: "10.0.1.0/24"
+#     # natGateway:
+#     #   # Pre-allocated NAT Gateway. Used with private subnets.
+#     #   id: "ngw-abcdef12"
+#     #   # Pre-allocated EIP for NAT Gateways. Used with private subnets.
+#     #   eipAllocationIDs: "eipalloc-abcdef12"
 
 # CIDR for all service IP addresses
 # serviceCIDR: "10.3.0.0/24"
