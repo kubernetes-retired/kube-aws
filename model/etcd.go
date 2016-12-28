@@ -1,7 +1,7 @@
 package model
 
 type Etcd struct {
-	PrivateSubnets   []*Subnet `yaml:"privateSubnets,omitempty"`
+	PrivateSubnets   []*PrivateSubnet `yaml:"privateSubnets,omitempty"`
 }
 
 func (c Etcd) TopologyPrivate() bool {
