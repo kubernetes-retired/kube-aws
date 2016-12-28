@@ -476,19 +476,21 @@ func (c Cluster) Config() (*Config, error) {
 	config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
 	var etcdEndpoints, etcdInitialCluster bytes.Buffer
 
-	var lastAllocatedAddr = make(map[*model.Subnet]*net.IP)
+	var lastAllocatedAddr = make(map[model.Subneter]*net.IP)
 	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
 
 		//Round-robbin etcd instances across all available subnets
 		subnetIndex := etcdIndex % len(config.Subnets)
-		subnet := config.Subnets[subnetIndex]
+		subnet := model.Subneter(config.Subnets[subnetIndex])
+		subnetInstanceCIDR := config.Subnets[subnetIndex].InstanceCIDR
 		if config.Etcd.TopologyPrivate() {
-			subnet = config.Etcd.PrivateSubnets[subnetIndex]
+			subnet = model.Subneter(config.Etcd.PrivateSubnets[subnetIndex])
+			subnetInstanceCIDR = config.Etcd.PrivateSubnets[subnetIndex].InstanceCIDR
 		}
 
-		_, subnetCIDR, err := net.ParseCIDR(subnet.InstanceCIDR)
+		_, subnetCIDR, err := net.ParseCIDR(subnetInstanceCIDR)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing subnet instance cidr %s: %v", subnet.InstanceCIDR, err)
+			return nil, fmt.Errorf("error parsing subnet instance cidr %s: %v", subnetInstanceCIDR, err)
 		}
 
 		if lastAllocatedAddr[subnet] == nil {
@@ -656,7 +658,7 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool
 
 type etcdInstance struct {
 	IPAddress   net.IP
-	Subnet      *model.Subnet
+	Subnet      model.Subneter
 }
 
 type Config struct {

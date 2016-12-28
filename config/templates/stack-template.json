@@ -443,11 +443,11 @@
               "VolumeType": "{{$.EtcdRootVolumeType}}"
             }
           },
-	  {
+	      {
             "DeviceName": "/dev/xvdf",
-	    {{if $.EtcdDataVolumeEphemeral}}
-	    "VirtualName" : "ephemeral0"
-	    {{else}}
+	        {{if $.EtcdDataVolumeEphemeral}}
+	        "VirtualName" : "ephemeral0"
+	        {{else}}
             "Ebs": {
               "VolumeSize": "{{$.EtcdDataVolumeSize}}",
               {{if gt $.EtcdDataVolumeIOPS 0}}
@@ -455,7 +455,7 @@
               {{end}}
               "VolumeType": "{{$.EtcdDataVolumeType}}"
             }
-	    {{end}}
+	        {{end}}
           }
         ],
         "IamInstanceProfile": {
@@ -1097,7 +1097,7 @@
 
     {{if $.Etcd.TopologyPrivate}}
     {{range $index, $subnet := .Etcd.PrivateSubnets}}
-    {{with $etcdSubnetLogicalName := printf "Etcd%d" $subnet.LogicalName}}
+    {{with $etcdSubnetLogicalName := printf "Etcd%s" $subnet.LogicalName}}
     ,
     "{{$etcdSubnetLogicalName}}": {
       "Properties": {
@@ -1242,6 +1242,80 @@
     {{end}}
     {{end}}
 
+    {{if $.Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
+    ,
+    "{{$workerSubnetLogicalName}}": {
+      "Properties": {
+        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$subnet.InstanceCIDR}}",
+        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::Subnet"
+    }
+    {{if not $subnet.RouteTableID}}
+    ,
+    "{{$workerSubnetLogicalName}}RouteTable": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}-route-table"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::RouteTable"
+    },
+    "{{$workerSubnetLogicalName}}RouteToNatGateway": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId":
+          {{if not $subnet.NatGateway.ID}}
+          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
+          {{else}}
+          "{{$subnet.NatGateway.ID}}",
+          {{end}}
+        "RouteTableId": {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"}
+      },
+      "Type": "AWS::EC2::Route"
+    }
+    {{end}}
+    ,
+    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"},
+          {{else}}
+          "{{$subnet.RouteTableID}}",
+          {{end}}
+        "SubnetId": {
+          "Ref": "{{$workerSubnetLogicalName}}"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{end}}
+    {{end}}
+
     {{if (or .Worker.TopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
     {{range $index, $subnet := .Subnets}}
     {{if not $subnet.NatGateway.EIPAllocationID}}
@@ -1331,12 +1405,19 @@
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPC" }}
     },
     {{end}}
-    {{if (or .Worker.TopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
     {{range $index, $subnet := .Subnets}}
-    "{{$subnet.LogicalName}}NatGateway" : {
-      "Description" : "The nat gateway assignedd managed by this stack subnet",
-      "Value" :  { "Ref" : "{{$subnet.LogicalName}}NatGateway" },
-      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}NatGateway" }}
+    "{{$subnet.LogicalName}}" : {
+      "Description" : "The public subnets assigned to worker nodes",
+      "Value" :  { "Ref" : "{{$subnet.LogicalName}}" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}" }}
+    },
+    {{end}}
+    {{if (or .Worker.TopologyPrivate)}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    "{{$subnet.LogicalName}}" : {
+      "Description" : "The private subnets assigned to worker nodes",
+      "Value" :  { "Ref" : "{{$subnet.LogicalName}}" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}" }}
     },
     {{end}}
     {{end}}
