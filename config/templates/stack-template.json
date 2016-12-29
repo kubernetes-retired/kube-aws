@@ -121,6 +121,7 @@
           {{if gt $index 0}},{{end}}
           "{{$subnet.AvailabilityZone}}"
           {{end}}
+          {{end}}
         ],
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
