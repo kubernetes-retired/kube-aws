@@ -66,7 +66,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #      instanceCIDR: "10.0.5.0/24"
 
 # Maximum time to wait for controller creation
-#controlerCreateTimeout: PT15M
+#controllerLoadBalancerPrivate: false
+
+# Maximum time to wait for controller creation
+#controllerCreateTimeout: PT15M
 
 # Instance type for controller node
 #controllerInstanceType: m3.medium

@@ -254,14 +254,15 @@ type WorkerSettings struct {
 
 // Part of configuration which is specific to controller nodes
 type ControllerSettings struct {
-	model.Controller         `yaml:"controller,omitempty"`
-	ControllerCount          int    `yaml:"controllerCount,omitempty"`
-	ControllerCreateTimeout  string `yaml:"controllerCreateTimeout,omitempty"`
-	ControllerInstanceType   string `yaml:"controllerInstanceType,omitempty"`
-	ControllerRootVolumeType string `yaml:"controllerRootVolumeType,omitempty"`
-	ControllerRootVolumeIOPS int    `yaml:"controllerRootVolumeIOPS,omitempty"`
-	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize,omitempty"`
-	ControllerTenancy        string `yaml:"controllerTenancy,omitempty"`
+	model.Controller               `yaml:"controller,omitempty"`
+	ControllerCount                int    `yaml:"controllerCount,omitempty"`
+	ControllerCreateTimeout        string `yaml:"controllerCreateTimeout,omitempty"`
+	ControllerInstanceType         string `yaml:"controllerInstanceType,omitempty"`
+	ControllerLoadBalancerPrivate  string `yaml:"controllerLoadBalancerPrivate,omitempty"`
+	ControllerRootVolumeType       string `yaml:"controllerRootVolumeType,omitempty"`
+	ControllerRootVolumeIOPS       int    `yaml:"controllerRootVolumeIOPS,omitempty"`
+	ControllerRootVolumeSize       int    `yaml:"controllerRootVolumeSize,omitempty"`
+	ControllerTenancy              string `yaml:"controllerTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to etcd nodes
