@@ -44,10 +44,10 @@
         ],
         {{if .Experimental.LoadBalancer.Enabled}}
         "LoadBalancerNames" : [
-        {{range $index, $elb := .Experimental.LoadBalancer.Names}}
-        {{if $index}},{{end}}
+          {{range $index, $elb := .Experimental.LoadBalancer.Names}}
+          {{if $index}},{{end}}
           "{{$elb}}"
-        {{end}}
+          {{end}}
         ],
         {{end}}
         "VPCZoneIdentifier": [
@@ -176,11 +176,11 @@
     "ExternalDNS": {
       "Type": "AWS::Route53::RecordSet",
       "Properties": {
-	{{ if .HostedZoneID }}
+        {{if .HostedZoneID}}
         "HostedZoneId": "{{.HostedZoneID}}",
-	{{else}}
+	    {{else}}
         "HostedZoneName": "{{.HostedZone}}",
-	{{ end }}
+	    {{end}}
         "Name": "{{.ExternalDNSName}}",
         "TTL": {{.RecordSetTTL}},
         "ResourceRecords": [{ "Fn::GetAtt": ["ElbAPIServer", "DNSName"]}],
@@ -613,9 +613,18 @@
           "UnhealthyThreshold" : "3"
         },
         "Subnets" : [
+          {{if .Controller.TopologyPrivate}}
+          {{range $index, $controllerSubnet := .Controller.PrivateSubnets}}
+          {{with $controllerSubnetLogicalName := printf "Controller%s" $controllerSubnet.LogicalName}}
+          {{if gt $index 0}},{{end}}
+          {"Ref": "{{$controllerSubnetLogicalName}}"}
+          {{end}}
+          {{end}}
+          {{else}}
           {{range $index, $subnet := .Subnets}}
           {{if gt $index 0}},{{end}}
           { "Ref" : "{{$subnet.LogicalName}}" }
+          {{end}}
           {{end}}
         ],
         "Listeners" : [
@@ -626,7 +635,9 @@
             "Protocol" : "TCP"
           }
         ],
-        {{if .MapPublicIPs}}
+        {{if .Controller.TopologyPrivate}}
+        "Scheme": "internal",
+        {{else if .MapPublicIPs}}
         "Scheme": "internet-facing",
         {{else}}
         "Scheme": "internal",
@@ -1017,6 +1028,7 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     }
+    {{/* TODO: Add Worker Mount Target */}}
     {{range $index, $subnet := .Subnets}}
     ,
     "{{$subnet.LogicalName}}MountTarget": {
@@ -1050,40 +1062,12 @@
         "VpcId": {{$.VPCRef}}
       },
       "Type": "AWS::EC2::Subnet"
-    }
-    {{if not $subnet.RouteTableID}}
-    ,
-    "{{$subnet.LogicalName}}RouteTable": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$subnet.LogicalName}}-route-table"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::RouteTable"
     },
-    "{{$subnet.LogicalName}}RouteToInternet": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "GatewayId": {{$.InternetGatewayRef}},
-        "RouteTableId": {"Ref" : "{{$subnet.LogicalName}}RouteTable"}
-      },
-      "Type": "AWS::EC2::Route"
-    }
-    {{end}}
-    ,
     "{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
           {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$subnet.LogicalName}}RouteTable"},
+          {"Ref" : "PublicRouteTable"},
           {{else}}
           "{{$subnet.RouteTableID}}",
           {{end}}
@@ -1118,44 +1102,12 @@
       },
       "Type": "AWS::EC2::Subnet"
     }
-    {{if not $subnet.RouteTableID}}
-    ,
-    "{{$etcdSubnetLogicalName}}RouteTable": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$etcdSubnetLogicalName}}-route-table"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::RouteTable"
-    },
-    "{{$etcdSubnetLogicalName}}RouteToNatGateway": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId":
-          {{if not $subnet.NatGateway.ID}}
-          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
-          {{else}}
-          "{{$subnet.NatGateway.ID}}",
-          {{end}}
-        "RouteTableId": {"Ref" : "{{$etcdSubnetLogicalName}}RouteTable"}
-      },
-      "Type": "AWS::EC2::Route"
-    }
-    {{end}}
     ,
     "{{$etcdSubnetLogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
           {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$etcdSubnetLogicalName}}RouteTable"},
+          {"Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"},
           {{else}}
           "{{$subnet.RouteTableID}}",
           {{end}}
@@ -1192,43 +1144,12 @@
       },
       "Type": "AWS::EC2::Subnet"
     }
-    {{if not $subnet.RouteTableID}}
-    "{{$controllerSubnetLogicalName}}RouteTable": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$controllerSubnetLogicalName}}-route-table"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::RouteTable"
-    },
-    "{{$controllerSubnetLogicalName}}RouteToNatGateway": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId":
-          {{if not $subnet.NatGateway.ID}}
-          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
-          {{else}}
-          "{{$subnet.NatGateway.ID}}",
-          {{end}}
-        "RouteTableId": {"Ref" : "{{$controllerSubnetLogicalName}}RouteTable"}
-      },
-      "Type": "AWS::EC2::Route"
-    }
-    {{end}}
     ,
     "{{$controllerSubnetLogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
           {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$controllerSubnetLogicalName}}RouteTable"},
+          {"Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"},
           {{else}}
           "{{$subnet.RouteTableID}}",
           {{end}}
@@ -1242,37 +1163,13 @@
     {{end}}
     {{end}}
 
-    {{if $.Worker.TopologyPrivate}}
-    {{range $index, $subnet := .Worker.PrivateSubnets}}
-    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
     ,
-    "{{$workerSubnetLogicalName}}": {
-      "Properties": {
-        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
-        "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::Subnet"
-    }
-    {{if not $subnet.RouteTableID}}
-    ,
-    "{{$workerSubnetLogicalName}}RouteTable": {
+    "PublicRouteTable": {
       "Properties": {
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}-route-table"
+            "Value": "{{$.ClusterName}}-PublicRouteTable"
           },
           {
             "Key": "KubernetesCluster",
@@ -1283,44 +1180,20 @@
       },
       "Type": "AWS::EC2::RouteTable"
     },
-    "{{$workerSubnetLogicalName}}RouteToNatGateway": {
+    "PublicRouteToInternet": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId":
-          {{if not $subnet.NatGateway.ID}}
-          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
-          {{else}}
-          "{{$subnet.NatGateway.ID}}",
-          {{end}}
-        "RouteTableId": {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"}
+        "GatewayId": {{$.InternetGatewayRef}},
+        "RouteTableId": {"Ref" : "PublicRouteTable"}
       },
       "Type": "AWS::EC2::Route"
     }
-    {{end}}
-    ,
-    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
-      "Properties": {
-        "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"},
-          {{else}}
-          "{{$subnet.RouteTableID}}",
-          {{end}}
-        "SubnetId": {
-          "Ref": "{{$workerSubnetLogicalName}}"
-        }
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    }
-    {{end}}
-    {{end}}
-    {{end}}
 
-    {{if (or .Worker.TopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
+    {{if (or .WorkerTopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
     {{range $index, $subnet := .Subnets}}
     {{if not $subnet.NatGateway.EIPAllocationID}}
     ,
-    "{{$subnet.LogicalName}}EIPNatGateway": {
+    "NatGateway{{$subnet.AvailabilityZoneLogicalName}}EIP": {
       "Properties": {
         "Domain": "vpc"
       },
@@ -1329,11 +1202,11 @@
     {{end}}
     {{if not $subnet.NatGateway.ID}}
     ,
-    "{{$subnet.LogicalName}}NatGateway": {
+    "NatGateway{{$subnet.AvailabilityZoneLogicalName}}": {
       "Properties": {
         "AllocationId":
           {{if not $subnet.NatGateway.EIPAllocationID}}
-          {"Fn::GetAtt": ["{{$subnet.LogicalName}}EIPNatGateway", "AllocationId"]},
+          {"Fn::GetAtt": ["NatGateway{{$subnet.AvailabilityZoneLogicalName}}EIP", "AllocationId"]},
           {{else}}
           "{{$subnet.NatGateway.EIPAllocationID}}",
           {{end}}
@@ -1342,6 +1215,36 @@
       "Type": "AWS::EC2::NatGateway"
     }
     {{end}}
+    ,
+    "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::RouteTable"
+    },
+    "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}RouteToNatGateway": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId":
+          {{if not $subnet.NatGateway.ID}}
+          {"Ref": "NatGateway{{$subnet.AvailabilityZoneLogicalName}}"},
+          {{else}}
+          "{{$subnet.NatGateway.ID}}",
+          {{end}}
+        "RouteTableId": {"Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}
+      },
+      "Type": "AWS::EC2::Route"
+    }
     {{end}}
     {{end}}
 
@@ -1352,7 +1255,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-igw"
+            "Value": "{{$.ClusterName}}-{{.InternetGatewayLogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -1405,19 +1308,17 @@
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPC" }}
     },
     {{end}}
-    {{range $index, $subnet := .Subnets}}
-    "{{$subnet.LogicalName}}" : {
-      "Description" : "The public subnets assigned to worker nodes",
-      "Value" :  { "Ref" : "{{$subnet.LogicalName}}" },
-      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}" }}
+    "PublicRouteTable" : {
+      "Description" : "The public route table assigned to the internet gateway for worker nodes",
+      "Value" :  { "Ref" : "PublicRouteTable" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PublicRouteTable" }}
     },
-    {{end}}
-    {{if (or .Worker.TopologyPrivate)}}
-    {{range $index, $subnet := .Worker.PrivateSubnets}}
-    "{{$subnet.LogicalName}}" : {
-      "Description" : "The private subnets assigned to worker nodes",
-      "Value" :  { "Ref" : "{{$subnet.LogicalName}}" },
-      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}" }}
+    {{if .WorkerTopologyPrivate}}
+    {{range $index, $subnet := .Subnets}}
+    "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}" : {
+      "Description" : "The private route table assigned to the nat gateway for worker nodes",
+      "Value" :  { "Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}" }}
     },
     {{end}}
     {{end}}
