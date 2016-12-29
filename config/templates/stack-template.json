@@ -13,9 +13,16 @@
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
+          {{if $.Worker.TopologyPrivate}}
+          {{range $index, $workerSubnet := .Worker.PrivateSubnets}}
+          {{if gt $index 0}},{{end}}
+          "{{$workerSubnet.AvailabilityZone}}"
+          {{end}}
+          {{else}}
           {{range $index, $subnet := .Subnets}}
           {{if gt $index 0}},{{end}}
           "{{$subnet.AvailabilityZone}}"
+          {{end}}
           {{end}}
         ],
         "HealthCheckGracePeriod": 600,
@@ -51,11 +58,22 @@
         ],
         {{end}}
         "VPCZoneIdentifier": [
+          {{if $.Worker.TopologyPrivate}}
+          {{range $index, $workerSubnet := .Worker.PrivateSubnets}}
+          {{with $workerSubnetLogicalName := printf "Worker%s" $workerSubnet.LogicalName}}
+          {{if gt $index 0}},{{end}}
+          {
+            "Ref": "{{$workerSubnetLogicalName}}"
+          }
+          {{end}}
+          {{end}}
+          {{else}}
           {{range $index, $subnet := .Subnets}}
           {{if gt $index 0}},{{end}}
           {
             "Ref": "{{$subnet.LogicalName}}"
           }
+          {{end}}
           {{end}}
         ]
       },
@@ -613,7 +631,7 @@
           "UnhealthyThreshold" : "3"
         },
         "Subnets" : [
-          {{if .Controller.TopologyPrivate}}
+          {{if .ControllerLoadBalancerPrivate}}
           {{range $index, $controllerSubnet := .Controller.PrivateSubnets}}
           {{with $controllerSubnetLogicalName := printf "Controller%s" $controllerSubnet.LogicalName}}
           {{if gt $index 0}},{{end}}
@@ -635,12 +653,10 @@
             "Protocol" : "TCP"
           }
         ],
-        {{if .Controller.TopologyPrivate}}
+        {{if .ControllerLoadBalancerPrivate}}
         "Scheme": "internal",
-        {{else if .MapPublicIPs}}
-        "Scheme": "internet-facing",
         {{else}}
-        "Scheme": "internal",
+        "Scheme": "internet-facing",
         {{end}}
         "SecurityGroups" : [
           { "Ref" : "SecurityGroupElbAPIServer" }
@@ -1163,6 +1179,47 @@
     {{end}}
     {{end}}
 
+    {{if $.Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
+    ,
+    "{{$workerSubnetLogicalName}}": {
+      "Properties": {
+        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$subnet.InstanceCIDR}}",
+        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}"
+          },
+          {
+            "Key": "KubernetesCluster",
+            "Value": "{{$.ClusterName}}"
+          }
+        ],
+        "VpcId": {{$.VPCRef}}
+      },
+      "Type": "AWS::EC2::Subnet"
+    }
+    ,
+    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
+      "Properties": {
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {"Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"},
+          {{else}}
+          "{{$subnet.RouteTableID}}",
+          {{end}}
+        "SubnetId": {
+          "Ref": "{{$workerSubnetLogicalName}}"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{end}}
+    {{end}}
     ,
     "PublicRouteTable": {
       "Properties": {
@@ -1290,9 +1347,7 @@
     },
     "VPCGatewayAttachment": {
       "Properties": {
-        "InternetGatewayId": {
-          "Ref": {{.InternetGatewayRef}}
-        },
+        "InternetGatewayId": {{.InternetGatewayRef}},
         "VpcId": {{.VPCRef}}
       },
       "Type": "AWS::EC2::VPCGatewayAttachment"
