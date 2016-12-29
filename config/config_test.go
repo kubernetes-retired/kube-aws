@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+
+	model "github.com/coreos/kube-aws/model"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
@@ -314,7 +316,7 @@ func TestMultipleSubnets(t *testing.T) {
 
 	validConfigs := []struct {
 		conf    string
-		subnets []*Subnet
+		subnets []*model.Subnet
 	}{
 		{
 			conf: `
@@ -327,7 +329,7 @@ subnets:
   - availabilityZone: ap-northeast-1c
     instanceCIDR: 10.4.4.0/24
 `,
-			subnets: []*Subnet{
+			subnets: []*model.Subnet{
 				{
 					InstanceCIDR:     "10.4.3.0/24",
 					AvailabilityZone: "ap-northeast-1a",
@@ -346,7 +348,7 @@ controllerIP: 10.4.3.50
 availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 `,
-			subnets: []*Subnet{
+			subnets: []*model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
@@ -362,7 +364,7 @@ availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 subnets: []
 `,
-			subnets: []*Subnet{
+			subnets: []*model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
@@ -375,7 +377,7 @@ subnets: []
 availabilityZone: "ap-northeast-1a"
 subnets: []
 `,
-			subnets: []*Subnet{
+			subnets: []*model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
@@ -387,7 +389,7 @@ subnets: []
 # Missing subnets field fall-backs to the single subnet with the default az/cidr.
 availabilityZone: "ap-northeast-1a"
 `,
-			subnets: []*Subnet{
+			subnets: []*model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
@@ -730,12 +732,12 @@ func newMinimalConfig() (*Config, error) {
 	cluster := NewDefaultCluster()
 	cluster.ExternalDNSName = "k8s.example.com"
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*Subnet{
-		&Subnet{
+	cluster.Subnets = []*model.Subnet{
+		&model.Subnet{
 			AvailabilityZone: "us-west-1a",
 			InstanceCIDR:     "10.0.0.0/24",
 		},
-		&Subnet{
+		&model.Subnet{
 			AvailabilityZone: "us-west-1b",
 			InstanceCIDR:     "10.0.1.0/24",
 		},
@@ -873,9 +875,9 @@ func TestValidateExistingVPC(t *testing.T) {
 	cluster := NewDefaultCluster()
 
 	cluster.VPCCIDR = "10.0.0.0/16"
-	cluster.Subnets = []*Subnet{
-		{"ap-northeast-1a", "10.0.1.0/24", nil},
-		{"ap-northeast-1a", "10.0.2.0/24", nil},
+	cluster.Subnets = []*model.Subnet{
+		{"ap-northeast-1a", "10.0.1.0/24", "", model.NatGateway{}},
+		{"ap-northeast-1a", "10.0.2.0/24", "", model.NatGateway{}},
 	}
 
 	for _, testCase := range validCases {
@@ -899,9 +901,9 @@ func TestValidateUserData(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*Subnet{
-		{"us-west-1a", "10.0.1.0/16", nil},
-		{"us-west-1b", "10.0.2.0/16", nil},
+	cluster.Subnets = []*model.Subnet{
+		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}},
+		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}},
 	}
 
 	helper.WithDummyCredentials(func(dir string) {
@@ -923,9 +925,9 @@ func TestRenderStackTemplate(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*Subnet{
-		{"us-west-1a", "10.0.1.0/16", nil},
-		{"us-west-1b", "10.0.2.0/16", nil},
+	cluster.Subnets = []*model.Subnet{
+		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}},
+		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}},
 	}
 
 	helper.WithDummyCredentials(func(dir string) {
