@@ -1,6 +1,8 @@
 package model
 
-import "strings"
+import (
+	"strings"
+)
 
 type Subneter interface {
 	LogicalName() string
@@ -14,8 +16,12 @@ type Subnet struct {
 	NatGateway        NatGateway `yaml:"natGateway,omitempty"`
 }
 
+func (c Subnet) AvailabilityZoneLogicalName() string {
+	return strings.Replace(strings.Title(c.AvailabilityZone), "-", "", -1)
+}
+
 func (c Subnet) LogicalName() string {
-	return "Subnet" + strings.Replace(strings.Title(c.AvailabilityZone), "-", "", -1)
+	return "Subnet" + c.AvailabilityZoneLogicalName()
 }
 
 type PrivateSubnet struct {
@@ -23,7 +29,7 @@ type PrivateSubnet struct {
 }
 
 func (c PrivateSubnet) LogicalName() string {
-	return "PrivateSubnet" + strings.Replace(strings.Title(c.AvailabilityZone), "-", "", -1)
+	return "Private" + c.Subnet.LogicalName()
 }
 
 type NatGateway struct {

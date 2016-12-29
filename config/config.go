@@ -249,6 +249,7 @@ type WorkerSettings struct {
 	WorkerSpotPrice        string   `yaml:"workerSpotPrice,omitempty"`
 	WorkerSecurityGroupIds []string `yaml:"workerSecurityGroupIds,omitempty"`
 	WorkerTenancy          string   `yaml:"workerTenancy,omitempty"`
+	WorkerTopologyPrivate  bool     `yaml:"workerTopologyPrivate,omitempty"`
 }
 
 // Part of configuration which is specific to controller nodes
@@ -986,12 +987,16 @@ func (c *Cluster) AvailabilityZones() []string {
 		return []string{c.AvailabilityZone}
 	}
 
-	azs := make([]string, len(c.Subnets))
-	for i := range azs {
-		azs[i] = c.Subnets[i].AvailabilityZone
+	result := []string{}
+	seen := map[string]bool{}
+	for _, s := range c.Subnets{
+		val := s.AvailabilityZone
+		if _, ok := seen[val]; !ok {
+			result = append(result, val)
+			seen[val] = true
+		}
 	}
-
-	return azs
+	return result
 }
 
 /*

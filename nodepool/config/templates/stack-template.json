@@ -8,8 +8,8 @@
         "TargetCapacity": {{$.Worker.SpotFleet.TargetCapacity}},
         "SpotPrice": "{{$.Worker.SpotFleet.SpotPrice}}",
         "LaunchSpecifications": [
-          {{range $subnetIndex, $subnet := $.Subnets}}
-          {{with $subnetLogicalName := printf "Subnet%d" $subnetIndex}}
+          {{if .Worker.TopologyPrivate}}
+          {{range $subnetIndex, $subnet := $.Worker.PrivateSubnets}}
           {{range $specIndex, $spec := $.Worker.SpotFleet.LaunchSpecifications}}
           {{if or (gt $subnetIndex 0) (gt $specIndex 0) }},{{end}}
           {
@@ -44,7 +44,49 @@
               {{end}}
             ],
             "SubnetId": {
-              "Ref": "{{$subnetLogicalName}}"
+              "Ref": "{{$subnet.LogicalName}}"
+            },
+            "UserData": "{{$.UserDataWorker}}"
+          }
+          {{end}}
+          {{end}}
+          {{else}}
+          {{range $subnetIndex, $subnet := $.Subnets}}
+          {{range $specIndex, $spec := $.Worker.SpotFleet.LaunchSpecifications}}
+          {{if or (gt $subnetIndex 0) (gt $specIndex 0) }},{{end}}
+          {
+            "ImageId": "{{$.AMI}}",
+            "InstanceType": "{{$spec.InstanceType}}",
+            "KeyName": "{{$.KeyName}}",
+            "WeightedCapacity": {{$spec.WeightedCapacity}},
+            {{if $spec.SpotPrice}}
+            "SpotPrice": "{{$spec.SpotPrice}}",
+            {{end}}
+            "IamInstanceProfile": {
+              "Arn": {
+                "Fn::GetAtt" : ["IAMInstanceProfileWorker", "Arn"]
+              }
+            },
+            "BlockDeviceMappings": [
+              {
+                "DeviceName": "/dev/xvda",
+                "Ebs": {
+                  "VolumeSize": "{{$spec.RootVolumeSize}}",
+                  {{if gt $spec.RootVolumeIOPS 0}}
+                  "Iops": "{{$spec.RootVolumeIOPS}}",
+                  {{end}}
+                  "VolumeType": "{{$spec.RootVolumeType}}"
+                }
+              }
+            ],
+            "SecurityGroups": [
+              {{range $sgIndex, $sgRef := $.WorkerSecurityGroupRefs}}
+              {{if gt $sgIndex 0}},{{end}}
+              {"GroupId":{{$sgRef}}}
+              {{end}}
+            ],
+            "SubnetId": {
+              "Ref": "{{$subnet.LogicalName}}"
             },
             "UserData": "{{$.UserDataWorker}}"
           }
@@ -60,9 +102,16 @@
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
+          {{if .Worker.TopologyPrivate}}
+          {{range $index, $subnet := .Worker.PrivateSubnets}}
+          {{if gt $index 0}},{{end}}
+          "{{$subnet.AvailabilityZone}}"
+          {{end}}
+          {{else}}
           {{range $index, $subnet := .Subnets}}
           {{if gt $index 0}},{{end}}
           "{{$subnet.AvailabilityZone}}"
+          {{end}}
           {{end}}
         ],
         "HealthCheckGracePeriod": 600,
@@ -103,11 +152,18 @@
         ],
         {{end}}
         "VPCZoneIdentifier": [
-          {{range $index, $subnet := .Subnets}}
-          {{with $subnetLogicalName := printf "Subnet%d" $index}}
+          {{if .Worker.TopologyPrivate}}
+          {{range $index, $subnet := .Worker.PrivateSubnets}}
           {{if gt $index 0}},{{end}}
           {
-            "Ref": "{{$subnetLogicalName}}"
+            "Ref": "{{$subnet.LogicalName}}"
+          }
+          {{end}}
+          {{else}}
+          {{range $index, $subnet := .Subnets}}
+          {{if gt $index 0}},{{end}}
+          {
+            "Ref": "{{$subnet.LogicalName}}"
           }
           {{end}}
           {{end}}
@@ -197,7 +253,7 @@
 {{end}}
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "kube-aws Kubernetes node pool {{.NodePoolName}}",
+  "Description": "kube-aws Kubernetes node pool {{.ClusterName}} {{.NodePoolName}}",
   "Resources": {
     {{if .Worker.SpotFleet.Enabled}}
     {{template "SpotFleet" .}}
@@ -317,18 +373,47 @@
       },
       "Type": "AWS::IAM::Role"
     }
-    {{range $index, $subnet := .Subnets}}
-    {{with $subnetLogicalName := printf "Subnet%d" $index}}
+
+    {{if $.ElasticFileSystemID}}
+    {{if $.Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
     ,
-    "{{$subnetLogicalName}}": {
+    "{{$subnet.LogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
+    {{else}}
+    {{range $index, $subnet := .Subnets}}
+    ,
+    "{{$subnet.LogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
+    {{end}}
+    {{end}}
+
+    {{if $.Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    ,
+    "{{$subnet.LogicalName}}": {
       "Properties": {
         "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": {{$.MapPublicIPs}},
+        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.NodePoolName}}-{{$subnetLogicalName}}"
+            "Value": "{{$.ClusterName}}-{{$.NodePoolName}}-{{$subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -338,33 +423,34 @@
         "VpcId": {{$.VPCRef}}
       },
       "Type": "AWS::EC2::Subnet"
-    }
-    {{if $.ElasticFileSystemID}}
-    ,
-    "{{$subnetLogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$subnetLogicalName}}" },
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
-    {{end}}
-    {{end}}
-
-    {{/*TODO: Add worker subnet specific logic */}}
-    {{if $.Worker.TopologyPrivate}}
-    {{range $index, $subnet := .Subnets}}
-    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
-    {{if not $subnet.RouteTableID}}
-    ,
-    "{{$workerSubnetLogicalName}}RouteTable": {
+    },
+    "{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}},
+          {{else}}
+          "{{$subnet.RouteTableID}}",
+          {{end}}
+        "SubnetId": {
+          "Ref": "{{$subnet.LogicalName}}"
+        }
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation"
+    }
+    {{end}}
+    {{else}}
+    {{range $index, $subnet := .Subnets}}
+    ,
+    "{{$subnet.LogicalName}}": {
+      "Properties": {
+        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$subnet.InstanceCIDR}}",
+        "MapPublicIpOnLaunch": {{$.MapPublicIPs}},
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}-route-table"
+            "Value": "{{$.ClusterName}}-{{$.NodePoolName}}-{{$subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -373,61 +459,23 @@
         ],
         "VpcId": {{$.VPCRef}}
       },
-      "Type": "AWS::EC2::RouteTable"
-    }
-    {{end}}
-    ,
-    {{if not $subnet.NatGateway.ID && not $subnet.RouteTableID}}
-    "{{$workerSubnetLogicalName}}RouteToNatGateway": {
-      "Properties": {
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId":
-          {{if not $subnet.NatGateway.ID}}
-          {"Ref": "{{$subnet.LogicalName}}NatGateway"},
-          {{else}}
-          "{{$subnet.NatGateway.ID}}",
-          {{end}}
-        "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"}
-          {{else}}
-          "{{$subnet.RouteTableID}}"
-          {{end}}
-      },
-      "Type": "AWS::EC2::Route"
+      "Type": "AWS::EC2::Subnet"
     },
-    {{end}}
-    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
+    "{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {"Ref" : "{{$workerSubnetLogicalName}}RouteTable"},
+          {{if not $.RouteTableID}}
+          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PublicRouteTable"}},
           {{else}}
-          "{{$subnet.RouteTableID}}",
+          "{{$.RouteTableID}}",
           {{end}}
         "SubnetId": {
-          "Ref": "{{$workerSubnetLogicalName}}"
+          "Ref": "{{$subnet.LogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
     {{end}}
     {{end}}
-
-    {{range $index, $subnet := .Subnets}}
-    {{with $subnetLogicalName := printf "Subnet%d" $index}}
-    ,
-    "{{$subnetLogicalName}}RouteTableAssociation": {
-      "Properties": {
-        "RouteTableId": {{$.RouteTableRef}},
-        "SubnetId": {
-          "Ref": "{{$subnetLogicalName}}"
-        }
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    }
-    {{end}}
-    {{end}}
-
   }
 }

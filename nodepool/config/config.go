@@ -225,13 +225,6 @@ func (c ComputedConfig) VPCRef() string {
 	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-VPC"}}`, c.ClusterName)
 }
 
-func (c ComputedConfig) RouteTableRef() string {
-	if c.RouteTableID != "" {
-		return fmt.Sprintf("%q", c.RouteTableID)
-	}
-	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-RouteTable"}}`, c.ClusterName)
-}
-
 func (c ComputedConfig) WorkerSecurityGroupRefs() []string {
 	refs := c.WorkerDeploymentSettings().WorkerSecurityGroupRefs()
 
