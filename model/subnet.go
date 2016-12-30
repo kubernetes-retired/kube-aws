@@ -10,10 +10,10 @@ type Subneter interface {
 
 type Subnet struct {
 	//ID                string `yaml:"id,omitempty"`
-	AvailabilityZone  string `yaml:"availabilityZone,omitempty"`
-	InstanceCIDR      string `yaml:"instanceCIDR,omitempty"`
-	RouteTableID      string `yaml:"routeTableId,omitempty"`
-	NatGateway        NatGateway `yaml:"natGateway,omitempty"`
+	AvailabilityZone string     `yaml:"availabilityZone,omitempty"`
+	InstanceCIDR     string     `yaml:"instanceCIDR,omitempty"`
+	RouteTableID     string     `yaml:"routeTableId,omitempty"`
+	NatGateway       NatGateway `yaml:"natGateway,omitempty"`
 }
 
 func (c Subnet) AvailabilityZoneLogicalName() string {
