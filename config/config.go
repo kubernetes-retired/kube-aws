@@ -254,15 +254,15 @@ type WorkerSettings struct {
 
 // Part of configuration which is specific to controller nodes
 type ControllerSettings struct {
-	model.Controller               `yaml:"controller,omitempty"`
-	ControllerCount                int    `yaml:"controllerCount,omitempty"`
-	ControllerCreateTimeout        string `yaml:"controllerCreateTimeout,omitempty"`
-	ControllerInstanceType         string `yaml:"controllerInstanceType,omitempty"`
-	ControllerLoadBalancerPrivate  string `yaml:"controllerLoadBalancerPrivate,omitempty"`
-	ControllerRootVolumeType       string `yaml:"controllerRootVolumeType,omitempty"`
-	ControllerRootVolumeIOPS       int    `yaml:"controllerRootVolumeIOPS,omitempty"`
-	ControllerRootVolumeSize       int    `yaml:"controllerRootVolumeSize,omitempty"`
-	ControllerTenancy              string `yaml:"controllerTenancy,omitempty"`
+	model.Controller              `yaml:"controller,omitempty"`
+	ControllerCount               int    `yaml:"controllerCount,omitempty"`
+	ControllerCreateTimeout       string `yaml:"controllerCreateTimeout,omitempty"`
+	ControllerInstanceType        string `yaml:"controllerInstanceType,omitempty"`
+	ControllerLoadBalancerPrivate string `yaml:"controllerLoadBalancerPrivate,omitempty"`
+	ControllerRootVolumeType      string `yaml:"controllerRootVolumeType,omitempty"`
+	ControllerRootVolumeIOPS      int    `yaml:"controllerRootVolumeIOPS,omitempty"`
+	ControllerRootVolumeSize      int    `yaml:"controllerRootVolumeSize,omitempty"`
+	ControllerTenancy             string `yaml:"controllerTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to etcd nodes
@@ -385,7 +385,7 @@ type WaitSignal struct {
 }
 
 const (
-	vpcLogicalName = "VPC"
+	vpcLogicalName             = "VPC"
 	internetGatewayLogicalName = "InternetGateway"
 )
 
@@ -507,8 +507,8 @@ func (c Cluster) Config() (*Config, error) {
 		nextAddr := netutil.IncrementIP(*lastAllocatedAddr[subnet])
 		lastAllocatedAddr[subnet] = &nextAddr
 		instance := etcdInstance{
-			IPAddress:   *lastAllocatedAddr[subnet],
-			Subnet: subnet,
+			IPAddress: *lastAllocatedAddr[subnet],
+			Subnet:    subnet,
 		}
 
 		//TODO(chom): validate we're not overflowing the address space
@@ -659,8 +659,8 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool
 }
 
 type etcdInstance struct {
-	IPAddress   net.IP
-	Subnet      model.Subneter
+	IPAddress net.IP
+	Subnet    model.Subneter
 }
 
 type Config struct {
@@ -698,7 +698,7 @@ func (c Config) InternetGatewayLogicalName() string {
 
 func (c Config) InternetGatewayRef() string {
 	if c.InternetGatewayID != "" {
-		return fmt.Sprintf("%q", c.InternetGatewayID);
+		return fmt.Sprintf("%q", c.InternetGatewayID)
 	} else {
 		return fmt.Sprintf(`{ "Ref" : %q }`, c.InternetGatewayLogicalName())
 	}
@@ -990,7 +990,7 @@ func (c *Cluster) AvailabilityZones() []string {
 
 	result := []string{}
 	seen := map[string]bool{}
-	for _, s := range c.Subnets{
+	for _, s := range c.Subnets {
 		val := s.AvailabilityZone
 		if _, ok := seen[val]; !ok {
 			result = append(result, val)
