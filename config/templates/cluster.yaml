@@ -92,6 +92,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    minSize: 1
 #    maxSize: 3
 #    rollingUpdateMinInstancesInService: 2
+#  privateSubnets:
+#    - availabilityZone: us-west-1a
+#      instanceCIDR: "10.0.6.0/24"
+#    - availabilityZone: us-west-1b
+#      instanceCIDR: "10.0.7.0/24"
 
 # Setting worker topology private ensures NAT Gateways are created for use in node pools.
 #workerTopologyPrivate: true

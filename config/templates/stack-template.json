@@ -1247,7 +1247,7 @@
       "Type": "AWS::EC2::Route"
     }
 
-    {{if (or .WorkerTopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
+    {{if (or .WorkerTopologyPrivate .Worker.TopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
     {{range $index, $subnet := .Subnets}}
     {{if not $subnet.NatGateway.EIPAllocationID}}
     ,
