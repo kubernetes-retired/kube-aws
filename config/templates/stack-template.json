@@ -1045,7 +1045,19 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     }
-    {{/* TODO: Add Worker Mount Target */}}
+    {{if .Worker.TopologyPrivate}}
+    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    ,
+    "{{$subnet.LogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
+    {{else}}
     {{range $index, $subnet := .Subnets}}
     ,
     "{{$subnet.LogicalName}}MountTarget": {
@@ -1056,6 +1068,7 @@
       },
       "Type" : "AWS::EFS::MountTarget"
     }
+    {{end}}
     {{end}}
     {{end}}
 
