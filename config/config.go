@@ -693,7 +693,7 @@ type Config struct {
 
 // CloudFormation stack name which is unique in an AWS account.
 // This is intended to be used to reference stack name from cloud-config as the target of awscli or cfn-bootstrap-tools commands e.g. `cfn-init` and `cfn-signal`
-func (c Config) StackName() string {
+func (c Cluster) StackName() string {
 	return c.ClusterName
 }
 
