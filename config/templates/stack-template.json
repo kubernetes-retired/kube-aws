@@ -949,6 +949,20 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
+    "SecurityGroupEtcdPeerHealthCheckIngress": {
+      "Properties": {
+        "FromPort": 2379,
+        "GroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupEtcd"
+        },
+        "ToPort": 2379
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
     "SecurityGroupEtcdPeerIngress": {
       "Properties": {
         "FromPort": 2380,
