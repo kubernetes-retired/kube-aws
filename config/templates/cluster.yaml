@@ -65,7 +65,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    - availabilityZone: us-west-1b
 #      instanceCIDR: "10.0.5.0/24"
 
-# Maximum time to wait for controller creation
+# Set to true to put the ELB on the public subnet although having controller nodes on private subnets
 #controllerLoadBalancerPrivate: false
 
 # Maximum time to wait for controller creation
