@@ -325,7 +325,7 @@ This includes the certificate authority, signed server certificates for the Kube
 
   The certificate and key granted to the kubelets on worker instances.
   The certificate is shared across all workers, so it must be valid for all worker hostnames.
-  This is achievable with the Subject Alternative Name (SAN) `*.*.cluster.internal`, or `*.ec2.internal` if using the us-east-1 AWS region.
+  This is achievable with the Subject Alternative Name (SAN) `*.*.compute.internal`, or `*.ec2.internal` if using the us-east-1 AWS region.
 
 * **CACert**
 
