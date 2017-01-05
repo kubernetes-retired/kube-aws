@@ -624,6 +624,9 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		KMSKeyARN:      c.KMSKeyARN,
 		EncryptService: c.providedEncryptService,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	stackConfig.Config.TLSConfig = compactAssets
 
