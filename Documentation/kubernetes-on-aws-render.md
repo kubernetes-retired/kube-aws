@@ -289,7 +289,7 @@ Please read [the AWS documentation for more details about AWS Auto Scaling](http
 
 #### For production cluster requiring cluster-autoscaler
 
-You must utilize [an experimental feature called Node Pool](aws-experimental-features) to achieve this deployment.
+You must utilize [an experimental feature called Node Pool][node-pool] to achieve this deployment.
 Please read [the documentation for experimental features](aws-experimental-features) for more instructions.
 
 ### Certificates and Keys
@@ -366,3 +366,4 @@ If your files are valid, you are ready to [launch your cluster][aws-step-3].
 [iscsi]: kubelet-wrapper.md#allow-pods-to-use-iscsi-mounts
 [host-dns]: kubelet-wrapper.md#use-the-hosts-dns-configuration
 [cluster-logging]: kubelet-wrapper.md#use-the-cluster-logging-add-on
+[node-pool]: kubernetes-on-aws-node-pool.md
