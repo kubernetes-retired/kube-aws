@@ -123,6 +123,7 @@ func NewDefaultCluster() *Cluster {
 		TLSCertDurationDays: 365,
 		CreateRecordSet:     false,
 		RecordSetTTL:        300,
+		CustomSettings:      make(map[string]interface{}),
 	}
 }
 
@@ -294,6 +295,7 @@ type Cluster struct {
 	HostedZone             string `yaml:"hostedZone,omitempty"`
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
 	providedEncryptService EncryptService
+	CustomSettings         map[string]interface{} `yaml:"customSettings,omitempty"`
 }
 
 type Subnet struct {
