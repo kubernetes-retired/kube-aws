@@ -253,3 +253,7 @@ controller:
 #stackTags:
 #  Name: "Kubernetes"
 #  Environment: "Production"
+
+# User-provided YAML map available in stack-template.json
+#customSettings:
+#  key1: [ 1, 2, 3 ]
