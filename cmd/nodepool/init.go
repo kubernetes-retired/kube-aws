@@ -105,10 +105,6 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		initOpts.RouteTableID = main.RouteTableID
 	}
 
-	if initOpts.EtcdEndpoints == "" {
-		initOpts.EtcdEndpoints = main.EtcdEndpoints
-	}
-
 	initOpts.ClusterName = main.ClusterName
 
 	// Required and shared settings for the node pool.

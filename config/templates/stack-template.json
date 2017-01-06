@@ -412,9 +412,23 @@
           }
         ]
       },
+
       "Type": "AWS::IAM::Role"
     },
     {{range $etcdIndex, $etcdInstance := .EtcdInstances}}
+    "InstanceEtcd{{$etcdIndex}}eni": {
+      "Properties": {
+          "SubnetId": {
+            "Ref": "Subnet{{$etcdInstance.SubnetIndex}}"
+          },
+          "GroupSet": [
+            {
+              "Ref": "SecurityGroupEtcd"
+            }
+          ]
+      },
+      "Type": "AWS::EC2::NetworkInterface"
+    },
     "InstanceEtcd{{$etcdIndex}}": {
       "Properties": {
         "BlockDeviceMappings": [
@@ -451,18 +465,8 @@
         "KeyName": "{{$.KeyName}}",
         "NetworkInterfaces": [
           {
-            "AssociatePublicIpAddress": {{$.MapPublicIPs}},
-            "DeleteOnTermination": true,
-            "DeviceIndex": "0",
-            "GroupSet": [
-              {
-                "Ref": "SecurityGroupEtcd"
-              }
-            ],
-            "PrivateIpAddress": "{{$etcdInstance.IPAddress}}",
-            "SubnetId": {
-              "Ref": "Subnet{{$etcdInstance.SubnetIndex}}"
-            }
+            "NetworkInterfaceId": { "Ref": "InstanceEtcd{{$etcdIndex}}eni" },
+            "DeviceIndex": "0"
           }
         ],
         "Tags": [
@@ -563,9 +567,13 @@
         "PlacementTenancy": "{{ .ControllerTenancy }}",
         "UserData": "{{ .UserDataController }}"
       },
-  {{ if .Experimental.AwsEnvironment.Enabled }}
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
+          "configSets" : {
+              "etcd-server": [ "etcd-server-env" ],
+              "etcd-client": [ "etcd-client-env" ]
+          },
+  {{ if .Experimental.AwsEnvironment.Enabled }}
           "config" : {
             "commands": {
               "write-environment": {
@@ -576,10 +584,41 @@
 "' > /etc/aws-environment" ] ] }
               }
             }
+          },
+  {{ end }}
+          "etcd-server-env": {
+            "files" : {
+              "/var/run/coreos/etcd-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_INITIAL_CLUSTER='",
+{{range $index, $_ := $.EtcdInstances}}
+                  {{if $index}}",", {{end}}
+                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
+                  "=https://",
+                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
+                  ":2380",
+{{end}}
+                  "'\n"
+                ]]}
+              }
+            }
+          },
+          "etcd-client-env": {
+            "files" : {
+              "/var/run/coreos/etcd-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_ENDPOINTS='",
+{{range $index, $_ := $.EtcdInstances}}
+                  {{if $index}}",", {{end}} "https://",
+                    { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] }, ":2379", 
+{{end}}
+                  "'\n"
+                ]]}
+              }
+            }
           }
         }
       },
-  {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "ElbAPIServer" : {
