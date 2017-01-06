@@ -161,8 +161,6 @@ vpcCIDR: "{{.VPCCIDR}}"
 #   - availabilityZone: us-west-1b
 #     instanceCIDR: "10.0.1.0/24"
 
-etcdEndpoints: "{{.EtcdEndpoints}}"
-
 # Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
 dnsServiceIP: "{{.DNSServiceIP}}"
 
