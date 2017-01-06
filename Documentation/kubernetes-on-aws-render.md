@@ -183,7 +183,6 @@ You can now customize your cluster by editing asset files. Any changes to these 
   - [allow pods to mount RDB][rdb] or [iSCSI volumes][iscsi]
   - [allowing access to insecure container registries][insecure-registry]
   - [use host DNS configuration instead of a public DNS server][host-dns]
-  - [enable the cluster logging add-on][cluster-logging]
   - [changing your CoreOS auto-update settings][update]
   <br/><br/>
 
@@ -362,8 +361,7 @@ If your files are valid, you are ready to [launch your cluster][aws-step-3].
 [k8s-openssl]: openssl.md
 [tls-note]: #certificates-and-keys
 [route53]: https://aws.amazon.com/route53/
-[rdb]: kubelet-wrapper.md#allow-pods-to-use-rbd-volumes
-[iscsi]: kubelet-wrapper.md#allow-pods-to-use-iscsi-mounts
-[host-dns]: kubelet-wrapper.md#use-the-hosts-dns-configuration
-[cluster-logging]: kubelet-wrapper.md#use-the-cluster-logging-add-on
+[rdb]: https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#allow-pods-to-use-rbd-volumes
+[iscsi]: https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#allow-pods-to-use-iscsi-mounts
+[host-dns]: https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#use-the-hosts-dns-configuration
 [node-pool]: kubernetes-on-aws-node-pool.md
