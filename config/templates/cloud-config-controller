@@ -461,14 +461,14 @@ write_files:
         -v /etc/resolv.conf:/etc/resolv.conf \
         {{.HyperkubeImageRepo}}:{{.K8sVer}} /bin/bash \
           -vxec \
-          'echo "tainting this node."; \
-           hostname="'${hostname}'"; \
-           kubectl="/kubectl --server=http://127.0.0.1:8080"; \
-           taint="$kubectl taint node --overwrite"; \
-           $taint "$hostname" "node.alpha.kubernetes.io/role=master:NoSchedule"; \
-           echo "done."; \
-           echo "uncordoning this node."; \
-           $kubectl uncordon "$hostname"; \
+          'echo "tainting this node."
+           hostname="'${hostname}'"
+           kubectl="/kubectl --server=http://127.0.0.1:8080"
+           taint="$kubectl taint node --overwrite"
+           $taint "$hostname" "node.alpha.kubernetes.io/role=master:NoSchedule"
+           echo "done."
+           echo "uncordoning this node."
+           $kubectl uncordon "$hostname"
            echo "done."'
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
