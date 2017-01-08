@@ -432,26 +432,21 @@ write_files:
         --net=host \
         --trust-keys-from-https \
         {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
-          -c \
-          'echo decrypting tls assets; \
-           for encKey in $(find /etc/kubernetes/ssl/*.pem.enc); do \
-             echo decrypting $encKey to $encKey.b64; \
+          -ec \
+          'echo decrypting tls assets
+           shopt -s nullglob
+           for encKey in /etc/kubernetes/ssl/*.pem.enc; do
+             echo decrypting $encKey
              /usr/bin/aws \
                --region {{.Region}} kms decrypt \
                --ciphertext-blob fileb://$encKey \
                --output text \
                --query Plaintext \
-               > $encKey.b64; \
-           done; \
+             | base64 --decode ${encKey%.enc}
+           done;
            echo done.'
 
       sudo rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid
-
-      echo base64 decoding decrypted tls assets
-      for encKey in $(find /etc/kubernetes/ssl/*.pem.enc);do
-        base64 --decode < $encKey.b64 > ${encKey%.enc}
-      done
-      echo done.
 
   - path: /opt/bin/taint-and-uncordon
     owner: root:root
