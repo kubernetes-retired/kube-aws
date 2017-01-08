@@ -367,25 +367,23 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
-      /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-      -d"$(cat /srv/kubernetes/manifests/kube-dns-de.yaml)" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
 
-      /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-      -d"$(cat /srv/kubernetes/manifests/kube-dns-autoscaler-de.yaml)" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+      post_yaml() {
+          /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
+          --data-binary "$1" "$2"
+      }
 
-      /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-      -d"$(cat /srv/kubernetes/manifests/kube-dashboard-rc.yaml)" \
+      mfdir=/srv/kubernetes/manifests
+      for manifest in $mfdir/{kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml;do
+          post_yaml "@$mfdir/$manifest" \
+          "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+      done
+
+      post_yaml "@$mfdir/kube-dashboard-rc.yaml" \
       "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers"
 
-      /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-      -d"$(cat /srv/kubernetes/manifests/heapster-de.yaml)" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
-
       for manifest in {kube-dns,heapster,kube-dashboard}-svc.yaml;do
-          /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-          -d"$(cat /srv/kubernetes/manifests/$manifest)" \
+          post_yaml "@$mfdir/$manifest" \
           "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
       done
 
@@ -415,7 +413,7 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
-      /usr/bin/curl -H "Content-Type: application/json" -XPOST -d @"/srv/kubernetes/manifests/calico-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
+      /usr/bin/curl -H "Content-Type: application/json" -XPOST --data-binary @"/srv/kubernetes/manifests/calico-system.json" "http://127.0.0.1:8080/api/v1/namespaces"
 
       /usr/bin/cp /srv/kubernetes/manifests/calico-policy-controller.yaml /etc/kubernetes/manifests
 {{ end }}
