@@ -628,6 +628,12 @@
             "FromPort": 443,
             "IpProtocol": "tcp",
             "ToPort": 443
+          },
+          {
+             "CidrIp": "0.0.0.0/0",
+             "FromPort": -1,
+             "IpProtocol": "icmp",
+             "ToPort": -1
           }
         ],
         "Tags": [
