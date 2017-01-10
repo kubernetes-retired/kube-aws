@@ -99,7 +99,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #      instanceCIDR: "10.0.7.0/24"
 
 # Setting worker topology private ensures NAT Gateways are created for use in node pools.
-#workerTopologyPrivate: true
+#workerTopologyPrivate: false
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
