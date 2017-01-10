@@ -87,7 +87,7 @@ func NewDefaultCluster() *Cluster {
 			Worker:                 model.NewDefaultWorker(),
 			WorkerCount:            1,
 			WorkerCreateTimeout:    "PT15M",
-			WorkerInstanceType:     "m3.medium",
+			WorkerInstanceType:     "t2.medium",
 			WorkerRootVolumeType:   "gp2",
 			WorkerRootVolumeIOPS:   0,
 			WorkerRootVolumeSize:   30,
@@ -97,7 +97,7 @@ func NewDefaultCluster() *Cluster {
 		ControllerSettings: ControllerSettings{
 			ControllerCount:          1,
 			ControllerCreateTimeout:  "PT15M",
-			ControllerInstanceType:   "m3.medium",
+			ControllerInstanceType:   "t2.medium",
 			ControllerRootVolumeType: "gp2",
 			ControllerRootVolumeIOPS: 0,
 			ControllerRootVolumeSize: 30,
@@ -105,7 +105,7 @@ func NewDefaultCluster() *Cluster {
 		},
 		EtcdSettings: EtcdSettings{
 			EtcdCount:          1,
-			EtcdInstanceType:   "m3.medium",
+			EtcdInstanceType:   "t2.medium",
 			EtcdRootVolumeSize: 30,
 			EtcdRootVolumeType: "gp2",
 			EtcdRootVolumeIOPS: 0,
@@ -276,7 +276,7 @@ type EtcdSettings struct {
 	EtcdDataVolumeSize      int    `yaml:"etcdDataVolumeSize,omitempty"`
 	EtcdDataVolumeType      string `yaml:"etcdDataVolumeType,omitempty"`
 	EtcdDataVolumeIOPS      int    `yaml:"etcdDataVolumeIOPS,omitempty"`
-	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumEphemeral,omitempty"`
+	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumeEphemeral,omitempty"`
 	EtcdTenancy             string `yaml:"etcdTenancy,omitempty"`
 }
 
@@ -613,6 +613,9 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		KMSKeyARN:      c.KMSKeyARN,
 		EncryptService: c.providedEncryptService,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	stackConfig.Config.TLSConfig = compactAssets
 
@@ -676,7 +679,7 @@ type Config struct {
 
 // CloudFormation stack name which is unique in an AWS account.
 // This is intended to be used to reference stack name from cloud-config as the target of awscli or cfn-bootstrap-tools commands e.g. `cfn-init` and `cfn-signal`
-func (c Config) StackName() string {
+func (c Cluster) StackName() string {
 	return c.ClusterName
 }
 

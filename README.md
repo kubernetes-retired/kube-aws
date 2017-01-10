@@ -58,6 +58,9 @@ $ kube-aws init --cluster-name=my-cluster \
 --kms-key-arn="arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 ```
 
+Here `us-west-1c` is used for parameter `--availability-zone`, but supported availability zone varies among AWS accounts.
+Please check if `us-west-1c` is supported by `aws ec2 --region us-west-1 describe-availability-zones`, if not switch to other supported availability zone. (e.g., `us-west-1a`, or `us-west-1b`)
+
 Generate assets:
 
 ```
