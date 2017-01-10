@@ -424,7 +424,7 @@ write_files:
     content: |
       #!/bin/bash -e
 
-      sudo rkt run \
+      rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
         --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
@@ -448,7 +448,7 @@ write_files:
            done;
            echo done.'
 
-      sudo rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid
+      rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid || :
 
   - path: /opt/bin/taint-and-uncordon
     owner: root:root
