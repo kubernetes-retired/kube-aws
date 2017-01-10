@@ -455,12 +455,14 @@ write_files:
            shopt -s nullglob
            for encKey in /etc/kubernetes/ssl/*.pem.enc; do
              echo decrypting $encKey
+             f=$(mktemp $encKey.XXXXXXXX)
              /usr/bin/aws \
                --region {{.Region}} kms decrypt \
                --ciphertext-blob fileb://$encKey \
                --output text \
                --query Plaintext \
-             | base64 --decode ${encKey%.enc}
+             | base64 -d > $f
+             mv -f $f ${encKey%.enc}
            done;
            echo done.'
 
