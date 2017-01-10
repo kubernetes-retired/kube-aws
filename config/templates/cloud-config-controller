@@ -495,8 +495,11 @@ write_files:
         metadata:
           name: kube-proxy
           namespace: kube-system
+          labels:
+            k8s-app: kube-proxy
           annotations:
             rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
+
         spec:
           hostNetwork: true
           containers:
@@ -530,6 +533,8 @@ write_files:
       metadata:
         name: kube-apiserver
         namespace: kube-system
+        labels:
+          k8s-app: kube-apiserver
       spec:
         hostNetwork: true
         containers:
@@ -599,6 +604,8 @@ write_files:
       metadata:
         name: kube-controller-manager
         namespace: kube-system
+        labels:
+          k8s-app: kube-controller-manager
       spec:
         containers:
         - name: kube-controller-manager
@@ -644,6 +651,8 @@ write_files:
       metadata:
         name: kube-scheduler
         namespace: kube-system
+        labels:
+          k8s-app: kube-scheduler
       spec:
         hostNetwork: true
         containers:
@@ -1012,6 +1021,7 @@ write_files:
           labels: 
             kubernetes.io/cluster-service: "true"
             kubernetes.io/name: "Heapster"
+            k8s-app: heapster
         spec: 
           ports: 
             - port: 80
