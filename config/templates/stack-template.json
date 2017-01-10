@@ -13,16 +13,9 @@
     "AutoScaleWorker": {
       "Properties": {
         "AvailabilityZones": [
-          {{if $.Worker.TopologyPrivate}}
-          {{range $index, $workerSubnet := .Worker.PrivateSubnets}}
+          {{range $index, $workerSubnet := .Worker.Subnets}}
           {{if gt $index 0}},{{end}}
           "{{$workerSubnet.AvailabilityZone}}"
-          {{end}}
-          {{else}}
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$subnet.AvailabilityZone}}"
-          {{end}}
           {{end}}
         ],
         "HealthCheckGracePeriod": 600,
@@ -58,22 +51,11 @@
         ],
         {{end}}
         "VPCZoneIdentifier": [
-          {{if $.Worker.TopologyPrivate}}
-          {{range $index, $workerSubnet := .Worker.PrivateSubnets}}
-          {{with $workerSubnetLogicalName := printf "Worker%s" $workerSubnet.LogicalName}}
+          {{range $index, $workerSubnet := .Worker.Subnets}}
           {{if gt $index 0}},{{end}}
           {
-            "Ref": "{{$workerSubnetLogicalName}}"
+            "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
           }
-          {{end}}
-          {{end}}
-          {{else}}
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          {
-            "Ref": "{{$subnet.LogicalName}}"
-          }
-          {{end}}
           {{end}}
         ]
       },
@@ -1059,30 +1041,16 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     }
-    {{if .Worker.TopologyPrivate}}
-    {{range $index, $subnet := .Worker.PrivateSubnets}}
+    {{range $index, $workerSubnet := .Worker.Subnets}}
     ,
-    "{{$subnet.LogicalName}}MountTarget": {
+    "{{$workerSubnet.LogicalName}}MountTarget": {
       "Properties" : {
         "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
+        "SubnetId": { "Ref": "{{$workerSubnet.LogicalName}}" },
         "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
       },
       "Type" : "AWS::EFS::MountTarget"
     }
-    {{end}}
-    {{else}}
-    {{range $index, $subnet := .Subnets}}
-    ,
-    "{{$subnet.LogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
     {{end}}
     {{end}}
 
@@ -1208,10 +1176,9 @@
     {{end}}
 
     {{if $.Worker.TopologyPrivate}}
-    {{range $index, $subnet := .Worker.PrivateSubnets}}
-    {{with $workerSubnetLogicalName := printf "Worker%s" $subnet.LogicalName}}
+    {{range $index, $subnet := .Worker.Subnets}}
     ,
-    "{{$workerSubnetLogicalName}}": {
+    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}": {
       "Properties": {
         "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
@@ -1219,7 +1186,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$workerSubnetLogicalName}}"
+            "Value": "{{$.ClusterName}}-{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -1231,7 +1198,7 @@
       "Type": "AWS::EC2::Subnet"
     }
     ,
-    "{{$workerSubnetLogicalName}}RouteTableAssociation": {
+    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
           {{if not $subnet.RouteTableID}}
@@ -1240,12 +1207,11 @@
           "{{$subnet.RouteTableID}}",
           {{end}}
         "SubnetId": {
-          "Ref": "{{$workerSubnetLogicalName}}"
+          "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
-    {{end}}
     {{end}}
     {{end}}
     ,
@@ -1396,7 +1362,7 @@
       "Value" :  { "Ref" : "PublicRouteTable" },
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PublicRouteTable" }}
     },
-    {{if .WorkerTopologyPrivate}}
+    {{if (or .WorkerTopologyPrivate .Worker.TopologyPrivate .Etcd.TopologyPrivate .Controller.TopologyPrivate)}}
     {{range $index, $subnet := .Subnets}}
     "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}" : {
       "Description" : "The private route table assigned to the nat gateway for worker nodes",

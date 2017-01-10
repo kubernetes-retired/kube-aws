@@ -162,6 +162,11 @@ func ClusterFromBytes(data []byte) (*ProvidedConfig, error) {
 		}
 	}
 
+	// Populate subnets
+	if len(c.Subnets) > 0 && c.WorkerSettings.TopologyPrivate() == false {
+		c.WorkerSettings.PublicSubnets = c.Subnets
+	}
+
 	return c, nil
 }
 
