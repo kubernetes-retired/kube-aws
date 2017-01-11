@@ -30,7 +30,7 @@ Please file an issue to make suggestions on this roadmap!
     * Recovery
   * YAML CloudFormation templates
   
-## State 4: v0.9.5
+## Stage 4: v0.9.5
 
   * Kubernetes 1.6
   * Etcd v3 support as it is enabled by default in 1.6: https://github.com/kubernetes/kubernetes/issues/22448#event-913208648
