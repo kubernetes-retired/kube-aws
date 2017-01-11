@@ -463,30 +463,20 @@ write_files:
 
       hostname=$(hostname)
 
-      sudo rkt run \
-        --volume=kube,kind=host,source=/etc/kubernetes,readOnly=true \
-        --mount=volume=kube,target=/etc/kubernetes \
-        --uuid-file-save=/var/run/coreos/taint-and-uncordon.uuid \
-        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
-        --net=host \
-        --trust-keys-from-https \
-        {{.HyperkubeImageRepo}}:{{.K8sVer}} --exec=/bin/bash -- \
-          -vxc \
-          'echo tainting this node; \
+      docker run --rm --net=host \
+        -v /etc/kubernetes:/etc/kubernetes \
+        -v /etc/resolv.conf:/etc/resolv.conf \
+        {{.HyperkubeImageRepo}}:{{.K8sVer}} /bin/bash \
+          -vxec \
+          'echo "tainting this node."; \
            hostname="'${hostname}'"; \
            kubectl="/kubectl --server=http://127.0.0.1:8080"; \
-           taint="$kubectl taint node $hostname"; \
-           $taint "node.alpha.kubernetes.io/role:master:NoSchedule"; \
-           echo done. ;\
-           echo uncordoning this node; \
-           $kubectl uncordon $hostname;\
-           echo done.'
-
-      echo cleaning pod resources.
-
-      sudo rkt rm --uuid-file=/var/run/coreos/taint-and-uncordon.uuid
-
-      echo done.
+           taint="$kubectl taint node --overwrite"; \
+           $taint "$hostname" "node.alpha.kubernetes.io/role=master:NoSchedule"; \
+           echo "done."; \
+           echo "uncordoning this node."; \
+           $kubectl uncordon "$hostname"; \
+           echo "done."'
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
     content: |
