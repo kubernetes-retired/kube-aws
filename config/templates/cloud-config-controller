@@ -463,30 +463,20 @@ write_files:
 
       hostname=$(hostname)
 
-      sudo rkt run \
-        --volume=kube,kind=host,source=/etc/kubernetes,readOnly=true \
-        --mount=volume=kube,target=/etc/kubernetes \
-        --uuid-file-save=/var/run/coreos/taint-and-uncordon.uuid \
-        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
-        --net=host \
-        --trust-keys-from-https \
-        {{.HyperkubeImageRepo}}:{{.K8sVer}} --exec=/bin/bash -- \
-          -vxc \
-          'echo tainting this node; \
+      docker run --rm --net=host \
+        -v /etc/kubernetes:/etc/kubernetes \
+        -v /etc/resolv.conf:/etc/resolv.conf \
+        {{.HyperkubeImageRepo}}:{{.K8sVer}} /bin/bash \
+          -vxec \
+          'echo "tainting this node."; \
            hostname="'${hostname}'"; \
            kubectl="/kubectl --server=http://127.0.0.1:8080"; \
-           taint="$kubectl taint node $hostname"; \
-           $taint "node.alpha.kubernetes.io/role:master:NoSchedule"; \
-           echo done. ;\
-           echo uncordoning this node; \
-           $kubectl uncordon $hostname;\
-           echo done.'
-
-      echo cleaning pod resources.
-
-      sudo rkt rm --uuid-file=/var/run/coreos/taint-and-uncordon.uuid
-
-      echo done.
+           taint="$kubectl taint node --overwrite"; \
+           $taint "$hostname" "node.alpha.kubernetes.io/role=master:NoSchedule"; \
+           echo "done."; \
+           echo "uncordoning this node."; \
+           $kubectl uncordon "$hostname"; \
+           echo "done."'
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
     content: |
@@ -551,6 +541,7 @@ write_files:
           - --allow-privileged=true
           - --service-cluster-ip-range={{.ServiceCIDR}}
           - --secure-port=443
+          - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
           {{if .Experimental.AuditLog.Enabled}}
           - --audit-log-maxage={{.Experimental.AuditLog.MaxAge}}
           - --audit-log-path={{.Experimental.AuditLog.LogPath}}
@@ -1034,11 +1025,11 @@ write_files:
         apiVersion: v1
         kind: ReplicationController
         metadata:
-          name: kubernetes-dashboard-v1.5.0
+          name: kubernetes-dashboard-v1.5.1
           namespace: kube-system
           labels:
             k8s-app: kubernetes-dashboard
-            version: v1.5.0
+            version: v1.5.1
             kubernetes.io/cluster-service: "true"
         spec:
           replicas: 1
@@ -1048,7 +1039,7 @@ write_files:
             metadata:
               labels:
                 k8s-app: kubernetes-dashboard
-                version: v1.5.0
+                version: v1.5.1
                 kubernetes.io/cluster-service: "true"
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
@@ -1056,7 +1047,7 @@ write_files:
             spec:
               containers:
               - name: kubernetes-dashboard
-                image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.5.0
+                image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.5.1
                 resources:
                   limits:
                     cpu: 100m
