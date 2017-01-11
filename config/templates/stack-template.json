@@ -12,12 +12,6 @@
     {{if .MinWorkerCount}}
     "AutoScaleWorker": {
       "Properties": {
-        "AvailabilityZones": [
-          {{range $index, $workerSubnet := .Worker.Subnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$workerSubnet.AvailabilityZone}}"
-          {{end}}
-        ],
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -92,19 +86,6 @@
     "AutoScaleController": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "AvailabilityZones": [
-          {{if $.Controller.TopologyPrivate}}
-          {{range $index, $controllerSubnet := .Controller.PrivateSubnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$controllerSubnet.AvailabilityZone}}"
-          {{end}}
-          {{else}}
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$subnet.AvailabilityZone}}"
-          {{end}}
-          {{end}}
-        ],
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {

@@ -57,12 +57,6 @@
 {{define "AutoScaling"}}
     "AutoScaleWorker": {
       "Properties": {
-        "AvailabilityZones": [
-          {{range $index, $workerSubnet := .Worker.Subnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$workerSubnet.AvailabilityZone}}"
-          {{end}}
-        ],
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
