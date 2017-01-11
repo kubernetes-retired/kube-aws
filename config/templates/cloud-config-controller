@@ -1025,11 +1025,11 @@ write_files:
         apiVersion: v1
         kind: ReplicationController
         metadata:
-          name: kubernetes-dashboard-v1.5.0
+          name: kubernetes-dashboard-v1.5.1
           namespace: kube-system
           labels:
             k8s-app: kubernetes-dashboard
-            version: v1.5.0
+            version: v1.5.1
             kubernetes.io/cluster-service: "true"
         spec:
           replicas: 1
@@ -1039,7 +1039,7 @@ write_files:
             metadata:
               labels:
                 k8s-app: kubernetes-dashboard
-                version: v1.5.0
+                version: v1.5.1
                 kubernetes.io/cluster-service: "true"
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
@@ -1047,7 +1047,7 @@ write_files:
             spec:
               containers:
               - name: kubernetes-dashboard
-                image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.5.0
+                image: gcr.io/google_containers/kubernetes-dashboard-amd64:v1.5.1
                 resources:
                   limits:
                     cpu: 100m
