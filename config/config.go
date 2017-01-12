@@ -830,8 +830,8 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		return nil, fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
 	}
 
-	if c.KeyName == "" {
-		return nil, errors.New("keyName must be set")
+	if c.KeyName == "" && len(c.SSHAuthorizedKeys) == 0 {
+		return nil, errors.New("Either keyName or sshAuthorizedKeys must be set")
 	}
 	if c.ClusterName == "" {
 		return nil, errors.New("clusterName must be set")
