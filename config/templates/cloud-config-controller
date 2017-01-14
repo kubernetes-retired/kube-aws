@@ -196,7 +196,7 @@ coreos:
         Restart=on-failure
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
-        ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
+        ExecStartPre=/usr/bin/curl -s -f http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-kube-system
 
 {{ if .UseCalico }}
@@ -214,7 +214,7 @@ coreos:
         Restart=on-failure
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
-        ExecStartPre=/usr/bin/curl http://127.0.0.1:8080/version
+        ExecStartPre=/usr/bin/curl -s -f http://127.0.0.1:8080/version
         ExecStart=/opt/bin/install-calico-system
 {{ end }}
 {{ if $.ElasticFileSystemID }}
@@ -374,7 +374,7 @@ write_files:
       }
 
       mfdir=/srv/kubernetes/manifests
-      for manifest in $mfdir/{kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml;do
+      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml; do
           post_yaml "@$mfdir/$manifest" \
           "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
       done
