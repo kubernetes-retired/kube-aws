@@ -19,9 +19,9 @@ coreos:
         After=network-online.target
 
         [Service]
-        Type=oneshot
+        Restart=on-failure
         RemainAfterExit=true
-        ExecStart=/usr/bin/rkt run \
+        ExecStartPre=/usr/bin/rkt run \
           --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
           --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \
           --net=host \
@@ -55,12 +55,13 @@ coreos:
         - name: 10-etcd.conf
           content: |
             [Unit]
-            Requires=cfn-etcd-environment.service
+            Wants=cfn-etcd-environment.service
             After=cfn-etcd-environment.service
 
             [Service]
-            EnvironmentFile=/etc/etcd-environment
+            EnvironmentFile=-/etc/etcd-environment
             EnvironmentFile=-/run/flannel/etcd-endpoints.opts
+            ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
             ExecStartPre=/bin/sh -ec "echo FLANNELD_ETCD_ENDPOINTS=${ETCD_ENDPOINTS} >/run/flannel/etcd-endpoints.opts"
             ExecStartPre=/opt/bin/decrypt-tls-assets
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
@@ -71,11 +72,10 @@ coreos:
       runtime: true
       content: |
         [Unit]
-        Wants=flanneld.service
-        Requires=cfn-etcd-environment.service
+        Wants=flanneld.service cfn-etcd-environment.service
         After=cfn-etcd-environment.service
         [Service]
-        EnvironmentFile=/etc/etcd-environment
+        EnvironmentFile=-/etc/etcd-environment
         Environment=KUBELET_VERSION={{.K8sVer}}
         Environment=KUBELET_ACI={{.HyperkubeImageRepo}}
         Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf \
@@ -96,6 +96,7 @@ coreos:
         --volume cni-bin,kind=host,source=/opt/cni/bin \
         --mount volume=cni-bin,target=/opt/cni/bin{{ end }}"
         ExecStartPre=/usr/bin/systemctl is-active flanneld.service
+        ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
         ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin

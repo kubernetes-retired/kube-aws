@@ -13,9 +13,9 @@ coreos:
         After=network-online.target
 
         [Service]
-        Type=oneshot
+        Restart=on-failure
         RemainAfterExit=true
-        ExecStart=/usr/bin/rkt run \
+        ExecStartPre=/usr/bin/rkt run \
           --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
           --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \
           --net=host \
@@ -32,7 +32,7 @@ coreos:
         - name: 20-etcd2-aws-cluster.conf
           content: |
             [Unit]
-            Requires=decrypt-tls-assets.service cfn-etcd-environment.service
+            Wants=decrypt-tls-assets.service cfn-etcd-environment.service
             After=decrypt-tls-assets.service cfn-etcd-environment.service
 
             [Service]
@@ -48,13 +48,15 @@ coreos:
             Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
 
             Environment=ETCD_INITIAL_CLUSTER_STATE=new
-            EnvironmentFile=/etc/etcd-environment
+            EnvironmentFile=-/etc/etcd-environment
             Environment=ETCD_DATA_DIR=/var/lib/etcd2
             Environment=ETCD_LISTEN_CLIENT_URLS=https://%H:2379
             Environment=ETCD_ADVERTISE_CLIENT_URLS=https://%H:2379
             Environment=ETCD_LISTEN_PEER_URLS=https://%H:2380
             Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=https://%H:2380
             PermissionsStartOnly=true
+            ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
+            ExecStartPre=/usr/bin/systemctl is-active decrypt-tls-assets.service
             ExecStartPre=/usr/bin/sed -i 's/^ETCDCTL_ENDPOINT.*$/ETCDCTL_ENDPOINT=https:\/\/%H:2379/' /etc/environment
             ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
       enable: true
@@ -99,9 +101,9 @@ coreos:
         Before=etcd2.service
 
         [Service]
-        Type=oneshot
+        Restart=on-failure
         RemainAfterExit=yes
-        ExecStart=/usr/bin/rkt run \
+        ExecStartPre=/usr/bin/rkt run \
           --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
           --volume=ssl,kind=host,source=/etc/etcd2/ssl,readOnly=false \
           --mount=volume=ssl,target=/etc/etcd2/ssl \
