@@ -137,7 +137,7 @@ coreos:
                        --cert-file /etc/kubernetes/ssl/etcd-client.pem \
                        --endpoints "${ETCD_ENDPOINTS}" \
                        cluster-health
-        ExecStartPre=/bin/bas -ec "shopts -s nullglob; sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|' /etc/kubernetes/manifests/* /srv/kubernetes/manifests/*"
+        ExecStartPre=/bin/bash -ec "shopt -s nullglob; sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|' /etc/kubernetes/manifests/* /srv/kubernetes/manifests/*"
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=http://localhost:8080 \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
