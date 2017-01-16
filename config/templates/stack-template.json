@@ -4,7 +4,7 @@
   "Mappings" : {
     "EtcdInstanceParams" : {
       "UserData" : {
-        "cloudconfig" : "{{.UserDataEtcd}}"
+       "cloudconfig" : "{{.UserDataEtcd}}"
       }
     }
   },
@@ -313,6 +313,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+		{
+                  "Effect": "Allow",
+		  "Action": [
+			"s3:GetObject"
+		  ],
+		  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-controller" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .ClusterName }}"
+		},
                 {{if .Experimental.WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -403,6 +410,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+		{
+                  "Effect": "Allow",
+		  "Action": [
+			"s3:GetObject"
+		  ],
+		  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-worker" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .ClusterName }}"
+		},
                 {{if .ManageCertificates}}
                 {
                   "Action" : "kms:Decrypt",
@@ -598,8 +612,39 @@
         {{else}}
         "PlacementTenancy": "{{.WorkerTenancy}}",
         {{end}}
-        "UserData": "{{ .UserDataWorker }}"
+        "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
+		"#!/bin/bash",
+                "# userdata hash: {{ .UserDataWorker | sha1 }}",
+		" . /etc/environment",
+                "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
+	        "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
+		"USERDATA_FILE=userdata-worker",
+		"/usr/bin/rkt run \\",
+		"   --net=host \\",
+		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
+		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
+   		"   --trust-keys-from-https \\",
+		"   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp {{ .S3URI }}/{{ .ClusterName }}/$USERDATA_FILE /var/run/coreos/",
+		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
+			]]}}
       },
+{{ if .Experimental.AwsEnvironment.Enabled }}
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+"{{$variable}}=", {{$function}} , "\n",
+{{end}}
+"' > /etc/aws-environment" ] ] }
+              }
+            }
+          }
+        }
+      },
+{{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "LaunchConfigurationController": {
@@ -628,8 +673,39 @@
           }
         ],
         "PlacementTenancy": "{{ .ControllerTenancy }}",
-        "UserData": "{{ .UserDataController }}"
+        "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
+		"#!/bin/bash",
+                "# userdata hash: {{ .UserDataController | sha1 }}",
+		" . /etc/environment",
+                "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
+	        "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
+		"USERDATA_FILE=userdata-controller",
+		"/usr/bin/rkt run \\",
+		"   --net=host \\",
+		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
+		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
+   		"   --trust-keys-from-https \\",
+		"   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp {{ .S3URI }}/{{ .ClusterName }}/$USERDATA_FILE /var/run/coreos/",
+		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
+			]]}}
       },
+  {{ if .Experimental.AwsEnvironment.Enabled }}
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+"{{$variable}}=", {{$function}} , "\n",
+{{end}}
+"' > /etc/aws-environment" ] ] }
+              }
+            }
+          }
+        }
+      },
+  {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "ElbAPIServer" : {

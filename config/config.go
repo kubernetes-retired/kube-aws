@@ -14,10 +14,8 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/coreos/kube-aws/coreos/amiregistry"
-	"github.com/coreos/kube-aws/coreos/userdatavalidation"
-	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
-	model "github.com/coreos/kube-aws/model"
+	"github.com/coreos/kube-aws/model"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -189,6 +187,15 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 	}
 
 	return c, nil
+}
+
+func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptService) (*Cluster, error) {
+	cluster, err := ClusterFromBytes(data)
+	if err != nil {
+		return nil, err
+	}
+	cluster.providedEncryptService = encryptService
+	return cluster, nil
 }
 
 // Part of configuration which is shared between controller nodes and worker nodes.
@@ -559,19 +566,13 @@ type StackTemplateOptions struct {
 	WorkerTmplFile        string
 	EtcdTmplFile          string
 	StackTemplateTmplFile string
+	S3URI                 string
+	PrettyPrint           bool
 }
 
-type stackConfig struct {
-	*Config
-	UserDataWorker        string
-	UserDataController    string
-	UserDataEtcd          string
-	ControllerSubnetIndex int
-}
-
-func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (*stackConfig, error) {
+func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 	var err error
-	stackConfig := stackConfig{}
+	stackConfig := StackConfig{}
 
 	if stackConfig.Config, err = c.Config(); err != nil {
 		return nil, err
@@ -591,46 +592,21 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		stackConfig.Config.TLSConfig = compactAssets
 	}
 
-	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.Config); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
 	}
-	if stackConfig.UserDataController, err = userdatatemplate.GetString(opts.ControllerTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.UserDataController, err = userdatatemplate.GetString(opts.ControllerTmplFile, stackConfig.Config); err != nil {
 		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
 	}
-	if stackConfig.UserDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config, compressUserData); err != nil {
+	if stackConfig.userDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config); err != nil {
 		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
 	}
 
+	stackConfig.S3URI = strings.TrimSuffix(opts.S3URI, "/")
+
+	stackConfig.StackTemplateOptions = opts
+
 	return &stackConfig, nil
-}
-
-func (c Cluster) ValidateUserData(opts StackTemplateOptions) error {
-	stackConfig, err := c.stackConfig(opts, false)
-	if err != nil {
-		return err
-	}
-
-	err = userdatavalidation.Execute([]userdatavalidation.Entry{
-		{Name: "UserDataWorker", Content: stackConfig.UserDataWorker},
-		{Name: "UserDataController", Content: stackConfig.UserDataController},
-		{Name: "UserDataEtcd", Content: stackConfig.UserDataEtcd},
-	})
-
-	return err
-}
-
-func (c Cluster) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool) ([]byte, error) {
-	stackConfig, err := c.stackConfig(opts, true)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := jsontemplate.GetBytes(opts.StackTemplateTmplFile, stackConfig, prettyPrint)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
 }
 
 type Config struct {
