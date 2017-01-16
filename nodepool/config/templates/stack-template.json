@@ -1,5 +1,21 @@
+{{define "UserData"}}
+{ "Fn::Base64": { "Fn::Join" : ["\n", [
+  "#!/bin/bash",
+  "# userdata hash: {{ .UserDataWorker | sha1 }}",
+  " . /etc/environment",
+  "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
+  "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
+  "USERDATA_FILE=userdata-worker",
+  "/usr/bin/rkt run \\",
+  "   --net=host \\",
+  "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
+  "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
+  "   --trust-keys-from-https \\",
+  "   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp {{ .S3URI }}/{{ .StackName }}/$USERDATA_FILE /var/run/coreos/",
+  "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
+]]}}
+{{end}}
 {{define "Metadata"}}
-
 {
   "AWS::CloudFormation::Init" : {
     "configSets" : {
@@ -85,7 +101,7 @@
             "SubnetId": {
               "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
             },
-            "UserData": "{{$.UserDataWorker}}"
+            "UserData": {{template "UserData" $}}
           }
           {{end}}
           {{end}}
@@ -205,7 +221,7 @@
         {{else}}
         "PlacementTenancy": "{{.WorkerTenancy}}",
         {{end}}
-        "UserData": "{{ .UserDataWorker }}"
+        "UserData": {{template "UserData" $}}
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
@@ -267,6 +283,13 @@
                   "Action": "ec2:DetachVolume",
                   "Effect": "Allow",
                   "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-worker" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .StackName }}"
                 },
                 {
                   "Action" : "kms:Decrypt",
