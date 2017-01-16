@@ -100,7 +100,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
-        ExecStartPre=/bin/sh -ec "sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|' /etc/kubernetes/manifests/* /etc/kubernetes/cni/net.d/*" 
+        ExecStartPre=/bin/bash -ec "shopt -s nullglob; sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|' /etc/kubernetes/manifests/* /etc/kubernetes/cni/net.d/*"
         ExecStartPre=/usr/bin/etcdctl \
                        --ca-file /etc/kubernetes/ssl/ca.pem \
                        --key-file /etc/kubernetes/ssl/etcd-client-key.pem \
