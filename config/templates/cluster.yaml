@@ -17,7 +17,7 @@ externalDNSName: {{.ExternalDNSName}}
 # If omitted, the latest AMI for the releaseChannel is used.
 #amiId: ""
 
-# Set to true if you want kube-aws to create a Route53 A Record for you.
+# Set to true if you want kube-aws to create a Route53 Alias Record pointing to the controller ELB for you.
 #createRecordSet: false
 
 # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
@@ -63,7 +63,8 @@ controller:
 # Maximum time to wait for controller creation
 #controlerCreateTimeout: PT15M
 
-# Instance type for controller node
+# Instance type for controller node.
+# CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/18975
 #controllerInstanceType: t2.medium
 
 # Disk size (GiB) for controller node
@@ -89,6 +90,7 @@ controller:
 #workerCreateTimeout: PT15M
 
 # Instance type for worker nodes
+# CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/16122
 #workerInstanceType: t2.medium
 
 # Disk size (GiB) for worker nodes
@@ -211,6 +213,11 @@ controller:
 #
 # You can create a new EFS volume using the CLI:
 # $ aws efs create-file-system --creation-token $(uuidgen)
+#
+# Beware that an EFS file system can not be mounted from mutiple subnets from the same availability zone and
+# therefore this feature won't work like you might have expected when you're deploying your cluster to an existing VPC and
+# wanted to mount an existing EFS to the subnet(s) created by kube-aws
+# See https://github.com/coreos/kube-aws/issues/208 for more information
 #elasticFileSystemId: fs-47a2c22e
 
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
@@ -218,22 +225,29 @@ controller:
 
 # Experimental features will change in backward-incompatible ways
 # experimental:
+#   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #   awsEnvironment:
 #     enabled: true
 #     environment:
 #       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#   # Enable audit log for apiserver. Recommended when `rbac` is enabled.
 #   auditLog:
 #     enabled: true
 #     maxage: 30
 #     logpath: /dev/stdout
+#   # Add predefined set of labels to the nodes
+#   # The set includes names of launch configurations and autoscaling groups
 #   awsNodeLabels:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
 #   ephemeralImageStorage:
 #     enabled: true
+#   # Configuration for external managed ELBs for worker nodes
 #   loadBalancer:
 #     enabled: true
+#     # Names of ELBs attached to worker nodes
 #     names: [ "manuallymanagedelb" ]
+#     # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
 #     securityGroupIds: [ "sg-87654321" ]
 #   nodeDrainer:
 #     enabled: true
@@ -243,9 +257,14 @@ controller:
 #     - key: dedicated
 #       value: search
 #       effect: NoSchedule
+#   # When enabled, autoscaling groups managing worker and controller nodes wait for nodes to be up and running.
+#   # Although this is still an experimental feature, it is recommended to be enabled and
+#   # it will even be enabled by default in the near future.
 #   waitSignal:
 #     enabled: true
 #   plugins:
+#     # When enabled, you also need to configure a minimum set of role bindings or everything breaks.
+#     # See https://github.com/coreos/kube-aws/issues/230 for more information.
 #     rbac:
 #       enabled: true
 
