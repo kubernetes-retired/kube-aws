@@ -45,6 +45,7 @@ Please file an issue to make suggestions on this roadmap!
 
   * Kubernetes 1.6
   * Etcd v3 support as it is enabled by default in 1.6: https://github.com/kubernetes/kubernetes/issues/22448#event-913208648
+  * Migrate from coreos-cloudinit to ignition for node bootstrapping
   * YAML CloudFormation templates
 
 ## Stage N: v0.9.x
