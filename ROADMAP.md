@@ -18,19 +18,31 @@ Please file an issue to make suggestions on this roadmap!
 
 ## Stage 2: v0.9.3
 
-  * Cluster Auto Scaling
-    * Including partial support for auto-scaling worker nodes, kube-dns
-  * Private subnets and NAT gateways for etcd, controller and worker nodes
+  * Kubernetes 1.5.1
+     * Auto-scaled kube-dns
   * Self-hosted Calico
+  * Very limited, almost theoretical support for automatic reconfiguration of cluster-autoscaler
 
 ## Stage 3: v0.9.4
 
+  * Cluster Auto Scaling
+    * Support for auto-scaling worker nodes with dynamic reconfiguration of cluster-autoscaler
+  * Rethink how node pools are implemented
+    * See https://github.com/coreos/kube-aws/issues/238
+  * Experimental support for
+    * Private subnets and NAT gateways for etcd, controller and worker nodes
+    * Deployments to existing subnets
+
+## Stage 4: v0.9.5
+
+  * Work-around the 16KB userdata limit in size
+  * Internal domain and custom hostnames support for etcd nodes?
   * etcd improvements
     * Backups
     * Recovery
   * YAML CloudFormation templates
   
-## Stage 4: v0.9.5
+## Stage 5: v0.9.6
 
   * Kubernetes 1.6
   * Etcd v3 support as it is enabled by default in 1.6: https://github.com/kubernetes/kubernetes/issues/22448#event-913208648
