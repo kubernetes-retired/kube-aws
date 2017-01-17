@@ -12,12 +12,19 @@ This survey is meant for those who are currently running at least some workloads
 
 ---
 
+`kube-aws` is a command-line tool to create/update/destroy Kubernetes clusters on AWS.
+
 ## Features
 
 * Create, update and destroy Kubernetes clusters on AWS
 * Highly available and scalable Kubernetes clusters backed by multi-AZ deployment and Node Pools
 * Deployment to an existing VPC
 * Powered by various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
+
+## Design Decisions
+
+* CoreOS as the host OS
+* Allow exporting CloudFormation stack templates for further customizations
 
 ## Getting Started
 
