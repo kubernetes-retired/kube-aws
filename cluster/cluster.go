@@ -158,8 +158,10 @@ func (c *Cluster) Create(stackBody string, s3URI string) error {
 	}
 
 	ec2Svc := ec2.New(c.session)
-	if err := c.validateKeyPair(ec2Svc); err != nil {
-		return err
+	if c.KeyName != "" {
+		if err := c.validateKeyPair(ec2Svc); err != nil {
+			return err
+		}
 	}
 
 	if err := c.validateExistingVPCState(ec2Svc); err != nil {
