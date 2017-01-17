@@ -40,7 +40,68 @@ KUBE_AWS_DEPLOY_TO_EXISTING_VPC=1 \
   KUBE_AWS_NODE_LABELS_ENABLED=1 \
   KUBE_AWS_AWS_ENV_ENABLED=1 \
   KUBE_AWS_USE_CALICO=true \
-  KUBE_AWS_CLUSTER_NAME=kubeawstest1 sh -c './run all'
+  KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
+```
+
+## Common configurations used for validating kube-aws releases
+
+### For deployments to new VPCs
+
+#### With Calico
+
+```
+KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
+KUBE_AWS_NODE_POOL_INDEX=1 \
+KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
+KUBE_AWS_AWS_ENV_ENABLED=1 \
+KUBE_AWS_USE_CALICO=true \
+KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
+```
+
+#### Without Calico
+
+##### ASG based worker nodes
+
+```
+KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
+KUBE_AWS_NODE_POOL_INDEX=1 \
+KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
+KUBE_AWS_AWS_ENV_ENABLED=1 \
+KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
+```
+
+##### Spot Fleet based worker nodes
+
+With omitting `KUBE_AWS_AWS_ENV_ENABLED` because the `awsEnvironment` feature doesn't support Spot Fleet
+
+```
+KUBE_AWS_SPOT_FLEET_ENABLED=1 \
+KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
+KUBE_AWS_NODE_POOL_INDEX=1 \
+KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
+UBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all
+```
+
+### For deployments to exising VPCs
+
+#### With Calico
+
+```
+KUBE_AWS_DEPLOY_TO_EXISTING_VPC=1 \
+KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
+KUBE_AWS_NODE_POOL_INDEX=1 \
+KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_NODE_LABELS_ENABLED=1 \
+KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
+KUBE_AWS_AWS_ENV_ENABLED=1 \
+KUBE_AWS_USE_CALICO=true \
+KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
 ```
 
 ## Customizing your test kubernetes cluster
