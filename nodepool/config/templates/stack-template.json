@@ -15,7 +15,7 @@
           {
             "ImageId": "{{$.AMI}}",
             "InstanceType": "{{$spec.InstanceType}}",
-            "KeyName": "{{$.KeyName}}",
+            {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}
             "WeightedCapacity": {{$spec.WeightedCapacity}},
             {{if $spec.SpotPrice}}
             "SpotPrice": "{{$spec.SpotPrice}}",
@@ -161,7 +161,7 @@
         },
         "ImageId": "{{.AMI}}",
         "InstanceType": "{{.WorkerInstanceType}}",
-        "KeyName": "{{.KeyName}}",
+        {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
         "SecurityGroups": [
           {{range $sgIndex, $sgRef := $.WorkerSecurityGroupRefs}}
           {{if gt $sgIndex 0}},{{end}}
