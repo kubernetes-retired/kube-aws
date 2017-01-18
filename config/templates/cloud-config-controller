@@ -1294,6 +1294,7 @@ write_files:
           - port: 80
             targetPort: 9090
         
+{{ if .ManageCertificates }}
   - path: /etc/kubernetes/ssl/ca.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
@@ -1313,6 +1314,7 @@ write_files:
   - path: /etc/kubernetes/ssl/etcd-client-key.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientKey}}
+{{ end }}
 
 
 {{ if not .UseCalico }}

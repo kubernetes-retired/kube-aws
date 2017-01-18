@@ -55,6 +55,11 @@ availabilityZone: {{.AvailabilityZone}}
 # ARN of the KMS key used to encrypt TLS assets.
 kmsKeyArn: "{{.KMSKeyARN}}"
 
+# If you do not want kube-aws to manage certificaes, set it to false. If you do that
+# you are responsible for making sure that nodes have correct certificates by the time
+# daemons start up.
+manageCertificates: {{.ManageCertificates}}
+
 # Number of worker nodes to create, for more control use `worker.autoScalingGroup` and do not use this setting
 #workerCount: 1
 
