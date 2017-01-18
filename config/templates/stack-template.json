@@ -9,7 +9,7 @@
     }
   },
   "Resources": {
-    "AutoScaleWorker": {
+    "{{.Worker.LogicalName}}": {
       "Properties": {
         "AvailabilityZones": [
           {{range $index, $subnet := .Subnets}}
@@ -87,9 +87,44 @@
           {{end}}
         }
       },
-      "DependsOn" : ["AutoScaleController"]
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+              "etcd-client": [ "etcd-client-env" ]{{if .Experimental.AwsEnvironment.Enabled}},
+              "aws-environment": [ "aws-environment-env" ]{{end}}
+          },
+          {{ if .Experimental.AwsEnvironment.Enabled }}
+          "aws-environment-env" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+                  {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+                  "{{$variable}}=", {{$function}} , "\n",
+                  {{end}}
+                  "' > /etc/aws-environment" ] ] }
+              }
+            }
+          },
+          {{ end }}
+          "etcd-client-env": {
+            "files" : {
+              "/var/run/coreos/etcd-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_ENDPOINTS='",
+{{range $index, $_ := $.EtcdInstances}}
+                  {{if $index}}",", {{end}} "https://",
+                    { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] }, ":2379",
+{{end}}
+                  "'\n"
+                ]]}
+              }
+            }
+          }
+        }
+      },
+      "DependsOn" : ["{{.Controller.LogicalName}}"]
     },
-    "AutoScaleController": {
+    "{{.Controller.LogicalName}}": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
         "AvailabilityZones": [
@@ -154,6 +189,59 @@
           {{else}}
           "PauseTime": "PT2M"
           {{end}}
+        }
+      },
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "configSets" : {
+              "etcd-server": [ "etcd-server-env" ],
+              "etcd-client": [ "etcd-client-env" ]{{if .Experimental.AwsEnvironment.Enabled}},
+              "aws-environment": [ "aws-environment-env" ]{{end}}
+          },
+          {{ if .Experimental.AwsEnvironment.Enabled }}
+          "aws-environment-env" : {
+            "commands": {
+              "write-environment": {
+                "command": { "Fn::Join" : ["", [ "echo '",
+                  {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+                  "{{$variable}}=", {{$function}} , "\n",
+                  {{end}}
+                  "' > /etc/aws-environment" ] ] }
+              }
+            }
+          },
+          {{ end }}
+          "etcd-server-env": {
+            "files" : {
+              "/var/run/coreos/etcd-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_INITIAL_CLUSTER='",
+                  {{range $index, $_ := $.EtcdInstances}}
+                  {{if $index}}",", {{end}}
+                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
+                  "=https://",
+                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
+                  ":2380",
+                  {{end}}
+                  "'\n"
+                ]]}
+              }
+            }
+          },
+          "etcd-client-env": {
+            "files" : {
+              "/var/run/coreos/etcd-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_ENDPOINTS='",
+{{range $index, $_ := $.EtcdInstances}}
+                  {{if $index}}",", {{end}} "https://",
+                    { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] }, ":2379",
+{{end}}
+                  "'\n"
+                ]]}
+              }
+            }
+          }
         }
       }
     },
@@ -526,23 +614,6 @@
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
-{{ if .Experimental.AwsEnvironment.Enabled }}
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "config" : {
-            "commands": {
-              "write-environment": {
-                "command": { "Fn::Join" : ["", [ "echo '",
-{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
-"{{$variable}}=", {{$function}} , "\n",
-{{end}}
-"' > /etc/aws-environment" ] ] }
-              }
-            }
-          }
-        }
-      },
-{{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
     "LaunchConfigurationController": {
@@ -572,58 +643,6 @@
         ],
         "PlacementTenancy": "{{ .ControllerTenancy }}",
         "UserData": "{{ .UserDataController }}"
-      },
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "configSets" : {
-              "etcd-server": [ "etcd-server-env" ],
-              "etcd-client": [ "etcd-client-env" ]
-          },
-  {{ if .Experimental.AwsEnvironment.Enabled }}
-          "config" : {
-            "commands": {
-              "write-environment": {
-                "command": { "Fn::Join" : ["", [ "echo '",
-{{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
-"{{$variable}}=", {{$function}} , "\n",
-{{end}}
-"' > /etc/aws-environment" ] ] }
-              }
-            }
-          },
-  {{ end }}
-          "etcd-server-env": {
-            "files" : {
-              "/var/run/coreos/etcd-environment": {
-                "content": { "Fn::Join" : [ "", [
-                  "ETCD_INITIAL_CLUSTER='",
-{{range $index, $_ := $.EtcdInstances}}
-                  {{if $index}}",", {{end}}
-                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
-                  "=https://",
-                  { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
-                  ":2380",
-{{end}}
-                  "'\n"
-                ]]}
-              }
-            }
-          },
-          "etcd-client-env": {
-            "files" : {
-              "/var/run/coreos/etcd-environment": {
-                "content": { "Fn::Join" : [ "", [
-                  "ETCD_ENDPOINTS='",
-{{range $index, $_ := $.EtcdInstances}}
-                  {{if $index}}",", {{end}} "https://",
-                    { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] }, ":2379", 
-{{end}}
-                  "'\n"
-                ]]}
-              }
-            }
-          }
-        }
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
@@ -1222,6 +1241,13 @@
       "Description" : "The security group assigned to worker nodes",
       "Value" :  { "Ref" : "SecurityGroupWorker" },
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-WorkerSecurityGroup" }}
+    },
+    {{range $index, $_ := $.EtcdInstances}}
+    {{if $index}},{{end}}"InstanceEtcd{{$index}}PrivateDnsName": {
+      "Description": "The resolvable hostname of etcd node {{$index}}",
+      "Value": { "Fn::GetAtt" : [ "InstanceEtcd{{$index}}", "PrivateDnsName" ] },
+      "Export": { "Name" : "{{$.ClusterName}}-InstanceEtcd{{$index}}PrivateDnsName" }
     }
+    {{end}}
   }
 }

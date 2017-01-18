@@ -489,14 +489,14 @@ func (c Cluster) Config() (*Config, error) {
 		config.VPCRef = fmt.Sprintf("%q", config.VPCID)
 	}
 
-	config.EtcdInstances = make([]etcdInstance, config.EtcdCount)
+	config.EtcdInstances = make([]model.EtcdInstance, config.EtcdCount)
 
 	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
 
 		//Round-robbin etcd instances across all available subnets
 		subnetIndex := etcdIndex % len(config.Subnets)
 
-		instance := etcdInstance{
+		instance := model.EtcdInstance{
 			SubnetIndex: subnetIndex,
 		}
 
@@ -617,14 +617,10 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool
 	return bytes, nil
 }
 
-type etcdInstance struct {
-	SubnetIndex int
-}
-
 type Config struct {
 	Cluster
 
-	EtcdInstances []etcdInstance
+	EtcdInstances []model.EtcdInstance
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
@@ -1034,7 +1030,7 @@ func (c WorkerDeploymentSettings) StackTags() map[string]string {
 	}
 
 	if c.Worker.ClusterAutoscaler.Enabled() {
-		tags["kube-aws:cluster-autoscaler:logical-name"] = "AutoScaleWorker"
+		tags["kube-aws:cluster-autoscaler:logical-name"] = c.Worker.LogicalName()
 		tags["kube-aws:cluster-autoscaler:min-size"] = strconv.Itoa(c.Worker.ClusterAutoscaler.MinSize)
 		tags["kube-aws:cluster-autoscaler:max-size"] = strconv.Itoa(c.Worker.ClusterAutoscaler.MaxSize)
 	}
@@ -1048,10 +1044,6 @@ func (c WorkerDeploymentSettings) Valid() error {
 
 	if numSGs > 4 {
 		return fmt.Errorf("number of user provided security groups must be less than or equal to 4 but was %d (actual EC2 limit is 5 but one of them is reserved for kube-aws) : %v", numSGs, sgRefs)
-	}
-
-	if c.SpotFleet.Enabled() && c.Experimental.AwsEnvironment.Enabled {
-		return fmt.Errorf("The experimental feature `awsEnvironment` assumes a node pool is managed by an ASG rather than a Spot Fleet.")
 	}
 
 	if c.SpotFleet.Enabled() && c.Experimental.WaitSignal.Enabled {

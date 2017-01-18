@@ -1,5 +1,45 @@
+{{define "Metadata"}}
+
+{
+  "AWS::CloudFormation::Init" : {
+    "configSets" : {
+      "etcd-client": [ "etcd-client-env" ]{{ if .Experimental.AwsEnvironment.Enabled }},
+      "aws-environment": [ "aws-environment-env" ]{{end}}
+    },
+    {{ if .Experimental.AwsEnvironment.Enabled }}
+    "aws-environment-env" : {
+      "commands": {
+         "write-environment": {
+          "command": {
+            "Fn::Join" : ["", [ "echo '",
+            {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+            "{{$variable}}=", {{$function}} , "\n",
+            {{end}}
+            "' > /etc/aws-environment" ] ]
+          }
+        }
+      }
+    },
+    {{end}}
+    "etcd-client-env": {
+      "files" : {
+        "/var/run/coreos/etcd-environment": {
+          "content": { "Fn::Join" : [ "", [
+            "ETCD_ENDPOINTS='",
+            {{range $index, $_ := $.EtcdInstances}}
+            {{if $index}}",", {{end}} "https://",
+              { "Fn::ImportValue" : "{{$.ClusterName}}-InstanceEtcd{{$index}}PrivateDnsName" }, ":2379",
+            {{end}}
+            "'\n"
+          ]]}
+        }
+      }
+    }
+  }
+}
+{{end}}
 {{define "SpotFleet"}}
-  "SpotFleet": {
+  "{{.Worker.LogicalName}}": {
     "Type": "AWS::EC2::SpotFleet",
     "Properties": {
       "SpotFleetRequestConfigData": {
@@ -53,11 +93,12 @@
           {{end}}
         ]
       }
-    }
+    },
+    "Metadata": {{template "Metadata" .}}
   },
 {{end}}
 {{define "AutoScaling"}}
-    "AutoScaleWorker": {
+    "{{.Worker.LogicalName}}": {
       "Properties": {
         "AvailabilityZones": [
           {{range $index, $subnet := .Subnets}}
@@ -139,7 +180,8 @@
           "PauseTime": "PT2M"
           {{end}}
         }
-      }
+      },
+      "Metadata": {{template "Metadata" .}}
     },
 
     "LaunchConfigurationWorker": {
@@ -175,23 +217,6 @@
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
-  {{ if .Experimental.AwsEnvironment.Enabled }}
-        "Metadata" : {
-          "AWS::CloudFormation::Init" : {
-            "config" : {
-              "commands": {
-                "write-environment": {
-                  "command": { "Fn::Join" : ["", [ "echo '",
-  {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
-  "{{$variable}}=", {{$function}} , "\n",
-  {{end}}
-  "' > /etc/aws-environment" ] ] }
-                }
-              }
-            }
-          }
-        },
-  {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
 {{end}}

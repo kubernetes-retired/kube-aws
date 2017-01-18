@@ -29,8 +29,8 @@ coreos:
           {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
               -c "etcd-client" \
               --region {{.Region}} \
-              --resource LaunchConfigurationController \
-              --stack {{ .ClusterName }}
+              --resource {{.Controller.LogicalName}} \
+              --stack {{ .StackName }}
         ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
 
 {{if .Experimental.AwsEnvironment.Enabled}}
@@ -54,8 +54,9 @@ coreos:
           --net=host \
           --trust-keys-from-https \
           {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
+              -c "aws-environment" \
               --region {{.Region}} \
-              --resource LaunchConfigurationController \
+              --resource {{.Controller.LogicalName}} \
               --stack {{.ClusterName}}
 {{end}}
     - name: docker.service
@@ -262,7 +263,7 @@ coreos:
           --trust-keys-from-https \
           quay.io/coreos/awscli:edge -- cfn-signal -e 0 \
               --region {{.Region}} \
-              --resource AutoScaleController \
+              --resource {{.Controller.LogicalName}} \
               --stack {{.ClusterName}}
 {{end}}
 {{if .Experimental.AwsNodeLabels.Enabled }}

@@ -134,7 +134,7 @@ manageCertificates: {{.ManageCertificates}}
 #    launchSpecifications:
 #    - # Number of units provided by an EC2 instance of the instanceType.
 #      weightedCapacity: 1
-#      instanceType: t2.medium
+#      instanceType: c4.large
 #
 #      # Price per unit hour = Price per instance hour / num of weighted capacity for the instance
 #      #spotPrice:
@@ -150,9 +150,7 @@ manageCertificates: {{.ManageCertificates}}
 #      # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #      #rootVolumeIOPS:
 #    - weightedCapacity: 2
-#      instanceType: m3.large
-#    - weightedCapacity: 2
-#      instanceType: m4.large
+#      instanceType: c4.xlarge
 
 ## Networking config
 

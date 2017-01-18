@@ -51,9 +51,8 @@ func newDefaultSpotFleet() SpotFleet {
 		UnitRootVolumeSize: 30,
 		RootVolumeType:     "gp2",
 		LaunchSpecifications: []LaunchSpecification{
-			NewLaunchSpecification(1, "t2.medium"),
-			NewLaunchSpecification(2, "m3.large"),
-			NewLaunchSpecification(2, "m4.large"),
+			NewLaunchSpecification(1, "c4.large"),
+			NewLaunchSpecification(2, "c4.xlarge"),
 		},
 	}
 }
@@ -66,6 +65,10 @@ func NewLaunchSpecification(weightedCapacity int, instanceType string) LaunchSpe
 		RootVolumeIOPS:   0,
 		RootVolumeType:   "",
 	}
+}
+
+func (c Worker) LogicalName() string {
+	return "Workers"
 }
 
 func (c Worker) Valid() error {
