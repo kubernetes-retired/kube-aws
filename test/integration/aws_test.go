@@ -2,6 +2,7 @@ package integration
 
 import (
 	"fmt"
+	cfg "github.com/coreos/kube-aws/config"
 	"github.com/coreos/kube-aws/nodepool/cluster"
 	"github.com/coreos/kube-aws/nodepool/config"
 	"github.com/coreos/kube-aws/test/helper"
@@ -200,10 +201,29 @@ experimental:
 		},
 	}
 
+	mainClusterYaml := `
+region: ap-northeast-1
+availabilityZone: ap-northeast-1a
+externalDNSName: kubeawstest.example.com
+sshAuthorizedKeys:
+- mydummysshpublickey
+kmsKeyArn: mykmskeyarn
+`
+	mainCluster, err := cfg.ClusterFromBytes([]byte(mainClusterYaml))
+	if err != nil {
+		t.Errorf("failed to read the test cluster : %v", err)
+		t.FailNow()
+	}
+	mainConfig, err := mainCluster.Config()
+	if err != nil {
+		t.Errorf("failed to generate the config for the default cluster : %v", err)
+		t.FailNow()
+	}
+
 	for _, validCase := range validCases {
 		t.Run(validCase.context, func(t *testing.T) {
 			configBytes := validCase.configYaml
-			providedConfig, err := config.ClusterFromBytes([]byte(configBytes))
+			providedConfig, err := config.ClusterFromBytes([]byte(configBytes), mainConfig)
 			if err != nil {
 				t.Errorf("failed to parse config %s: %v", configBytes, err)
 				t.FailNow()
@@ -246,7 +266,7 @@ experimental:
 					report, err := cluster.ValidateStack(string(stackTemplate), s3URI)
 
 					if err != nil {
-						t.Errorf("failed to validate stack: %s", report)
+						t.Errorf("failed to validate stack: %s %v", report, err)
 					}
 				})
 			})

@@ -34,7 +34,7 @@ availabilityZone: us-west-1c
 
 type ConfigTester func(c *ProvidedConfig, t *testing.T)
 
-func TestConfig(t *testing.T) {
+func TestNodePoolConfig(t *testing.T) {
 	minimalValidConfigYaml := insufficientConfigYaml + `
 availabilityZone: us-west-1c
 dnsServiceIP: "10.3.0.10"
@@ -404,10 +404,29 @@ experimental:
 		},
 	}
 
+	mainClusterYaml := `
+region: ap-northeast-1
+availabilityZone: ap-northeast-1a
+externalDNSName: kubeawstest.example.com
+sshAuthorizedKeys:
+- mydummysshpublickey
+kmsKeyArn: mykmskeyarn
+`
+	mainCluster, err := cfg.ClusterFromBytes([]byte(mainClusterYaml))
+	if err != nil {
+		t.Errorf("failed to read the test cluster : %v", err)
+		t.FailNow()
+	}
+	mainConfig, err := mainCluster.Config()
+	if err != nil {
+		t.Errorf("failed to generate the config for the default cluster : %v", err)
+		t.FailNow()
+	}
+
 	for _, validCase := range validCases {
 		t.Run(validCase.context, func(t *testing.T) {
 			configBytes := validCase.configYaml
-			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			providedConfig, err := ClusterFromBytes([]byte(configBytes), mainConfig)
 			if err != nil {
 				t.Errorf("failed to parse config %s: %v", configBytes, err)
 				t.FailNow()
@@ -465,18 +484,6 @@ vpcId: vpc-1a2b3c4d
 # vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
 vpcCIDR: "10.1.0.0/16"
 `,
-		},
-		{
-			context: "WithSpotFleetWithExperimentalAwsEnvironment",
-			configYaml: minimalValidConfigYaml + `
-worker:
-  spotFleet:
-    targetCapacity: 10
-experimental:
-  awsEnvironment:
-    enabled: true
-`,
-			expectedErrorMessage: "The experimental feature `awsEnvironment` assumes a node pool is managed by an ASG rather than a Spot Fleet.",
 		},
 		{
 			context: "WithSpotFleetWithExperimentalWaitSignal",
@@ -562,7 +569,7 @@ experimental:
 	for _, invalidCase := range parseErrorCases {
 		t.Run(invalidCase.context, func(t *testing.T) {
 			configBytes := invalidCase.configYaml
-			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			providedConfig, err := ClusterFromBytes([]byte(configBytes), mainConfig)
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %v", configBytes, providedConfig)
 				t.FailNow()

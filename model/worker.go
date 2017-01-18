@@ -68,6 +68,10 @@ func NewLaunchSpecification(weightedCapacity int, instanceType string) LaunchSpe
 	}
 }
 
+func (c Worker) LogicalName() string {
+	return "Workers"
+}
+
 func (c Worker) Valid() error {
 	if err := c.SpotFleet.Valid(); err != nil {
 		return err
