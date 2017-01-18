@@ -34,7 +34,7 @@ availabilityZone: us-west-1c
 
 type ConfigTester func(c *ProvidedConfig, t *testing.T)
 
-func TestConfig(t *testing.T) {
+func TestNodePoolConfig(t *testing.T) {
 	minimalValidConfigYaml := insufficientConfigYaml + `
 availabilityZone: us-west-1c
 dnsServiceIP: "10.3.0.10"
@@ -44,21 +44,14 @@ etcdEndpoints: "10.0.0.1"
 		expected := []model.LaunchSpecification{
 			{
 				WeightedCapacity: 1,
-				InstanceType:     "t2.medium",
+				InstanceType:     "c4.large",
 				RootVolumeSize:   30,
 				RootVolumeIOPS:   0,
 				RootVolumeType:   "gp2",
 			},
 			{
 				WeightedCapacity: 2,
-				InstanceType:     "m3.large",
-				RootVolumeSize:   60,
-				RootVolumeIOPS:   0,
-				RootVolumeType:   "gp2",
-			},
-			{
-				WeightedCapacity: 2,
-				InstanceType:     "m4.large",
+				InstanceType:     "c4.xlarge",
 				RootVolumeSize:   60,
 				RootVolumeIOPS:   0,
 				RootVolumeType:   "gp2",
@@ -247,9 +240,9 @@ worker:
     unitRootVolumeSize: 40
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
     - weightedCapacity: 2
-      instanceType: m3.large
+      instanceType: c4.xlarge
       rootVolumeSize: 100
 `,
 			assertProvidedConfig: []ConfigTester{
@@ -258,7 +251,7 @@ worker:
 					expected := []model.LaunchSpecification{
 						{
 							WeightedCapacity: 1,
-							InstanceType:     "t2.medium",
+							InstanceType:     "c4.large",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
 							RootVolumeSize: 40,
 							RootVolumeIOPS: 0,
@@ -267,8 +260,52 @@ worker:
 						},
 						{
 							WeightedCapacity: 2,
-							InstanceType:     "m3.large",
+							InstanceType:     "c4.xlarge",
 							RootVolumeSize:   100,
+							RootVolumeIOPS:   0,
+							RootVolumeType:   "gp2",
+						},
+					}
+					actual := c.Worker.SpotFleet.LaunchSpecifications
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"LaunchSpecifications didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithSpotFleetWithCustomInstanceTypes",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    unitRootVolumeSize: 40
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m4.large
+    - weightedCapacity: 2
+      instanceType: m4.xlarge
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *ProvidedConfig, t *testing.T) {
+					expected := []model.LaunchSpecification{
+						{
+							WeightedCapacity: 1,
+							InstanceType:     "m4.large",
+							RootVolumeSize:   40,
+							RootVolumeIOPS:   0,
+							// RootVolumeType was not specified in the configYaml but should default to:
+							RootVolumeType: "gp2",
+						},
+						{
+							WeightedCapacity: 2,
+							InstanceType:     "m4.xlarge",
+							RootVolumeSize:   80,
 							RootVolumeIOPS:   0,
 							RootVolumeType:   "gp2",
 						},
@@ -295,9 +332,9 @@ worker:
     unitRootVolumeIOPS: 100
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
     - weightedCapacity: 2
-      instanceType: m3.large
+      instanceType: c4.xlarge
       rootVolumeIOPS: 500
 `,
 			assertProvidedConfig: []ConfigTester{
@@ -306,7 +343,7 @@ worker:
 					expected := []model.LaunchSpecification{
 						{
 							WeightedCapacity: 1,
-							InstanceType:     "t2.medium",
+							InstanceType:     "c4.large",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
 							RootVolumeSize: 40,
 							// RootVolumeIOPS was not specified in the configYaml but should default to workerRootVolumeIOPS * weightedCapacity hence:
@@ -316,7 +353,7 @@ worker:
 						},
 						{
 							WeightedCapacity: 2,
-							InstanceType:     "m3.large",
+							InstanceType:     "c4.xlarge",
 							RootVolumeSize:   80,
 							RootVolumeIOPS:   500,
 							// RootVolumeType was not specified in the configYaml but should default to:
@@ -404,10 +441,29 @@ experimental:
 		},
 	}
 
+	mainClusterYaml := `
+region: ap-northeast-1
+availabilityZone: ap-northeast-1a
+externalDNSName: kubeawstest.example.com
+sshAuthorizedKeys:
+- mydummysshpublickey
+kmsKeyArn: mykmskeyarn
+`
+	mainCluster, err := cfg.ClusterFromBytes([]byte(mainClusterYaml))
+	if err != nil {
+		t.Errorf("failed to read the test cluster : %v", err)
+		t.FailNow()
+	}
+	mainConfig, err := mainCluster.Config()
+	if err != nil {
+		t.Errorf("failed to generate the config for the default cluster : %v", err)
+		t.FailNow()
+	}
+
 	for _, validCase := range validCases {
 		t.Run(validCase.context, func(t *testing.T) {
 			configBytes := validCase.configYaml
-			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			providedConfig, err := ClusterFromBytes([]byte(configBytes), mainConfig)
 			if err != nil {
 				t.Errorf("failed to parse config %s: %v", configBytes, err)
 				t.FailNow()
@@ -467,18 +523,6 @@ vpcCIDR: "10.1.0.0/16"
 `,
 		},
 		{
-			context: "WithSpotFleetWithExperimentalAwsEnvironment",
-			configYaml: minimalValidConfigYaml + `
-worker:
-  spotFleet:
-    targetCapacity: 10
-experimental:
-  awsEnvironment:
-    enabled: true
-`,
-			expectedErrorMessage: "The experimental feature `awsEnvironment` assumes a node pool is managed by an ASG rather than a Spot Fleet.",
-		},
-		{
 			context: "WithSpotFleetWithExperimentalWaitSignal",
 			configYaml: minimalValidConfigYaml + `
 worker:
@@ -498,7 +542,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: foo
 `,
 		},
@@ -510,7 +554,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: io1
       # must be 100~2000
       rootVolumeIOPS: 50
@@ -524,7 +568,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: gp2
       rootVolumeIOPS: 1000
 `,
@@ -562,7 +606,7 @@ experimental:
 	for _, invalidCase := range parseErrorCases {
 		t.Run(invalidCase.context, func(t *testing.T) {
 			configBytes := invalidCase.configYaml
-			providedConfig, err := ClusterFromBytes([]byte(configBytes))
+			providedConfig, err := ClusterFromBytes([]byte(configBytes), mainConfig)
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %v", configBytes, providedConfig)
 				t.FailNow()

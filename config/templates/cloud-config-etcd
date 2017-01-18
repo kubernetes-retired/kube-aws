@@ -23,8 +23,8 @@ coreos:
           {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
               -c "etcd-server" \
               --region {{.Region}} \
-              --resource LaunchConfigurationController \
-              --stack {{ .ClusterName }}
+              --resource {{.Controller.LogicalName}} \
+              --stack {{ .StackName }}
         ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
 
     - name: etcd2.service
