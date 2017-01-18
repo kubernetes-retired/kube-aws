@@ -44,21 +44,14 @@ etcdEndpoints: "10.0.0.1"
 		expected := []model.LaunchSpecification{
 			{
 				WeightedCapacity: 1,
-				InstanceType:     "t2.medium",
+				InstanceType:     "c4.large",
 				RootVolumeSize:   30,
 				RootVolumeIOPS:   0,
 				RootVolumeType:   "gp2",
 			},
 			{
 				WeightedCapacity: 2,
-				InstanceType:     "m3.large",
-				RootVolumeSize:   60,
-				RootVolumeIOPS:   0,
-				RootVolumeType:   "gp2",
-			},
-			{
-				WeightedCapacity: 2,
-				InstanceType:     "m4.large",
+				InstanceType:     "c4.xlarge",
 				RootVolumeSize:   60,
 				RootVolumeIOPS:   0,
 				RootVolumeType:   "gp2",
@@ -247,9 +240,9 @@ worker:
     unitRootVolumeSize: 40
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
     - weightedCapacity: 2
-      instanceType: m3.large
+      instanceType: c4.xlarge
       rootVolumeSize: 100
 `,
 			assertProvidedConfig: []ConfigTester{
@@ -258,7 +251,7 @@ worker:
 					expected := []model.LaunchSpecification{
 						{
 							WeightedCapacity: 1,
-							InstanceType:     "t2.medium",
+							InstanceType:     "c4.large",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
 							RootVolumeSize: 40,
 							RootVolumeIOPS: 0,
@@ -267,8 +260,52 @@ worker:
 						},
 						{
 							WeightedCapacity: 2,
-							InstanceType:     "m3.large",
+							InstanceType:     "c4.xlarge",
 							RootVolumeSize:   100,
+							RootVolumeIOPS:   0,
+							RootVolumeType:   "gp2",
+						},
+					}
+					actual := c.Worker.SpotFleet.LaunchSpecifications
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"LaunchSpecifications didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithSpotFleetWithCustomInstanceTypes",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  spotFleet:
+    targetCapacity: 10
+    unitRootVolumeSize: 40
+    launchSpecifications:
+    - weightedCapacity: 1
+      instanceType: m4.large
+    - weightedCapacity: 2
+      instanceType: m4.xlarge
+`,
+			assertProvidedConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *ProvidedConfig, t *testing.T) {
+					expected := []model.LaunchSpecification{
+						{
+							WeightedCapacity: 1,
+							InstanceType:     "m4.large",
+							RootVolumeSize:   40,
+							RootVolumeIOPS:   0,
+							// RootVolumeType was not specified in the configYaml but should default to:
+							RootVolumeType: "gp2",
+						},
+						{
+							WeightedCapacity: 2,
+							InstanceType:     "m4.xlarge",
+							RootVolumeSize:   80,
 							RootVolumeIOPS:   0,
 							RootVolumeType:   "gp2",
 						},
@@ -295,9 +332,9 @@ worker:
     unitRootVolumeIOPS: 100
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
     - weightedCapacity: 2
-      instanceType: m3.large
+      instanceType: c4.xlarge
       rootVolumeIOPS: 500
 `,
 			assertProvidedConfig: []ConfigTester{
@@ -306,7 +343,7 @@ worker:
 					expected := []model.LaunchSpecification{
 						{
 							WeightedCapacity: 1,
-							InstanceType:     "t2.medium",
+							InstanceType:     "c4.large",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity hence:
 							RootVolumeSize: 40,
 							// RootVolumeIOPS was not specified in the configYaml but should default to workerRootVolumeIOPS * weightedCapacity hence:
@@ -316,7 +353,7 @@ worker:
 						},
 						{
 							WeightedCapacity: 2,
-							InstanceType:     "m3.large",
+							InstanceType:     "c4.xlarge",
 							RootVolumeSize:   80,
 							RootVolumeIOPS:   500,
 							// RootVolumeType was not specified in the configYaml but should default to:
@@ -505,7 +542,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: foo
 `,
 		},
@@ -517,7 +554,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: io1
       # must be 100~2000
       rootVolumeIOPS: 50
@@ -531,7 +568,7 @@ worker:
     targetCapacity: 10
     launchSpecifications:
     - weightedCapacity: 1
-      instanceType: t2.medium
+      instanceType: c4.large
       rootVolumeType: gp2
       rootVolumeIOPS: 1000
 `,
