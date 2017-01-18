@@ -31,7 +31,6 @@ type ProvidedConfig struct {
 	cfg.KubeClusterSettings `yaml:",inline"`
 	cfg.WorkerSettings      `yaml:",inline"`
 	cfg.DeploymentSettings  `yaml:",inline"`
-	EtcdEndpoints           string `yaml:"etcdEndpoints,omitempty"`
 	NodePoolName            string `yaml:"nodePoolName,omitempty"`
 	providedEncryptService  cfg.EncryptService
 }
