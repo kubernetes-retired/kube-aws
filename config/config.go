@@ -77,6 +77,7 @@ func NewDefaultCluster() *Cluster {
 			Subnets:            []*Subnet{},
 			MapPublicIPs:       true,
 			Experimental:       experimental,
+			ManageCertificates: true,
 		},
 		KubeClusterSettings: KubeClusterSettings{
 			DNSServiceIP: "10.3.0.10",
@@ -232,6 +233,7 @@ type DeploymentSettings struct {
 	ElasticFileSystemID string            `yaml:"elasticFileSystemId,omitempty"`
 	SSHAuthorizedKeys   []string          `yaml:"sshAuthorizedKeys,omitempty"`
 	Experimental        Experimental      `yaml:"experimental"`
+	ManageCertificates  bool              `yaml:"manageCertificates,omitempty"`
 }
 
 // Part of configuration which is specific to worker nodes
@@ -559,16 +561,19 @@ func (c Cluster) stackConfig(opts StackTemplateOptions, compressUserData bool) (
 		return nil, err
 	}
 
-	compactAssets, err := ReadOrCreateCompactTLSAssets(opts.TLSAssetsDir, KMSConfig{
-		Region:         stackConfig.Config.Region,
-		KMSKeyARN:      c.KMSKeyARN,
-		EncryptService: c.providedEncryptService,
-	})
-	if err != nil {
-		return nil, err
-	}
+	var compactAssets *CompactTLSAssets
 
-	stackConfig.Config.TLSConfig = compactAssets
+	if c.ManageCertificates {
+		compactAssets, err = ReadOrCreateCompactTLSAssets(opts.TLSAssetsDir, KMSConfig{
+			Region:         stackConfig.Config.Region,
+			KMSKeyARN:      c.KMSKeyARN,
+			EncryptService: c.providedEncryptService,
+		})
+		if err != nil {
+			return nil, err
+		}
+		stackConfig.Config.TLSConfig = compactAssets
+	}
 
 	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.Config, compressUserData); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
@@ -771,7 +776,7 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 	if c.ClusterName == "" {
 		return nil, errors.New("clusterName must be set")
 	}
-	if c.KMSKeyARN == "" {
+	if c.KMSKeyARN == "" && c.ManageCertificates {
 		return nil, errors.New("kmsKeyArn must be set")
 	}
 

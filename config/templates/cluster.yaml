@@ -223,6 +223,11 @@ controller:
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
 # containerRuntime: docker
 
+# If you do not want kube-aws to manage certificaes, set it to false. If you do that
+# you are responsible for making sure that nodes have correct certificates by the time
+# daemons start up.
+# manageCertificates: true
+
 # Experimental features will change in backward-incompatible ways
 # experimental:
 #   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs

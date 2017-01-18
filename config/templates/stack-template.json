@@ -262,11 +262,13 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
+                {{if .ManageCertificates}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },
+                {{end}}
                 {
                   "Action": [
                     "ecr:GetAuthorizationToken",
@@ -327,11 +329,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{if .ManageCertificates}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },
+                {{end}}
                 {{if .Experimental.WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -397,6 +401,7 @@
         },
         "Path": "/",
         "Policies": [
+          {{if .ManageCertificates}}
           {
             "PolicyDocument": {
               "Statement": [
@@ -410,6 +415,7 @@
             },
             "PolicyName": "root"
           }
+          {{end}}
         ]
       },
 
