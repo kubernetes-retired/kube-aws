@@ -7,3 +7,7 @@ type Etcd struct {
 func (c Etcd) TopologyPrivate() bool {
 	return len(c.PrivateSubnets) > 0
 }
+
+type EtcdInstance struct {
+	Subnet  Subneter
+}

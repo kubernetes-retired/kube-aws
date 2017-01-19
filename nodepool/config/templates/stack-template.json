@@ -1,5 +1,45 @@
+{{define "Metadata"}}
+
+{
+  "AWS::CloudFormation::Init" : {
+    "configSets" : {
+      "etcd-client": [ "etcd-client-env" ]{{ if .Experimental.AwsEnvironment.Enabled }},
+      "aws-environment": [ "aws-environment-env" ]{{end}}
+    },
+    {{ if .Experimental.AwsEnvironment.Enabled }}
+    "aws-environment-env" : {
+      "commands": {
+         "write-environment": {
+          "command": {
+            "Fn::Join" : ["", [ "echo '",
+            {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
+            "{{$variable}}=", {{$function}} , "\n",
+            {{end}}
+            "' > /etc/aws-environment" ] ]
+          }
+        }
+      }
+    },
+    {{end}}
+    "etcd-client-env": {
+      "files" : {
+        "/var/run/coreos/etcd-environment": {
+          "content": { "Fn::Join" : [ "", [
+            "ETCD_ENDPOINTS='",
+            {{range $index, $_ := $.EtcdInstances}}
+            {{if $index}}",", {{end}} "https://",
+              { "Fn::ImportValue" : "{{$.ClusterName}}-InstanceEtcd{{$index}}PrivateDnsName" }, ":2379",
+            {{end}}
+            "'\n"
+          ]]}
+        }
+      }
+    }
+  }
+}
+{{end}}
 {{define "SpotFleet"}}
-  "SpotFleet": {
+  "{{.Worker.LogicalName}}": {
     "Type": "AWS::EC2::SpotFleet",
     "Properties": {
       "SpotFleetRequestConfigData": {
@@ -14,7 +54,7 @@
           {
             "ImageId": "{{$.AMI}}",
             "InstanceType": "{{$spec.InstanceType}}",
-            "KeyName": "{{$.KeyName}}",
+            {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}
             "WeightedCapacity": {{$spec.WeightedCapacity}},
             {{if $spec.SpotPrice}}
             "SpotPrice": "{{$spec.SpotPrice}}",
@@ -51,11 +91,12 @@
           {{end}}
         ]
       }
-    }
+    },
+    "Metadata": {{template "Metadata" .}}
   },
 {{end}}
 {{define "AutoScaling"}}
-    "AutoScaleWorker": {
+    "{{.Worker.LogicalName}}": {
       "Properties": {
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
@@ -129,7 +170,8 @@
           "PauseTime": "PT2M"
           {{end}}
         }
-      }
+      },
+      "Metadata": {{template "Metadata" .}}
     },
 
     "LaunchConfigurationWorker": {
@@ -151,7 +193,7 @@
         },
         "ImageId": "{{.AMI}}",
         "InstanceType": "{{.WorkerInstanceType}}",
-        "KeyName": "{{.KeyName}}",
+        {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
         "SecurityGroups": [
           {{range $sgIndex, $sgRef := $.WorkerSecurityGroupRefs}}
           {{if gt $sgIndex 0}},{{end}}
@@ -165,23 +207,6 @@
         {{end}}
         "UserData": "{{ .UserDataWorker }}"
       },
-  {{ if .Experimental.AwsEnvironment.Enabled }}
-        "Metadata" : {
-          "AWS::CloudFormation::Init" : {
-            "config" : {
-              "commands": {
-                "write-environment": {
-                  "command": { "Fn::Join" : ["", [ "echo '",
-  {{range $variable, $function := .Experimental.AwsEnvironment.Environment}}
-  "{{$variable}}=", {{$function}} , "\n",
-  {{end}}
-  "' > /etc/aws-environment" ] ] }
-                }
-              }
-            }
-          }
-        },
-  {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
 {{end}}

@@ -8,3 +8,7 @@ type Controller struct {
 func (c Controller) TopologyPrivate() bool {
 	return len(c.PrivateSubnets) > 0
 }
+
+func (c Controller) LogicalName() string {
+	return "Controllers"
+}
