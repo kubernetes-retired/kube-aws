@@ -42,8 +42,6 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		{"--external-dns-name", initOpts.ExternalDNSName},
 		{"--region", initOpts.Region},
 		{"--availability-zone", initOpts.AvailabilityZone},
-		{"--key-name", initOpts.KeyName},
-		{"--kms-key-arn", initOpts.KMSKeyARN},
 	}
 	var missing []string
 	for _, req := range required {

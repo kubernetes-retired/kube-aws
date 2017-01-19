@@ -37,6 +37,15 @@ amiId: {{.AmiId}}
 # account being used to deploy this cluster.
 keyName: {{.KeyName}}
 
+# Additional keys to preload on the coreos account (keep this to a minimum)
+{{ if .SSHAuthorizedKeys }}
+sshAuthorizedKeys:
+{{ range $key := .SSHAuthorizedKeys}}- "{{$key}}"
+{{ end }}
+{{ else }}
+# sshAuthorizedKeys:
+{{ end }}
+
 # Region to provision Kubernetes cluster
 region: {{.Region}}
 
@@ -45,6 +54,11 @@ availabilityZone: {{.AvailabilityZone}}
 
 # ARN of the KMS key used to encrypt TLS assets.
 kmsKeyArn: "{{.KMSKeyARN}}"
+
+# If you do not want kube-aws to manage certificaes, set it to false. If you do that
+# you are responsible for making sure that nodes have correct certificates by the time
+# daemons start up.
+manageCertificates: {{.ManageCertificates}}
 
 # Number of worker nodes to create, for more control use `worker.autoScalingGroup` and do not use this setting
 #workerCount: 1
@@ -120,7 +134,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    launchSpecifications:
 #    - # Number of units provided by an EC2 instance of the instanceType.
 #      weightedCapacity: 1
-#      instanceType: t2.medium
+#      instanceType: c4.large
 #
 #      # Price per unit hour = Price per instance hour / num of weighted capacity for the instance
 #      #spotPrice:
@@ -136,9 +150,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #      # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #      #rootVolumeIOPS:
 #    - weightedCapacity: 2
-#      instanceType: m3.large
-#    - weightedCapacity: 2
-#      instanceType: m4.large
+#      instanceType: c4.xlarge
 
 ## Networking config
 
@@ -160,8 +172,6 @@ vpcCIDR: "{{.VPCCIDR}}"
 #     instanceCIDR: "10.0.0.0/24"
 #   - availabilityZone: us-west-1b
 #     instanceCIDR: "10.0.1.0/24"
-
-etcdEndpoints: "{{.EtcdEndpoints}}"
 
 # Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
 dnsServiceIP: "{{.DNSServiceIP}}"

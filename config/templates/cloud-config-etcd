@@ -3,13 +3,37 @@ coreos:
   update:
     reboot-strategy: etcd-lock
   units:
+    - name: cfn-etcd-environment.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Fetches etcd static IP addresses list from CF
+        After=network-online.target
+
+        [Service]
+        Restart=on-failure
+        RemainAfterExit=true
+        ExecStartPre=/usr/bin/rkt run \
+          --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+          --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \
+          --net=host \
+          --trust-keys-from-https \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- cfn-init -v \
+              -c "etcd-server" \
+              --region {{.Region}} \
+              --resource {{.Controller.LogicalName}} \
+              --stack {{ .StackName }}
+        ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+
     - name: etcd2.service
       drop-ins:
         - name: 20-etcd2-aws-cluster.conf
           content: |
             [Unit]
-            Requires=decrypt-tls-assets.service
-            After=decrypt-tls-assets.service
+            Wants=decrypt-tls-assets.service cfn-etcd-environment.service
+            After=decrypt-tls-assets.service cfn-etcd-environment.service
 
             [Service]
             Environment=ETCD_NAME=%H
@@ -24,14 +48,16 @@ coreos:
             Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
 
             Environment=ETCD_INITIAL_CLUSTER_STATE=new
-            Environment=ETCD_INITIAL_CLUSTER={{.EtcdInitialCluster}}
+            EnvironmentFile=-/etc/etcd-environment
             Environment=ETCD_DATA_DIR=/var/lib/etcd2
             Environment=ETCD_LISTEN_CLIENT_URLS=https://%H:2379
             Environment=ETCD_ADVERTISE_CLIENT_URLS=https://%H:2379
             Environment=ETCD_LISTEN_PEER_URLS=https://%H:2380
             Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=https://%H:2380
             PermissionsStartOnly=true
-            ExecStartPre=/usr/bin/bash -c "sed -i \"s/^ETCDCTL_ENDPOINT.*$/ETCDCTL_ENDPOINT=https:\/\/$(hostname):2379/\" /etc/environment"
+            ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
+            ExecStartPre=/usr/bin/systemctl is-active decrypt-tls-assets.service
+            ExecStartPre=/usr/bin/sed -i 's/^ETCDCTL_ENDPOINT.*$/ETCDCTL_ENDPOINT=https:\/\/%H:2379/' /etc/environment
             ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
       enable: true
       command: start
@@ -73,14 +99,33 @@ coreos:
         [Unit]
         Description=decrypt etcd2 tls assets using amazon kms
         Before=etcd2.service
-        After=early-docker.service
-        Requires=early-docker.service
 
         [Service]
-        Type=oneshot
+        Restart=on-failure
         RemainAfterExit=yes
-        Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
-        ExecStart=/opt/bin/decrypt-tls-assets
+        ExecStartPre=/usr/bin/rkt run \
+          --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
+          --volume=ssl,kind=host,source=/etc/etcd2/ssl,readOnly=false \
+          --mount=volume=ssl,target=/etc/etcd2/ssl \
+          --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --net=host \
+          --trust-keys-from-https \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
+            -ec \
+            'echo decrypting tls assets; \
+             shopt -s nullglob; \
+             for encKey in /etc/etcd2/ssl/*.pem.enc; do \
+             echo decrypting $encKey; \
+             /usr/bin/aws \
+               --region {{.Region}} kms decrypt \
+               --ciphertext-blob fileb://$encKey \
+               --output text \
+               --query Plaintext \
+             | base64 -d > $${encKey%.enc}; \
+             done; \
+             echo done.'
+        ExecStart=-/usr/bin/rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid
 
         [Install]
         RequiredBy=etcd2.service
@@ -115,17 +160,7 @@ write_files:
         echo "volume $1 is already formatted"
       fi
 
-  - path: /opt/bin/decrypt-tls-assets
-    owner: root:root
-    permissions: 0700
-    content: |
-      #!/bin/bash -e
-
-      for encKey in $(find /etc/etcd2/ssl/*.pem.enc);do
-        tmpPath="/tmp/$(basename $encKey).tmp"
-        docker run --net host --rm -v /etc/etcd2/ssl:/etc/etcd2/ssl --rm {{.AWSCliImageRepo}}:{{.AWSCliTag}} aws --region {{.Region}} kms decrypt --ciphertext-blob fileb://$encKey --output text --query Plaintext | base64 --decode > $tmpPath
-        mv  $tmpPath /etc/etcd2/ssl/$(basename $encKey .enc)
-      done
+{{ if .ManageCertificates }}
 
   - path: /etc/etcd2/ssl/ca.pem.enc
     encoding: gzip+base64
@@ -146,3 +181,5 @@ write_files:
   - path: /etc/etcd2/ssl/etcd-client-key.pem.enc
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientKey}}
+
+{{ end }}

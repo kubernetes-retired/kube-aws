@@ -105,11 +105,8 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 		initOpts.RouteTableID = main.RouteTableID
 	}
 
-	if initOpts.EtcdEndpoints == "" {
-		initOpts.EtcdEndpoints = main.EtcdEndpoints
-	}
-
 	initOpts.ClusterName = main.ClusterName
+	initOpts.ManageCertificates = main.ManageCertificates
 
 	// Required and shared settings for the node pool.
 	//
@@ -118,6 +115,7 @@ func runCmdInit(cmd *cobra.Command, args []string) error {
 	// because inconsistency between the main cluster and node pools result in
 	// unusable worker nodes that can't communicate with k8s apiserver, kube-dns, calico, etc.
 
+	initOpts.SSHAuthorizedKeys = main.SSHAuthorizedKeys
 	initOpts.KubeClusterSettings = main.KubeClusterSettings
 
 	if err := filegen.CreateFileFromTemplate(nodePoolClusterConfigFilePath(), initOpts, config.DefaultClusterConfig); err != nil {
