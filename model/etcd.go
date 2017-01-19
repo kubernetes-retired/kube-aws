@@ -9,5 +9,5 @@ func (c Etcd) TopologyPrivate() bool {
 }
 
 type EtcdInstance struct {
-	Subnet  Subneter
+	Subnet Subneter
 }

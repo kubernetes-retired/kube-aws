@@ -495,7 +495,7 @@ func (c Cluster) Config() (*Config, error) {
 		}
 
 		instance := model.EtcdInstance{
-			Subnet:    subnet,
+			Subnet: subnet,
 		}
 
 		config.EtcdInstances[etcdIndex] = instance
