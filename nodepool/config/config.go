@@ -183,9 +183,9 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 		}
 	}
 
-	// Populate subnets
-	if len(c.Subnets) > 0 && c.WorkerSettings.TopologyPrivate() == false {
-		c.WorkerSettings.PublicSubnets = c.Subnets
+	// Mark top-level subnets appropriately
+	for _, subnet := range c.Subnets {
+		subnet.TopLevel = true
 	}
 
 	c.EtcdInstances = main.EtcdInstances
@@ -203,6 +203,11 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 		}
 	} else {
 		config.AMI = c.AmiId
+	}
+
+	// Populate top-level subnets to model
+	if len(c.Subnets) > 0 && c.WorkerSettings.TopologyPrivate() == false {
+		c.WorkerSettings.Subnets = c.Subnets
 	}
 
 	return &config, nil

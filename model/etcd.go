@@ -1,13 +1,20 @@
 package model
 
 type Etcd struct {
-	PrivateSubnets []*PrivateSubnet `yaml:"privateSubnets,omitempty"`
+	Subnets []*Subnet `yaml:"subnets,omitempty"`
 }
 
 func (c Etcd) TopologyPrivate() bool {
-	return len(c.PrivateSubnets) > 0
+	return len(c.Subnets) > 0
 }
 
 type EtcdInstance struct {
-	Subnet Subneter
+	Subnet Subnet
+}
+
+func (c EtcdInstance) SubnetLogicalNamePrefix() string {
+	if c.Subnet.TopLevel == false {
+		return "Etcd"
+	}
+	return ""
 }

@@ -180,9 +180,9 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 		}
 	}
 
-	// Populate subnets
-	if len(c.Subnets) > 0 && c.WorkerSettings.MinWorkerCount() > 0 && c.WorkerSettings.TopologyPrivate() == false {
-		c.WorkerSettings.PublicSubnets = c.Subnets
+	// Mark top-level subnets appropriately
+	for _, subnet := range c.Subnets {
+		subnet.TopLevel = true
 	}
 
 	return c, nil
@@ -489,9 +489,9 @@ func (c Cluster) Config() (*Config, error) {
 
 		//Round-robbin etcd instances across all available subnets
 		subnetIndex := etcdIndex % len(config.Subnets)
-		subnet := model.Subneter(config.Subnets[subnetIndex])
+		subnet := *config.Subnets[subnetIndex]
 		if config.Etcd.TopologyPrivate() {
-			subnet = model.Subneter(config.Etcd.PrivateSubnets[subnetIndex])
+			subnet = *config.Etcd.Subnets[subnetIndex]
 		}
 
 		instance := model.EtcdInstance{
@@ -502,6 +502,21 @@ func (c Cluster) Config() (*Config, error) {
 
 		//http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html#concepts-private-addresses
 
+	}
+
+	// Populate top-level subnets to model
+	if len(config.Subnets) > 0 {
+		if config.WorkerSettings.MinWorkerCount() > 0 && config.WorkerSettings.TopologyPrivate() == false {
+			config.WorkerSettings.Subnets = config.Subnets
+		}
+		if config.ControllerSettings.MinControllerCount() > 0 && config.ControllerSettings.TopologyPrivate() == false {
+			config.ControllerSettings.Subnets = config.Subnets
+		}
+	}
+	config.ControllerElb.Private = config.ControllerSettings.ControllerLoadBalancerPrivate
+	config.ControllerElb.Subnets = config.Subnets
+	if config.ControllerElb.Private == true {
+		config.ControllerElb.Subnets = config.ControllerSettings.Subnets
 	}
 
 	config.IsChinaRegion = strings.HasPrefix(config.Region, "cn")
@@ -618,6 +633,7 @@ func (c Cluster) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool
 type Config struct {
 	Cluster
 
+	ControllerElb model.ControllerElb
 	EtcdInstances []model.EtcdInstance
 
 	// Encoded TLS assets

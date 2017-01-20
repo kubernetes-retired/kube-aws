@@ -59,7 +59,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    minSize: 1
 #    maxSize: 3
 #    rollingUpdateMinInstancesInService: 2
-#  privateSubnets:
+#  subnets:
 #    - availabilityZone: us-west-1a
 #      instanceCIDR: "10.0.4.0/24"
 #    - availabilityZone: us-west-1b
@@ -93,7 +93,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    minSize: 1
 #    maxSize: 3
 #    rollingUpdateMinInstancesInService: 2
-#  privateSubnets:
+#  subnets:
 #    - availabilityZone: us-west-1a
 #      instanceCIDR: "10.0.6.0/24"
 #    - availabilityZone: us-west-1b
@@ -140,7 +140,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # etcdCount: 1
 
 #etcd:
-#  privateSubnets:
+#  subnets:
 #    - availabilityZone: us-west-1a
 #      instanceCIDR: "10.0.2.0/24"
 #    - availabilityZone: us-west-1b
