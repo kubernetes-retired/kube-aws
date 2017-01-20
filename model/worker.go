@@ -6,28 +6,19 @@ type Worker struct {
 	AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
 	ClusterAutoscaler ClusterAutoscaler `yaml:"clusterAutoscaler"`
 	SpotFleet         `yaml:"spotFleet,omitempty"`
-	PrivateSubnets    []*PrivateSubnet `yaml:"privateSubnets,omitempty"`
-	PublicSubnets     []*Subnet
+	Subnets           []*Subnet `yaml:"subnets,omitempty"`
 }
 
 func (c Worker) TopologyPrivate() bool {
-	return len(c.PrivateSubnets) > 0
-}
-
-func (c Worker) Subnets() []*Subnet {
-	if len(c.PrivateSubnets) > 0 {
-		var subnets []*Subnet
-		for _, privateSubnet := range c.PrivateSubnets {
-			subnets = append(subnets, &privateSubnet.Subnet)
-		}
-		return subnets
+	if len(c.Subnets) > 0 {
+		return !c.Subnets[0].TopLevel
 	}
-	return c.PublicSubnets
+	return false
 }
 
 func (c Worker) SubnetLogicalNamePrefix() string {
-	if len(c.PrivateSubnets) > 0 {
-		return "WorkerPrivate"
+	if c.TopologyPrivate() == true {
+		return "Worker"
 	}
 	return ""
 }

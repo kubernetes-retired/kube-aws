@@ -4,7 +4,7 @@
   "Mappings" : {
     "EtcdInstanceParams" : {
       "UserData" : {
-	"cloudconfig" : "{{.UserDataEtcd}}"
+        "cloudconfig" : "{{.UserDataEtcd}}"
       }
     }
   },
@@ -45,10 +45,10 @@
         ],
         {{end}}
         "VPCZoneIdentifier": [
-          {{range $index, $workerSubnet := .Worker.Subnets}}
+          {{range $index, $subnet := .Worker.Subnets}}
           {{if gt $index 0}},{{end}}
           {
-            "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
+            "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
           }
           {{end}}
         ]
@@ -146,22 +146,11 @@
           }
         ],
         "VPCZoneIdentifier": [
-          {{if $.Controller.TopologyPrivate}}
-          {{range $index, $controllerSubnet := .Controller.PrivateSubnets}}
-          {{with $controllerSubnetLogicalName := printf "Controller%s" $controllerSubnet.LogicalName}}
+          {{range $index, $subnet := .Controller.Subnets}}
           {{if gt $index 0}},{{end}}
           {
-            "Ref": "{{$controllerSubnetLogicalName}}"
+            "Ref": "{{$.Controller.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
           }
-          {{end}}
-          {{end}}
-          {{else}}
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          {
-            "Ref": "{{$subnet.LogicalName}}"
-          }
-          {{end}}
           {{end}}
         ],
         "LoadBalancerNames" : [
@@ -248,9 +237,9 @@
       "Properties": {
         {{if .HostedZoneID}}
         "HostedZoneId": "{{.HostedZoneID}}",
-	    {{else}}
+        {{else}}
         "HostedZoneName": "{{.HostedZone}}",
-	    {{end}}
+        {{end}}
         "Name": "{{.ExternalDNSName}}",
         "TTL": {{.RecordSetTTL}},
         "ResourceRecords": [{ "Fn::GetAtt": ["ElbAPIServer", "DNSName"]}],
@@ -510,11 +499,7 @@
     "InstanceEtcd{{$etcdIndex}}eni": {
       "Properties": {
           "SubnetId": {
-            {{if $.Etcd.TopologyPrivate}}
-              "Ref": "Etcd{{$etcdInstance.Subnet.LogicalName}}"
-            {{else}}
-              "Ref": "{{$etcdInstance.Subnet.LogicalName}}"
-            {{end}}
+              "Ref": "{{$etcdInstance.SubnetLogicalNamePrefix}}{{$etcdInstance.Subnet.LogicalName}}"
           },
           "GroupSet": [
             {
@@ -537,11 +522,11 @@
               "VolumeType": "{{$.EtcdRootVolumeType}}"
             }
           },
-	      {
+          {
             "DeviceName": "/dev/xvdf",
-	        {{if $.EtcdDataVolumeEphemeral}}
-	        "VirtualName" : "ephemeral0"
-	        {{else}}
+            {{if $.EtcdDataVolumeEphemeral}}
+            "VirtualName" : "ephemeral0"
+            {{else}}
             "Ebs": {
               "VolumeSize": "{{$.EtcdDataVolumeSize}}",
               {{if gt $.EtcdDataVolumeIOPS 0}}
@@ -549,7 +534,7 @@
               {{end}}
               "VolumeType": "{{$.EtcdDataVolumeType}}"
             }
-	        {{end}}
+            {{end}}
           }
         ],
         "IamInstanceProfile": {
@@ -650,7 +635,7 @@
     "ElbAPIServer" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
-	    "CrossZone" : true,
+        "CrossZone" : true,
         "HealthCheck" : {
           "HealthyThreshold" : "3",
           "Interval" : "10",
@@ -659,18 +644,9 @@
           "UnhealthyThreshold" : "3"
         },
         "Subnets" : [
-          {{if .ControllerLoadBalancerPrivate}}
-          {{range $index, $controllerSubnet := .Controller.PrivateSubnets}}
-          {{with $controllerSubnetLogicalName := printf "Controller%s" $controllerSubnet.LogicalName}}
+          {{range $index, $subnet := .ControllerElb.Subnets}}
           {{if gt $index 0}},{{end}}
-          {"Ref": "{{$controllerSubnetLogicalName}}"}
-          {{end}}
-          {{end}}
-          {{else}}
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          { "Ref" : "{{$subnet.LogicalName}}" }
-          {{end}}
+          {"Ref": "{{$.ControllerElb.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"}
           {{end}}
         ],
         "Listeners" : [
@@ -1092,12 +1068,12 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     }
-    {{range $index, $workerSubnet := .Worker.Subnets}}
+    {{range $index, $subnet := .Worker.Subnets}}
     ,
-    "{{$workerSubnet.LogicalName}}MountTarget": {
+    "{{$subnet.LogicalName}}MountTarget": {
       "Properties" : {
         "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$workerSubnet.LogicalName}}" },
+        "SubnetId": { "Ref": "{{$subnet.LogicalName}}" },
         "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
       },
       "Type" : "AWS::EFS::MountTarget"
@@ -1143,18 +1119,17 @@
     {{end}}
 
     {{if $.Etcd.TopologyPrivate}}
-    {{range $index, $subnet := .Etcd.PrivateSubnets}}
-    {{with $etcdSubnetLogicalName := printf "Etcd%s" $subnet.LogicalName}}
+    {{range $etcdIndex, $etcdInstance := .EtcdInstances}}
     ,
-    "{{$etcdSubnetLogicalName}}": {
+    "{{$etcdInstance.SubnetLogicalNamePrefix}}{{$etcdInstance.Subnet.LogicalName}}": {
       "Properties": {
-        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
-        "CidrBlock": "{{$subnet.InstanceCIDR}}",
+        "AvailabilityZone": "{{$etcdInstance.Subnet.AvailabilityZone}}",
+        "CidrBlock": "{{$etcdInstance.Subnet.InstanceCIDR}}",
         "MapPublicIpOnLaunch": {{not $.Etcd.TopologyPrivate}},
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$etcdSubnetLogicalName}}"
+            "Value": "{{$.ClusterName}}-{{$etcdInstance.SubnetLogicalNamePrefix}}{{$etcdInstance.Subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -1166,29 +1141,27 @@
       "Type": "AWS::EC2::Subnet"
     }
     ,
-    "{{$etcdSubnetLogicalName}}RouteTableAssociation": {
+    "{{$etcdInstance.SubnetLogicalNamePrefix}}{{$etcdInstance.Subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {"Ref" : "PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"},
+          {{if not $etcdInstance.Subnet.RouteTableID}}
+          {"Ref" : "PrivateRouteTable{{$etcdInstance.Subnet.AvailabilityZoneLogicalName}}"},
           {{else}}
-          "{{$subnet.RouteTableID}}",
+          "{{$etcdInstance.Subnet.RouteTableID}}",
           {{end}}
         "SubnetId": {
-          "Ref": "{{$etcdSubnetLogicalName}}"
+          "Ref": "{{$etcdInstance.SubnetLogicalNamePrefix}}{{$etcdInstance.Subnet.LogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
     {{end}}
     {{end}}
-    {{end}}
 
     {{if $.Controller.TopologyPrivate}}
-    {{range $index, $subnet := .Controller.PrivateSubnets}}
-    {{with $controllerSubnetLogicalName := printf "Controller%s" $subnet.LogicalName}}
+    {{range $index, $subnet := .Controller.Subnets}}
     ,
-    "{{$controllerSubnetLogicalName}}": {
+    "{{$.Controller.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}": {
       "Properties": {
         "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
@@ -1196,7 +1169,7 @@
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$controllerSubnetLogicalName}}"
+            "Value": "{{$.ClusterName}}-{{$.Controller.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -1208,7 +1181,7 @@
       "Type": "AWS::EC2::Subnet"
     }
     ,
-    "{{$controllerSubnetLogicalName}}RouteTableAssociation": {
+    "{{$.Controller.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
         "RouteTableId":
           {{if not $subnet.RouteTableID}}
@@ -1217,12 +1190,11 @@
           "{{$subnet.RouteTableID}}",
           {{end}}
         "SubnetId": {
-          "Ref": "{{$controllerSubnetLogicalName}}"
+          "Ref": "{{$.Controller.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
         }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
-    {{end}}
     {{end}}
     {{end}}
 

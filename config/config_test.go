@@ -333,10 +333,12 @@ subnets:
 				{
 					InstanceCIDR:     "10.4.3.0/24",
 					AvailabilityZone: "ap-northeast-1a",
+					TopLevel:         true,
 				},
 				{
 					InstanceCIDR:     "10.4.4.0/24",
 					AvailabilityZone: "ap-northeast-1c",
+					TopLevel:         true,
 				},
 			},
 		},
@@ -352,6 +354,7 @@ instanceCIDR: 10.4.3.0/24
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
+					TopLevel:         true,
 				},
 			},
 		},
@@ -368,6 +371,7 @@ subnets: []
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
+					TopLevel:         true,
 				},
 			},
 		},
@@ -381,6 +385,7 @@ subnets: []
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
+					TopLevel:         true,
 				},
 			},
 		},
@@ -393,6 +398,7 @@ availabilityZone: "ap-northeast-1a"
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
+					TopLevel:         true,
 				},
 			},
 		},
@@ -876,8 +882,8 @@ func TestValidateExistingVPC(t *testing.T) {
 
 	cluster.VPCCIDR = "10.0.0.0/16"
 	cluster.Subnets = []*model.Subnet{
-		{"ap-northeast-1a", "10.0.1.0/24", "", model.NatGateway{}},
-		{"ap-northeast-1a", "10.0.2.0/24", "", model.NatGateway{}},
+		{"ap-northeast-1a", "10.0.1.0/24", "", model.NatGateway{}, true},
+		{"ap-northeast-1a", "10.0.2.0/24", "", model.NatGateway{}, true},
 	}
 
 	for _, testCase := range validCases {
@@ -902,8 +908,8 @@ func TestValidateUserData(t *testing.T) {
 
 	cluster.Region = "us-west-1"
 	cluster.Subnets = []*model.Subnet{
-		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}},
-		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}},
+		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}, true},
+		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}, true},
 	}
 
 	helper.WithDummyCredentials(func(dir string) {
@@ -926,8 +932,8 @@ func TestRenderStackTemplate(t *testing.T) {
 
 	cluster.Region = "us-west-1"
 	cluster.Subnets = []*model.Subnet{
-		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}},
-		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}},
+		{"us-west-1a", "10.0.1.0/16", "", model.NatGateway{}, true},
+		{"us-west-1b", "10.0.2.0/16", "", model.NatGateway{}, true},
 	}
 
 	helper.WithDummyCredentials(func(dir string) {
