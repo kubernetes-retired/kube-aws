@@ -719,6 +719,9 @@
           "Timeout" : "8",
           "UnhealthyThreshold" : "3"
         },
+        "ConnectionSettings" : {
+          "IdleTimeout" : "3600"
+        },
         "Subnets" : [
           {{range $index, $subnet := .ControllerElb.Subnets}}
           {{if gt $index 0}},{{end}}
