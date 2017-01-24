@@ -5,6 +5,7 @@ import (
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	//"github.com/coreos/kube-aws/gzipcompressor"
 	"fmt"
+	"net/url"
 )
 
 type StackConfig struct {
@@ -15,6 +16,14 @@ type StackConfig struct {
 
 type CompressedStackConfig struct {
 	*StackConfig
+}
+
+func (c *StackConfig) UserDataWorkerS3Path() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in UserDataWorkerS3Path : %v", err)
+	}
+	return fmt.Sprintf("%s%s/%s/userdata-worker", s3uri.Host, s3uri.Path, c.StackName()), nil
 }
 
 func (c *StackConfig) ValidateUserData() error {
