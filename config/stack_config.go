@@ -1,9 +1,11 @@
 package config
 
 import (
+	"fmt"
 	"github.com/coreos/kube-aws/coreos/userdatavalidation"
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	"github.com/coreos/kube-aws/gzipcompressor"
+	"net/url"
 )
 
 type StackConfig struct {
@@ -18,6 +20,22 @@ type StackConfig struct {
 type CompressedStackConfig struct {
 	*StackConfig
 	UserDataEtcd string
+}
+
+func (c *StackConfig) UserDataWorkerS3Path() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in UserDataWorkerS3Path : %v", err)
+	}
+	return fmt.Sprintf("%s%s/%s/userdata-worker", s3uri.Host, s3uri.Path, c.StackName()), nil
+}
+
+func (c *StackConfig) UserDataControllerS3Path() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in UserDataControllerS3Path : %v", err)
+	}
+	return fmt.Sprintf("%s%s/%s/userdata-controller", s3uri.Host, s3uri.Path, c.StackName()), nil
 }
 
 func (c *StackConfig) ValidateUserData() error {

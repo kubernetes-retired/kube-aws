@@ -318,7 +318,7 @@
 		  "Action": [
 			"s3:GetObject"
 		  ],
-		  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-controller" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .ClusterName }}"
+		  "Resource": "arn:aws:s3:::{{$.UserDataControllerS3Path}}"
 		},
                 {{if .Experimental.WaitSignal.Enabled}}
                 {
@@ -415,7 +415,7 @@
 		  "Action": [
 			"s3:GetObject"
 		  ],
-		  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-worker" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .ClusterName }}"
+		  "Resource": "arn:aws:s3:::{{$.UserDataWorkerS3Path}}"
 		},
                 {{if .ManageCertificates}}
                 {

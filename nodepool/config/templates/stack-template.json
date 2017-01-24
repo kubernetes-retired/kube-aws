@@ -289,7 +289,7 @@
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:aws:s3:::{{ printf "%s%s/%s/userdata-worker" (.S3URI | urlparse).Host (.S3URI | urlparse).Path .StackName }}"
+                  "Resource": "arn:aws:s3:::{{$.UserDataWorkerS3Path}}"
                 },
                 {
                   "Action" : "kms:Decrypt",
