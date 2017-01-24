@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/coreos/kube-aws/coreos/userdatavalidation"
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
-	//"github.com/coreos/kube-aws/gzipcompressor"
 	"fmt"
 	"net/url"
 )
