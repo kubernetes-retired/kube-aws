@@ -179,6 +179,12 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 		}
 	}
 
+	for index, s := range c.Subnets {
+		if s.SubnetLogicalName == "" {
+			s.SubnetLogicalName = fmt.Sprintf("Subnet%d", index)
+		}
+	}
+
 	return c, nil
 }
 

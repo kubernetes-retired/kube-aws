@@ -330,12 +330,14 @@ subnets:
 `,
 			subnets: []*Subnet{
 				{
-					InstanceCIDR:     "10.4.3.0/24",
-					AvailabilityZone: "ap-northeast-1a",
+					InstanceCIDR:      "10.4.3.0/24",
+					AvailabilityZone:  "ap-northeast-1a",
+					SubnetLogicalName: "Subnet0",
 				},
 				{
-					InstanceCIDR:     "10.4.4.0/24",
-					AvailabilityZone: "ap-northeast-1c",
+					InstanceCIDR:      "10.4.4.0/24",
+					AvailabilityZone:  "ap-northeast-1c",
+					SubnetLogicalName: "Subnet1",
 				},
 			},
 		},
@@ -349,8 +351,9 @@ instanceCIDR: 10.4.3.0/24
 `,
 			subnets: []*Subnet{
 				{
-					AvailabilityZone: "ap-northeast-1a",
-					InstanceCIDR:     "10.4.3.0/24",
+					AvailabilityZone:  "ap-northeast-1a",
+					InstanceCIDR:      "10.4.3.0/24",
+					SubnetLogicalName: "Subnet0",
 				},
 			},
 		},
@@ -365,8 +368,9 @@ subnets: []
 `,
 			subnets: []*Subnet{
 				{
-					AvailabilityZone: "ap-northeast-1a",
-					InstanceCIDR:     "10.4.3.0/24",
+					AvailabilityZone:  "ap-northeast-1a",
+					InstanceCIDR:      "10.4.3.0/24",
+					SubnetLogicalName: "Subnet0",
 				},
 			},
 		},
@@ -378,8 +382,9 @@ subnets: []
 `,
 			subnets: []*Subnet{
 				{
-					AvailabilityZone: "ap-northeast-1a",
-					InstanceCIDR:     "10.0.0.0/24",
+					AvailabilityZone:  "ap-northeast-1a",
+					InstanceCIDR:      "10.0.0.0/24",
+					SubnetLogicalName: "Subnet0",
 				},
 			},
 		},
@@ -390,8 +395,9 @@ availabilityZone: "ap-northeast-1a"
 `,
 			subnets: []*Subnet{
 				{
-					AvailabilityZone: "ap-northeast-1a",
-					InstanceCIDR:     "10.0.0.0/24",
+					AvailabilityZone:  "ap-northeast-1a",
+					InstanceCIDR:      "10.0.0.0/24",
+					SubnetLogicalName: "Subnet0",
 				},
 			},
 		},
@@ -452,7 +458,7 @@ subnets:
 		}
 		if !reflect.DeepEqual(c.Subnets, conf.subnets) {
 			t.Errorf(
-				"parsed subnets %s does not expected subnets %s in config: %s",
+				"parsed subnets %s does not match expected subnets %s in config: %s",
 				c.Subnets,
 				conf.subnets,
 				confBody,
