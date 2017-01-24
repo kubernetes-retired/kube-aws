@@ -236,7 +236,6 @@ func (c *Cluster) Create() error {
 	cloudConfigs := map[string]string{
 		"userdata-controller": c.UserDataController,
 		"userdata-worker":     c.UserDataWorker,
-		"userdata-etcd":       c.UserDataEtcd,
 	}
 
 	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
