@@ -56,12 +56,20 @@ main_stack_name() {
   echo $KUBE_AWS_CLUSTER_NAME
 }
 
+main_status() {
+  aws cloudformation describe-stacks --stack-name $(main_stack_name) --output json | jq -rc '.Stacks[0].StackStatus'
+}
+
 main_all() {
   status=$(aws cloudformation describe-stacks --stack-name $(main_stack_name) --output json | jq -rc '.Stacks[0].StackStatus')
   if [ "$status" = "" ]; then
-    prepare
-    configure
-    up
+    if [ ! -e "${WORK_DIR}/cluster.yaml" ]; then
+      prepare
+      configure
+    fi
+    if [ "$(main_status)" = "" ]; then
+      up
+    fi
     if [ "$KUBE_AWS_UPDATE" != "" ]; then
       update
     fi
@@ -174,9 +182,19 @@ up() {
   set -vx
 }
 
-destroy() {
-  aws cloudformation delete-stack --stack-name ${KUBE_AWS_CLUSTER_NAME}
-  aws cloudformation wait stack-delete-complete --stack-name ${KUBE_AWS_CLUSTER_NAME}
+main_destroy() {
+  status=$(main_status)
+
+  if [ "$status" != "" ]; then
+    if [ "$status" != "DELETE_IN_PROGRESS" ]; then
+        aws cloudformation delete-stack --stack-name $(main_stack_name)
+        aws cloudformation wait stack-delete-complete --stack-name $(main_stack_name)
+    else
+        aws cloudformation wait stack-delete-complete --stack-name $(main_stack_name)
+    fi
+  else
+    echo $(main_stack_name) does not exist. skipping.
+  fi
 }
 
 update() {
@@ -355,7 +373,7 @@ nodepool_update() {
 nodepool_destroy() {
   cd ${WORK_DIR}
 
-  status=$(aws cloudformation describe-stacks --stack-name $(nodepool_stack_name) --output json | jq -rc '.Stacks[0].StackStatus')
+  status=$(nodepool_status)
 
   if [ "$status" != "" ]; then
     if [ "$status" != "DELETE_IN_PROGRESS" ]; then
@@ -460,7 +478,7 @@ all() {
 
 all_destroy() {
   nodepool_destroy
-  destroy
+  main_destroy
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
     testinfra_destroy
   fi
