@@ -348,7 +348,7 @@ nodepool_validate() {
 nodepool_up() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} node-pools up --node-pool-name $(nodepool_name) --export
+  ${KUBE_AWS_CMD} node-pools up --node-pool-name $(nodepool_name) --export --s3-uri ${KUBE_AWS_S3_URI}
   ${KUBE_AWS_CMD} node-pools up --node-pool-name $(nodepool_name) --s3-uri ${KUBE_AWS_S3_URI}
 }
 
@@ -398,6 +398,7 @@ nodepool_status() {
 nodepool() {
   cd ${WORK_DIR}
 
+  nodepool_destroy
   if [ ! -e "$(nodepool_assets_dir)/cluster.yaml" ]; then
     nodepool_init
   fi
@@ -409,6 +410,11 @@ nodepool() {
   if [ "$KUBE_AWS_UPDATE" != "" ]; then
     nodepool_update
   fi
+}
+
+nodepools() {
+  KUBE_AWS_NODE_POOL_INDEX=1 nodepool
+  KUBE_AWS_NODE_POOL_INDEX=2 KUBE_AWS_SPOT_FLEET_ENABLED=1 KUBE_AWS_WAIT_SIGNAL_ENABLED= nodepool
 }
 
 testinfra_up() {
@@ -471,13 +477,17 @@ all() {
   fi
 
   main_all
-  KUBE_AWS_NODE_POOL_INDEX=1 nodepool
-  KUBE_AWS_NODE_POOL_INDEX=2 KUBE_AWS_SPOT_FLEET_ENABLED=1 KUBE_AWS_WAIT_SIGNAL_ENABLED= nodepool
+  nodepools
   conformance
 }
 
+nodepools_destroy() {
+  KUBE_AWS_NODE_POOL_INDEX=1 nodepool_destroy
+  KUBE_AWS_NODE_POOL_INDEX=2 nodepool_destroy
+}
+
 all_destroy() {
-  nodepool_destroy
+  nodepools_destroy
   main_destroy
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
     testinfra_destroy

@@ -6,15 +6,13 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
-
 	"path/filepath"
+	"strings"
 
 	cfg "github.com/coreos/kube-aws/config"
 	"github.com/coreos/kube-aws/coreos/amiregistry"
-	"github.com/coreos/kube-aws/coreos/userdatavalidation"
-	"github.com/coreos/kube-aws/filereader/jsontemplate"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
-	model "github.com/coreos/kube-aws/model"
+	"github.com/coreos/kube-aws/model"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,19 +44,16 @@ type StackTemplateOptions struct {
 	WorkerTmplFile        string
 	StackTemplateTmplFile string
 	TLSAssetsDir          string
+	PrettyPrint           bool
+	S3URI                 string
 }
 
-type stackConfig struct {
-	*ComputedConfig
-	UserDataWorker string
-}
-
-func (c ProvidedConfig) stackConfig(opts StackTemplateOptions, compressUserData bool) (*stackConfig, error) {
+func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 	var err error
-	stackConfig := stackConfig{}
+	stackConfig := StackConfig{}
 
 	if stackConfig.ComputedConfig, err = c.Config(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate config : %v", err)
 	}
 
 	compactAssets, err := cfg.ReadOrCreateCompactTLSAssets(opts.TLSAssetsDir, cfg.KMSConfig{
@@ -69,45 +64,20 @@ func (c ProvidedConfig) stackConfig(opts StackTemplateOptions, compressUserData 
 
 	stackConfig.ComputedConfig.TLSConfig = compactAssets
 
-	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.ComputedConfig, compressUserData); err != nil {
+	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.ComputedConfig); err != nil {
 		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
 	}
 
+	stackConfig.S3URI = strings.TrimSuffix(opts.S3URI, "/")
+	stackConfig.StackTemplateOptions = opts
+
 	return &stackConfig, nil
-}
-
-func (c ProvidedConfig) ValidateUserData(opts StackTemplateOptions) error {
-	stackConfig, err := c.stackConfig(opts, false)
-	if err != nil {
-		return fmt.Errorf("failed to create stack config: %v", err)
-	}
-
-	err = userdatavalidation.Execute([]userdatavalidation.Entry{
-		{Name: "UserDataWorker", Content: stackConfig.UserDataWorker},
-	})
-
-	return err
-}
-
-func (c ProvidedConfig) RenderStackTemplate(opts StackTemplateOptions, prettyPrint bool) ([]byte, error) {
-	stackConfig, err := c.stackConfig(opts, true)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, err := jsontemplate.GetBytes(opts.StackTemplateTmplFile, stackConfig, prettyPrint)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
 }
 
 func ClusterFromFile(filename string) (*ProvidedConfig, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read %s : %v", filename, err)
 	}
 
 	abs, err := filepath.Abs(filename)
@@ -195,6 +165,15 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 	c.EtcdInstances = main.EtcdInstances
 
 	return c, nil
+}
+
+func ClusterFromBytesWithEncryptService(data []byte, main *cfg.Config, encryptService cfg.EncryptService) (*ProvidedConfig, error) {
+	cluster, err := ClusterFromBytes(data, main)
+	if err != nil {
+		return nil, err
+	}
+	cluster.providedEncryptService = encryptService
+	return cluster, nil
 }
 
 func (c ProvidedConfig) Config() (*ComputedConfig, error) {
