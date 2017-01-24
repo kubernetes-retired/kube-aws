@@ -1,9 +1,9 @@
 package config
 
 import (
+	"fmt"
 	"github.com/coreos/kube-aws/coreos/userdatavalidation"
 	"github.com/coreos/kube-aws/filereader/jsontemplate"
-	"fmt"
 	"net/url"
 )
 
