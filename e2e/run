@@ -481,8 +481,13 @@ all() {
   conformance
 }
 
+nodepools_destroy() {
+  KUBE_AWS_NODE_POOL_INDEX=1 nodepool_destroy
+  KUBE_AWS_NODE_POOL_INDEX=2 nodepool_destroy
+}
+
 all_destroy() {
-  nodepool_destroy
+  nodepools_destroy
   main_destroy
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
     testinfra_destroy
