@@ -233,14 +233,13 @@ func (c *Cluster) Create() error {
 		return fmt.Errorf("Error while rendering template : %v", err)
 	}
 
-	uploads := map[string]string{
-		"stack.json":          stackTemplate,
+	cloudConfigs := map[string]string{
 		"userdata-controller": c.UserDataController,
 		"userdata-worker":     c.UserDataWorker,
 		"userdata-etcd":       c.UserDataEtcd,
 	}
 
-	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, uploads)
+	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 }
 
 /*
@@ -328,13 +327,12 @@ func (c *Cluster) Update() (string, error) {
 		return "", err
 	}
 
-	uploads := map[string]string{
-		"stack.json":          stackBody,
+	cloudConfigs := map[string]string{
 		"userdata-controller": c.UserDataController,
 		"userdata-worker":     c.UserDataWorker,
 		"userdata-etcd":       c.UserDataEtcd,
 	}
-	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, uploads)
+	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackBody, cloudConfigs)
 
 	return updateOutput, err
 }
