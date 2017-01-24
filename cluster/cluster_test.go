@@ -591,7 +591,13 @@ stackTags:
 			ExpectedTags: testCase.expectedTags,
 		}
 
-		s3Svc := &dummyS3ObjectPutterService{}
+		s3Svc := &dummyS3ObjectPutterService{
+			ExpectedBody:          "{}",
+			ExpectedBucket:        "test-bucket",
+			ExpectedContentType:   "application/json",
+			ExpectedKey:           "foo/bar/test-cluster-name/stack.json",
+			ExpectedContentLength: 2,
+		}
 
 		helper.WithDummyCredentials(func(dummyTlsAssetsDir string) {
 			var stackTemplateOptions = config.StackTemplateOptions{
@@ -609,7 +615,7 @@ stackTags:
 				t.FailNow()
 			}
 
-			_, err = cluster.stackProvisioner().CreateStack(cfSvc, s3Svc, map[string]string{})
+			_, err = cluster.stackProvisioner().CreateStack(cfSvc, s3Svc, "{}", map[string]string{})
 
 			if err != nil {
 				t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)

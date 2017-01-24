@@ -99,12 +99,11 @@ func (c *Cluster) Create() error {
 		return err
 	}
 
-	uploads := map[string]string{
-		"stack.json":      stackTemplate,
+	cloudConfigs := map[string]string{
 		"userdata-worker": c.UserDataWorker,
 	}
 
-	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, uploads)
+	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 }
 
 func (c *Cluster) Update() (string, error) {
@@ -115,12 +114,11 @@ func (c *Cluster) Update() (string, error) {
 		return "", err
 	}
 
-	uploads := map[string]string{
-		"stack.json":      stackTemplate,
+	cloudConfigs := map[string]string{
 		"userdata-worker": c.UserDataWorker,
 	}
 
-	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, uploads)
+	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 
 	return updateOutput, err
 }
