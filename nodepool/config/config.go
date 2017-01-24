@@ -176,7 +176,7 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 
 	// For backward-compatibility
 	if len(c.Subnets) == 0 {
-		c.Subnets = []*cfg.Subnet{
+		c.Subnets = []*model.Subnet{
 			{
 				AvailabilityZone: c.AvailabilityZone,
 				InstanceCIDR:     c.InstanceCIDR,
@@ -184,10 +184,12 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 		}
 	}
 
-	for index, s := range c.Subnets {
-		if s.SubnetLogicalName == "" {
-			s.SubnetLogicalName = fmt.Sprintf("Subnet%d", index)
+	for i, s := range c.Subnets {
+		if s.CustomName == "" {
+			s.CustomName = fmt.Sprintf("Subnet%d", i)
 		}
+		// Mark top-level subnets appropriately
+		s.TopLevel = true
 	}
 
 	c.EtcdInstances = main.EtcdInstances
@@ -205,6 +207,11 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 		}
 	} else {
 		config.AMI = c.AmiId
+	}
+
+	// Populate top-level subnets to model
+	if len(c.Subnets) > 0 && c.WorkerSettings.TopologyPrivate() == false {
+		config.WorkerSettings.Subnets = c.Subnets
 	}
 
 	return &config, nil
@@ -253,13 +260,6 @@ func (c ComputedConfig) VPCRef() string {
 		return fmt.Sprintf("%q", c.VPCID)
 	}
 	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-VPC"}}`, c.ClusterName)
-}
-
-func (c ComputedConfig) RouteTableRef() string {
-	if c.RouteTableID != "" {
-		return fmt.Sprintf("%q", c.RouteTableID)
-	}
-	return fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "%s-RouteTable"}}`, c.ClusterName)
 }
 
 func (c ComputedConfig) WorkerSecurityGroupRefs() []string {

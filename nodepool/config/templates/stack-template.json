@@ -48,7 +48,7 @@
         "TargetCapacity": {{$.Worker.SpotFleet.TargetCapacity}},
         "SpotPrice": "{{$.Worker.SpotFleet.SpotPrice}}",
         "LaunchSpecifications": [
-          {{range $subnetIndex, $subnet := $.Subnets}}
+          {{range $subnetIndex, $workerSubnet := $.Worker.Subnets}}
           {{range $specIndex, $spec := $.Worker.SpotFleet.LaunchSpecifications}}
           {{if or (gt $subnetIndex 0) (gt $specIndex 0) }},{{end}}
           {
@@ -82,7 +82,9 @@
               {"GroupId":{{$sgRef}}}
               {{end}}
             ],
-            "SubnetId": {{$subnet.Ref}},
+            "SubnetId": {
+              "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
+            },
             "UserData": "{{$.UserDataWorker}}"
           }
           {{end}}
@@ -96,12 +98,6 @@
 {{define "AutoScaling"}}
     "{{.Worker.LogicalName}}": {
       "Properties": {
-        "AvailabilityZones": [
-          {{range $index, $subnet := .Subnets}}
-          {{if gt $index 0}},{{end}}
-          "{{$subnet.AvailabilityZone}}"
-          {{end}}
-        ],
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
@@ -133,16 +129,18 @@
         ],
         {{if .Experimental.LoadBalancer.Enabled}}
         "LoadBalancerNames" : [
-        {{range $index, $elb := .Experimental.LoadBalancer.Names}}
-        {{if $index}},{{end}}
+          {{range $index, $elb := .Experimental.LoadBalancer.Names}}
+          {{if $index}},{{end}}
           "{{$elb}}"
-        {{end}}
+          {{end}}
         ],
         {{end}}
         "VPCZoneIdentifier": [
-          {{range $index, $subnet := .Subnets}}
+          {{range $index, $workerSubnet := .Worker.Subnets}}
           {{if gt $index 0}},{{end}}
-          {{$subnet.Ref}}
+          {
+            "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
+          }
           {{end}}
         ]
       },
@@ -214,7 +212,7 @@
 {{end}}
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "kube-aws Kubernetes node pool {{.NodePoolName}}",
+  "Description": "kube-aws Kubernetes node pool {{.ClusterName}} {{.NodePoolName}}",
   "Resources": {
     {{if .Worker.SpotFleet.Enabled}}
     {{template "SpotFleet" .}}
@@ -334,18 +332,32 @@
       },
       "Type": "AWS::IAM::Role"
     }
-    {{range $index, $subnet := .Subnets}}
-    {{if not $subnet.SubnetId }}
+
+    {{if $.ElasticFileSystemID}}
+    {{range $index, $subnet := .Worker.Subnets}}
     ,
-    "{{$subnet.SubnetLogicalName}}": {
+    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": { "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}" },
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
+    {{end}}
+
+    {{range $index, $subnet := .Worker.Subnets}}
+    ,
+    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}": {
       "Properties": {
         "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
         "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": {{$.MapPublicIPs}},
+        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.NodePoolName}}-{{$subnet.SubnetLogicalName}}"
+            "Value": "{{$.ClusterName}}-{{$.NodePoolName}}-{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -356,25 +368,24 @@
       },
       "Type": "AWS::EC2::Subnet"
     },
-    "{{$subnet.SubnetLogicalName}}RouteTableAssociation": {
+    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
-        "RouteTableId": {{$.RouteTableRef}},
-        "SubnetId": {{$subnet.Ref}}
+        "RouteTableId":
+          {{if not $subnet.RouteTableID}}
+          {{if $.WorkerTopologyPrivate}}
+          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}},
+          {{else}}
+          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PublicRouteTable"}},
+          {{end}}
+          {{else}}
+          "{{$subnet.RouteTableID}}",
+          {{end}}
+        "SubnetId": {
+          "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
+        }
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
-    {{end}}
-    {{if $.ElasticFileSystemID}}
-    ,
-    "{{$subnet.SubnetLogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$subnet.SubnetLogicalName}}" },
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
     {{end}}
   }
 }
