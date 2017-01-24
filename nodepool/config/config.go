@@ -184,6 +184,12 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 		}
 	}
 
+	for index, s := range c.Subnets {
+		if s.SubnetLogicalName == "" {
+			s.SubnetLogicalName = fmt.Sprintf("Subnet%d", index)
+		}
+	}
+
 	c.EtcdInstances = main.EtcdInstances
 
 	return c, nil
