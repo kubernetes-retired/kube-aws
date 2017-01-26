@@ -72,7 +72,7 @@ func NewDefaultCluster() *Cluster {
 			AWSCliImageRepo:    "quay.io/coreos/awscli",
 			AWSCliTag:          "master",
 			ContainerRuntime:   "docker",
-			Subnets:            []*model.Subnet{},
+			Subnets:            []model.Subnet{},
 			EIPAllocationIDs:   []string{},
 			MapPublicIPs:       true,
 			Experimental:       experimental,
@@ -168,25 +168,64 @@ func ClusterFromBytes(data []byte) (*Cluster, error) {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
 	}
 
+	c.SetDefaults()
+
+	return c, nil
+}
+
+func (c *Cluster) SetDefaults() {
 	// For backward-compatibility
 	if len(c.Subnets) == 0 {
-		c.Subnets = []*model.Subnet{
-			{
-				AvailabilityZone: c.AvailabilityZone,
-				InstanceCIDR:     c.InstanceCIDR,
-			},
+		c.Subnets = []model.Subnet{
+			model.NewPublicSubnet(c.AvailabilityZone, c.InstanceCIDR),
 		}
 	}
 
 	for i, s := range c.Subnets {
 		if s.CustomName == "" {
-			s.CustomName = fmt.Sprintf("Subnet%d", i)
+			c.Subnets[i].CustomName = fmt.Sprintf("Subnet%d", i)
 		}
-		// Mark top-level subnets appropriately
-		s.TopLevel = true
 	}
 
-	return c, nil
+	for i, s := range c.Worker.Subnets {
+		linkedSubnet := c.FindSubnetMatching(s)
+		c.Worker.Subnets[i] = linkedSubnet
+	}
+
+	for i, s := range c.Controller.Subnets {
+		linkedSubnet := c.FindSubnetMatching(s)
+		c.Controller.Subnets[i] = linkedSubnet
+	}
+
+	for i, s := range c.Controller.LoadBalancer.Subnets {
+		linkedSubnet := c.FindSubnetMatching(s)
+		c.Controller.LoadBalancer.Subnets[i] = linkedSubnet
+	}
+
+	for i, s := range c.Etcd.Subnets {
+		linkedSubnet := c.FindSubnetMatching(s)
+		c.Etcd.Subnets[i] = linkedSubnet
+	}
+
+	if len(c.Worker.Subnets) == 0 {
+		c.Worker.Subnets = c.PublicSubnets()
+	}
+
+	if len(c.Controller.Subnets) == 0 {
+		c.Controller.Subnets = c.PublicSubnets()
+	}
+
+	if len(c.Controller.LoadBalancer.Subnets) == 0 {
+		if c.Controller.LoadBalancer.Private == true {
+			c.Controller.LoadBalancer.Subnets = c.PrivateSubnets()
+		} else {
+			c.Controller.LoadBalancer.Subnets = c.PublicSubnets()
+		}
+	}
+
+	if len(c.Etcd.Subnets) == 0 {
+		c.Etcd.Subnets = c.PublicSubnets()
+	}
 }
 
 func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptService) (*Cluster, error) {
@@ -245,7 +284,7 @@ type DeploymentSettings struct {
 	ContainerRuntime    string            `yaml:"containerRuntime,omitempty"`
 	KMSKeyARN           string            `yaml:"kmsKeyArn,omitempty"`
 	StackTags           map[string]string `yaml:"stackTags,omitempty"`
-	Subnets             []*model.Subnet   `yaml:"subnets,omitempty"`
+	Subnets             []model.Subnet    `yaml:"subnets,omitempty"`
 	EIPAllocationIDs    []string          `yaml:"eipAllocationIDs,omitempty"`
 	MapPublicIPs        bool              `yaml:"mapPublicIPs,omitempty"`
 	ElasticFileSystemID string            `yaml:"elasticFileSystemId,omitempty"`
@@ -271,15 +310,14 @@ type WorkerSettings struct {
 
 // Part of configuration which is specific to controller nodes
 type ControllerSettings struct {
-	model.Controller              `yaml:"controller,omitempty"`
-	ControllerCount               int    `yaml:"controllerCount,omitempty"`
-	ControllerCreateTimeout       string `yaml:"controllerCreateTimeout,omitempty"`
-	ControllerInstanceType        string `yaml:"controllerInstanceType,omitempty"`
-	ControllerLoadBalancerPrivate bool   `yaml:"controllerLoadBalancerPrivate,omitempty"`
-	ControllerRootVolumeType      string `yaml:"controllerRootVolumeType,omitempty"`
-	ControllerRootVolumeIOPS      int    `yaml:"controllerRootVolumeIOPS,omitempty"`
-	ControllerRootVolumeSize      int    `yaml:"controllerRootVolumeSize,omitempty"`
-	ControllerTenancy             string `yaml:"controllerTenancy,omitempty"`
+	model.Controller         `yaml:"controller,omitempty"`
+	ControllerCount          int    `yaml:"controllerCount,omitempty"`
+	ControllerCreateTimeout  string `yaml:"controllerCreateTimeout,omitempty"`
+	ControllerInstanceType   string `yaml:"controllerInstanceType,omitempty"`
+	ControllerRootVolumeType string `yaml:"controllerRootVolumeType,omitempty"`
+	ControllerRootVolumeIOPS int    `yaml:"controllerRootVolumeIOPS,omitempty"`
+	ControllerRootVolumeSize int    `yaml:"controllerRootVolumeSize,omitempty"`
+	ControllerTenancy        string `yaml:"controllerTenancy,omitempty"`
 }
 
 // Part of configuration which is specific to etcd nodes
@@ -498,11 +536,8 @@ func (c Cluster) Config() (*Config, error) {
 	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
 
 		//Round-robbin etcd instances across all available subnets
-		subnetIndex := etcdIndex % len(config.Subnets)
-		subnet := *config.Subnets[subnetIndex]
-		if config.Etcd.TopologyPrivate() {
-			subnet = *config.Etcd.Subnets[subnetIndex]
-		}
+		subnetIndex := etcdIndex % len(config.Etcd.Subnets)
+		subnet := config.Etcd.Subnets[subnetIndex]
 
 		instance := model.EtcdInstance{
 			Subnet: subnet,
@@ -516,22 +551,73 @@ func (c Cluster) Config() (*Config, error) {
 
 	// Populate top-level subnets to model
 	if len(config.Subnets) > 0 {
-		if config.WorkerSettings.MinWorkerCount() > 0 && config.WorkerSettings.TopologyPrivate() == false {
+		if config.WorkerSettings.MinWorkerCount() > 0 && len(config.WorkerSettings.Subnets) == 0 {
 			config.WorkerSettings.Subnets = config.Subnets
 		}
-		if config.ControllerSettings.MinControllerCount() > 0 && config.ControllerSettings.TopologyPrivate() == false {
+		if config.ControllerSettings.MinControllerCount() > 0 && len(config.ControllerSettings.Subnets) == 0 {
 			config.ControllerSettings.Subnets = config.Subnets
 		}
-	}
-	config.ControllerElb.Private = config.ControllerSettings.ControllerLoadBalancerPrivate
-	config.ControllerElb.Subnets = config.Subnets
-	if config.ControllerElb.Private == true {
-		config.ControllerElb.Subnets = config.ControllerSettings.Subnets
 	}
 
 	config.IsChinaRegion = strings.HasPrefix(config.Region, "cn")
 
 	return &config, nil
+}
+
+func (c *Cluster) FindSubnetMatching(condition model.Subnet) model.Subnet {
+	for _, s := range c.Subnets {
+		if s.CustomName == condition.CustomName {
+			return s
+		}
+	}
+	out := ""
+	for _, s := range c.Subnets {
+		out = fmt.Sprintf("%s%+v ", out, s)
+	}
+	panic(fmt.Errorf("No subnet matching %v found in %s", condition, out))
+}
+
+func (c *Cluster) PrivateSubnets() []model.Subnet {
+	result := []model.Subnet{}
+	for _, s := range c.Subnets {
+		if s.Private {
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+func (c *Cluster) PublicSubnets() []model.Subnet {
+	result := []model.Subnet{}
+	for _, s := range c.Subnets {
+		if !s.Private {
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+func (c *Cluster) NATGateways() []model.NATGateway {
+	ngws := []model.NATGateway{}
+	for _, privateSubnet := range c.PrivateSubnets() {
+		var publicSubnet model.Subnet
+		config := privateSubnet.NATGateway
+		if !config.HasIdentifier() {
+			found := false
+			for _, s := range c.PublicSubnets() {
+				if s.AvailabilityZone == privateSubnet.AvailabilityZone {
+					publicSubnet = s
+					found = true
+				}
+			}
+			if !found {
+				panic(fmt.Sprintf("No public subnet found for a NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
+			}
+		}
+		ngw := model.NewNATGateway(config, privateSubnet, publicSubnet)
+		ngws = append(ngws, ngw)
+	}
+	return ngws
 }
 
 // releaseVersionIsGreaterThan will return true if the supplied version is greater then
@@ -612,7 +698,6 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 type Config struct {
 	Cluster
 
-	ControllerElb model.ControllerElb
 	EtcdInstances []model.EtcdInstance
 
 	// Encoded TLS assets
@@ -825,7 +910,7 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		var instanceCIDRs = make([]*net.IPNet, 0)
 
 		for i, subnet := range c.Subnets {
-			if subnet.ID != "" {
+			if subnet.ID != "" || subnet.IDFromStackOutput != "" {
 				continue
 			}
 			if subnet.AvailabilityZone == "" {
@@ -859,6 +944,11 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 	}
 
 	return &DeploymentValidationResult{vpcNet: vpcNet}, nil
+}
+
+func (s DeploymentSettings) AllSubnets() []model.Subnet {
+	subnets := s.Subnets
+	return subnets
 }
 
 func (c WorkerSettings) Valid() error {

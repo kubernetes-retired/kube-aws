@@ -146,20 +146,15 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 
 	// For backward-compatibility
 	if len(c.Subnets) == 0 {
-		c.Subnets = []*model.Subnet{
-			{
-				AvailabilityZone: c.AvailabilityZone,
-				InstanceCIDR:     c.InstanceCIDR,
-			},
+		c.Subnets = []model.Subnet{
+			model.NewPublicSubnet(c.AvailabilityZone, c.InstanceCIDR),
 		}
 	}
 
 	for i, s := range c.Subnets {
 		if s.CustomName == "" {
-			s.CustomName = fmt.Sprintf("Subnet%d", i)
+			c.Subnets[i].CustomName = fmt.Sprintf("Subnet%d", i)
 		}
-		// Mark top-level subnets appropriately
-		s.TopLevel = true
 	}
 
 	c.EtcdInstances = main.EtcdInstances
@@ -189,7 +184,7 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 	}
 
 	// Populate top-level subnets to model
-	if len(c.Subnets) > 0 && c.WorkerSettings.TopologyPrivate() == false {
+	if len(c.Subnets) > 0 && len(c.WorkerSettings.Subnets) == 0 {
 		config.WorkerSettings.Subnets = c.Subnets
 	}
 

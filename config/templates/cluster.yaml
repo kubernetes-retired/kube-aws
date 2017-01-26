@@ -205,7 +205,8 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     #   id: "ngw-abcdef12"
 #     #   # Pre-allocated EIP for NAT Gateways. Used with private subnets.
 #     #   eipAllocationId: "eipalloc-abcdef12"
-#     subnetId: "subnet-xxxxxxxx" #optional
+#     # Existing subnet. Beware that `availabilityZone` can't be omitted; it must be the one in which the subnet exists.
+#     # id: "subnet-xxxxxxxx" #optional
 
 # CIDR for all service IP addresses
 # serviceCIDR: "10.3.0.0/24"
