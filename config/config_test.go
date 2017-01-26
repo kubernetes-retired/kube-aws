@@ -315,7 +315,7 @@ func TestMultipleSubnets(t *testing.T) {
 
 	validConfigs := []struct {
 		conf    string
-		subnets []*model.Subnet
+		subnets []model.Subnet
 	}{
 		{
 			conf: `
@@ -328,18 +328,16 @@ subnets:
   - availabilityZone: ap-northeast-1c
     instanceCIDR: 10.4.4.0/24
 `,
-			subnets: []*model.Subnet{
+			subnets: []model.Subnet{
 				{
 					InstanceCIDR:     "10.4.3.0/24",
 					AvailabilityZone: "ap-northeast-1a",
 					CustomName:       "Subnet0",
-					TopLevel:         true,
 				},
 				{
 					InstanceCIDR:     "10.4.4.0/24",
 					AvailabilityZone: "ap-northeast-1c",
 					CustomName:       "Subnet1",
-					TopLevel:         true,
 				},
 			},
 		},
@@ -351,12 +349,11 @@ controllerIP: 10.4.3.50
 availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 `,
-			subnets: []*model.Subnet{
+			subnets: []model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
 					CustomName:       "Subnet0",
-					TopLevel:         true,
 				},
 			},
 		},
@@ -369,12 +366,11 @@ availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 subnets: []
 `,
-			subnets: []*model.Subnet{
+			subnets: []model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
 					CustomName:       "Subnet0",
-					TopLevel:         true,
 				},
 			},
 		},
@@ -384,12 +380,11 @@ subnets: []
 availabilityZone: "ap-northeast-1a"
 subnets: []
 `,
-			subnets: []*model.Subnet{
+			subnets: []model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
 					CustomName:       "Subnet0",
-					TopLevel:         true,
 				},
 			},
 		},
@@ -398,12 +393,11 @@ subnets: []
 # Missing subnets field fall-backs to the single subnet with the default az/cidr.
 availabilityZone: "ap-northeast-1a"
 `,
-			subnets: []*model.Subnet{
+			subnets: []model.Subnet{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
 					CustomName:       "Subnet0",
-					TopLevel:         true,
 				},
 			},
 		},
@@ -743,16 +737,11 @@ func newMinimalConfig() (*Config, error) {
 	cluster := NewDefaultCluster()
 	cluster.ExternalDNSName = "k8s.example.com"
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*model.Subnet{
-		&model.Subnet{
-			AvailabilityZone: "us-west-1a",
-			InstanceCIDR:     "10.0.0.0/24",
-		},
-		&model.Subnet{
-			AvailabilityZone: "us-west-1b",
-			InstanceCIDR:     "10.0.1.0/24",
-		},
+	cluster.Subnets = []model.Subnet{
+		model.NewPublicSubnet("us-west-1a", "10.0.0.0/24"),
+		model.NewPublicSubnet("us-west-1b", "10.0.1.0/24"),
 	}
+	cluster.SetDefaults()
 	c, err := cluster.Config()
 	if err != nil {
 		return nil, err
@@ -886,9 +875,9 @@ func TestValidateExistingVPC(t *testing.T) {
 	cluster := NewDefaultCluster()
 
 	cluster.VPCCIDR = "10.0.0.0/16"
-	cluster.Subnets = []*model.Subnet{
-		{"ap-northeast-1a", "10.0.1.0/24", "", "", "", model.NatGateway{}, true},
-		{"ap-northeast-1a", "10.0.2.0/24", "", "", "", model.NatGateway{}, true},
+	cluster.Subnets = []model.Subnet{
+		model.NewPublicSubnet("ap-northeast-1a", "10.0.1.0/24"),
+		model.NewPublicSubnet("ap-northeast-1a", "10.0.2.0/24"),
 	}
 
 	for _, testCase := range validCases {
