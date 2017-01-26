@@ -6,9 +6,10 @@ Please file an issue to make suggestions on this roadmap!
 ## Every stage
 
   * Provide article walking users through:
-    * setting up a cluster from scratch
-    * using/enabling new features
-    * (breaking changes)
+    * Setting up a cluster from scratch
+    * Using/enabling new features
+    * (Breaking changes)
+  * Drop deprecated configuration syntax and flags, options
 
 ## Stage 1: v0.9.2
 
