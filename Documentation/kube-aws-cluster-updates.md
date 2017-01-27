@@ -20,12 +20,22 @@ kube-aws update
 
 ## Certificate rotation
 
-The parameter-level update mechanism can be used to rotate in new TLS credentials:
+The parameter-level update mechanism can be used to rotate in new TLS credentials.
 
-```sh
-kube-aws render credentials
-kube-aws update
-```
+More concretely, steps should be taken in order to rotate your certs on nodes are:
+
+* Optionally modify the `externalDNSName` attribute in `cluster.yaml`
+* Remove all the `credentials/*.enc` which are cached encrypted certs and keys to prevent unnecessary node replacement when there's actually no update. See #107 and #237 for more context.
+* Render new credentials using kube-aws render credentials:
+
+  ```sh
+  kube-aws render credentials
+  ```
+* Execute the update command like:
+
+  ```sh
+  kube-aws update --s3-uri s3://my/own/path
+  ```
 
 ## the etcd caveat
 
