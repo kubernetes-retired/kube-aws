@@ -279,6 +279,12 @@ worker:
 					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
 					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
+					}
 				},
 			},
 		},
@@ -344,6 +350,12 @@ subnets:
 					}
 					if !reflect.DeepEqual(c.Etcd.Subnets, publicSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", publicSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
 					}
 				},
 			},
@@ -429,6 +441,12 @@ worker:
 					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
 					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
+					}
 				},
 			},
 		},
@@ -509,6 +527,114 @@ worker:
 					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
 					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
+					}
+				},
+			},
+		},
+		// See https://github.com/coreos/kube-aws/pull/284#issuecomment-275955785
+		{
+			context: "WithNetworkTopologyExistingPrivateSubnetsWithNonAWSNATGateway",
+			configYaml: kubeAwsSettings.mainClusterYaml + `
+vpcId: vpc-1a2b3c4d
+# routeTableId must be omitted
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# routeTableId: rtb-1a2b3c4d
+subnets:
+- name: private1
+  availabilityZone: us-west-1a
+  id: subnet-1
+  private: true
+  natGateway:
+    preconfigured: true
+  # this, in combination with "natGateway.preconfigured=true", implies that the route table already has a route to an existing NAT gateway
+  routeTable:
+    id: routetable-withpreconfigurednat1a
+- name: private2
+  availabilityZone: us-west-1b
+  id: subnet-2
+  private: true
+  natGateway:
+    preconfigured: true
+  # this, in combination with "natGateway.preconfigured=true", implies that the route table already has a route to an existing NAT gateway
+  routeTable:
+    id: routetable-withpreconfigurednat1b
+- name: public1
+  availabilityZone: us-west-1a
+  id: subnet-3
+- name: public2
+  availabilityZone: us-west-1b
+  id: subnet-4
+controller:
+  subnets:
+  - name: private1
+  - name: private2
+  loadBalancer:
+    private: false
+etcd:
+  subnets:
+  - name: private1
+  - name: private2
+worker:
+  subnets:
+  - name: private1
+  - name: private2
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					private1 := model.NewExistingPrivateSubnetWithPreconfiguredNATGateway("us-west-1a", "subnet-1", "routetable-withpreconfigurednat1a")
+					private1.CustomName = "private1"
+
+					private2 := model.NewExistingPrivateSubnetWithPreconfiguredNATGateway("us-west-1b", "subnet-2", "routetable-withpreconfigurednat1b")
+					private2.CustomName = "private2"
+
+					public1 := model.NewExistingPublicSubnet("us-west-1a", "subnet-3")
+					public1.CustomName = "public1"
+
+					public2 := model.NewExistingPublicSubnet("us-west-1b", "subnet-4")
+					public2.CustomName = "public2"
+
+					subnets := []model.Subnet{
+						private1,
+						private2,
+						public1,
+						public2,
+					}
+					publicSubnets := []model.Subnet{
+						public1,
+						public2,
+					}
+					privateSubnets := []model.Subnet{
+						private1,
+						private2,
+					}
+
+					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
+						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
+					}
+					if !reflect.DeepEqual(c.Worker.Subnets, privateSubnets) {
+						t.Errorf("Worker subnets didn't match: expected=%v actual=%v", publicSubnets, c.Worker.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.Subnets, privateSubnets) {
+						t.Errorf("Controller subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.LoadBalancer.Subnets)
+					}
+					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
+						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PrivateSubnets() {
+						if !s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d is externally managed and shouldn't created by kube-aws", i)
+						}
+					}
 				},
 			},
 		},
@@ -588,6 +714,12 @@ worker:
 					}
 					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
 					}
 				},
 			},

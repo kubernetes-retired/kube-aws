@@ -539,8 +539,18 @@ func (c Cluster) Config() (*Config, error) {
 		subnetIndex := etcdIndex % len(config.Etcd.Subnets)
 		subnet := config.Etcd.Subnets[subnetIndex]
 
-		instance := model.EtcdInstance{
-			Subnet: subnet,
+		var instance model.EtcdInstance
+
+		if subnet.Private {
+			ngw, err := c.FindNATGatewayForPrivateSubnet(subnet)
+
+			if err != nil {
+				return nil, fmt.Errorf("failed getting the NAT gateway for the subnet %s in %v: %v", subnet.LogicalName(), c.NATGateways(), err)
+			}
+
+			instance = model.NewPrivateEtcdInstance(subnet, *ngw)
+		} else {
+			instance = model.NewPublicEtcdInstance(subnet)
 		}
 
 		config.EtcdInstances[etcdIndex] = instance
@@ -562,62 +572,6 @@ func (c Cluster) Config() (*Config, error) {
 	config.IsChinaRegion = strings.HasPrefix(config.Region, "cn")
 
 	return &config, nil
-}
-
-func (c *Cluster) FindSubnetMatching(condition model.Subnet) model.Subnet {
-	for _, s := range c.Subnets {
-		if s.CustomName == condition.CustomName {
-			return s
-		}
-	}
-	out := ""
-	for _, s := range c.Subnets {
-		out = fmt.Sprintf("%s%+v ", out, s)
-	}
-	panic(fmt.Errorf("No subnet matching %v found in %s", condition, out))
-}
-
-func (c *Cluster) PrivateSubnets() []model.Subnet {
-	result := []model.Subnet{}
-	for _, s := range c.Subnets {
-		if s.Private {
-			result = append(result, s)
-		}
-	}
-	return result
-}
-
-func (c *Cluster) PublicSubnets() []model.Subnet {
-	result := []model.Subnet{}
-	for _, s := range c.Subnets {
-		if !s.Private {
-			result = append(result, s)
-		}
-	}
-	return result
-}
-
-func (c *Cluster) NATGateways() []model.NATGateway {
-	ngws := []model.NATGateway{}
-	for _, privateSubnet := range c.PrivateSubnets() {
-		var publicSubnet model.Subnet
-		config := privateSubnet.NATGateway
-		if !config.HasIdentifier() {
-			found := false
-			for _, s := range c.PublicSubnets() {
-				if s.AvailabilityZone == privateSubnet.AvailabilityZone {
-					publicSubnet = s
-					found = true
-				}
-			}
-			if !found {
-				panic(fmt.Sprintf("No public subnet found for a NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
-			}
-		}
-		ngw := model.NewNATGateway(config, privateSubnet, publicSubnet)
-		ngws = append(ngws, ngw)
-	}
-	return ngws
 }
 
 // releaseVersionIsGreaterThan will return true if the supplied version is greater then
@@ -943,12 +897,83 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		return nil, err
 	}
 
+	for i, ngw := range c.NATGateways() {
+		if err := ngw.Validate(); err != nil {
+			return nil, fmt.Errorf("NGW %d is not valid: %v", i, err)
+		}
+	}
+
 	return &DeploymentValidationResult{vpcNet: vpcNet}, nil
 }
 
 func (s DeploymentSettings) AllSubnets() []model.Subnet {
 	subnets := s.Subnets
 	return subnets
+}
+
+func (c DeploymentSettings) FindSubnetMatching(condition model.Subnet) model.Subnet {
+	for _, s := range c.Subnets {
+		if s.CustomName == condition.CustomName {
+			return s
+		}
+	}
+	out := ""
+	for _, s := range c.Subnets {
+		out = fmt.Sprintf("%s%+v ", out, s)
+	}
+	panic(fmt.Errorf("No subnet matching %v found in %s", condition, out))
+}
+
+func (c DeploymentSettings) PrivateSubnets() []model.Subnet {
+	result := []model.Subnet{}
+	for _, s := range c.Subnets {
+		if s.Private {
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+func (c DeploymentSettings) PublicSubnets() []model.Subnet {
+	result := []model.Subnet{}
+	for _, s := range c.Subnets {
+		if !s.Private {
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
+func (c DeploymentSettings) FindNATGatewayForPrivateSubnet(s model.Subnet) (*model.NATGateway, error) {
+	for _, ngw := range c.NATGateways() {
+		if ngw.IsConnectedToPrivateSubnet(s) {
+			return &ngw, nil
+		}
+	}
+	return nil, fmt.Errorf("No NATGateway found for the subnet %v", s)
+}
+
+func (c DeploymentSettings) NATGateways() []model.NATGateway {
+	ngws := []model.NATGateway{}
+	for _, privateSubnet := range c.PrivateSubnets() {
+		var publicSubnet model.Subnet
+		ngwConfig := privateSubnet.NATGateway
+		if !ngwConfig.Preconfigured {
+			found := false
+			for _, s := range c.PublicSubnets() {
+				if s.AvailabilityZone == privateSubnet.AvailabilityZone {
+					publicSubnet = s
+					found = true
+				}
+			}
+			if !found {
+				panic(fmt.Sprintf("No appropriate public subnet found for a non-preconfigured NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
+			}
+		}
+		ngw := model.NewNATGateway(ngwConfig, privateSubnet, publicSubnet)
+		ngws = append(ngws, ngw)
+	}
+	return ngws
 }
 
 func (c WorkerSettings) Valid() error {
