@@ -509,7 +509,7 @@
     {{range $etcdIndex, $etcdInstance := .EtcdInstances}}
     "InstanceEtcd{{$etcdIndex}}eni": {
       "Properties": {
-          "SubnetId": {{$etcdInstance.Subnet.Ref}},
+          "SubnetId": {{$etcdInstance.SubnetRef}},
           "GroupSet": [
             {
               "Ref": "SecurityGroupEtcd"
@@ -571,8 +571,8 @@
         "Tenancy": "{{$.EtcdTenancy}}",
         "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
       },
-      {{if $etcdInstance.Subnet.Private}}
-      "DependsOn": ["{{$etcdInstance.Subnet.NATGatewayRouteName}}"],
+      {{if $etcdInstance.DependencyRef}}
+      "DependsOn": [{{$etcdInstance.DependencyRef}}],
       {{end}}
       "Type": "AWS::EC2::Instance"
     },
@@ -1254,8 +1254,9 @@
       },
       "Type": "AWS::EC2::NatGateway"
     }
-    ,
     {{end}}
+    {{if $ngw.ManageRoute}}
+    ,
     "{{$ngw.NATGatewayRouteName}}": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
@@ -1264,6 +1265,7 @@
       },
       "Type": "AWS::EC2::Route"
     }
+    {{end}}
     {{end}}
 
     {{if not .InternetGatewayID}}

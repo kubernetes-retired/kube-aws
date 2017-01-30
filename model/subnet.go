@@ -41,6 +41,24 @@ func NewExistingPrivateSubnet(az string, id string) Subnet {
 	}
 }
 
+func NewExistingPrivateSubnetWithPreconfiguredNATGateway(az string, id string, rtb string) Subnet {
+	return Subnet{
+		Identifier: Identifier{
+			ID: id,
+		},
+		AvailabilityZone: az,
+		Private:          true,
+		RouteTable: RouteTable{
+			Identifier: Identifier{
+				ID: rtb,
+			},
+		},
+		NATGateway: NATGatewayConfig{
+			Preconfigured: true,
+		},
+	}
+}
+
 func NewImportedPrivateSubnet(az string, name string) Subnet {
 	return Subnet{
 		Identifier: Identifier{
@@ -69,6 +87,10 @@ func NewImportedPublicSubnet(az string, name string) Subnet {
 		AvailabilityZone: az,
 		Private:          false,
 	}
+}
+
+func (s *Subnet) Provided() bool {
+	return s.AvailabilityZone != ""
 }
 
 func (s *Subnet) Public() bool {
