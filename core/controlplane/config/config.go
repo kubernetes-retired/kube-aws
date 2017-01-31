@@ -412,6 +412,7 @@ type Cluster struct {
 	EtcdSettings           `yaml:",inline"`
 	FlannelSettings        `yaml:",inline"`
 	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
+	APIServerServiceIP    string `yaml:"-"`
 	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
 	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
@@ -842,6 +843,8 @@ func (c Cluster) valid() error {
 	if !serviceNet.Contains(kubernetesServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", c.ServiceCIDR, kubernetesServiceIPAddr)
 	}
+
+	c.APIServerServiceIP = kubernetesServiceIPAddr.String()
 
 	if !serviceNet.Contains(dnsServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", c.ServiceCIDR, c.DNSServiceIP)
