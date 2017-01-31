@@ -8,7 +8,8 @@ type Etcd struct {
 
 type EtcdInstance interface {
 	SubnetRef() string
-	DependencyRef() string
+	DependencyExists() bool
+	DependencyRef() (string, error)
 }
 
 type etcdInstanceImpl struct {
@@ -16,14 +17,14 @@ type etcdInstanceImpl struct {
 	natGateway NATGateway
 }
 
-func NewPrivateEtcdInstance(s Subnet, ngw NATGateway) EtcdInstance {
+func NewEtcdInstanceDependsOnNewlyCreatedNGW(s Subnet, ngw NATGateway) EtcdInstance {
 	return etcdInstanceImpl{
 		subnet:     s,
 		natGateway: ngw,
 	}
 }
 
-func NewPublicEtcdInstance(s Subnet) EtcdInstance {
+func NewEtcdInstance(s Subnet) EtcdInstance {
 	return etcdInstanceImpl{
 		subnet: s,
 	}
@@ -33,10 +34,18 @@ func (i etcdInstanceImpl) SubnetRef() string {
 	return i.subnet.Ref()
 }
 
-func (i etcdInstanceImpl) DependencyRef() string {
+func (i etcdInstanceImpl) DependencyExists() bool {
+	return i.subnet.Private && i.natGateway != nil && i.natGateway.ManageRoute()
+}
+
+func (i etcdInstanceImpl) DependencyRef() (string, error) {
 	// We have to wait until the route to the NAT gateway if it doesn't exist yet(hence ManageRoute=true) or the etcd node fails due to inability to connect internet
-	if i.subnet.Private && i.natGateway.ManageRoute() {
-		return fmt.Sprintf(`"%s"`, i.natGateway.NATGatewayRouteName())
+	if i.DependencyExists() {
+		name, err := i.natGateway.NATGatewayRouteName()
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf(`"%s"`, name), nil
 	}
-	return ""
+	return "", nil
 }

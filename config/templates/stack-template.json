@@ -571,7 +571,7 @@
         "Tenancy": "{{$.EtcdTenancy}}",
         "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
       },
-      {{if $etcdInstance.DependencyRef}}
+      {{if $etcdInstance.DependencyExists}}
       "DependsOn": [{{$etcdInstance.DependencyRef}}],
       {{end}}
       "Type": "AWS::EC2::Instance"
@@ -1148,7 +1148,7 @@
     {{end}}
 
     {{range $index, $subnet := .Subnets}}
-    {{if not $subnet.HasIdentifier }}
+    {{if $subnet.ManageSubnet }}
     ,
     "{{$subnet.LogicalName}}": {
       "Properties": {
@@ -1169,18 +1169,6 @@
       },
       "Type": "AWS::EC2::Subnet"
     }
-    {{end}}
-    {{if $.ElasticFileSystemID}}
-    ,
-    "{{$subnet.LogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": {{$subnet.Ref}},
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
     ,
     "{{$subnet.LogicalName}}RouteTableAssociation": {
       "Properties": {
@@ -1189,6 +1177,7 @@
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation"
     }
+    {{if $subnet.ManageRouteTable}}
     ,
     "{{$subnet.RouteTableName}}": {
       "Properties": {
@@ -1206,6 +1195,19 @@
       },
       "Type": "AWS::EC2::RouteTable"
     }
+    {{end}}
+    {{end}}
+    {{if $.ElasticFileSystemID}}
+    ,
+    "{{$subnet.LogicalName}}MountTarget": {
+      "Properties" : {
+        "FileSystemId": "{{$.ElasticFileSystemID}}",
+        "SubnetId": {{$subnet.Ref}},
+        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+      },
+      "Type" : "AWS::EFS::MountTarget"
+    }
+    {{end}}
     {{if $subnet.ManageRouteToInternet}}
     ,
     "{{$subnet.RouteTableName}}ToInternet": {
@@ -1311,11 +1313,13 @@
     },
     {{end}}
     {{range $index, $subnet := .Subnets}}
+    {{if $subnet.ManageRouteTable}}
     "{{$subnet.RouteTableName}}" : {
       "Description" : "The route table assigned to the subnet {{$subnet.LogicalName}}",
       "Value" :  {{$subnet.RouteTableRef}},
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.RouteTableName}}" }}
     },
+    {{end}}
     {{end}}
     "WorkerSecurityGroup" : {
       "Description" : "The security group assigned to worker nodes",

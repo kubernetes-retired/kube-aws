@@ -6,7 +6,6 @@ import (
 
 type NATGatewayConfig struct {
 	Identifier      `yaml:",inline"`
-	Preconfigured   bool   `yaml:"preconfigured,omitempty"`
 	EIPAllocationID string `yaml:"eipAllocationId,omitempty"`
 }
 
@@ -18,9 +17,9 @@ type NATGateway interface {
 	ManageEIP() bool
 	ManageNATGateway() bool
 	ManageRoute() bool
-	NATGatewayRouteName() string
+	NATGatewayRouteName() (string, error)
 	Ref() string
-	PrivateSubnetRouteTableRef() string
+	PrivateSubnetRouteTableRef() (string, error)
 	PublicSubnetRef() string
 	Validate() error
 }
@@ -44,7 +43,7 @@ func (g natGatewayImpl) LogicalName() string {
 }
 
 func (g natGatewayImpl) ManageNATGateway() bool {
-	return !g.HasIdentifier() && !g.Preconfigured
+	return g.privateSubnet.ManageNATGateway()
 }
 
 func (g natGatewayImpl) ManageEIP() bool {
@@ -52,7 +51,7 @@ func (g natGatewayImpl) ManageEIP() bool {
 }
 
 func (g natGatewayImpl) ManageRoute() bool {
-	return !g.Preconfigured
+	return g.privateSubnet.ManageRouteToNATGateway()
 }
 
 func (g natGatewayImpl) EIPLogicalName() string {
@@ -78,34 +77,38 @@ func (g natGatewayImpl) PublicSubnetRef() string {
 	return g.publicSubnet.Ref()
 }
 
-func (g natGatewayImpl) PrivateSubnetRouteTableRef() string {
-	return g.privateSubnet.RouteTableRef()
+func (g natGatewayImpl) PrivateSubnetRouteTableRef() (string, error) {
+	ref, err := g.privateSubnet.RouteTableRef()
+	if err != nil {
+		return "", err
+	}
+	return ref, nil
 }
 
-func (g natGatewayImpl) NATGatewayRouteName() string {
-	return g.privateSubnet.NATGatewayRouteName()
+func (g natGatewayImpl) NATGatewayRouteName() (string, error) {
+	return fmt.Sprintf("%sRouteToNatGateway", g.privateSubnet.ReferenceName()), nil
 }
 
 func (g natGatewayImpl) Validate() error {
-	if g.Preconfigured {
+	if !g.ManageNATGateway() {
 		if !g.privateSubnet.HasIdentifier() {
-			return fmt.Errorf("an NGW with preconfigured=true must be associated to an existing private subnet: %+v", g)
+			return fmt.Errorf("a preconfigured NGW must be associated to an existing private subnet: %+v", g)
 		}
 
 		if g.publicSubnet.Provided() {
-			return fmt.Errorf("an NGW with preconfigured=true must not be associated to an existing public subnet: %+v", g)
+			return fmt.Errorf("a preconfigured NGW must not be associated to an existing public subnet: %+v", g)
 		}
 
 		if !g.privateSubnet.RouteTable.HasIdentifier() {
-			return fmt.Errorf("an NGW with preconfigured=true must have an existing route table provided via routeTable.id or routeTable.idFromStackOutput: %+v", g)
+			return fmt.Errorf("a preconfigured NGW must have an existing route table provided via routeTable.id or routeTable.idFromStackOutput: %+v", g)
 		}
 
 		if g.HasIdentifier() {
-			return fmt.Errorf("an NGW with preconcfigured=true must not have id or idFromStackOutput: %+v", g)
+			return fmt.Errorf("a preconfigured NGW must not have id or idFromStackOutput: %+v", g)
 		}
 
 		if g.EIPAllocationID != "" {
-			return fmt.Errorf("an NGW with preconcfigured=true must not have an eipAllocactionID: %+v", g)
+			return fmt.Errorf("a preconfigured NGW must not have an eipAllocactionID: %+v", g)
 		}
 	}
 	return nil
