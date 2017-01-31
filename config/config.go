@@ -195,7 +195,6 @@ func (c *Cluster) SetDefaults() {
 		// This implies a deployment to an existing VPC with a route table with a preconfigured Internet Gateway
 		// and all the subnets created by kube-aws are public
 		if publicTopologyImplied {
-			c.Subnets[i].InternetGateway.Preconfigured = true
 			c.Subnets[i].RouteTable.ID = c.RouteTableID
 			if s.Private {
 				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts: %+v", c.MapPublicIPs, i, s.Private, s))
@@ -209,7 +208,6 @@ func (c *Cluster) SetDefaults() {
 		// This implies a deployment to an existing VPC with a route table with a preconfigured NAT Gateway
 		// and all the subnets created by kube-aws are private
 		if privateTopologyImplied {
-			c.Subnets[i].NATGateway.Preconfigured = true
 			c.Subnets[i].RouteTable.ID = c.RouteTableID
 			if s.Private {
 				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts. You don't need to set true to both of them. If you want to make all the subnets private, make mapPublicIPs false. If you want to make only part of subnets private, make subnets[].private true accordingly: %+v", c.MapPublicIPs, i, s.Private, s))
@@ -585,16 +583,16 @@ func (c Cluster) Config() (*Config, error) {
 
 		var instance model.EtcdInstance
 
-		if subnet.Private {
+		if subnet.ManageNATGateway() {
 			ngw, err := c.FindNATGatewayForPrivateSubnet(subnet)
 
 			if err != nil {
-				return nil, fmt.Errorf("failed getting the NAT gateway for the subnet %s in %v: %v", subnet.LogicalName(), c.NATGateways(), err)
+				return nil, fmt.Errorf("failed getting a NAT gateway for the subnet %s in %v: %v", subnet.LogicalName(), c.NATGateways(), err)
 			}
 
-			instance = model.NewPrivateEtcdInstance(subnet, *ngw)
+			instance = model.NewEtcdInstanceDependsOnNewlyCreatedNGW(subnet, *ngw)
 		} else {
-			instance = model.NewPublicEtcdInstance(subnet)
+			instance = model.NewEtcdInstance(subnet)
 		}
 
 		config.EtcdInstances[etcdIndex] = instance
@@ -1016,7 +1014,7 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 	for _, privateSubnet := range c.PrivateSubnets() {
 		var publicSubnet model.Subnet
 		ngwConfig := privateSubnet.NATGateway
-		if !ngwConfig.Preconfigured {
+		if privateSubnet.ManageNATGateway() {
 			found := false
 			for _, s := range c.PublicSubnets() {
 				if s.AvailabilityZone == privateSubnet.AvailabilityZone {
@@ -1027,9 +1025,9 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 			if !found {
 				panic(fmt.Sprintf("No appropriate public subnet found for a non-preconfigured NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
 			}
+			ngw := model.NewNATGateway(ngwConfig, privateSubnet, publicSubnet)
+			ngws = append(ngws, ngw)
 		}
-		ngw := model.NewNATGateway(ngwConfig, privateSubnet, publicSubnet)
-		ngws = append(ngws, ngw)
 	}
 	return ngws
 }

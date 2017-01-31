@@ -1,8 +1,7 @@
 package model
 
 type InternetGateway struct {
-	Identifier    `yaml:",inline"`
-	Preconfigured bool `yaml:"preconfigured,omitempty"`
+	Identifier `yaml:",inline"`
 }
 
 func (g InternetGateway) ManageInternetGateway() bool {
