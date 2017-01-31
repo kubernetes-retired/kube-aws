@@ -181,9 +181,40 @@ func (c *Cluster) SetDefaults() {
 		}
 	}
 
+	privateTopologyImplied := c.RouteTableID != "" && !c.MapPublicIPs
+	publicTopologyImplied := c.RouteTableID != "" && c.MapPublicIPs
+
 	for i, s := range c.Subnets {
 		if s.CustomName == "" {
 			c.Subnets[i].CustomName = fmt.Sprintf("Subnet%d", i)
+		}
+
+		// DEPRECATED AND REMOVED IN THE FUTURE
+		// See https://github.com/coreos/kube-aws/pull/284#issuecomment-275998862
+		//
+		// This implies a deployment to an existing VPC with a route table with a preconfigured Internet Gateway
+		// and all the subnets created by kube-aws are public
+		if publicTopologyImplied {
+			c.Subnets[i].InternetGateway.Preconfigured = true
+			c.Subnets[i].RouteTable.ID = c.RouteTableID
+			if s.Private {
+				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts: %+v", c.MapPublicIPs, i, s.Private, s))
+			}
+			c.Subnets[i].Private = false
+		}
+
+		// DEPRECATED AND REMOVED IN THE FUTURE
+		// See https://github.com/coreos/kube-aws/pull/284#issuecomment-275998862
+		//
+		// This implies a deployment to an existing VPC with a route table with a preconfigured NAT Gateway
+		// and all the subnets created by kube-aws are private
+		if privateTopologyImplied {
+			c.Subnets[i].NATGateway.Preconfigured = true
+			c.Subnets[i].RouteTable.ID = c.RouteTableID
+			if s.Private {
+				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts. You don't need to set true to both of them. If you want to make all the subnets private, make mapPublicIPs false. If you want to make only part of subnets private, make subnets[].private true accordingly: %+v", c.MapPublicIPs, i, s.Private, s))
+			}
+			c.Subnets[i].Private = true
 		}
 	}
 
@@ -208,23 +239,36 @@ func (c *Cluster) SetDefaults() {
 	}
 
 	if len(c.Worker.Subnets) == 0 {
-		c.Worker.Subnets = c.PublicSubnets()
+		if privateTopologyImplied {
+			c.Worker.Subnets = c.PrivateSubnets()
+		} else {
+			c.Worker.Subnets = c.PublicSubnets()
+		}
 	}
 
 	if len(c.Controller.Subnets) == 0 {
-		c.Controller.Subnets = c.PublicSubnets()
+		if privateTopologyImplied {
+			c.Controller.Subnets = c.PrivateSubnets()
+		} else {
+			c.Controller.Subnets = c.PublicSubnets()
+		}
 	}
 
 	if len(c.Controller.LoadBalancer.Subnets) == 0 {
-		if c.Controller.LoadBalancer.Private == true {
+		if c.Controller.LoadBalancer.Private || privateTopologyImplied {
 			c.Controller.LoadBalancer.Subnets = c.PrivateSubnets()
+			c.Controller.LoadBalancer.Private = true
 		} else {
 			c.Controller.LoadBalancer.Subnets = c.PublicSubnets()
 		}
 	}
 
 	if len(c.Etcd.Subnets) == 0 {
-		c.Etcd.Subnets = c.PublicSubnets()
+		if privateTopologyImplied {
+			c.Etcd.Subnets = c.PrivateSubnets()
+		} else {
+			c.Etcd.Subnets = c.PublicSubnets()
+		}
 	}
 }
 
@@ -863,6 +907,9 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 
 		var instanceCIDRs = make([]*net.IPNet, 0)
 
+		allPrivate := true
+		allPublic := true
+
 		for i, subnet := range c.Subnets {
 			if subnet.ID != "" || subnet.IDFromStackOutput != "" {
 				continue
@@ -882,6 +929,17 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 					i,
 				)
 			}
+
+			if subnet.RouteTableID() != "" && c.RouteTableID != "" {
+				return nil, fmt.Errorf("either subnets[].routeTable.id(%s) or routeTableId(%s) but not both can be specified", subnet.RouteTableID(), c.RouteTableID)
+			}
+
+			allPrivate = allPrivate && subnet.Private
+			allPublic = allPublic && subnet.Public()
+		}
+
+		if c.RouteTableID != "" && !allPublic && !allPrivate {
+			return nil, fmt.Errorf("network topology including both private and public subnets specified while the single route table(%s) is also specified. You must differentiate the route table at least between private and public subnets. Use subets[].routeTable.id instead of routeTableId for that.", c.RouteTableID)
 		}
 
 		for i, a := range instanceCIDRs {

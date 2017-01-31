@@ -85,6 +85,14 @@ func TestMainClusterConfig(t *testing.T) {
 		}
 	}
 
+	everyPublicSubnetHasRouteToIGW := func(c *config.Cluster, t *testing.T) {
+		for i, s := range c.PublicSubnets() {
+			if !s.ManageRouteToInternet() {
+				t.Errorf("Public subnet %d should have a route to the IGW but it doesn't: %+v", i, s)
+			}
+		}
+	}
+
 	kubeAwsSettings := newKubeAwsSettingsFromEnv(t)
 
 	minimalValidConfigYaml := kubeAwsSettings.mainClusterYaml + `
@@ -196,10 +204,172 @@ experimental:
 			},
 		},
 		{
+			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecated",
+			configYaml: kubeAwsSettings.mainClusterYaml + `
+vpcId: vpc-1a2b3c4d
+# This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
+routeTableId: rtb-1a2b3c4d
+# This means that all the subnets created by kube-aws should be private
+mapPublicIPs: false
+# This can't be false because kube-aws won't create public subbnets which are required by an external lb when mapPublicIPs=false
+controllerLoadBalancerPrivate: true
+subnets:
+- availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  # implies
+  # private: true
+  # natGateway:
+  #   preconfigured: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+- availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  # implies
+  # private: true
+  # natGateway:
+  #   preconfigured: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					private1 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
+					private1.CustomName = "Subnet0"
+
+					private2 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
+					private2.CustomName = "Subnet1"
+
+					subnets := []model.Subnet{
+						private1,
+						private2,
+					}
+					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
+						t.Errorf("Managed subnets didn't match: expected=%+v actual=%+v", subnets, c.AllSubnets())
+					}
+
+					privateSubnets := []model.Subnet{
+						private1,
+						private2,
+					}
+					if !reflect.DeepEqual(c.Worker.Subnets, privateSubnets) {
+						t.Errorf("Worker subnets didn't match: expected=%+v actual=%+v", subnets, c.Worker.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.Subnets, privateSubnets) {
+						t.Errorf("Controller subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Controller.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, privateSubnets) {
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Controller.LoadBalancer.Subnets)
+					}
+					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
+						t.Errorf("Etcd subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PrivateSubnets() {
+						if !s.NATGateway.Preconfigured {
+							t.Errorf("NAT gateway for the private subnet #%d is externally managed and shouldn't created by kube-aws", i)
+						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %+v", s)
+						}
+					}
+
+					if len(c.PublicSubnets()) != 0 {
+						t.Errorf("Number of public subnets should be zero but it wasn't: %d", len(c.PublicSubnets()))
+					}
+				},
+			},
+		},
+		{
+			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecated",
+			configYaml: kubeAwsSettings.mainClusterYaml + `
+vpcId: vpc-1a2b3c4d
+# This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
+routeTableId: rtb-1a2b3c4d
+# This means that all the subnets created by kube-aws should be public
+mapPublicIPs: true
+# This can't be true because kube-aws won't create private subnets which are required by an internal lb when mapPublicIPs=true
+controllerLoadBalancerPrivate: false
+# internetGatewayId should be omitted as we assume that the route table specified by routeTableId already contain a route to one
+#internetGatewayId:
+subnets:
+- availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  # #implies
+  # private: false
+  # internetGateway:
+  #   preconfigured: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+- availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  # #implies
+  # private: false
+  # internetGateway:
+  #   preconfigured: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					private1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
+					private1.CustomName = "Subnet0"
+
+					private2 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
+					private2.CustomName = "Subnet1"
+
+					subnets := []model.Subnet{
+						private1,
+						private2,
+					}
+					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
+						t.Errorf("Managed subnets didn't match: expected=%+v actual=%+v", subnets, c.AllSubnets())
+					}
+
+					publicSubnets := []model.Subnet{
+						private1,
+						private2,
+					}
+					if !reflect.DeepEqual(c.Worker.Subnets, publicSubnets) {
+						t.Errorf("Worker subnets didn't match: expected=%+v actual=%+v", subnets, c.Worker.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.Subnets, publicSubnets) {
+						t.Errorf("Controller subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Controller.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Controller.LoadBalancer.Subnets)
+					}
+					if !reflect.DeepEqual(c.Etcd.Subnets, publicSubnets) {
+						t.Errorf("Etcd subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PublicSubnets() {
+						if s.RouteTableID() != "rtb-1a2b3c4d" {
+							t.Errorf("Subnet %d should be associated to a route table with an IGW preconfigured but it wasn't", i)
+						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a public subnet with a preconfigured IGW: %+v", s)
+						}
+					}
+
+					if len(c.PrivateSubnets()) != 0 {
+						t.Errorf("Number of private subnets should be zero but it wasn't: %d", len(c.PrivateSubnets()))
+					}
+				},
+			},
+		},
+		{
 			context: "WithNetworkTopologyExplicitSubnets",
 			configYaml: kubeAwsSettings.mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
+# routeTableId must be omitted
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -235,6 +405,7 @@ worker:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.CustomName = "private1"
@@ -274,7 +445,7 @@ worker:
 						t.Errorf("Controller subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.Subnets)
 					}
 					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
-						t.Errorf("Controller loadbalancer subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.LoadBalancer.Subnets)
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%v actual=%v", publicSubnets, c.Controller.LoadBalancer.Subnets)
 					}
 					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
 						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
@@ -284,6 +455,10 @@ worker:
 						if s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
 						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
 					}
 				},
 			},
@@ -292,7 +467,9 @@ worker:
 			context: "WithNetworkTopologyImplicitSubnets",
 			configYaml: kubeAwsSettings.mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
+# routeTableId must be omitted
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -311,6 +488,7 @@ subnets:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.CustomName = "private1"
@@ -356,6 +534,10 @@ subnets:
 						if s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
 						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
 					}
 				},
 			},
@@ -364,7 +546,9 @@ subnets:
 			context: "WithNetworkTopologyControllerPrivateLB",
 			configYaml: kubeAwsSettings.mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
+# routeTableId must be omitted
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -397,6 +581,7 @@ worker:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.CustomName = "private1"
@@ -446,6 +631,10 @@ worker:
 						if s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
 						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
 					}
 				},
 			},
@@ -454,7 +643,9 @@ worker:
 			context: "WithNetworkTopologyControllerPublicLB",
 			configYaml: kubeAwsSettings.mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
+# routeTableId must be omitted
+# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -484,6 +675,7 @@ worker:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.CustomName = "private1"
@@ -531,6 +723,10 @@ worker:
 					for i, s := range c.PrivateSubnets() {
 						if s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
+						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
 						}
 					}
 				},
@@ -634,6 +830,10 @@ worker:
 						if !s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d is externally managed and shouldn't created by kube-aws", i)
 						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
 					}
 				},
 			},
@@ -642,7 +842,6 @@ worker:
 			context: "WithNetworkTopologyExistingSubnets",
 			configYaml: kubeAwsSettings.mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -720,6 +919,10 @@ worker:
 						if s.NATGateway.Preconfigured {
 							t.Errorf("NAT gateway for the private subnet #%d should be created by kube-aws but it is not going to be", i)
 						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
 					}
 				},
 			},
@@ -741,8 +944,35 @@ vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
-				hasDefaultEtcdSettings,
 				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
+					subnet1.CustomName = "Subnet0"
+					subnets := []model.Subnet{
+						subnet1,
+					}
+					expected := config.EtcdSettings{
+						Etcd: model.Etcd{
+							Subnets: subnets,
+						},
+						EtcdCount:               1,
+						EtcdInstanceType:        "t2.medium",
+						EtcdRootVolumeSize:      30,
+						EtcdRootVolumeType:      "gp2",
+						EtcdDataVolumeSize:      30,
+						EtcdDataVolumeType:      "gp2",
+						EtcdDataVolumeEphemeral: false,
+						EtcdTenancy:             "default",
+					}
+					actual := c.EtcdSettings
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf(
+							"EtcdSettings didn't match: expected=%v actual=%v",
+							expected,
+							actual,
+						)
+					}
+				},
 			},
 		},
 		{
@@ -850,7 +1080,7 @@ etcdDataVolumeIOPS: 104
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
-					subnet1 := model.NewPublicSubnet("us-west-1c", "10.0.0.0/24")
+					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
 					subnet1.CustomName = "Subnet0"
 					subnets := []model.Subnet{
 						subnet1,

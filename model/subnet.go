@@ -59,6 +59,38 @@ func NewExistingPrivateSubnetWithPreconfiguredNATGateway(az string, id string, r
 	}
 }
 
+func NewPublicSubnetWithPreconfiguredInternetGateway(az string, cidr string, rtb string) Subnet {
+	return Subnet{
+		AvailabilityZone: az,
+		InstanceCIDR:     cidr,
+		Private:          false,
+		RouteTable: RouteTable{
+			Identifier: Identifier{
+				ID: rtb,
+			},
+		},
+		InternetGateway: InternetGateway{
+			Preconfigured: true,
+		},
+	}
+}
+
+func NewPrivateSubnetWithPreconfiguredNATGateway(az string, cidr string, rtb string) Subnet {
+	return Subnet{
+		AvailabilityZone: az,
+		InstanceCIDR:     cidr,
+		Private:          true,
+		RouteTable: RouteTable{
+			Identifier: Identifier{
+				ID: rtb,
+			},
+		},
+		NATGateway: NATGatewayConfig{
+			Preconfigured: true,
+		},
+	}
+}
+
 func NewImportedPrivateSubnet(az string, name string) Subnet {
 	return Subnet{
 		Identifier: Identifier{
@@ -130,8 +162,8 @@ func (s *Subnet) ManageRouteTable() bool {
 	return !s.RouteTable.HasIdentifier()
 }
 
-func (s *Subnet) ManageInternetGateway() bool {
-	return !s.InternetGateway.HasIdentifier()
+func (s *Subnet) ManageRouteToInternet() bool {
+	return s.Public() && !s.InternetGateway.Preconfigured
 }
 
 func (s *Subnet) NATGatewayRouteName() string {
@@ -151,10 +183,6 @@ func (s *Subnet) RouteTableName() string {
 func (s *Subnet) RouteTableRef() string {
 	logicalName := s.RouteTableName()
 	return s.RouteTable.Ref(logicalName)
-}
-
-type InternetGateway struct {
-	Identifier `yaml:",inline"`
 }
 
 type RouteTable struct {
