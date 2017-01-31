@@ -1206,24 +1206,8 @@
       },
       "Type": "AWS::EC2::RouteTable"
     }
-    {{if $subnet.Public}}
+    {{if $subnet.ManageRouteToInternet}}
     ,
-    "{{$subnet.RouteTableName}}": {
-      "Properties": {
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$subnet.RouteTableName}}"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::RouteTable"
-    },
     "{{$subnet.RouteTableName}}ToInternet": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
