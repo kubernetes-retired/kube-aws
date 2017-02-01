@@ -67,22 +67,17 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  loadBalancer:
 #    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
 #    # only public subnets defined under the top-level `subnets` key are used for the ELB
-#    # private: false
-#    #
+#    private: false
 #    # If you like specific public subnets to be used by the internet-facing ELB:
-#    # subnets:
-#    #   - name: ManagedPublicSubnet0
+#    #subnets:
+#    #  - name: ManagedPublicSubnet0
 #
 #    # When explicitly set to true, the ELB for the k8s API endpoint becomes `Schema=internal` rather than default `Schema=internet-facing` one and
 #    # only private subnets defined under the top-level `subnets` key are used for the ELB
-#    # private: true
-#    #
+#    private: true
 #    # If you like specific private subnets to be used by the internal ELB:
 #    # subnets:
 #    #   - name: ManagedPrivateSubnet0
-
-# Set to true to put the ELB on the public subnet although having controller nodes on private subnets
-#controllerLoadBalancerPrivate: false
 
 # Maximum time to wait for controller creation
 #controllerCreateTimeout: PT15M
