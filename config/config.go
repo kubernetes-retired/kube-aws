@@ -185,8 +185,8 @@ func (c *Cluster) SetDefaults() {
 	publicTopologyImplied := c.RouteTableID != "" && c.MapPublicIPs
 
 	for i, s := range c.Subnets {
-		if s.CustomName == "" {
-			c.Subnets[i].CustomName = fmt.Sprintf("Subnet%d", i)
+		if s.Name == "" {
+			c.Subnets[i].Name = fmt.Sprintf("Subnet%d", i)
 		}
 
 		// DEPRECATED AND REMOVED IN THE FUTURE
@@ -969,7 +969,7 @@ func (s DeploymentSettings) AllSubnets() []model.Subnet {
 
 func (c DeploymentSettings) FindSubnetMatching(condition model.Subnet) model.Subnet {
 	for _, s := range c.Subnets {
-		if s.CustomName == condition.CustomName {
+		if s.Name == condition.Name {
 			return s
 		}
 	}
@@ -1015,14 +1015,15 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 		var publicSubnet model.Subnet
 		ngwConfig := privateSubnet.NATGateway
 		if privateSubnet.ManageNATGateway() {
-			found := false
+			publicSubnetFound := false
 			for _, s := range c.PublicSubnets() {
 				if s.AvailabilityZone == privateSubnet.AvailabilityZone {
 					publicSubnet = s
-					found = true
+					publicSubnetFound = true
+					break
 				}
 			}
-			if !found {
+			if !publicSubnetFound {
 				panic(fmt.Sprintf("No appropriate public subnet found for a non-preconfigured NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
 			}
 			ngw := model.NewNATGateway(ngwConfig, privateSubnet, publicSubnet)

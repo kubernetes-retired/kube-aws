@@ -7,13 +7,13 @@ import (
 
 type Subnet struct {
 	Identifier       `yaml:",inline"`
-	CustomName       string           `yaml:"name,omitempty"`
 	AvailabilityZone string           `yaml:"availabilityZone,omitempty"`
+	Name             string           `yaml:"name,omitempty"`
 	InstanceCIDR     string           `yaml:"instanceCIDR,omitempty"`
-	RouteTable       RouteTable       `yaml:"routeTable,omitempty"`
-	NATGateway       NATGatewayConfig `yaml:"natGateway,omitempty"`
 	InternetGateway  InternetGateway  `yaml:"internetGateway,omitempty"`
-	Private          bool
+	NATGateway       NATGatewayConfig `yaml:"natGateway,omitempty"`
+	Private          bool             `yaml:"private,omitempty"`
+	RouteTable       RouteTable       `yaml:"routeTable,omitempty"`
 }
 
 func NewPublicSubnet(az string, cidr string) Subnet {
@@ -100,46 +100,19 @@ func NewImportedPublicSubnet(az string, name string) Subnet {
 	}
 }
 
-func (s *Subnet) Provided() bool {
-	return s.AvailabilityZone != ""
-}
-
 func (s *Subnet) Public() bool {
 	return !s.Private
-}
-
-func (s *Subnet) AvailabilityZoneLogicalName() string {
-	return strings.Replace(strings.Title(s.AvailabilityZone), "-", "", -1)
 }
 
 func (s *Subnet) MapPublicIPs() bool {
 	return !s.Private
 }
 
-func (s *Subnet) ResourcePrefix() string {
-	var t string
-	if s.Private {
-		t = "Private"
-	} else {
-		t = "Public"
-	}
-	return t
-}
-
-func (s *Subnet) ReferenceName() string {
-	if s.ManageSubnet() {
-		return s.LogicalName()
-	} else if s.ID != "" {
-		return s.ID
-	}
-	return s.IDFromStackOutput
-}
-
 func (s *Subnet) LogicalName() string {
-	if s.CustomName != "" {
-		return s.CustomName
+	if s.Name != "" {
+		return strings.Replace(strings.Title(s.Name), "-", "", -1)
 	}
-	return s.ResourcePrefix() + "Subnet" + s.AvailabilityZoneLogicalName()
+	panic(fmt.Sprintf("Name must be set for a subnet: %+v", *s))
 }
 
 func (s *Subnet) RouteTableID() string {
@@ -153,7 +126,7 @@ func (s *Subnet) RouteTableID() string {
 // * the route table for the subnet is going to be managed by kube-aws(an existing subnet is NOT specified) and
 // * an existing NAT gateway ID is not specified to be reused
 func (s *Subnet) ManageNATGateway() bool {
-	return s.Private && s.ManageRouteTable() && !s.NATGateway.HasIdentifier()
+	return s.managePrivateRouteTable() && !s.NATGateway.HasIdentifier()
 }
 
 // ManageRouteToNATGateway returns true if a route to a NAT gateway for this subnet must be created or updated by kube-aws
@@ -161,7 +134,11 @@ func (s *Subnet) ManageNATGateway() bool {
 // * the NGW is going to be managed or
 // * an existing NAT gateway ID is specified
 func (s *Subnet) ManageRouteToNATGateway() bool {
-	return s.ManageNATGateway() || s.NATGateway.HasIdentifier()
+	return s.managePrivateRouteTable()
+}
+
+func (s *Subnet) managePrivateRouteTable() bool {
+	return s.Private && s.ManageRouteTable()
 }
 
 // ManageRouteTable returns true if a route table for this subnet must be created or updated by kube-aws
@@ -170,7 +147,7 @@ func (s *Subnet) ManageRouteTable() bool {
 	return s.ManageSubnet() && !s.RouteTable.HasIdentifier()
 }
 
-// ManageRouteToInternet returns true if a route from this subnet to to an IGW must be created or updated by kube-aws
+// ManageRouteToInternet returns true if a route from this subnet to an IGW must be created or updated by kube-aws
 // kube-aws creates a route to an IGW for an subnet if and only if:
 // * the subnet is public and
 // * the subnet is going to be managed by kube-aws and
@@ -191,22 +168,41 @@ func (s *Subnet) ManageSubnet() bool {
 
 // Ref returns ID or ref to newly created resource
 func (s *Subnet) Ref() string {
-	return s.Identifier.Ref(s.LogicalName())
+	return s.Identifier.Ref(s.LogicalName)
 }
 
-// RouteTableName represents the name of the route table to which this subnet is associated.
-func (s *Subnet) RouteTableName() (string, error) {
+// RouteTableLogicalName represents the name of the route table to which this subnet is associated.
+func (s *Subnet) RouteTableLogicalName() (string, error) {
 	// There should be no need to call this func if the route table isn't going to be created/updated by kube-aws
 	if !s.ManageRouteTable() {
-		return "", fmt.Errorf("[bug] assertion failed: RouteTableName() must be called if and only if ManageRouteTable() returns true")
+		return "", fmt.Errorf("[bug] assertion failed: RouteTableLogicalName() must be called if and only if ManageRouteTable() returns true")
 	}
-	return s.ResourcePrefix() + "RouteTable" + s.AvailabilityZoneLogicalName(), nil
+	return s.subnetSpecificResourceLogicalName("RouteTable"), nil
+}
+
+func (s *Subnet) InternetGatewayRouteLogicalName() string {
+	return s.subnetSpecificResourceLogicalName("RouteToInternet")
+}
+
+func (s *Subnet) NATGatewayRouteLogicalName() string {
+	return s.subnetSpecificResourceLogicalName("RouteToNatGateway")
+}
+
+func (s *Subnet) subnetSpecificResourceLogicalName(resourceName string) string {
+	return fmt.Sprintf("%s%s", s.LogicalName(), resourceName)
 }
 
 func (s *Subnet) RouteTableRef() (string, error) {
-	return s.RouteTable.IdOrRef(s.RouteTableName)
+	return s.RouteTable.RefOrError(s.RouteTableLogicalName)
 }
 
+// kube-aws manages at most one route table per subnet
+// If ID or IDFromStackOutput is non-zero, kube-aws doesn't manage the route table but its users' responsibility to
+// provide properly configured one to be reused by kube-aws.
+// More concretely:
+// * If an user is going to reuse an existing route table for a private subnet, it must have a route to a NAT gateway
+//   * A NAT gateway can be either a classical one with a NAT EC2 instance or an AWS-managed one
+// * IF an user is going to reuse an existing route table for a public subnet, it must have a route to an Internet gateway
 type RouteTable struct {
 	Identifier `yaml:",inline"`
 }

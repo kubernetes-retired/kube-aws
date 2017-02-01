@@ -167,11 +167,11 @@ vpcCIDR: "{{.VPCCIDR}}"
 # instanceCIDR: "10.0.0.0/24"
 
 # Kubernetes subnets with their CIDRs and availability zones. Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
+# However please beware that cluster-autoscaler doesn't support a node pool backed by an ASG assigned to multi AZs.
+# If you're planning to use cluster-autoscaler, just use a single subnet for each node pool and create multiple node pools for high-availability.
 # subnets:
-#   - availabilityZone: us-west-1a
-#     instanceCIDR: "10.0.0.0/24"
-#   - availabilityZone: us-west-1b
-#     instanceCIDR: "10.0.1.0/24"
+#   # Fetch subnets managed in the main cluster by name to be reused in this node pool
+#   - name: PrivateSubnet1a
 
 # Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
 dnsServiceIP: "{{.DNSServiceIP}}"

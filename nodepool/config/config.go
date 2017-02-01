@@ -144,16 +144,28 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 		return nil, fmt.Errorf("invalid cluster: %v", err)
 	}
 
-	// For backward-compatibility
-	if len(c.Subnets) == 0 {
-		c.Subnets = []model.Subnet{
-			model.NewPublicSubnet(c.AvailabilityZone, c.InstanceCIDR),
-		}
+	// Fetch subnets defined in the main cluster by name
+	for i, s := range c.Worker.Subnets {
+		linkedSubnet := main.FindSubnetMatching(s)
+		c.Worker.Subnets[i] = linkedSubnet
 	}
 
-	for i, s := range c.Subnets {
-		if s.CustomName == "" {
-			c.Subnets[i].CustomName = fmt.Sprintf("Subnet%d", i)
+	// Default to subnets defined in the main cluster
+	// CAUTION: cluster-autoscaler Won't work if there're 2 or more subnets spanning over different AZs
+	if len(c.Worker.Subnets) == 0 {
+		c.Worker.Subnets = main.Worker.Subnets
+	}
+
+	// Import all the managed subnets from the main cluster i.e. don't create subnets inside the node pool cfn stack
+	for i, s := range c.Worker.Subnets {
+		if !s.HasIdentifier() {
+			stackOutputName := fmt.Sprintf("%s-%s", main.ClusterName, s.LogicalName())
+			az := s.AvailabilityZone
+			if s.Private {
+				c.Worker.Subnets[i] = model.NewImportedPublicSubnet(az, stackOutputName)
+			} else {
+				c.Worker.Subnets[i] = model.NewImportedPrivateSubnet(az, stackOutputName)
+			}
 		}
 	}
 

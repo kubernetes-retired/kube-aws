@@ -13,23 +13,25 @@ func (i Identifier) HasIdentifier() bool {
 	return i.ID != "" || i.IDFromStackOutput != ""
 }
 
-func (i Identifier) Ref(logicalName string) string {
+func (i Identifier) Ref(logicalNameProvider func() string) string {
 	if i.IDFromStackOutput != "" {
-		return fmt.Sprintf(`{ "ImportValue" : %q }`, i.IDFromStackOutput)
+		return fmt.Sprintf(`{ "Fn::ImportValue" : %q }`, i.IDFromStackOutput)
 	} else if i.ID != "" {
 		return fmt.Sprintf(`"%s"`, i.ID)
 	} else {
-		return fmt.Sprintf(`{ "Ref" : %q }`, logicalName)
+		return fmt.Sprintf(`{ "Ref" : %q }`, logicalNameProvider())
 	}
 }
 
-func (i Identifier) IdOrRef(refProvider func() (string, error)) (string, error) {
+// RefOrError should be used instead of Ref where possible so that kube-aws can print a more useful error message with
+// the line number for the stack-template.json when there's an error.
+func (i Identifier) RefOrError(logicalNameProvider func() (string, error)) (string, error) {
 	if i.IDFromStackOutput != "" {
-		return fmt.Sprintf(`{ "ImportValue" : %q }`, i.IDFromStackOutput), nil
+		return fmt.Sprintf(`{ "Fn::ImportValue" : %q }`, i.IDFromStackOutput), nil
 	} else if i.ID != "" {
 		return fmt.Sprintf(`"%s"`, i.ID), nil
 	} else {
-		logicalName, err := refProvider()
+		logicalName, err := logicalNameProvider()
 		if err != nil {
 			return "", fmt.Errorf("failed to get id or ref: %v", err)
 		}
