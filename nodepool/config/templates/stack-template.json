@@ -351,55 +351,5 @@
       },
       "Type": "AWS::IAM::Role"
     }
-
-    {{range $index, $subnet := .Subnets}}
-    ,
-    "{{$subnet.LogicalName}}": {
-      "Properties": {
-        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
-        "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": {{$subnet.MapPublicIPs}},
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$.NodePoolName}}-{{$subnet.LogicalName}}"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::Subnet"
-    },
-    "{{$subnet.LogicalName}}RouteTableAssociation": {
-      "Properties": {
-        "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {{if $subnet.Private}}
-          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}},
-          {{else}}
-          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PublicRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}},
-          {{end}}
-          {{else}}
-          "{{$subnet.RouteTableID}}",
-          {{end}}
-        "SubnetId": {{$subnet.Ref}}
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    }
-    {{if $.ElasticFileSystemID}}
-    ,
-    "{{$subnet.LogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": {{$subnet.Ref}},
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
-    {{end}}
   }
 }

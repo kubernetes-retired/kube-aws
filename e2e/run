@@ -488,6 +488,12 @@ nodepools_destroy() {
   KUBE_AWS_NODE_POOL_INDEX=2 nodepool_destroy
 }
 
+nodepools_rerun() {
+  nodepools_destroy
+  build
+  nodepools
+}
+
 all_destroy() {
   nodepools_destroy
   main_destroy

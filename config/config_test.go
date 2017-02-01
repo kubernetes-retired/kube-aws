@@ -332,12 +332,12 @@ subnets:
 				{
 					InstanceCIDR:     "10.4.3.0/24",
 					AvailabilityZone: "ap-northeast-1a",
-					CustomName:       "Subnet0",
+					Name:             "Subnet0",
 				},
 				{
 					InstanceCIDR:     "10.4.4.0/24",
 					AvailabilityZone: "ap-northeast-1c",
-					CustomName:       "Subnet1",
+					Name:             "Subnet1",
 				},
 			},
 		},
@@ -353,7 +353,7 @@ instanceCIDR: 10.4.3.0/24
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
-					CustomName:       "Subnet0",
+					Name:             "Subnet0",
 				},
 			},
 		},
@@ -370,7 +370,7 @@ subnets: []
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
-					CustomName:       "Subnet0",
+					Name:             "Subnet0",
 				},
 			},
 		},
@@ -384,7 +384,7 @@ subnets: []
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
-					CustomName:       "Subnet0",
+					Name:             "Subnet0",
 				},
 			},
 		},
@@ -397,7 +397,7 @@ availabilityZone: "ap-northeast-1a"
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
-					CustomName:       "Subnet0",
+					Name:             "Subnet0",
 				},
 			},
 		},

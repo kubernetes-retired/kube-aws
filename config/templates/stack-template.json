@@ -1148,7 +1148,7 @@
     {{end}}
 
     {{range $index, $subnet := .Subnets}}
-    {{if $subnet.ManageSubnet }}
+    {{if $subnet.ManageSubnet}}
     ,
     "{{$subnet.LogicalName}}": {
       "Properties": {
@@ -1179,12 +1179,12 @@
     }
     {{if $subnet.ManageRouteTable}}
     ,
-    "{{$subnet.RouteTableName}}": {
+    "{{$subnet.RouteTableLogicalName}}": {
       "Properties": {
         "Tags": [
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$subnet.RouteTableName}}"
+            "Value": "{{$.ClusterName}}-{{$subnet.RouteTableLogicalName}}"
           },
           {
             "Key": "KubernetesCluster",
@@ -1195,7 +1195,6 @@
       },
       "Type": "AWS::EC2::RouteTable"
     }
-    {{end}}
     {{end}}
     {{if $.ElasticFileSystemID}}
     ,
@@ -1210,7 +1209,7 @@
     {{end}}
     {{if $subnet.ManageRouteToInternet}}
     ,
-    "{{$subnet.RouteTableName}}ToInternet": {
+    "{{$subnet.InternetGatewayRouteLogicalName}}": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "GatewayId": {{$.InternetGatewayRef}},
@@ -1218,6 +1217,7 @@
       },
       "Type": "AWS::EC2::Route"
     }
+    {{end}}
     {{end}}
     {{end}}
 
@@ -1241,16 +1241,18 @@
       "Type": "AWS::EC2::NatGateway"
     }
     {{end}}
-    {{if $ngw.ManageRoute}}
+    {{range $_, $s := $ngw.PrivateSubnets}}
+    {{if $s.ManageRouteToNATGateway}}
     ,
-    "{{$ngw.NATGatewayRouteName}}": {
+    "{{$s.NATGatewayRouteLogicalName}}": {
       "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
         "NatGatewayId": {{$ngw.Ref}},
-        "RouteTableId": {{$ngw.PrivateSubnetRouteTableRef}}
+        "RouteTableId": {{$s.RouteTableRef}}
       },
       "Type": "AWS::EC2::Route"
     }
+    {{end}}
     {{end}}
     {{end}}
 
@@ -1314,10 +1316,17 @@
     {{end}}
     {{range $index, $subnet := .Subnets}}
     {{if $subnet.ManageRouteTable}}
-    "{{$subnet.RouteTableName}}" : {
+    "{{$subnet.RouteTableLogicalName}}" : {
       "Description" : "The route table assigned to the subnet {{$subnet.LogicalName}}",
       "Value" :  {{$subnet.RouteTableRef}},
-      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.RouteTableName}}" }}
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.RouteTableLogicalName}}" }}
+    },
+    {{end}}
+    {{if $subnet.ManageSubnet}}
+    "{{$subnet.LogicalName}}" : {
+      "Description" : "The subnet id of {{$subnet.LogicalName}}",
+      "Value" :  {{$subnet.Ref}},
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$subnet.LogicalName}}" }}
     },
     {{end}}
     {{end}}

@@ -9,6 +9,14 @@ type NATGatewayConfig struct {
 	EIPAllocationID string `yaml:"eipAllocationId,omitempty"`
 }
 
+func (c NATGatewayConfig) Validate() error {
+	if c.HasIdentifier() && c.EIPAllocationID != "" {
+		return fmt.Errorf("eipAllocationId can't be specified for a existing nat gatway. It is an user's responsibility to configure the nat gateway if one tried to reuse an existing one: %+v", c)
+	}
+	return nil
+}
+
+// kube-aws manages at most one NAT gateway per subnet
 type NATGateway interface {
 	EIPAllocationIDRef() string
 	EIPLogicalName() string
@@ -17,33 +25,48 @@ type NATGateway interface {
 	ManageEIP() bool
 	ManageNATGateway() bool
 	ManageRoute() bool
-	NATGatewayRouteName() (string, error)
 	Ref() string
-	PrivateSubnetRouteTableRef() (string, error)
 	PublicSubnetRef() string
+	PrivateSubnets() []Subnet
 	Validate() error
 }
 
 type natGatewayImpl struct {
 	NATGatewayConfig
-	privateSubnet Subnet
-	publicSubnet  Subnet
+	privateSubnets []Subnet
+	publicSubnet   Subnet
 }
 
 func NewNATGateway(c NATGatewayConfig, private Subnet, public Subnet) NATGateway {
 	return natGatewayImpl{
 		NATGatewayConfig: c,
-		privateSubnet:    private,
+		privateSubnets:   []Subnet{private},
 		publicSubnet:     public,
 	}
 }
 
 func (g natGatewayImpl) LogicalName() string {
-	return fmt.Sprintf("NatGateway%s", g.privateSubnet.AvailabilityZoneLogicalName())
+	name := ""
+	for _, s := range g.privateSubnets {
+		name = name + s.LogicalName()
+	}
+	return fmt.Sprintf("NatGateway%s", name)
 }
 
 func (g natGatewayImpl) ManageNATGateway() bool {
-	return g.privateSubnet.ManageNATGateway()
+	allTrue := true
+	allFalse := true
+	for _, s := range g.privateSubnets {
+		allTrue = allTrue && s.ManageNATGateway()
+		allFalse = allFalse && !s.ManageNATGateway()
+	}
+	if allTrue {
+		return true
+	} else if allFalse {
+		return false
+	}
+
+	panic(fmt.Sprintf("[bug] assertion failed: private subnets associated to this nat gateway(%+v) conflicts in their settings. kube-aws is confused and can't decide whether it should manage the nat gateway or not", g))
 }
 
 func (g natGatewayImpl) ManageEIP() bool {
@@ -51,7 +74,19 @@ func (g natGatewayImpl) ManageEIP() bool {
 }
 
 func (g natGatewayImpl) ManageRoute() bool {
-	return g.privateSubnet.ManageRouteToNATGateway()
+	allTrue := true
+	allFalse := true
+	for _, s := range g.privateSubnets {
+		allTrue = allTrue && s.ManageRouteToNATGateway()
+		allFalse = allFalse && !s.ManageRouteToNATGateway()
+	}
+	if allTrue {
+		return true
+	} else if allFalse {
+		return false
+	}
+
+	panic(fmt.Sprintf("[bug] assertion failed: private subnets associated to this nat gateway(%+v) conflicts in their settings. kube-aws is confused and can't decide whether it should manage the route to nat gateway or not", g))
 }
 
 func (g natGatewayImpl) EIPLogicalName() string {
@@ -66,41 +101,39 @@ func (g natGatewayImpl) EIPAllocationIDRef() string {
 }
 
 func (g natGatewayImpl) IsConnectedToPrivateSubnet(s Subnet) bool {
-	return g.privateSubnet.LogicalName() == s.LogicalName()
+	for _, ps := range g.privateSubnets {
+		if ps.LogicalName() == s.LogicalName() {
+			return true
+		}
+	}
+	return false
 }
 
 func (g natGatewayImpl) Ref() string {
-	return g.Identifier.Ref(g.LogicalName())
+	return g.Identifier.Ref(g.LogicalName)
 }
 
 func (g natGatewayImpl) PublicSubnetRef() string {
 	return g.publicSubnet.Ref()
 }
 
-func (g natGatewayImpl) PrivateSubnetRouteTableRef() (string, error) {
-	ref, err := g.privateSubnet.RouteTableRef()
-	if err != nil {
-		return "", err
-	}
-	return ref, nil
-}
-
-func (g natGatewayImpl) NATGatewayRouteName() (string, error) {
-	return fmt.Sprintf("%sRouteToNatGateway", g.privateSubnet.ReferenceName()), nil
+func (g natGatewayImpl) PrivateSubnets() []Subnet {
+	return g.privateSubnets
 }
 
 func (g natGatewayImpl) Validate() error {
+	if err := g.NATGatewayConfig.Validate(); err != nil {
+		return fmt.Errorf("failed to validate nat gateway: %v", err)
+	}
 	if !g.ManageNATGateway() {
-		if !g.privateSubnet.HasIdentifier() {
-			return fmt.Errorf("a preconfigured NGW must be associated to an existing private subnet: %+v", g)
-		}
+		for i, s := range g.privateSubnets {
+			if !s.HasIdentifier() {
+				return fmt.Errorf("a preconfigured NGW must be associated to an existing private subnet #%d: %+v", i, g)
+			}
 
-		if g.publicSubnet.Provided() {
-			return fmt.Errorf("a preconfigured NGW must not be associated to an existing public subnet: %+v", g)
-		}
-
-		if !g.privateSubnet.RouteTable.HasIdentifier() {
-			return fmt.Errorf("a preconfigured NGW must have an existing route table provided via routeTable.id or routeTable.idFromStackOutput: %+v", g)
+			if !s.RouteTable.HasIdentifier() {
+				return fmt.Errorf("a preconfigured NGW must have an existing route table provided via routeTable.id or routeTable.idFromStackOutput: %+v", g)
+			}
 		}
 
 		if g.HasIdentifier() {

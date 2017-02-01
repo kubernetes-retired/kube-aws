@@ -35,16 +35,13 @@ func (i etcdInstanceImpl) SubnetRef() string {
 }
 
 func (i etcdInstanceImpl) DependencyExists() bool {
-	return i.subnet.Private && i.natGateway != nil && i.natGateway.ManageRoute()
+	return i.subnet.Private && i.subnet.ManageRouteToNATGateway()
 }
 
 func (i etcdInstanceImpl) DependencyRef() (string, error) {
 	// We have to wait until the route to the NAT gateway if it doesn't exist yet(hence ManageRoute=true) or the etcd node fails due to inability to connect internet
 	if i.DependencyExists() {
-		name, err := i.natGateway.NATGatewayRouteName()
-		if err != nil {
-			return "", err
-		}
+		name := i.subnet.NATGatewayRouteLogicalName()
 		return fmt.Sprintf(`"%s"`, name), nil
 	}
 	return "", nil

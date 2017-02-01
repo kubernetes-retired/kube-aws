@@ -18,7 +18,7 @@ type ConfigTester func(c *config.Cluster, t *testing.T)
 func TestMainClusterConfig(t *testing.T) {
 	hasDefaultEtcdSettings := func(c *config.Cluster, t *testing.T) {
 		subnet1 := model.NewPublicSubnet("us-west-1c", "10.0.0.0/24")
-		subnet1.CustomName = "Subnet0"
+		subnet1.Name = "Subnet0"
 		expected := config.EtcdSettings{
 			Etcd: model.Etcd{
 				Subnets: []model.Subnet{
@@ -232,10 +232,10 @@ subnets:
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
-					private1.CustomName = "Subnet0"
+					private1.Name = "Subnet0"
 
 					private2 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
-					private2.CustomName = "Subnet1"
+					private2.Name = "Subnet1"
 
 					subnets := []model.Subnet{
 						private1,
@@ -309,10 +309,10 @@ subnets:
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
-					private1.CustomName = "Subnet0"
+					private1.Name = "Subnet0"
 
 					private2 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
-					private2.CustomName = "Subnet1"
+					private2.Name = "Subnet1"
 
 					subnets := []model.Subnet{
 						private1,
@@ -400,16 +400,16 @@ worker:
 				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
-					private1.CustomName = "private1"
+					private1.Name = "private1"
 
 					private2 := model.NewPrivateSubnet("us-west-1b", "10.0.2.0/24")
-					private2.CustomName = "private2"
+					private2.Name = "private2"
 
 					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
-					public1.CustomName = "public1"
+					public1.Name = "public1"
 
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
-					public2.CustomName = "public2"
+					public2.Name = "public2"
 
 					subnets := []model.Subnet{
 						private1,
@@ -483,16 +483,16 @@ subnets:
 				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
-					private1.CustomName = "private1"
+					private1.Name = "private1"
 
 					private2 := model.NewPrivateSubnet("us-west-1b", "10.0.2.0/24")
-					private2.CustomName = "private2"
+					private2.Name = "private2"
 
 					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
-					public1.CustomName = "public1"
+					public1.Name = "public1"
 
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
-					public2.CustomName = "public2"
+					public2.Name = "public2"
 
 					subnets := []model.Subnet{
 						private1,
@@ -576,16 +576,16 @@ worker:
 				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
-					private1.CustomName = "private1"
+					private1.Name = "private1"
 
 					private2 := model.NewPrivateSubnet("us-west-1b", "10.0.2.0/24")
-					private2.CustomName = "private2"
+					private2.Name = "private2"
 
 					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
-					public1.CustomName = "public1"
+					public1.Name = "public1"
 
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
-					public2.CustomName = "public2"
+					public2.Name = "public2"
 
 					subnets := []model.Subnet{
 						private1,
@@ -670,16 +670,16 @@ worker:
 				everyPublicSubnetHasRouteToIGW,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
-					private1.CustomName = "private1"
+					private1.Name = "private1"
 
 					private2 := model.NewPrivateSubnet("us-west-1b", "10.0.2.0/24")
-					private2.CustomName = "private2"
+					private2.Name = "private2"
 
 					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
-					public1.CustomName = "public1"
+					public1.Name = "public1"
 
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
-					public2.CustomName = "public2"
+					public2.Name = "public2"
 
 					subnets := []model.Subnet{
 						private1,
@@ -759,16 +759,16 @@ worker:
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewExistingPrivateSubnet("us-west-1a", "subnet-1")
-					private1.CustomName = "private1"
+					private1.Name = "private1"
 
 					private2 := model.NewImportedPrivateSubnet("us-west-1b", "mycluster-private-subnet-1")
-					private2.CustomName = "private2"
+					private2.Name = "private2"
 
 					public1 := model.NewExistingPublicSubnet("us-west-1a", "subnet-2")
-					public1.CustomName = "public1"
+					public1.Name = "public1"
 
 					public2 := model.NewImportedPublicSubnet("us-west-1b", "mycluster-public-subnet-1")
-					public2.CustomName = "public2"
+					public2.Name = "public2"
 
 					subnets := []model.Subnet{
 						private1,
@@ -833,7 +833,7 @@ routeTableId: rtb-1a2b3c4d
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
 					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
-					subnet1.CustomName = "Subnet0"
+					subnet1.Name = "Subnet0"
 					subnets := []model.Subnet{
 						subnet1,
 					}
@@ -967,7 +967,7 @@ etcdDataVolumeIOPS: 104
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
 					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
-					subnet1.CustomName = "Subnet0"
+					subnet1.Name = "Subnet0"
 					subnets := []model.Subnet{
 						subnet1,
 					}
