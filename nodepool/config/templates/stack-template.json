@@ -98,9 +98,7 @@
               {"GroupId":{{$sgRef}}}
               {{end}}
             ],
-            "SubnetId": {
-              "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
-            },
+            "SubnetId": {{$workerSubnet.Ref}},
             "UserData": {{template "UserData" $}}
           }
           {{end}}
@@ -152,11 +150,9 @@
         ],
         {{end}}
         "VPCZoneIdentifier": [
-          {{range $index, $workerSubnet := .Worker.Subnets}}
+          {{range $index, $subnet := .Worker.Subnets}}
           {{if gt $index 0}},{{end}}
-          {
-            "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$workerSubnet.LogicalName}}"
-          }
+          {{$subnet.Ref}}
           {{end}}
         ]
       },
@@ -355,60 +351,5 @@
       },
       "Type": "AWS::IAM::Role"
     }
-
-    {{if $.ElasticFileSystemID}}
-    {{range $index, $subnet := .Worker.Subnets}}
-    ,
-    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}MountTarget": {
-      "Properties" : {
-        "FileSystemId": "{{$.ElasticFileSystemID}}",
-        "SubnetId": { "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}" },
-        "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
-      },
-      "Type" : "AWS::EFS::MountTarget"
-    }
-    {{end}}
-    {{end}}
-
-    {{range $index, $subnet := .Worker.Subnets}}
-    ,
-    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}": {
-      "Properties": {
-        "AvailabilityZone": "{{$subnet.AvailabilityZone}}",
-        "CidrBlock": "{{$subnet.InstanceCIDR}}",
-        "MapPublicIpOnLaunch": {{not $.Worker.TopologyPrivate}},
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "{{$.ClusterName}}-{{$.NodePoolName}}-{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
-          },
-          {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
-          }
-        ],
-        "VpcId": {{$.VPCRef}}
-      },
-      "Type": "AWS::EC2::Subnet"
-    },
-    "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}RouteTableAssociation": {
-      "Properties": {
-        "RouteTableId":
-          {{if not $subnet.RouteTableID}}
-          {{if $.WorkerTopologyPrivate}}
-          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PrivateRouteTable{{$subnet.AvailabilityZoneLogicalName}}"}},
-          {{else}}
-          {"Fn::ImportValue" : {"Fn::Sub" : "{{$.ClusterName}}-PublicRouteTable"}},
-          {{end}}
-          {{else}}
-          "{{$subnet.RouteTableID}}",
-          {{end}}
-        "SubnetId": {
-          "Ref": "{{$.Worker.SubnetLogicalNamePrefix}}{{$subnet.LogicalName}}"
-        }
-      },
-      "Type": "AWS::EC2::SubnetRouteTableAssociation"
-    }
-    {{end}}
   }
 }
