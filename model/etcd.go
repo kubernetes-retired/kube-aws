@@ -1,20 +1,48 @@
 package model
 
+import "fmt"
+
 type Etcd struct {
-	Subnets []*Subnet `yaml:"subnets,omitempty"`
+	Subnets []Subnet `yaml:"subnets,omitempty"`
 }
 
-func (c Etcd) TopologyPrivate() bool {
-	return len(c.Subnets) > 0
+type EtcdInstance interface {
+	SubnetRef() string
+	DependencyExists() bool
+	DependencyRef() (string, error)
 }
 
-type EtcdInstance struct {
-	Subnet Subnet
+type etcdInstanceImpl struct {
+	subnet     Subnet
+	natGateway NATGateway
 }
 
-func (c EtcdInstance) SubnetLogicalNamePrefix() string {
-	if c.Subnet.TopLevel == false {
-		return "Etcd"
+func NewEtcdInstanceDependsOnNewlyCreatedNGW(s Subnet, ngw NATGateway) EtcdInstance {
+	return etcdInstanceImpl{
+		subnet:     s,
+		natGateway: ngw,
 	}
-	return ""
+}
+
+func NewEtcdInstance(s Subnet) EtcdInstance {
+	return etcdInstanceImpl{
+		subnet: s,
+	}
+}
+
+func (i etcdInstanceImpl) SubnetRef() string {
+	return i.subnet.Ref()
+}
+
+func (i etcdInstanceImpl) DependencyExists() bool {
+	return i.subnet.Private && i.subnet.ManageRouteToNATGateway()
+}
+
+func (i etcdInstanceImpl) DependencyRef() (string, error) {
+	// We have to wait until the route to the NAT gateway if it doesn't exist yet(hence ManageRoute=true) or the etcd node fails due to inability to connect internet
+	if i.DependencyExists() {
+		name := i.subnet.NATGatewayRouteLogicalName()
+		return fmt.Sprintf(`"%s"`, name), nil
+	}
+	return "", nil
 }

@@ -59,11 +59,27 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    minSize: 1
 #    maxSize: 3
 #    rollingUpdateMinInstancesInService: 2
+#  # If omitted, public subnets are created by kube-aws and used for controller nodes
 #  subnets:
-#    - availabilityZone: us-west-1a
-#      instanceCIDR: "10.0.4.0/24"
-#    - availabilityZone: us-west-1b
-#      instanceCIDR: "10.0.5.0/24"
+#    # References subnets defined under the top-level `subnets` key by their names
+#    - name: ManagedPublicSubnet1
+#    - name: ManagedPublicSubnet2
+#  loadBalancer:
+#    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
+#    # only public subnets defined under the top-level `subnets` key are used for the ELB
+#    # private: false
+#    #
+#    # If you like specific public subnets to be used by the internet-facing ELB:
+#    # subnets:
+#    #   - name: ManagedPublicSubnet0
+#
+#    # When explicitly set to true, the ELB for the k8s API endpoint becomes `Schema=internal` rather than default `Schema=internet-facing` one and
+#    # only private subnets defined under the top-level `subnets` key are used for the ELB
+#    # private: true
+#    #
+#    # If you like specific private subnets to be used by the internal ELB:
+#    # subnets:
+#    #   - name: ManagedPrivateSubnet0
 
 # Set to true to put the ELB on the public subnet although having controller nodes on private subnets
 #controllerLoadBalancerPrivate: false
@@ -93,11 +109,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    minSize: 1
 #    maxSize: 3
 #    rollingUpdateMinInstancesInService: 2
+#  # If omitted, public subnets are created by kube-aws and used for worker nodes
 #  subnets:
-#    - availabilityZone: us-west-1a
-#      instanceCIDR: "10.0.6.0/24"
-#    - availabilityZone: us-west-1b
-#      instanceCIDR: "10.0.7.0/24"
+#    # References subnets defined under the top-level `subnets` key by their names
+#    - name: ManagedPublicSubnet1
 
 # Setting worker topology private ensures NAT Gateways are created for use in node pools.
 #workerTopologyPrivate: false
@@ -140,11 +155,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # etcdCount: 1
 
 #etcd:
+#  # If omitted, public subnets are created by kube-aws and used for etcd nodes
 #  subnets:
-#    - availabilityZone: us-west-1a
-#      instanceCIDR: "10.0.2.0/24"
-#    - availabilityZone: us-west-1b
-#      instanceCIDR: "10.0.3.0/24"
+#    # References subnets defined under the top-level `subnets` key by their names
+#    - name: ManagedPrivateSubnet1
+#    - name: ManagedPrivateSubnet2
 
 # Instance type for etcd node
 # etcdInstanceType: t2.medium
@@ -184,8 +199,21 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
 # internetGatewayId:
 
-# ID of existing route table in existing VPC to attach subnet to. Leave blank to use the VPC's main route table.
-# routeTableId:
+# Advanced: ID of existing route table in existing VPC to attach subnet to.
+# Leave blank to use the VPC's main route table.
+# This should be specified if and only if vpcId is specified.
+#
+# IMPORTANT NOTICE:
+#
+# If routeTableId is specified, it's your responsibility to add an appropriate route to
+# an internet gateway(IGW) or a NAT gateway(NGW) to the route table.
+#
+# More concretely,
+# * If you like to make all the subnets private, pre-configure an NGW yourself and add a route to the NGW beforehand
+# * If you like to make all the subnets public, pre-configure an IGW yourself and add a route to the IGW beforehand
+# * If you like to mix private and public subnets, omit routeTableId but specify subnets[].routeTable.id per subnet
+#
+# routeTableId: rtb-xxxxxxxx
 
 # CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
 # vpcCIDR: "10.0.0.0/16"
@@ -193,19 +221,160 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # CIDR for Kubernetes subnet when placing nodes in a single availability zone (not highly-available) Leave commented out for multi availability zone setting and use the below `subnets` section instead.
 # instanceCIDR: "10.0.0.0/24"
 
-# Kubernetes subnets with their CIDRs and availability zones. Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
+# Kubernetes subnets with their CIDRs and availability zones.
+# Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
 # subnets:
-#   - availabilityZone: us-west-1a
+#   #
+#   # Managed public subnet managed by kube-aws
+#   #
+#   - name: ManagedPublicSubnet1
+#     # Set to false if this subnet is public
+#     # private: false
+#     availabilityZone: us-west-1a
 #     instanceCIDR: "10.0.0.0/24"
-#     subnetId: "subnet-xxxxxxxx" #optional
-#   - availabilityZone: us-west-1b
+#
+#   #
+#   # Managed private subnet managed by kube-aws
+#   #
+#   - name: ManagedPrivateSubnet1
+#     # Set to true if this subnet is private
+#     private: true
+#     availabilityZone: us-west-1a
 #     instanceCIDR: "10.0.1.0/24"
-#     # natGateway:
-#     #   # Pre-allocated NAT Gateway. Used with private subnets.
-#     #   id: "ngw-abcdef12"
-#     #   # Pre-allocated EIP for NAT Gateways. Used with private subnets.
-#     #   eipAllocationId: "eipalloc-abcdef12"
-#     subnetId: "subnet-xxxxxxxx" #optional
+#
+#   #
+#   # Advanced: Unmanaged/existing public subnet reused but not managed by kube-aws
+#   #
+#   # An internet gateway(igw) and a route table contains the route to the igw must have been properly configured by YOU.
+#   # kube-aws tries to reuse the subnet specified by id or idFromStackOutput but kube-aws never modify the subnet
+#   #
+#   - name: ExistingPublicSubnet1
+#     # Beware that `availabilityZone` can't be omitted; it must be the one in which the subnet exists.
+#     availabilityZone: us-west-1a
+#     # ID of existing subnet to be reused.
+#     # availabilityZone should still be provided but instanceCIDR can be omitted when id is specified.
+#     id: "subnet-xxxxxxxx"
+#     # Exported output's name from another stack
+#     # Only specify either id or idFromStackOutput but not both
+#     #idFromStackOutput: myinfra-PublicSubnet1
+#
+#   #
+#   # Advanced: Unmanaged/existing private subnet reused but not managed by kube-aws
+#   #
+#   # A nat gateway(ngw) and a route table contains the route to the ngw must have been properly configured by YOU.
+#   # kube-aws tries to reuse the subnet specified by id or idFromStackOutput but kube-aws never modify the subnet
+#   #
+#   - name: ExistingPrivateSubnet1
+#     # Beware that `availabilityZone` can't be omitted; it must be the one in which the subnet exists.
+#     availabilityZone: us-west-1a
+#     # Existing subnet.
+#     id: "subnet-xxxxxxxx"
+#     # Exported output's name from another stack
+#     # Only specify either id or idFromStackOutput but not both
+#     #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing NAT gateway
+#   #
+#   # kube-aws tries to reuse the ngw specified by id or idFromStackOutput
+#   # by adding a route to the ngw to a route table managed by kube-aws
+#   #
+#   # Please be sure that the NGW is properly deployed. kube-aws will never modify ngw itself.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingNGW
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       id: "ngw-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing NAT gateway
+#   #
+#   # kube-aws tries to reuse the ngw specified by id or idFromStackOutput
+#   # by adding a route to the ngw to a route table managed by kube-aws
+#   #
+#   # Please be sure that the NGW is properly deployed. kube-aws will never modify ngw itself.
+#   # For example, kube-aws won't assign a pre-allocated EIP to the existing ngw for you.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingNGW
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       # Pre-allocated NAT Gateway. Used with private subnets.
+#       id: "ngw-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing EIP for kube-aws managed NGW
+#   #
+#   # kube-aws tries to reuse the EIP specified by eipAllocationId
+#   # by associating the EIP to a NGW managed by kube-aws.
+#   # Please be sure that kube-aws won't assign an EIP to an existing NGW i.e.
+#   # either natGateway.id or eipAllocationId can be specified but not both.
+#   #
+#   - name: ManagedPrivateSubnetWithManagedNGWWithExistingEIP
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       # Pre-allocated EIP for NAT Gateways. Used with private subnets.
+#       eipAllocationId: eipalloc-xxxxxxxx
+#
+#   #
+#   # Advanced: Managed private subnet with an existing route table
+#   #
+#   # kube-aws tries to reuse the route table specified by id or idFromStackOutput
+#   # by assigning this subnet to the route table.
+#   #
+#   # Please be sure that it's your responsibility to:
+#   # * Configure an AWS managed NAT or a NAT instance or an another NAT and
+#   # * Add a route to the NAT to the route table being reused
+#   #
+#   # i.e. kube-aws neither modify route table nor create other related resources like
+#   # ngw, route to nat gateway, eip for ngw, etc.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingRouteTable
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     routeTable:
+#       # Pre-allocated route table
+#       id: "rtb-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateRouteTable1
+#
+#   #
+#   # Advanced: Managed public subnet with an existing route table
+#   #
+#   # kube-aws tries to reuse the route table specified by id or idFromStackOutput
+#   # by assigning this subnet to the route table.
+#   #
+#   # Please be sure that it's your responsibility to:
+#   # * Configure an internet gateway(IGW) and
+#   # * Attach the IGW to the VPC you're deploying to
+#   # * Add a route to the IGW to the route table being reused
+#   #
+#   # i.e. kube-aws neither modify route table nor create other related resources like
+#   # igw, route to igw, igw vpc attachment, etc.
+#   #
+#   - name: ManagedPublicSubnetWithExistingRouteTable
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     routeTable:
+#       # Pre-allocated route table
+#       id: "rtb-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PublicRouteTable1
+
 
 # CIDR for all service IP addresses
 # serviceCIDR: "10.3.0.0/24"

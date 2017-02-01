@@ -10,10 +10,11 @@ func TestRenderStackTemplate(t *testing.T) {
 	clusterConfig := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	clusterConfig.Region = "us-west-1"
-	clusterConfig.Subnets = []*model.Subnet{
-		{"us-west-1a", "10.0.1.0/16", "", "", "", model.NatGateway{}, false},
-		{"us-west-1b", "10.0.2.0/16", "", "", "", model.NatGateway{}, false},
+	clusterConfig.Subnets = []model.Subnet{
+		model.NewPublicSubnet("us-west-1a", "10.0.1.0/16"),
+		model.NewPublicSubnet("us-west-1b", "10.0.2.0/16"),
 	}
+	clusterConfig.SetDefaults()
 
 	helper.WithDummyCredentials(func(dir string) {
 		var stackTemplateOptions = StackTemplateOptions{
@@ -44,10 +45,11 @@ func TestValidateUserData(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 
 	cluster.Region = "us-west-1"
-	cluster.Subnets = []*model.Subnet{
-		{"us-west-1a", "10.0.1.0/16", "", "", "", model.NatGateway{}, false},
-		{"us-west-1b", "10.0.2.0/16", "", "", "", model.NatGateway{}, false},
+	cluster.Subnets = []model.Subnet{
+		model.NewPublicSubnet("us-west-1a", "10.0.1.0/16"),
+		model.NewPublicSubnet("us-west-1b", "10.0.2.0/16"),
 	}
+	cluster.SetDefaults()
 
 	helper.WithDummyCredentials(func(dir string) {
 		var stackTemplateOptions = StackTemplateOptions{
