@@ -222,6 +222,8 @@ experimental:
       effect: NoSchedule
   waitSignal:
     enabled: true
+  kube2IamSupport:
+    enabled: true
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
@@ -268,6 +270,9 @@ experimental:
 						WaitSignal: config.WaitSignal{
 							Enabled:      true,
 							MaxBatchSize: 1,
+						},
+						Kube2IamSupport: config.Kube2IamSupport{
+							Enabled: true,
 						},
 					}
 
@@ -1121,6 +1126,21 @@ routeTableId: rtb-1a2b3c4d
 							expected,
 							actual,
 						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerManagedIamRoleName",
+			configYaml: minimalValidConfigYaml + `
+workerManagedIamRoleName: "yourManagedRole"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					if c.WorkerManagedIamRoleName != "yourManagedRole" {
+						t.Errorf("workerManagedIamRoleName: expected=yourManagedRole actual=%s", c.WorkerManagedIamRoleName)
 					}
 				},
 			},
