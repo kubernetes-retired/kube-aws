@@ -1,0 +1,21 @@
+diff a/config/templates/stack-template.json b/config/templates/stack-template.json	(rejected hunks)
+@@ -470,7 +463,18 @@
+           }
+         ],
+         "Tenancy": "{{$.EtcdTenancy}}",
+-        "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
++        "UserData": { "Fn::Join" : ["\n", [
++		"#!/bin/sh",
++	        "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
++		"USERDATA_FILE=etcd-instance-userdata",
++		"/usr/bin/rkt run \",
++		"   --net=host \",
++		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \",
++		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \",
++   		"   --trust-keys-from-https \"
++		"   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp s3://{{ .S3URI }}/$USERDATA_FILE /var/run/coreos/",
++		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
++			]]}
+       },
+       "Type": "AWS::EC2::Instance"
+     },

@@ -289,6 +289,9 @@ func (c *Cluster) SetDefaults() {
 			c.Etcd.Subnets = c.PublicSubnets()
 		}
 	}
+
+	_, serviceNet, _ := net.ParseCIDR(c.ServiceCIDR)
+	c.APIServerServiceIP = netutil.IncrementIP(serviceNet.IP).String()
 }
 
 func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptService) (*Cluster, error) {
