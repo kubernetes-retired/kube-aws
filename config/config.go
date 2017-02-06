@@ -1026,7 +1026,10 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 			if !publicSubnetFound {
 				panic(fmt.Sprintf("No appropriate public subnet found for a non-preconfigured NAT gateway associated to private subnet %s", privateSubnet.LogicalName()))
 			}
-			ngw := model.NewNATGateway(ngwConfig, privateSubnet, publicSubnet)
+			ngw := model.NewManagedNATGateway(ngwConfig, privateSubnet, publicSubnet)
+			ngws = append(ngws, ngw)
+		} else if ngwConfig.HasIdentifier() {
+			ngw := model.NewUnmanagedNATGateway(ngwConfig, privateSubnet)
 			ngws = append(ngws, ngw)
 		}
 	}
