@@ -42,7 +42,7 @@ func NewExistingPrivateSubnet(az string, id string) Subnet {
 	}
 }
 
-func NewPublicSubnetWithPreconfiguredInternetGateway(az string, cidr string, rtb string) Subnet {
+func NewPublicSubnetWithPreconfiguredRouteTable(az string, cidr string, rtb string) Subnet {
 	return Subnet{
 		AvailabilityZone: az,
 		InstanceCIDR:     cidr,
@@ -56,7 +56,7 @@ func NewPublicSubnetWithPreconfiguredInternetGateway(az string, cidr string, rtb
 	}
 }
 
-func NewPrivateSubnetWithPreconfiguredNATGateway(az string, cidr string, rtb string) Subnet {
+func NewPrivateSubnetWithPreconfiguredRouteTable(az string, cidr string, rtb string) Subnet {
 	return Subnet{
 		AvailabilityZone: az,
 		InstanceCIDR:     cidr,
@@ -67,6 +67,32 @@ func NewPrivateSubnetWithPreconfiguredNATGateway(az string, cidr string, rtb str
 			},
 		},
 		NATGateway: NATGatewayConfig{},
+	}
+}
+
+func NewPrivateSubnetWithPreconfiguredNATGateway(az string, cidr string, ngw string) Subnet {
+	return Subnet{
+		AvailabilityZone: az,
+		InstanceCIDR:     cidr,
+		Private:          true,
+		RouteTable:       RouteTable{},
+		NATGateway: NATGatewayConfig{
+			Identifier: Identifier{
+				ID: ngw,
+			},
+		},
+	}
+}
+
+func NewPrivateSubnetWithPreconfiguredNATGatewayEIP(az string, cidr string, alloc string) Subnet {
+	return Subnet{
+		AvailabilityZone: az,
+		InstanceCIDR:     cidr,
+		Private:          true,
+		RouteTable:       RouteTable{},
+		NATGateway: NATGatewayConfig{
+			EIPAllocationID: alloc,
+		},
 	}
 }
 
