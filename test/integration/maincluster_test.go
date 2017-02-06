@@ -93,6 +93,90 @@ func TestMainClusterConfig(t *testing.T) {
 		}
 	}
 
+	hasPrivateSubnetsWithManagedNGWs := func(numExpectedNum int) func(c *config.Cluster, t *testing.T) {
+		return func(c *config.Cluster, t *testing.T) {
+			for i, s := range c.PrivateSubnets() {
+				if !s.ManageNATGateway() {
+					t.Errorf("NAT gateway for the existing private subnet #%d should be created by kube-aws but was not", i)
+				}
+
+				if s.ManageRouteToInternet() {
+					t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+				}
+			}
+		}
+	}
+
+	hasSpecificNumOfManagedNGWsWithUnmanagedEIPs := func(ngwExpectedNum int) func(c *config.Cluster, t *testing.T) {
+		return func(c *config.Cluster, t *testing.T) {
+			ngwActualNum := len(c.NATGateways())
+			if ngwActualNum != ngwExpectedNum {
+				t.Errorf("Number of NAT gateways(%d) doesn't match with the expexted one: %d", ngwActualNum, ngwExpectedNum)
+			}
+			for i, n := range c.NATGateways() {
+				if !n.ManageNATGateway() {
+					t.Errorf("NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+				if n.ManageEIP() {
+					t.Errorf("EIP for NGW #%d is expected to be unmanaged by kube-aws but was not: %+v", i, n)
+				}
+				if !n.ManageRoute() {
+					t.Errorf("Routes for NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+			}
+		}
+	}
+
+	hasSpecificNumOfManagedNGWsAndEIPs := func(ngwExpectedNum int) func(c *config.Cluster, t *testing.T) {
+		return func(c *config.Cluster, t *testing.T) {
+			ngwActualNum := len(c.NATGateways())
+			if ngwActualNum != ngwExpectedNum {
+				t.Errorf("Number of NAT gateways(%d) doesn't match with the expexted one: %d", ngwActualNum, ngwExpectedNum)
+			}
+			for i, n := range c.NATGateways() {
+				if !n.ManageNATGateway() {
+					t.Errorf("NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+				if !n.ManageEIP() {
+					t.Errorf("EIP for NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+				if !n.ManageRoute() {
+					t.Errorf("Routes for NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+			}
+		}
+	}
+
+	hasTwoManagedNGWsAndEIPs := hasSpecificNumOfManagedNGWsAndEIPs(2)
+
+	hasNoManagedNGWsButSpecificNumOfRoutesToUnmanagedNGWs := func(ngwExpectedNum int) func(c *config.Cluster, t *testing.T) {
+		return func(c *config.Cluster, t *testing.T) {
+			ngwActualNum := len(c.NATGateways())
+			if ngwActualNum != ngwExpectedNum {
+				t.Errorf("Number of NAT gateways(%d) doesn't match with the expexted one: %d", ngwActualNum, ngwExpectedNum)
+			}
+			for i, n := range c.NATGateways() {
+				if n.ManageNATGateway() {
+					t.Errorf("NGW #%d is expected to be unamanged by kube-aws but was not: %+v", i, n)
+				}
+				if n.ManageEIP() {
+					t.Errorf("EIP for NGW #%d is expected to be unmanaged by kube-aws but was not: %+v", i, n)
+				}
+				if !n.ManageRoute() {
+					t.Errorf("Routes for NGW #%d is expected to be managed by kube-aws but was not: %+v", i, n)
+				}
+			}
+		}
+	}
+
+	hasNoNGWsOrEIPsOrRoutes := func(c *config.Cluster, t *testing.T) {
+		ngwActualNum := len(c.NATGateways())
+		ngwExpectedNum := 0
+		if ngwActualNum != ngwExpectedNum {
+			t.Errorf("Number of NAT gateways(%d) doesn't match with the expexted one: %d", ngwActualNum, ngwExpectedNum)
+		}
+	}
+
 	kubeAwsSettings := newKubeAwsSettingsFromEnv(t)
 
 	minimalValidConfigYaml := kubeAwsSettings.mainClusterYaml + `
@@ -230,11 +314,12 @@ subnets:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				hasNoNGWsOrEIPsOrRoutes,
 				func(c *config.Cluster, t *testing.T) {
-					private1 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
+					private1 := model.NewPrivateSubnetWithPreconfiguredRouteTable("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
 					private1.Name = "Subnet0"
 
-					private2 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
+					private2 := model.NewPrivateSubnetWithPreconfiguredRouteTable("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
 					private2.Name = "Subnet1"
 
 					subnets := []model.Subnet{
@@ -307,11 +392,12 @@ subnets:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				hasNoNGWsOrEIPsOrRoutes,
 				func(c *config.Cluster, t *testing.T) {
-					private1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
+					private1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
 					private1.Name = "Subnet0"
 
-					private2 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
+					private2 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
 					private2.Name = "Subnet1"
 
 					subnets := []model.Subnet{
@@ -398,6 +484,7 @@ worker:
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				everyPublicSubnetHasRouteToIGW,
+				hasTwoManagedNGWsAndEIPs,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.Name = "private1"
@@ -481,6 +568,7 @@ subnets:
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				everyPublicSubnetHasRouteToIGW,
+				hasTwoManagedNGWsAndEIPs,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.Name = "private1"
@@ -574,6 +662,7 @@ worker:
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				everyPublicSubnetHasRouteToIGW,
+				hasTwoManagedNGWsAndEIPs,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.Name = "private1"
@@ -668,6 +757,7 @@ worker:
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				everyPublicSubnetHasRouteToIGW,
+				hasTwoManagedNGWsAndEIPs,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewPrivateSubnet("us-west-1a", "10.0.1.0/24")
 					private1.Name = "private1"
@@ -757,6 +847,7 @@ worker:
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
+				hasNoNGWsOrEIPsOrRoutes,
 				func(c *config.Cluster, t *testing.T) {
 					private1 := model.NewExistingPrivateSubnet("us-west-1a", "subnet-1")
 					private1.Name = "private1"
@@ -814,6 +905,179 @@ worker:
 			},
 		},
 		{
+			context: "WithNetworkTopologyExistingNATGateways",
+			configYaml: kubeAwsSettings.mainClusterYaml + `
+vpcId: vpc-1a2b3c4d
+subnets:
+- name: private1
+  availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  private: true
+  natGateway:
+    id: ngw-11111111
+- name: private2
+  availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  private: true
+  natGateway:
+    id: ngw-22222222
+- name: public1
+  availabilityZone: us-west-1a
+  instanceCIDR: "10.0.3.0/24"
+- name: public2
+  availabilityZone: us-west-1b
+  instanceCIDR: "10.0.4.0/24"
+etcd:
+  subnets:
+  - name: private1
+  - name: private2
+worker:
+  subnets:
+  - name: public1
+  - name: public2
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				hasNoManagedNGWsButSpecificNumOfRoutesToUnmanagedNGWs(2),
+				func(c *config.Cluster, t *testing.T) {
+					private1 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1a", "10.0.1.0/24", "ngw-11111111")
+					private1.Name = "private1"
+
+					private2 := model.NewPrivateSubnetWithPreconfiguredNATGateway("us-west-1b", "10.0.2.0/24", "ngw-22222222")
+					private2.Name = "private2"
+
+					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
+					public1.Name = "public1"
+
+					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
+					public2.Name = "public2"
+
+					subnets := []model.Subnet{
+						private1,
+						private2,
+						public1,
+						public2,
+					}
+					publicSubnets := []model.Subnet{
+						public1,
+						public2,
+					}
+					privateSubnets := []model.Subnet{
+						private1,
+						private2,
+					}
+
+					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
+						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
+					}
+					if !reflect.DeepEqual(c.Worker.Subnets, publicSubnets) {
+						t.Errorf("Worker subnets didn't match: expected=%v actual=%v", publicSubnets, c.Worker.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.Subnets, publicSubnets) {
+						t.Errorf("Controller subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.LoadBalancer.Subnets)
+					}
+					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
+						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
+					}
+
+					for i, s := range c.PrivateSubnets() {
+						if s.ManageNATGateway() {
+							t.Errorf("NAT gateway for the existing private subnet #%d should not be created by kube-aws", i)
+						}
+
+						if s.ManageRouteToInternet() {
+							t.Errorf("Route to IGW shouldn't be created for a private subnet: %v", s)
+						}
+					}
+				},
+			},
+		},
+		{
+			context: "WithNetworkTopologyExistingNATGatewayEIPs",
+			configYaml: kubeAwsSettings.mainClusterYaml + `
+vpcId: vpc-1a2b3c4d
+subnets:
+- name: private1
+  availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  private: true
+  natGateway:
+    eipAllocationId: eipalloc-11111111
+- name: private2
+  availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  private: true
+  natGateway:
+    eipAllocationId: eipalloc-22222222
+- name: public1
+  availabilityZone: us-west-1a
+  instanceCIDR: "10.0.3.0/24"
+- name: public2
+  availabilityZone: us-west-1b
+  instanceCIDR: "10.0.4.0/24"
+etcd:
+  subnets:
+  - name: private1
+  - name: private2
+worker:
+  subnets:
+  - name: public1
+  - name: public2
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				hasSpecificNumOfManagedNGWsWithUnmanagedEIPs(2),
+				hasPrivateSubnetsWithManagedNGWs(2),
+				func(c *config.Cluster, t *testing.T) {
+					private1 := model.NewPrivateSubnetWithPreconfiguredNATGatewayEIP("us-west-1a", "10.0.1.0/24", "eipalloc-11111111")
+					private1.Name = "private1"
+
+					private2 := model.NewPrivateSubnetWithPreconfiguredNATGatewayEIP("us-west-1b", "10.0.2.0/24", "eipalloc-22222222")
+					private2.Name = "private2"
+
+					public1 := model.NewPublicSubnet("us-west-1a", "10.0.3.0/24")
+					public1.Name = "public1"
+
+					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
+					public2.Name = "public2"
+
+					subnets := []model.Subnet{
+						private1,
+						private2,
+						public1,
+						public2,
+					}
+					publicSubnets := []model.Subnet{
+						public1,
+						public2,
+					}
+					privateSubnets := []model.Subnet{
+						private1,
+						private2,
+					}
+
+					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
+						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
+					}
+					if !reflect.DeepEqual(c.Worker.Subnets, publicSubnets) {
+						t.Errorf("Worker subnets didn't match: expected=%v actual=%v", publicSubnets, c.Worker.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.Subnets, publicSubnets) {
+						t.Errorf("Controller subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.Subnets)
+					}
+					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
+						t.Errorf("Controller loadbalancer subnets didn't match: expected=%v actual=%v", privateSubnets, c.Controller.LoadBalancer.Subnets)
+					}
+					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
+						t.Errorf("Etcd subnets didn't match: expected=%v actual=%v", privateSubnets, c.Etcd.Subnets)
+					}
+				},
+			},
+		},
+		{
 			context: "WithVpcIdSpecified",
 			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
@@ -832,7 +1096,7 @@ routeTableId: rtb-1a2b3c4d
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
-					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
+					subnet1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
 					subnet1.Name = "Subnet0"
 					subnets := []model.Subnet{
 						subnet1,
@@ -966,7 +1230,7 @@ etcdDataVolumeIOPS: 104
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				func(c *config.Cluster, t *testing.T) {
-					subnet1 := model.NewPublicSubnetWithPreconfiguredInternetGateway("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
+					subnet1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
 					subnet1.Name = "Subnet0"
 					subnets := []model.Subnet{
 						subnet1,
