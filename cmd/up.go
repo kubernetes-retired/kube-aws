@@ -22,8 +22,8 @@ var (
 	}
 
 	upOpts = struct {
-		awsDebug, export, prettyPrint bool
-		s3URI                         string
+		awsDebug, export, prettyPrint, skipWait bool
+		s3URI                                   string
 	}{}
 )
 
@@ -33,6 +33,7 @@ func init() {
 	cmdUp.Flags().BoolVar(&upOpts.prettyPrint, "pretty-print", false, "Pretty print the resulting CloudFormation")
 	cmdUp.Flags().BoolVar(&upOpts.awsDebug, "aws-debug", false, "Log debug information from aws-sdk-go library")
 	cmdUp.Flags().StringVar(&upOpts.s3URI, "s3-uri", "", "When your template is bigger than the cloudformation limit of 51200 bytes, upload the template to the specified location in S3. S3 location expressed as s3://<bucket>/path/to/dir")
+	cmdUp.Flags().BoolVar(&upOpts.skipWait, "skip-wait", false, "Don't wait for the cluster components be ready")
 }
 
 func runCmdUp(cmd *cobra.Command, args []string) error {
@@ -57,7 +58,7 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to read cluster config: %v", err)
 	}
 
-	opts := stackTemplateOptions(upOpts.s3URI, upOpts.prettyPrint)
+	opts := stackTemplateOptions(upOpts.s3URI, upOpts.prettyPrint, upOpts.skipWait)
 
 	cluster, err := cluster.NewCluster(conf, opts, upOpts.awsDebug)
 	if err != nil {
@@ -83,13 +84,10 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		if err := ioutil.WriteFile(templatePath, stackTemplate, 0600); err != nil {
 			return fmt.Errorf("Error writing %s : %v", templatePath, err)
 		}
-		if conf.KMSKeyARN == "" {
-			fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
-		}
 		return nil
 	}
 
-	fmt.Printf("Creating AWS resources. This should take around 5 minutes.\n")
+	fmt.Printf("Creating AWS resources.Please wait. Update may take a few minutes.\n")
 	if err := cluster.Create(); err != nil {
 		return fmt.Errorf("Error creating cluster: %v", err)
 	}

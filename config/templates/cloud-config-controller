@@ -243,7 +243,7 @@ coreos:
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl -s -m 20 -f  http://127.0.0.1:8080/healthz > /dev/null &&  /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10252/healthz > /dev/null && /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10251/healthz > /dev/null &&  /usr/bin/curl --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
         ExecStart=/opt/bin/taint-and-uncordon
-{{if .Experimental.WaitSignal.Enabled}}
+{{if .WaitSignal.Enabled}}
     - name: cfn-signal.service
       command: start
       content: |
