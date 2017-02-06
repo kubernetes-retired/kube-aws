@@ -475,7 +475,7 @@ write_files:
             hostNetwork: true
             containers:
               - name: calico-node
-                image: quay.io/calico/node:v1.0.0
+                image: quay.io/calico/node:v1.0.2
                 env:
                   - name: ETCD_ENDPOINTS
                     valueFrom:
@@ -518,7 +518,7 @@ write_files:
                     name: dns
                     readOnly: true
               - name: install-cni
-                image: calico/cni:v1.5.5
+                image: quay.io/calico/cni:v1.5.6
                 imagePullPolicy: Always
                 command: ["/install-cni.sh"]
                 env:
@@ -588,7 +588,7 @@ write_files:
             hostNetwork: true
             containers:
               - name: calico-policy-controller
-                image: calico/kube-policy-controller:v0.5.2
+                image: quay.io/calico/kube-policy-controller:v0.5.2
                 env:
                   - name: ETCD_ENDPOINTS
                     valueFrom:
