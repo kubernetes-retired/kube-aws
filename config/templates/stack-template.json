@@ -541,6 +541,9 @@
               {{if gt $.EtcdDataVolumeIOPS 0}}
               "Iops": "{{$.EtcdDataVolumeIOPS}}",
               {{end}}
+              {{if $.EtcdDataVolumeEncrypted}}
+              "Encrypted": {{$.EtcdDataVolumeEncrypted}},
+              {{end}}
               "VolumeType": "{{$.EtcdDataVolumeType}}"
             }
             {{end}}
