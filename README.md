@@ -1,5 +1,10 @@
 # Kubernetes on AWS (kube-aws)
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/coreos/kube-aws)](https://goreportcard.com/report/github.com/coreos/kube-aws)
+[![Build Status](https://travis-ci.org/coreos/kube-aws.svg?branch=master)](https://travis-ci.org/coreos/kube-aws)
+
+**Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases][github-release] instead of the `master` branch in order to get stable binaries.
+
 This is the source of the `kube-aws` tool and the installation artifacts used by the official Kubernetes on AWS documentation.
 
 View the full instructions at [GitHub](/Documentation/kubernetes-on-aws.md) or at [the CoreOS documentation website](https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html).
