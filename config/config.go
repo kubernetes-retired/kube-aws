@@ -374,6 +374,7 @@ type EtcdSettings struct {
 	EtcdDataVolumeType      string `yaml:"etcdDataVolumeType,omitempty"`
 	EtcdDataVolumeIOPS      int    `yaml:"etcdDataVolumeIOPS,omitempty"`
 	EtcdDataVolumeEphemeral bool   `yaml:"etcdDataVolumeEphemeral,omitempty"`
+	EtcdDataVolumeEncrypted bool   `yaml:"etcdDataVolumeEncrypted,omitempty"`
 	EtcdTenancy             string `yaml:"etcdTenancy,omitempty"`
 }
 
