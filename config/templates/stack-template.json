@@ -842,6 +842,20 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
+    "SecurityGroupControllerIngressFromControllerToKubelet": {
+      "Properties": {
+        "FromPort": 10250,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 10250
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
     "SecurityGroupControllerIngressFromWorkerToEtcd": {
       "Properties": {
         "FromPort": 2379,
