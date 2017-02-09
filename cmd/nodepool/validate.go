@@ -39,7 +39,7 @@ func runCmdValidate(cmd *cobra.Command, args []string) error {
 	opts := stackTemplateOptions(validateOpts.s3URI, false)
 	cluster, err := cluster.NewCluster(conf, opts, validateOpts.awsDebug)
 	if err != nil {
-		return fmt.Errorf("Failed to initialize cluster driver : %v ", cluster)
+		return fmt.Errorf("Failed to initialize cluster driver: %v", err)
 	}
 
 	report, err := cluster.ValidateStack()
