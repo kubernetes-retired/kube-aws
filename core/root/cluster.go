@@ -58,6 +58,50 @@ func (c clusterImpl) Export() error {
 	return nil
 }
 
+func (c clusterImpl) EstimateCost() ([]string, error) {
+
+	cfSvc := cloudformation.New(c.session)
+	var urls []string
+
+	controlPlaneTemplate, err := c.controlPlane.RenderStackTemplateAsString()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to render control plane template %v", err)
+	}
+
+	controlPlaneCost, err := c.stackProvisioner().EstimateTemplateCost(cfSvc, controlPlaneTemplate, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to estimate cost for control plane %v", err)
+	}
+
+	urls = append(urls, *controlPlaneCost.Url)
+
+	for i, p := range c.nodePools {
+		nodePoolsTemplate, err := p.RenderStackTemplateAsString()
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to render node pool #%d template: %v", i, err)
+		}
+
+		nodePoolsCost, err := c.stackProvisioner().EstimateTemplateCost(cfSvc, nodePoolsTemplate, []*cloudformation.Parameter{
+			{
+				ParameterKey:   aws.String("ControlPlaneStackName"),
+				ParameterValue: aws.String("fake-name"),
+			},
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to estimate cost for node pool #%d %v", i, err)
+		}
+
+		urls = append(urls, *nodePoolsCost.Url)
+	}
+
+	return urls, nil
+
+}
+
 func (c clusterImpl) Info() (*Info, error) {
 	return &Info{}, nil
 }
@@ -65,6 +109,7 @@ func (c clusterImpl) Info() (*Info, error) {
 type Cluster interface {
 	Create() error
 	Export() error
+	EstimateCost() ([]string, error)
 	Info() (*Info, error)
 	Update() (string, error)
 	ValidateStack() (string, error)
@@ -78,14 +123,6 @@ func ClusterFromFile(configPath string, opts Options, awsDebug bool) (Cluster, e
 		return nil, err
 	}
 	return ClusterFromConfig(cfg, opts, awsDebug)
-}
-
-func normalizeS3URI(s3URI string) string {
-	return strings.TrimSuffix(s3URI, "/")
-}
-
-func appendSuffixToS3URI(s3URI string, suffix string) string {
-	return strings.Join([]string{normalizeS3URI(s3URI), suffix}, "/")
 }
 
 func ClusterFromConfig(cfg *config.Config, opts Options, awsDebug bool) (Cluster, error) {
