@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -30,35 +29,19 @@ func NewProvisioner(name string, stackTags map[string]string, s3URI string, stac
 	}
 }
 
-func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, stackBody string, filename string) (string, error) {
-	s3URI := c.s3URI
-
-	re := regexp.MustCompile("s3://(?P<bucket>[^/]+)/(?P<directory>.+[^/])/*$")
-	matches := re.FindStringSubmatch(s3URI)
-
-	var bucket string
-	var key string
-	if len(matches) == 3 {
-		directory := matches[2]
-
-		bucket = matches[1]
-		key = fmt.Sprintf("%s/%s/%s", directory, c.stackName, filename)
-	} else {
-		re := regexp.MustCompile("s3://(?P<bucket>[^/]+)/*$")
-		matches := re.FindStringSubmatch(s3URI)
-
-		if len(matches) == 2 {
-			bucket = matches[1]
-			key = fmt.Sprintf("%s/%s", c.stackName, filename)
-		} else {
-			return "", fmt.Errorf("failed to parse s3 uri(=%s): The valid uri pattern for it is s3://mybucket/mydir or s3://mybucket", s3URI)
-		}
+func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, content string, filename string) (string, error) {
+	locProvider := newAssetLocationProvider(c.stackName, c.s3URI)
+	loc, err := locProvider.locationFor(filename)
+	if err != nil {
+		return "", err
 	}
+	bucket := loc.Bucket
+	key := loc.Key
 
-	contentLength := int64(len(stackBody))
-	body := strings.NewReader(stackBody)
+	contentLength := int64(len(content))
+	body := strings.NewReader(content)
 
-	_, err := s3Svc.PutObject(&s3.PutObjectInput{
+	_, err = s3Svc.PutObject(&s3.PutObjectInput{
 		Bucket:        aws.String(bucket),
 		Key:           aws.String(key),
 		Body:          body,
@@ -70,9 +53,25 @@ func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, stackBody string, 
 		return "", err
 	}
 
-	uploadedFileURL := fmt.Sprintf("https://s3.amazonaws.com/%s/%s", bucket, key)
+	return loc.URL, nil
+}
 
-	return uploadedFileURL, nil
+func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset Asset) error {
+	bucket := asset.Bucket
+	key := asset.Key
+	content := asset.Content
+	contentLength := int64(len(content))
+	body := strings.NewReader(content)
+
+	_, err := s3Svc.PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(bucket),
+		Key:           aws.String(key),
+		Body:          body,
+		ContentLength: aws.Int64(contentLength),
+		ContentType:   aws.String("application/json"),
+	})
+
+	return err
 }
 
 func (c *Provisioner) uploadStackAssets(s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (*string, error) {
@@ -88,6 +87,16 @@ func (c *Provisioner) uploadStackAssets(s3Svc S3ObjectPutterService, stackTempla
 	}
 
 	return &templateURL, nil
+}
+
+func (c *Provisioner) UploadAssets(s3Svc S3ObjectPutterService, assets Assets) error {
+	for _, a := range assets.AsMap() {
+		err := c.uploadAsset(s3Svc, a)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Provisioner) CreateStack(cfSvc CreationService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (*cloudformation.CreateStackOutput, error) {
@@ -107,12 +116,23 @@ func (c *Provisioner) CreateStack(cfSvc CreationService, s3Svc S3ObjectPutterSer
 	}
 }
 
+func (c *Provisioner) CreateStackAtURLAndWait(cfSvc CRUDService, templateURL string) error {
+	resp, err := c.createStackFromTemplateURL(cfSvc, templateURL)
+	if err != nil {
+		return err
+	}
+	return c.waitUntilStackGetsCreated(cfSvc, resp)
+}
+
 func (c *Provisioner) CreateStackAndWait(cfSvc CRUDService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) error {
 	resp, err := c.CreateStack(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 	if err != nil {
 		return err
 	}
+	return c.waitUntilStackGetsCreated(cfSvc, resp)
+}
 
+func (c *Provisioner) waitUntilStackGetsCreated(cfSvc CRUDService, resp *cloudformation.CreateStackOutput) error {
 	req := cloudformation.DescribeStacksInput{
 		StackName: resp.StackId,
 	}
@@ -208,11 +228,23 @@ func (c *Provisioner) UpdateStack(cfSvc UpdateService, s3Svc S3ObjectPutterServi
 	}
 }
 
+func (c *Provisioner) UpdateStackAtURLAndWait(cfSvc CRUDService, templateURL string) (string, error) {
+	updateOutput, err := c.updateStackWithTemplateURL(cfSvc, templateURL)
+	if err != nil {
+		return "", fmt.Errorf("error updating cloudformation stack: %v", err)
+	}
+	return c.waitUntilStackGetsUpdated(cfSvc, updateOutput)
+}
+
 func (c *Provisioner) UpdateStackAndWait(cfSvc CRUDService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (string, error) {
 	updateOutput, err := c.UpdateStack(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 	if err != nil {
 		return "", fmt.Errorf("error updating cloudformation stack: %v", err)
 	}
+	return c.waitUntilStackGetsUpdated(cfSvc, updateOutput)
+}
+
+func (c *Provisioner) waitUntilStackGetsUpdated(cfSvc CRUDService, updateOutput *cloudformation.UpdateStackOutput) (string, error) {
 	req := cloudformation.DescribeStacksInput{
 		StackName: updateOutput.StackId,
 	}

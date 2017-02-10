@@ -1,0 +1,611 @@
+# Unique name of Kubernetes cluster. In order to deploy
+# more than one cluster into the same AWS account, this
+# name must not conflict with an existing cluster.
+clusterName: {{.ClusterName}}
+
+# DNS name routable to the Kubernetes controller nodes
+# from worker nodes and external clients. Configure the options
+# below if you'd like kube-aws to create a Route53 record sets/hosted zones
+# for you.  Otherwise the deployer is responsible for making this name routable
+externalDNSName: {{.ExternalDNSName}}
+
+# CoreOS release channel to use. Currently supported options: alpha, beta, stable
+# See coreos.com/releases for more information
+#releaseChannel: stable
+
+# The AMI ID of CoreOS.
+# If omitted, the latest AMI for the releaseChannel is used.
+#amiId: ""
+
+# Set to true if you want kube-aws to create a Route53 Alias Record pointing to the controller ELB for you.
+#createRecordSet: false
+
+# TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+#recordSetTTL: 300
+
+# DEPRECATED: use hostedZoneId instead
+# The name of the hosted zone to add the externalDNSName to,
+# E.g: "google.com".  This needs to already exist, kube-aws will not create
+# it for you.
+#hostedZone: ""
+
+# The ID of hosted zone to add the externalDNSName to.
+# Either specify hostedZoneId or hostedZone, but not both
+#hostedZoneId: ""
+
+# Name of the SSH keypair already loaded into the AWS
+# account being used to deploy this cluster.
+keyName: {{.KeyName}}
+
+# Additional keys to preload on the coreos account (keep this to a minimum)
+# sshAuthorizedKeys:
+# - "ssh-rsa AAAAEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEYEXAMPLEKEY example@example.org"
+
+# Region to provision Kubernetes cluster
+region: {{.Region}}
+
+# Availability Zone to provision Kubernetes cluster when placing nodes in a single availability zone (not highly-available) Comment out for multi availability zone setting and use the below `subnets` section instead.
+availabilityZone: {{.AvailabilityZone}}
+
+# ARN of the KMS key used to encrypt TLS assets.
+kmsKeyArn: "{{.KMSKeyARN}}"
+
+# Number of controller nodes to create, for more control use `controller.autoScalingGroup` and do not use this setting
+#controllerCount: 1
+
+#controller:
+#  # Auto Scaling Group definition for controllers. If only `controllerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
+#  autoScalingGroup:
+#    minSize: 1
+#    maxSize: 3
+#    rollingUpdateMinInstancesInService: 2
+#  # If omitted, public subnets are created by kube-aws and used for controller nodes
+#  subnets:
+#    # References subnets defined under the top-level `subnets` key by their names
+#    - name: ManagedPublicSubnet1
+#    - name: ManagedPublicSubnet2
+#  loadBalancer:
+#    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
+#    # only public subnets defined under the top-level `subnets` key are used for the ELB
+#    private: false
+#    # If you like specific public subnets to be used by the internet-facing ELB:
+#    #subnets:
+#    #  - name: ManagedPublicSubnet0
+#
+#    # When explicitly set to true, the ELB for the k8s API endpoint becomes `Schema=internal` rather than default `Schema=internet-facing` one and
+#    # only private subnets defined under the top-level `subnets` key are used for the ELB
+#    private: true
+#    # If you like specific private subnets to be used by the internal ELB:
+#    # subnets:
+#    #   - name: ManagedPrivateSubnet0
+
+# Maximum time to wait for controller creation
+#controllerCreateTimeout: PT15M
+
+# Instance type for controller node.
+# CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/18975
+#controllerInstanceType: t2.medium
+
+# Disk size (GiB) for controller node
+#controllerRootVolumeSize: 30
+
+# Disk type for controller node (one of standard, io1, or gp2)
+#controllerRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controllerRootVolumeType is not io1
+#controllerRootVolumeIOPS: 0
+
+# Default number of worker nodes per node pool to create, for more control use `worker.nodePools[].count` and/or `worker.autoScalingGroup` and do not use this setting
+#workerCount: 1
+
+worker:
+  nodePools:
+    - # Name of this node pool. Must be unique among all the node pools in this cluster
+      name: nodepool1
+#      # Number of worker nodes to create for an autoscaling group based pool
+#      count: 1
+#      # If omitted, public subnets are created by kube-aws and used for worker nodes
+#      subnet:
+#      - # References subnets defined under the top-level `subnets` key by their names
+#        name: ManagedPublicSubnet1
+#      # Auto Scaling Group definition for workers. If only `workerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
+#      autoScalingGroup:
+#        minSize: 1
+#        maxSize: 3
+#        rollingUpdateMinInstancesInService: 2
+#      # Tag the cloudformation stack with the key `kube-aws:cluster-autoscaler:scale-specs` with the value containing
+#      # source of truth for cluster-autoscaler to update their autoscaling target and its min/max size.
+#      # Currently, enabling this configuration doesn't automatically deploy cluster-autoscaler itself.
+#      # Please read [the original issue](https://github.com/coreos/kube-aws/issues/148) carefully for more information.
+#      clusterAutoscaler:
+#        minSize: 1
+#        maxSize: 3
+#      # Spot fleet config for worker nodes
+#      spotFleet:
+#        # Total desired number of units to maintain
+#        # An unit is chosen by you and can be a vCPU, specific amount of memory, size of instance store, etc., according to your requirement.
+#        # Omit or put zero to disable the spot fleet support and use an autoscaling group to manage nodes.
+#        targetCapacity: 10
+#
+#        # IAM role to grant the Spot fleet permission to bid on, launch, and terminate instances on your behalf
+#        # See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites
+#        #
+#        # Defaults to "arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-role" assuming you've arrived "Spot Requests" in EC2 Dashboard
+#        # hence the role is automatically created for you
+#        iamFleetRoleArn: "arn:aws:iam::youraccountid:role/kube-aws-doesnt-create-this-for-you"
+#
+#        # Price per unit hour = Price per instance hour / num of weighted capacity for the instance
+#        # Defaults to "0.06"
+#        spotPrice: 0.06
+#
+#        # Disk size (GiB) per unit
+#        # Disk size for each launch specification defaults to unitRootVolumeSize * weightedCapacity
+#        unitRootVolumeSize: 30
+#
+#        # Disk type for worker node (one of standard, io1, or gp2)
+#        # Can be overridden in each launch specification
+#        rootVolumeType: gp2
+#
+#        # Number of I/O operations per second (IOPS) per unit. Leave blank if rootVolumeType is not io1
+#        # IOPS for each launch specification defaults to unitRootVolumeIOPS * weightedCapacity
+#        unitRootVolumeIOPS: 0
+#
+#        launchSpecifications:
+#        - # Number of units provided by an EC2 instance of the instanceType.
+#          weightedCapacity: 1
+#          instanceType: c4.large
+#
+#          # Price per instance hour
+#          # Defaults to worker.spotFleet.spotPrice * weightedCapacity if omitted
+#          #spotPrice:
+#
+#          # Defaults to worker.spotFleet.rootVolumeType if omitted
+#          #rootVolumeType:
+#
+#          # Defaults to worker.spotFleet.unitRootVolumeSize * weightedCapacity if omitted
+#          #rootVolumeSize:
+#
+#          # Number of provisioned IOPS when rootVlumeType is io1
+#          # Must be within the range between 100 and 2000
+#          # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
+#          #rootVolumeIOPS:
+#        - weightedCapacity: 2
+#          instanceType: c4.xlarge
+#      # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
+#      awsEnvironment:
+#        enabled: true
+#        environment:
+#          CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#      # Add predefined set of labels to the nodes
+#      # The set includes names of launch configurations and autoscaling groups
+#      awsNodeLabels:
+#        enabled: true
+#      # Will provision worker nodes with IAM permissions to run cluster-autoscaler
+#      clusterAutoscalerSupport:
+#        enable: true
+#      # This option has not yet been tested with rkt as container runtime
+#      ephemeralImageStorage:
+#        enabled: true
+#      # Configuration for external managed ELBs for worker nodes
+#      loadBalancer:
+#        enabled: true
+#        # Names of ELBs attached to worker nodes
+#        names: [ "manuallymanagedelb" ]
+#        # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
+#        securityGroupIds: [ "sg-87654321" ]
+#      # When enabled, `kubectl drain` is run on the node going to shut-down
+#      nodeDrainer:
+#        enabled: true
+#      # Kubernetes node labels to be added to worker nodes
+#      nodeLabels:
+#        kube-aws.coreos.com/role: worker
+#      # Kubernetes node taints to be added to worker nodes
+#      taints:
+#        - key: dedicated
+#          value: search
+#          effect: NoSchedule
+#      # When enabled, autoscaling groups managing worker nodes wait for nodes to be up and running.
+#      # Although this is still an experimental feature, it is recommended to be enabled and
+#      # This is enabled by default.
+#      waitSignal:
+#        enabled: true
+#        # Max number of nodes concurrently updated
+#        maxBatchSize: 1
+#      # Configuration to support various Kubernetes plugins
+#      plugins:
+#        # When enabled it will grant sts:assumeRole permission to every role in the IAM Controller Role.
+#        kube2IamSupport:
+#          enabled: true
+#      # Other less common customizations per node pool
+#      # All these settings default to the top-level ones
+#      keyName:
+#      releaseChannel: alpha
+#      amiId:
+#      kubernetesVersion: 1.6.0-alpha.1
+#      hyperkubeImageRepo:
+#      AwsCliImageRepo: quay.io/coroes/awscli
+#      awsCliTag: edge
+#      sshAuthorizedKeys:
+
+# Maximum time to wait for worker creation
+#workerCreateTimeout: PT15M
+
+# Instance type for worker nodes
+# CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/16122
+#workerInstanceType: t2.medium
+
+# Disk size (GiB) for worker nodes
+#workerRootVolumeSize: 30
+
+# Disk type for worker node (one of standard, io1, or gp2)
+#workerRootVolumeType: gp2
+
+# if you specify workerManagedIamRoleName the role created will not suffix the random id at the end
+# Role will be created with "Ref": {"AWS::StackName"}-{"AWS::Region"}-yourManagedRole
+# to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
+#workerManagedIamRoleName: "yourManagedRole"
+
+# Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
+#workerRootVolumeIOPS: 0
+
+# Tenancy of the worker nodes. Options are "default" and "dedicated"
+# Documentation: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html
+# workerTenancy: default
+
+# Price (Dollars) to bid for spot instances. Omit for on-demand instances.
+# workerSpotPrice: "0.05"
+
+# Existing "glue" security groups attached to worker nodes which are typically used to allow access from worker nodes to services running on an existing infrastructure
+# workerSecurityGroupIds:
+#   - sg-1234abcd
+#   - sg-5678efab
+
+## Etcd Cluster config
+## WARNING: Any changes to etcd parameters after the cluster is first created will not be applied
+## during a cluster upgrade, due to concerns over data loss.
+## This situation is being rectified with work towards automated management of etcd clusters
+
+# Number of etcd nodes
+# (Set to an odd number >= 3 for HA control plane)
+# etcdCount: 1
+
+#etcd:
+#  # If omitted, public subnets are created by kube-aws and used for etcd nodes
+#  subnets:
+#    # References subnets defined under the top-level `subnets` key by their names
+#    - name: ManagedPrivateSubnet1
+#    - name: ManagedPrivateSubnet2
+
+# Instance type for etcd node
+# etcdInstanceType: t2.medium
+
+# Root volume size (GiB) for etcd node
+# etcdRootVolumeSize: 30
+
+# Root volume type for etcd node (one of standard, io1, or gp2)
+# etcdRootVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the etcd node's root volume supports. Leave blank if etcdRootVolumeType is not io1
+# etcdRootVolumeIOPS: 0
+
+# Use ephemeral instance storage for etcd data volume instead of EBS?
+# (Recommended set to true for high-throughput control planes)
+# etcdDataVolumeEphemeral: false
+
+# Data volume size (GiB) for etcd node
+# if etcdDataVolumeEphemeral=true, this value is ignored. The size of ephemeral volumes is not configurable.
+# etcdDataVolumeSize: 30
+
+# Data volume type for etcd node (one of standard, io1, or gp2)
+# etcdDataVolumeType: gp2
+
+# Number of I/O operations per second (IOPS) that the etcd node's data volume supports. Leave blank if etcdDataVolumeType is not io1
+# etcdDataVolumeIOPS: 0
+
+# Encrypt the Etcd Data volume.  Set to true for encryption.  This does not work for etcdDataVolumeEphemeral.
+# etcdDataVolumeEncrypted: false
+
+# Tenancy of the etcd instances. Options are "default" and "dedicated"
+# Documentation: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/dedicated-instance.html
+# etcdTenancy: default
+
+## Networking config
+
+# ID of existing VPC to create subnet in. Leave blank to create a new VPC
+# vpcId:
+
+# ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+# internetGatewayId:
+
+# Advanced: ID of existing route table in existing VPC to attach subnet to.
+# Leave blank to use the VPC's main route table.
+# This should be specified if and only if vpcId is specified.
+#
+# IMPORTANT NOTICE:
+#
+# If routeTableId is specified, it's your responsibility to add an appropriate route to
+# an internet gateway(IGW) or a NAT gateway(NGW) to the route table.
+#
+# More concretely,
+# * If you like to make all the subnets private, pre-configure an NGW yourself and add a route to the NGW beforehand
+# * If you like to make all the subnets public, pre-configure an IGW yourself and add a route to the IGW beforehand
+# * If you like to mix private and public subnets, omit routeTableId but specify subnets[].routeTable.id per subnet
+#
+# routeTableId: rtb-xxxxxxxx
+
+# CIDR for Kubernetes VPC. If vpcId is specified, must match the CIDR of existing vpc.
+# vpcCIDR: "10.0.0.0/16"
+
+# CIDR for Kubernetes subnet when placing nodes in a single availability zone (not highly-available) Leave commented out for multi availability zone setting and use the below `subnets` section instead.
+# instanceCIDR: "10.0.0.0/24"
+
+# Kubernetes subnets with their CIDRs and availability zones.
+# Differentiating availability zone for 2 or more subnets result in high-availability (failures of a single availability zone won't result in immediate downtimes)
+# subnets:
+#   #
+#   # Managed public subnet managed by kube-aws
+#   #
+#   - name: ManagedPublicSubnet1
+#     # Set to false if this subnet is public
+#     # private: false
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.0.0/24"
+#
+#   #
+#   # Managed private subnet managed by kube-aws
+#   #
+#   - name: ManagedPrivateSubnet1
+#     # Set to true if this subnet is private
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#
+#   #
+#   # Advanced: Unmanaged/existing public subnet reused but not managed by kube-aws
+#   #
+#   # An internet gateway(igw) and a route table contains the route to the igw must have been properly configured by YOU.
+#   # kube-aws tries to reuse the subnet specified by id or idFromStackOutput but kube-aws never modify the subnet
+#   #
+#   - name: ExistingPublicSubnet1
+#     # Beware that `availabilityZone` can't be omitted; it must be the one in which the subnet exists.
+#     availabilityZone: us-west-1a
+#     # ID of existing subnet to be reused.
+#     # availabilityZone should still be provided but instanceCIDR can be omitted when id is specified.
+#     id: "subnet-xxxxxxxx"
+#     # Exported output's name from another stack
+#     # Only specify either id or idFromStackOutput but not both
+#     #idFromStackOutput: myinfra-PublicSubnet1
+#
+#   #
+#   # Advanced: Unmanaged/existing private subnet reused but not managed by kube-aws
+#   #
+#   # A nat gateway(ngw) and a route table contains the route to the ngw must have been properly configured by YOU.
+#   # kube-aws tries to reuse the subnet specified by id or idFromStackOutput but kube-aws never modify the subnet
+#   #
+#   - name: ExistingPrivateSubnet1
+#     # Beware that `availabilityZone` can't be omitted; it must be the one in which the subnet exists.
+#     availabilityZone: us-west-1a
+#     # Existing subnet.
+#     id: "subnet-xxxxxxxx"
+#     # Exported output's name from another stack
+#     # Only specify either id or idFromStackOutput but not both
+#     #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing NAT gateway
+#   #
+#   # kube-aws tries to reuse the ngw specified by id or idFromStackOutput
+#   # by adding a route to the ngw to a route table managed by kube-aws
+#   #
+#   # Please be sure that the NGW is properly deployed. kube-aws will never modify ngw itself.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingNGW
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       id: "ngw-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing NAT gateway
+#   #
+#   # kube-aws tries to reuse the ngw specified by id or idFromStackOutput
+#   # by adding a route to the ngw to a route table managed by kube-aws
+#   #
+#   # Please be sure that the NGW is properly deployed. kube-aws will never modify ngw itself.
+#   # For example, kube-aws won't assign a pre-allocated EIP to the existing ngw for you.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingNGW
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       # Pre-allocated NAT Gateway. Used with private subnets.
+#       id: "ngw-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateSubnet1
+#
+#   #
+#   # Advanced: Managed private subnet with an existing EIP for kube-aws managed NGW
+#   #
+#   # kube-aws tries to reuse the EIP specified by eipAllocationId
+#   # by associating the EIP to a NGW managed by kube-aws.
+#   # Please be sure that kube-aws won't assign an EIP to an existing NGW i.e.
+#   # either natGateway.id or eipAllocationId can be specified but not both.
+#   #
+#   - name: ManagedPrivateSubnetWithManagedNGWWithExistingEIP
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     natGateway:
+#       # Pre-allocated EIP for NAT Gateways. Used with private subnets.
+#       eipAllocationId: eipalloc-xxxxxxxx
+#
+#   #
+#   # Advanced: Managed private subnet with an existing route table
+#   #
+#   # kube-aws tries to reuse the route table specified by id or idFromStackOutput
+#   # by assigning this subnet to the route table.
+#   #
+#   # Please be sure that it's your responsibility to:
+#   # * Configure an AWS managed NAT or a NAT instance or an another NAT and
+#   # * Add a route to the NAT to the route table being reused
+#   #
+#   # i.e. kube-aws neither modify route table nor create other related resources like
+#   # ngw, route to nat gateway, eip for ngw, etc.
+#   #
+#   - name: ManagedPrivateSubnetWithExistingRouteTable
+#     private: true
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     routeTable:
+#       # Pre-allocated route table
+#       id: "rtb-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PrivateRouteTable1
+#
+#   #
+#   # Advanced: Managed public subnet with an existing route table
+#   #
+#   # kube-aws tries to reuse the route table specified by id or idFromStackOutput
+#   # by assigning this subnet to the route table.
+#   #
+#   # Please be sure that it's your responsibility to:
+#   # * Configure an internet gateway(IGW) and
+#   # * Attach the IGW to the VPC you're deploying to
+#   # * Add a route to the IGW to the route table being reused
+#   #
+#   # i.e. kube-aws neither modify route table nor create other related resources like
+#   # igw, route to igw, igw vpc attachment, etc.
+#   #
+#   - name: ManagedPublicSubnetWithExistingRouteTable
+#     availabilityZone: us-west-1a
+#     instanceCIDR: "10.0.1.0/24"
+#     routeTable:
+#       # Pre-allocated route table
+#       id: "rtb-xxxxxxxx"
+#       # Exported output's name from another stack
+#       # Only specify either id or idFromStackOutput but not both
+#       #idFromStackOutput: myinfra-PublicRouteTable1
+
+
+# CIDR for all service IP addresses
+# serviceCIDR: "10.3.0.0/24"
+
+# CIDR for all pod IP addresses
+# podCIDR: "10.2.0.0/16"
+
+# IP address of Kubernetes dns service (must be contained by serviceCIDR)
+# dnsServiceIP: 10.3.0.10
+
+# Uncomment to provision nodes without a public IP. This assumes your VPC route table is setup to route to the internet via a NAT gateway.
+# If you did not set vpcId and routeTableId the cluster will not bootstrap.
+# mapPublicIPs: false
+
+# Expiration in days from creation time of TLS assets. By default, the CA will
+# expire in 10 years and the server and client certificates will expire in 1
+# year.
+#tlsCADurationDays: 3650
+#tlsCertDurationDays: 365
+
+# Version of hyperkube image to use. This is the tag for the hyperkube image repository.
+# kubernetesVersion: v1.5.3_coreos.0
+
+# Hyperkube image repository to use.
+# hyperkubeImageRepo: quay.io/coreos/hyperkube
+
+# AWS CLI image repository to use.
+# awsCliImageRepo: quay.io/coreos/awscli
+
+# AWS CLI image tag to use.
+# awsCliTag: master
+
+# Use Calico for network policy.
+# useCalico: false
+
+# Create MountTargets for a pre-existing Elastic File System (Amazon EFS). Enter the resource id, eg "fs-47a2c22e"
+# This is a NFS share that will be available across the entire cluster through a hostPath volume on the "/efs" mountpoint
+#
+# You can create a new EFS volume using the CLI:
+# $ aws efs create-file-system --creation-token $(uuidgen)
+#
+# Beware that an EFS file system can not be mounted from mutiple subnets from the same availability zone and
+# therefore this feature won't work like you might have expected when you're deploying your cluster to an existing VPC and
+# wanted to mount an existing EFS to the subnet(s) created by kube-aws
+# See https://github.com/coreos/kube-aws/issues/208 for more information
+#elasticFileSystemId: fs-47a2c22e
+
+# Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
+# containerRuntime: docker
+
+# If you do not want kube-aws to manage certificaes, set it to false. If you do that
+# you are responsible for making sure that nodes have correct certificates by the time
+# daemons start up.
+# manageCertificates: true
+
+# When enabled, autoscaling groups managing controller nodes wait for nodes to be up and running.
+# It is enabled by default.
+#waitSignal:
+#  enabled: true
+#   maxBatchSize: 1
+
+# Experimental features will change in backward-incompatible ways
+# experimental:
+#   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
+#   awsEnvironment:
+#     enabled: true
+#     environment:
+#       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+#   # Enable audit log for apiserver. Recommended when `rbac` is enabled.
+#   auditLog:
+#     enabled: true
+#     maxage: 30
+#     logpath: /dev/stdout
+#   authentication:
+#     # See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication
+#     # for more information.
+#     webhook:
+#       enabled: true
+#       cacheTTL: 1m0s
+#       configBase64: base64-encoded-webhook-yaml
+#   # Add predefined set of labels to the controller nodes
+#   # The set includes names of launch configurations and autoscaling groups
+#   awsNodeLabels:
+#     enabled: true
+#   # Will provision controller nodes with IAM permissions to run cluster-autoscaler
+#   clusterAutoscalerSupport:
+#     enable: true
+#   # This option has not yet been tested with rkt as container runtime
+#   ephemeralImageStorage:
+#     enabled: true
+#   # When enabled, `kubectl drain` is run on the node going to shut-down
+#   nodeDrainer:
+#     enabled: true
+#   # Kubernetes node labels to be added to controller nodes
+#   nodeLabels:
+#     kube-aws.coreos.com/role: worker
+#   # Kubernetes node taints to be added to controller nodes
+#   taints:
+#     - key: dedicated
+#       value: search
+#       effect: NoSchedule
+#   plugins:
+#     # When enabled, you also need to configure a minimum set of role bindings or everything breaks.
+#     # See https://github.com/coreos/kube-aws/issues/230 for more information.
+#     rbac:
+#       enabled: true
+#
+
+# AWS Tags for cloudformation stack resources
+#stackTags:
+#  Name: "Kubernetes"
+#  Environment: "Production"
+
+# User-provided YAML map available in stack-template.json
+#customSettings:
+#  key1: [ 1, 2, 3 ]

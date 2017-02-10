@@ -13,105 +13,73 @@ Node Pool allows you to bring up additional pools of worker nodes each with a se
 
 ## Deploying a Multi-AZ cluster with cluster-autoscaler support with Node Pools
 
-Edit the `cluster.yaml` file to decrease `workerCount`, which is meant to be number of worker nodes in the "main" cluster, down to zero:
+kube-aws creates a node pool in a single AZ by default.
+On top of that, you can add one or more node pool in an another AZ to achieve Multi-AZ.
+
+Assuming you already have a subnet and a node pool in the subnet:
 
 ```yaml
-# `workerCount` should be set to zero explicitly
-workerCount: 0
-# And the below should be added before recreating the cluster
+subnets:
+- name: managedPublicSubnetIn1a
+  availabilityZone: us-west-1a
+  instanceCIDR: 10.0.0.0/24
+
 worker:
-  autoScalingGroup:
-    minSize: 0
-    rollingUpdateMinInstancesInService: 0
-
-subnets:
-  - availabilityZone: us-west-1a
-    instanceCIDR: "10.0.0.0/24"
+  nodePools:
+    - name: pool1
+      subnets:
+      - name: managedPublicSubnetIn1a
 ```
 
-`kube-aws update` doesn't work when decreasing number of workers down to zero as of today.
-Therefore, don't update but recreate the main cluster to catch up changes made in `cluster.yaml`:
 
-```
-$ kube-aws destroy
-$ kube-aws up \
-  --s3-uri s3://<my-bucket>/<optional-prefix>
-```
-
-Create two node pools, each with a different subnet and an availability zone:
-
-```
-$ kube-aws node-pools init --node-pool-name first-pool-in-1a \
-  --availability-zone us-west-1a \
-  --key-name ${KUBE_AWS_KEY_NAME} \
-  --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
-
-$ kube-aws node-pools init --node-pool-name second-pool-in-1b \
-  --availability-zone us-west-1b \
-  --key-name ${KUBE_AWS_KEY_NAME} \
-  --kms-key-arn ${KUBE_AWS_KMS_KEY_ARN}
-```
-
-Edit the `cluster.yaml` for the first zone:
-
-```
-$ $EDITOR node-pools/first-pool-in-1a/cluster.yaml
-```
+Edit the `cluster.yaml` file to add the second node pool:
 
 ```yaml
-workerCount: 1
 subnets:
-  - availabilityZone: us-west-1a
-    instanceCIDR: "10.0.1.0/24"
+- name: managedPublicSubnetIn1a
+  availabilityZone: us-west-1a
+  instanceCIDR: 10.0.0.0/24
+- name: managedPublicSubnetIn1c
+  availabilityZone: us-west-1c
+  instanceCIDR: 10.0.1.0/24
+
+worker:
+  nodePools:
+    - name: pool1
+      subnets:
+      - name: managedPublicSubnetIn1a
+    - name: pool2
+      subnets:
+      - name: managedPublicSubnetIn1c
 ```
 
-Edit the `cluster.yaml` for the second zone:
+Launch the secondary node pool by running `kube-aws update``:
 
 ```
-$ $EDITOR node-pools/second-pool-in-1b/cluster.yaml
-```
-
-```yaml
-workerCount: 1
-subnets:
-  - availabilityZone: us-west-1b
-    instanceCIDR: "10.0.2.0/24"
-```
-
-Render the assets for the node pools including [cloud-init](https://github.com/coreos/coreos-cloudinit) cloud-config userdata and [AWS CloudFormation](https://aws.amazon.com/cloudformation/) template:
-
-```
-$ kube-aws node-pools render stack --node-pool-name first-pool-in-1a
-
-$ kube-aws node-pools render stack --node-pool-name second-pool-in-1b
-```
-
-Launch the node pools:
-
-```
-$ kube-aws node-pools up --node-pool-name first-pool-in-1a \
-  --s3-uri s3://<my-bucket>/<optional-prefix>
-
-$ kube-aws node-pools up --node-pool-name second-pool-in-1b \
+$ kube-aws update \
   --s3-uri s3://<my-bucket>/<optional-prefix>
 ```
 
-Deployment of cluster-autoscaler is currently out of scope of this documentation.
+Beware that you have to associate only 1 AZ to a node pool or cluster-autoscaler may end up failing to reliably add nodes on demand due to the fact
+that what cluster-autoscaler does is to increase/decrease the desired capacity hence it has no way to selectively add node(s) in a desired AZ.
+
+Also note that deployment of cluster-autoscaler is currently out of scope of this documentation.
 Please read [cluster-autoscaler's documentation](https://github.com/kubernetes/contrib/blob/master/cluster-autoscaler/cloudprovider/aws/README.md) for instructions on it.
 
 ## Customizing min/max size of the auto scaling group
 
-If you've chosen to power your worker nodes in a node pool with an auto scaling group, you can customize `MinSize`, `MaxSize`, `MinInstancesInService` in `cluster.yaml`:
+If you've chosen to power your worker nodes in a node pool with an auto scaling group, you can customize `MinSize`, `MaxSize`, `RollingUpdateMinInstancesInService` in `cluster.yaml`:
 
 Please read [the AWS documentation](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html#aws-properties-as-group-prop) for more information on `MinSize`, `MaxSize`, `MinInstancesInService` for ASGs.
 
 ```
 worker:
-  # Auto Scaling Group definition for workers. If only `workerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
-  autoScalingGroup:
-    minSize: 1
-    maxSize: 3
-    rollingUpdateMinInstancesInService: 2
+  nodePools:
+  - name: pool1
+    autoScalingGroup:
+      minSize: 1
+      maxSize: 3
+      rollingUpdateMinInstancesInService: 2
 ```
 
 See [the detailed comments in `cluster.yaml`](https://github.com/coreos/kube-aws/blob/master/nodepool/config/templates/cluster.yaml) for further information.
@@ -142,23 +110,27 @@ To add a node pool powered by Spot Fleet, edit node pool's `cluster.yaml`:
 
 ```yaml
 worker:
-  spotFleet:
-    targetCapacity: 3
+  nodePools:
+  - name: pool1
+    spotFleet:
+      targetCapacity: 3
 ```
 
 To customize your launch specifications to diversify your pool among instance types other than the defaults, edit `cluster.yaml`:
 
 ```yaml
 worker:
-  spotFleet:
-    targetCapacity: 5
-    launchSpecifications:
-    - weightedCapacity: 1
-      instanceType: t2.medium
-    - weightedCapacity: 2
-      instanceType: m3.large
-    - weightedCapacity: 2
-      instanceType: m4.large
+  nodePools:
+  - name: pool1
+    spotFleet:
+      targetCapacity: 5
+      launchSpecifications:
+      - weightedCapacity: 1
+        instanceType: t2.medium
+      - weightedCapacity: 2
+        instanceType: m3.large
+      - weightedCapacity: 2
+        instanceType: m4.large
 ```
 
 This configuration would normally result in Spot Fleet to bring up 3 instances to meet your target capacity:

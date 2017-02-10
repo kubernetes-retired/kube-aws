@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/coreos/kube-aws/cluster"
-	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/core/root"
 	"github.com/spf13/cobra"
-	"strconv"
-	"strings"
 )
 
 var (
@@ -44,30 +41,9 @@ func init() {
 }
 
 func runCmdValidate(cmd *cobra.Command, args []string) error {
-	// Up flags.
-	required := []struct {
-		name, val string
-	}{
-		{"--s3-uri", validateOpts.s3URI},
-	}
-	var missing []string
-	for _, req := range required {
-		if req.val == "" {
-			missing = append(missing, strconv.Quote(req.name))
-		}
-	}
-	if len(missing) != 0 {
-		return fmt.Errorf("Missing required flag(s): %s", strings.Join(missing, ", "))
-	}
+	opts := root.NewOptions(validateOpts.s3URI, validateOpts.awsDebug, validateOpts.skipWait)
 
-	cfg, err := config.ClusterFromFile(configPath)
-	if err != nil {
-		return fmt.Errorf("Unable to load cluster config: %v", err)
-	}
-
-	opts := stackTemplateOptions(validateOpts.s3URI, validateOpts.awsDebug, validateOpts.skipWait)
-
-	cluster, err := cluster.NewCluster(cfg, opts, validateOpts.awsDebug)
+	cluster, err := root.ClusterFromFile(configPath, opts, validateOpts.awsDebug)
 	if err != nil {
 		return fmt.Errorf("Failed to initialize cluster driver: %v", err)
 	}

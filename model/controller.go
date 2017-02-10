@@ -6,6 +6,13 @@ type Controller struct {
 	Subnets          []Subnet `yaml:"subnets,omitempty"`
 }
 
+func NewDefaultController() Controller {
+	n := 1
+	return Controller{
+		AutoScalingGroup: AutoScalingGroup{RollingUpdateMinInstancesInService: &n},
+	}
+}
+
 func (c Controller) LogicalName() string {
 	return "Controllers"
 }

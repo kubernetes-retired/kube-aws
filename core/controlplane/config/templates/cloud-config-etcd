@@ -1,0 +1,205 @@
+#cloud-config
+coreos:
+  update:
+    reboot-strategy: etcd-lock
+  units:
+    - name: cfn-etcd-environment.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Fetches etcd static IP addresses list from CF
+        After=network-online.target
+
+        [Service]
+        Restart=on-failure
+        RemainAfterExit=true
+        ExecStartPre=/opt/bin/cfn-etcd-environment
+        ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+
+    - name: etcd2.service
+      drop-ins:
+        - name: 20-etcd2-aws-cluster.conf
+          content: |
+            [Unit]
+            Wants=decrypt-tls-assets.service cfn-etcd-environment.service
+            After=decrypt-tls-assets.service cfn-etcd-environment.service
+
+            [Service]
+            Environment=ETCD_NAME=%H
+
+            Environment=ETCD_PEER_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
+            Environment=ETCD_PEER_CERT_FILE=/etc/etcd2/ssl/etcd.pem
+            Environment=ETCD_PEER_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+
+            Environment=ETCD_CLIENT_CERT_AUTH=true
+            Environment=ETCD_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
+            Environment=ETCD_CERT_FILE=/etc/etcd2/ssl/etcd.pem
+            Environment=ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+
+            Environment=ETCD_INITIAL_CLUSTER_STATE=new
+            EnvironmentFile=-/etc/etcd-environment
+            Environment=ETCD_DATA_DIR=/var/lib/etcd2
+            Environment=ETCD_LISTEN_CLIENT_URLS=https://%H:2379
+            Environment=ETCD_ADVERTISE_CLIENT_URLS=https://%H:2379
+            Environment=ETCD_LISTEN_PEER_URLS=https://%H:2380
+            Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=https://%H:2380
+            PermissionsStartOnly=true
+            ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
+            ExecStartPre=/usr/bin/systemctl is-active decrypt-tls-assets.service
+            ExecStartPre=/usr/bin/sed -i 's/^ETCDCTL_ENDPOINT.*$/ETCDCTL_ENDPOINT=https:\/\/%H:2379/' /etc/environment
+            ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
+      enable: true
+      command: start
+
+    - name: var-lib-etcd2.mount
+      enable: true
+      content: |
+        [Unit]
+        Before=etcd2.service
+
+        [Mount]
+        What=/dev/xvdf
+        Where=/var/lib/etcd2
+        Type=ext4
+
+        [Install]
+        RequiredBy=etcd2.service
+
+    - name: format-etcd2-volume.service
+      enable: true
+      content: |
+        [Unit]
+        Description=Formats etcd2 ebs volume
+        After=dev-xvdf.device
+        Requires=dev-xvdf.device
+        Before=var-lib-etcd2.mount
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/ext4-format-volume-once /dev/xvdf
+
+        [Install]
+        RequiredBy=var-lib-etcd2.mount
+
+    - name: decrypt-tls-assets.service
+      enable: true
+      content: |
+        [Unit]
+        Description=decrypt etcd2 tls assets using amazon kms
+        Before=etcd2.service
+
+        [Service]
+        Restart=on-failure
+        RemainAfterExit=yes
+        ExecStartPre=/usr/bin/rkt run \
+          --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
+          --volume=ssl,kind=host,source=/etc/etcd2/ssl,readOnly=false \
+          --mount=volume=ssl,target=/etc/etcd2/ssl \
+          --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
+          --mount volume=dns,target=/etc/resolv.conf \
+          --net=host \
+          --trust-keys-from-https \
+          {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
+            -ec \
+            'echo decrypting tls assets; \
+             shopt -s nullglob; \
+             for encKey in /etc/etcd2/ssl/*.pem.enc; do \
+             echo decrypting $encKey; \
+             /usr/bin/aws \
+               --region {{.Region}} kms decrypt \
+               --ciphertext-blob fileb://$encKey \
+               --output text \
+               --query Plaintext \
+             | base64 -d > $${encKey%.enc}; \
+             done; \
+             echo done.'
+        ExecStart=-/usr/bin/rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid
+
+        [Install]
+        RequiredBy=etcd2.service
+
+{{if .SSHAuthorizedKeys}}
+ssh_authorized_keys:
+  {{range $sshkey := .SSHAuthorizedKeys}}
+  - {{$sshkey}}
+  {{end}}
+{{end}}
+
+write_files:
+
+  - path: /opt/bin/cfn-etcd-environment
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      rkt run \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
+        --mount volume=dns,target=/etc/resolv.conf \
+        --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false \
+        --mount volume=awsenv,target=/var/run/coreos \
+        --uuid-file-save=/var/run/coreos/cfn-etcd-environment.uuid \
+        --net=host \
+        --trust-keys-from-https \
+        {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
+          -ec \
+          'instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+           stack_name=$(
+             aws ec2 describe-tags --region {{.Region}} --filters \
+               "Name=resource-id,Values=$instance_id" \
+               "Name=key,Values=aws:cloudformation:stack-name" \
+               --output json \
+             | jq -r ".Tags[].Value"
+           )
+           cfn-init -v -c "etcd-server" --region {{.Region}} --resource {{.Controller.LogicalName}} --stack $stack_name
+          '
+
+      rkt rm --uuid-file=/var/run/coreos/cfn-etcd-environment.uuid || :
+
+  - path: /etc/environment
+    permissions: 0644
+    content: |
+      COREOS_PUBLIC_IPV4=$public_ipv4
+      COREOS_PRIVATE_IPV4=$private_ipv4
+      ETCDCTL_CA_FILE=/etc/etcd2/ssl/ca.pem
+      ETCDCTL_CERT_FILE=/etc/etcd2/ssl/etcd-client.pem
+      ETCDCTL_KEY_FILE=/etc/etcd2/ssl/etcd-client-key.pem
+      ETCDCTL_ENDPOINT=
+
+  - path: /opt/bin/ext4-format-volume-once
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      if [[ "$(wipefs -n -p $1 | grep ext4)" == "" ]];then
+        mkfs.ext4 $1
+      else
+        echo "volume $1 is already formatted"
+      fi
+
+{{ if .ManageCertificates }}
+
+  - path: /etc/etcd2/ssl/ca.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.CACert}}
+
+  - path: /etc/etcd2/ssl/etcd-key.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdKey}}
+
+  - path: /etc/etcd2/ssl/etcd.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdCert}}
+
+  - path: /etc/etcd2/ssl/etcd-client.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdClientCert}}
+
+  - path: /etc/etcd2/ssl/etcd-client-key.pem.enc
+    encoding: gzip+base64
+    content: {{.TLSConfig.EtcdClientKey}}
+
+{{ end }}
