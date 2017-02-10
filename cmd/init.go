@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/coreos/kube-aws/filegen"
 	"github.com/spf13/cobra"
 )
@@ -35,22 +33,13 @@ func init() {
 
 func runCmdInit(cmd *cobra.Command, args []string) error {
 	// Validate flags.
-	required := []struct {
-		name, val string
-	}{
-		{"--cluster-name", initOpts.ClusterName},
-		{"--external-dns-name", initOpts.ExternalDNSName},
-		{"--region", initOpts.Region},
-		{"--availability-zone", initOpts.AvailabilityZone},
-	}
-	var missing []string
-	for _, req := range required {
-		if req.val == "" {
-			missing = append(missing, strconv.Quote(req.name))
-		}
-	}
-	if len(missing) != 0 {
-		return fmt.Errorf("Missing required flag(s): %s", strings.Join(missing, ", "))
+	if err := validateRequired(
+		flag{"--cluster-name", initOpts.ClusterName},
+		flag{"--external-dns-name", initOpts.ExternalDNSName},
+		flag{"--region", initOpts.Region},
+		flag{"--availability-zone", initOpts.AvailabilityZone},
+	); err != nil {
+		return err
 	}
 
 	if err := filegen.CreateFileFromTemplate(configPath, initOpts, config.DefaultClusterConfig); err != nil {

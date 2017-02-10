@@ -2,11 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/coreos/kube-aws/cluster"
-	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/core/root"
 	"github.com/spf13/cobra"
 )
 
@@ -34,35 +31,18 @@ func init() {
 }
 
 func runCmdUpdate(cmd *cobra.Command, args []string) error {
-	// Up flags.
-	required := []struct {
-		name, val string
-	}{
-		{"--s3-uri", updateOpts.s3URI},
-	}
-	var missing []string
-	for _, req := range required {
-		if req.val == "" {
-			missing = append(missing, strconv.Quote(req.name))
-		}
-	}
-	if len(missing) != 0 {
-		return fmt.Errorf("Missing required flag(s): %s", strings.Join(missing, ", "))
+	if err := validateRequired(flag{"--s3-uri", updateOpts.s3URI}); err != nil {
+		return err
 	}
 
-	confCluster, err := config.ClusterFromFile(configPath)
+	opts := root.NewOptions(updateOpts.s3URI, updateOpts.prettyPrint, updateOpts.skipWait)
+
+	cluster, err := root.ClusterFromFile(configPath, opts, updateOpts.awsDebug)
 	if err != nil {
 		return fmt.Errorf("Failed to read cluster config: %v", err)
 	}
 
-	opts := stackTemplateOptions(updateOpts.s3URI, updateOpts.prettyPrint, updateOpts.skipWait)
-
-	cluster, err := cluster.NewCluster(confCluster, opts, upOpts.awsDebug)
-	if err != nil {
-		return fmt.Errorf("Failed to initialize cluster driver: %v", err)
-	}
-
-	if err := cluster.ValidateUserData(); err != nil {
+	if _, err := cluster.ValidateStack(); err != nil {
 		return err
 	}
 

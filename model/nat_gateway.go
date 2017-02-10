@@ -13,6 +13,9 @@ func (c NATGatewayConfig) Validate() error {
 	if c.HasIdentifier() && c.EIPAllocationID != "" {
 		return fmt.Errorf("eipAllocationId can't be specified for a existing nat gatway. It is an user's responsibility to configure the nat gateway if one tried to reuse an existing one: %+v", c)
 	}
+	if err := c.Identifier.Validate(); err != nil {
+		return fmt.Errorf("failed to validate id for nat gateway: %v", err)
+	}
 	return nil
 }
 

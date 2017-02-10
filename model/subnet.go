@@ -126,8 +126,41 @@ func NewImportedPublicSubnet(az string, name string) Subnet {
 	}
 }
 
+func NewPublicSubnetFromFn(az string, fn string) Subnet {
+	return Subnet{
+		Identifier: Identifier{
+			IDFromFn: fn,
+		},
+		AvailabilityZone: az,
+		Private:          false,
+	}
+}
+
+func NewPrivateSubnetFromFn(az string, fn string) Subnet {
+	return Subnet{
+		Identifier: Identifier{
+			IDFromFn: fn,
+		},
+		AvailabilityZone: az,
+		Private:          true,
+	}
+}
+
 func (s *Subnet) Public() bool {
 	return !s.Private
+}
+
+func (s *Subnet) Validate() error {
+	if err := s.Identifier.Validate(); err != nil {
+		return fmt.Errorf("failed to validate id for subnet: %v", err)
+	}
+	if err := s.RouteTable.Validate(); err != nil {
+		return fmt.Errorf("failed to validate route table for subnet: %v", err)
+	}
+	if err := s.NATGateway.Validate(); err != nil {
+		return fmt.Errorf("failed to validate nat gateway for subnet: %v", err)
+	}
+	return nil
 }
 
 func (s *Subnet) MapPublicIPs() bool {
