@@ -432,6 +432,12 @@ write_files:
           --data-binary "$1" "$2"
       }
 
+      post_yaml_status_code(){
+          /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
+          --write-out %{http_code} --silent --output /dev/null \
+          --data-binary "$1" "$2"
+      }
+
       mfdir=/srv/kubernetes/manifests
       for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml; do
           post_yaml "@$mfdir/$manifest" \
@@ -445,6 +451,24 @@ write_files:
           post_yaml "@$mfdir/$manifest" \
           "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
       done
+
+      {{if .Experimental.Plugins.Rbac.Enabled}}
+      # k8s > 1.5 already have this clusterRole, so we accept http.code != 200
+      mfdir=/srv/kubernetes/rbac
+      if [[ $(post_yaml_status_code "@mfdir/cluster-roles/cluster-admin.yaml" \
+          "http://127.0.0.1:8081/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles") -ne "200" ]] ; then
+          echo 'Failed to create the cluster role named "cluster-admin". It is ok if you are using k8s newer than 1.5'
+      fi
+
+      post_yaml "@${mfdir}/cluster-roles/cluster-admin.yaml" \
+      "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles" |true
+
+      for manifest in {system-worker,kube-worker,kube-admin}; do
+          post_yaml "@${mfdir}/cluster-role-bindings/$manifest.yaml" \
+          "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterrolebindings"
+      done
+
+      {{ end }}
 
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
@@ -758,6 +782,66 @@ write_files:
            echo "uncordoning this node."
            $kubectl uncordon "$hostname"
            echo "done."'
+
+  {{if .Experimental.Plugins.Rbac.Enabled }}
+
+  #https://github.com/coreos/kube-aws/issues/230#issuecomment-274946933
+  - path: /srv/kubernetes/rbac/cluster-roles/cluster-admin.yaml
+    content: |
+        kind: ClusterRole
+        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        metadata:
+            name: cluster-admin
+        rules:
+          - apiGroups: ["*"]
+            resources: ["*"]
+            verbs: ["*"]
+          - nonResourceURLs: ["*"]
+            verbs: ["*"]
+
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/kube-admin.yaml
+    content: |
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        metadata:
+          name: kube-admin
+        subjects:
+          - kind: User
+            name: kube-admin
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/kube-worker.yaml
+    content: |
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        metadata:
+          name: kube-worker
+        subjects:
+          - kind: User
+            name: kube-worker
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/system-worker.yaml
+    content: |
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        metadata:
+          name: system-worker
+        subjects:
+          - kind: ServiceAccount
+            namespace: kube-system
+            name: default
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+{{ end }}
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
     content: |
