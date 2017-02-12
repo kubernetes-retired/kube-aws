@@ -58,7 +58,7 @@ func runCmdUpdate(cmd *cobra.Command, args []string) error {
 
 	cluster, err := cluster.NewCluster(confCluster, opts, upOpts.awsDebug)
 	if err != nil {
-		return fmt.Errorf("Failed to initialize cluster driver : %v", cluster)
+		return fmt.Errorf("Failed to initialize cluster driver: %v", err)
 	}
 
 	if err := cluster.ValidateUserData(); err != nil {

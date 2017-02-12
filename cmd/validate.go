@@ -50,7 +50,7 @@ func runCmdValidate(cmd *cobra.Command, args []string) error {
 
 	cluster, err := cluster.NewCluster(cfg, opts, validateOpts.awsDebug)
 	if err != nil {
-		return fmt.Errorf("Failed to initialize cluster driver : %v", err)
+		return fmt.Errorf("Failed to initialize cluster driver: %v", err)
 	}
 
 	fmt.Printf("Validating UserData and stack template...\n")
