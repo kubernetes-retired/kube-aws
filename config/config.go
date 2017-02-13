@@ -38,6 +38,9 @@ func NewDefaultCluster() *Cluster {
 		AwsNodeLabels{
 			Enabled: false,
 		},
+		ClusterAutoscalerSupport{
+			Enabled: false,
+		},
 		EphemeralImageStorage{
 			Enabled:    false,
 			Disk:       "xvdb",
@@ -402,16 +405,17 @@ type Cluster struct {
 }
 
 type Experimental struct {
-	AuditLog              AuditLog              `yaml:"auditLog"`
-	AwsEnvironment        AwsEnvironment        `yaml:"awsEnvironment"`
-	AwsNodeLabels         AwsNodeLabels         `yaml:"awsNodeLabels"`
-	EphemeralImageStorage EphemeralImageStorage `yaml:"ephemeralImageStorage"`
-	LoadBalancer          LoadBalancer          `yaml:"loadBalancer"`
-	NodeDrainer           NodeDrainer           `yaml:"nodeDrainer"`
-	NodeLabels            NodeLabels            `yaml:"nodeLabels"`
-	Plugins               Plugins               `yaml:"plugins"`
-	Taints                []Taint               `yaml:"taints"`
-	WaitSignal            WaitSignal            `yaml:"waitSignal"`
+	AuditLog                 AuditLog                 `yaml:"auditLog"`
+	AwsEnvironment           AwsEnvironment           `yaml:"awsEnvironment"`
+	AwsNodeLabels            AwsNodeLabels            `yaml:"awsNodeLabels"`
+	ClusterAutoscalerSupport ClusterAutoscalerSupport `yaml:"clusterAutoscalerSupport"`
+	EphemeralImageStorage    EphemeralImageStorage    `yaml:"ephemeralImageStorage"`
+	LoadBalancer             LoadBalancer             `yaml:"loadBalancer"`
+	NodeDrainer              NodeDrainer              `yaml:"nodeDrainer"`
+	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
+	Plugins                  Plugins                  `yaml:"plugins"`
+	Taints                   []Taint                  `yaml:"taints"`
+	WaitSignal               WaitSignal               `yaml:"waitSignal"`
 }
 
 type AwsEnvironment struct {
@@ -426,6 +430,10 @@ type AuditLog struct {
 }
 
 type AwsNodeLabels struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type ClusterAutoscalerSupport struct {
 	Enabled bool `yaml:"enabled"`
 }
 
