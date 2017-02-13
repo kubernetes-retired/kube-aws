@@ -815,14 +815,6 @@ func (c Cluster) valid() error {
 		return err
 	}
 
-	if c.WorkerTenancy != "default" && c.Worker.SpotFleet.Enabled() {
-		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot fleet", c.WorkerTenancy)
-	}
-
-	if c.WorkerTenancy != "default" && c.WorkerSpotPrice != "" {
-		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot instances", c.WorkerTenancy)
-	}
-
 	if c.Worker.ClusterAutoscaler.Enabled() {
 		return fmt.Errorf("cluster-autoscaler support can't be enabled for a main cluster because allowing so" +
 			"results in unreliability while scaling nodes out. " +
