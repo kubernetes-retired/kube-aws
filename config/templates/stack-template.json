@@ -444,6 +444,18 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
+                {{if .Experimental.ClusterAutoscalerSupport.Enabled}}
+                {
+                "Effect": "Allow",
+                  "Action": [
+                    "autoscaling:DescribeAutoScalingGroups",
+                    "autoscaling:DescribeAutoScalingInstances",
+                    "autoscaling:SetDesiredCapacity",
+                    "autoscaling:TerminateInstanceInAutoScalingGroup"
+                  ],
+                  "Resource": "*"
+                },
+                {{end}}
                 {
                   "Action": [
                     "ecr:GetAuthorizationToken",
