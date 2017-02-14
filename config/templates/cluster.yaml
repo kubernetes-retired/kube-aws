@@ -475,7 +475,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     # See https://github.com/coreos/kube-aws/issues/230 for more information.
 #     rbac:
 #       enabled: true
-
+#     authentication:
+#       webhook:
+#         enabled: true
+#         cacheTTL: 1m0s
+#         configBase64: base64-encoded-webhook-yaml
 # AWS Tags for cloudformation stack resources
 #stackTags:
 #  Name: "Kubernetes"
