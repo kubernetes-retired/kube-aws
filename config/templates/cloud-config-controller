@@ -406,7 +406,7 @@ write_files:
       kind: ConfigMap
       apiVersion: v1
       metadata:
-        name: calico-config 
+        name: calico-config
         namespace: kube-system
       data:
         etcd_endpoints: "#ETCD_ENDPOINTS#"
@@ -482,7 +482,7 @@ write_files:
                       configMapKeyRef:
                         name: calico-config
                         key: etcd_endpoints
-                  - name: CALICO_NETWORKING_BACKEND 
+                  - name: CALICO_NETWORKING_BACKEND
                     value: "none"
                   - name: CALICO_DISABLE_FILE_LOGGING
                     value: "true"
@@ -564,7 +564,7 @@ write_files:
       ---
 
       apiVersion: extensions/v1beta1
-      kind: Deployment 
+      kind: Deployment
       metadata:
         name: calico-policy-controller
         namespace: kube-system
@@ -621,7 +621,7 @@ write_files:
               - name: etcd-certs
                 secret:
                   secretName: calico-etcd-secrets
-  
+
   - path: /opt/bin/populate-tls-calico-etcd
     owner: root:root
     permissions: 0700
@@ -765,6 +765,10 @@ write_files:
           - --authorization-mode=RBAC
           - --authorization-rbac-super-user=kube-admin
           {{ end }}
+          {{if .Experimental.Authentication.Webhook.Enabled}}
+          - --authentication-token-webhook-config-file=/etc/kubernetes/webhooks/authentication.yaml
+          - --authentication-token-webhook-cache-ttl={{ .Experimental.Authentication.Webhook.CacheTTL }}
+          {{ end }}
           - --advertise-address=$private_ipv4
           - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
           - --anonymous-auth=false
@@ -795,6 +799,9 @@ write_files:
           - mountPath: /etc/ssl/certs
             name: ssl-certs-host
             readOnly: true
+          - mountPath: /etc/kubernetes/webhooks
+            name: kubernetes-webhooks
+            readOnly: true
         volumes:
         - hostPath:
             path: /etc/kubernetes/ssl
@@ -802,6 +809,9 @@ write_files:
         - hostPath:
             path: /usr/share/ca-certificates
           name: ssl-certs-host
+        - hostPath:
+            path: /etc/kubernetes/webhooks
+          name: kubernetes-webhooks
 
   - path: /etc/kubernetes/manifests/kube-controller-manager.yaml
     content: |
@@ -1164,18 +1174,18 @@ write_files:
     content: |
         kind: Service
         apiVersion: v1
-        metadata: 
+        metadata:
           name: heapster
           namespace: kube-system
-          labels: 
+          labels:
             kubernetes.io/cluster-service: "true"
             kubernetes.io/name: "Heapster"
             k8s-app: heapster
-        spec: 
-          ports: 
+        spec:
+          ports:
             - port: 80
               targetPort: 8082
-          selector: 
+          selector:
             k8s-app: heapster
 
   - path: /srv/kubernetes/manifests/kube-dashboard-rc.yaml
@@ -1238,7 +1248,7 @@ write_files:
           ports:
           - port: 80
             targetPort: 9090
-        
+
 {{ if .ManageCertificates }}
   - path: /etc/kubernetes/ssl/ca.pem.enc
     encoding: gzip+base64
@@ -1272,4 +1282,10 @@ write_files:
                 "isDefaultGateway": true
             }
         }
+{{ end }}
+
+{{if .Experimental.Authentication.Webhook.Enabled}}
+  - path: /etc/kubernetes/webhooks/authentication.yaml
+    encoding: base64
+    content: {{ .Experimental.Authentication.Webhook.Config }}
 {{ end }}

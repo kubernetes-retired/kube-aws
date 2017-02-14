@@ -120,6 +120,12 @@ etcdEndpoints: "10.0.0.1"
 				Enabled:      false,
 				MaxBatchSize: 1,
 			},
+			Authentication: cfg.Authentication{
+				Webhook: cfg.Webhook{
+					Enabled:  false,
+					CacheTTL: "5m0s",
+				},
+			},
 		}
 
 		actual := c.Experimental
@@ -203,6 +209,12 @@ experimental:
 						WaitSignal: cfg.WaitSignal{
 							Enabled:      true,
 							MaxBatchSize: 1,
+						},
+						Authentication: cfg.Authentication{
+							Webhook: cfg.Webhook{
+								Enabled:  false,
+								CacheTTL: "5m0s",
+							},
 						},
 					}
 
