@@ -76,6 +76,12 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled:      false,
 				MaxBatchSize: 1,
 			},
+			Authentication: config.Authentication{
+				Webhook: config.Webhook{
+					Enabled:  false,
+					CacheTTL: "5m0s",
+				},
+			},
 		}
 
 		actual := c.Experimental
@@ -260,6 +266,12 @@ experimental:
 						Plugins: config.Plugins{
 							Rbac: config.Rbac{
 								Enabled: true,
+							},
+						},
+						Authentication: config.Authentication{
+							Webhook: config.Webhook{
+								Enabled:  false,
+								CacheTTL: "5m0s",
 							},
 						},
 						Taints: []config.Taint{
