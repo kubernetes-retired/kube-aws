@@ -799,9 +799,11 @@ write_files:
           - mountPath: /etc/ssl/certs
             name: ssl-certs-host
             readOnly: true
+          {{if .Experimental.Authentication.Webhook.Enabled}}
           - mountPath: /etc/kubernetes/webhooks
             name: kubernetes-webhooks
             readOnly: true
+          {{ end }}
         volumes:
         - hostPath:
             path: /etc/kubernetes/ssl
@@ -809,9 +811,11 @@ write_files:
         - hostPath:
             path: /usr/share/ca-certificates
           name: ssl-certs-host
+        {{if .Experimental.Authentication.Webhook.Enabled}}
         - hostPath:
             path: /etc/kubernetes/webhooks
           name: kubernetes-webhooks
+        {{end}}
 
   - path: /etc/kubernetes/manifests/kube-controller-manager.yaml
     content: |
