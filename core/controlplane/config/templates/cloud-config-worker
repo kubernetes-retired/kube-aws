@@ -19,6 +19,7 @@ coreos:
         After=network-online.target
 
         [Service]
+        EnvironmentFile={{.StackNameEnvFileName}}
         Restart=on-failure
         RemainAfterExit=true
         ExecStartPre=/opt/bin/cfn-etcd-environment
@@ -199,6 +200,7 @@ coreos:
 
         [Service]
         Type=oneshot
+        EnvironmentFile={{.StackNameEnvFileName}}
         RemainAfterExit=true
         ExecStartPre=/bin/touch /etc/aws-environment
         ExecStart=/opt/bin/set-aws-environment
@@ -286,6 +288,7 @@ coreos:
 
         [Service]
         Type=oneshot
+        EnvironmentFile={{.StackNameEnvFileName}}
         ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl  --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
         {{ if .UseCalico }}
         ExecStartPre=/usr/bin/bash -c "until /usr/bin/docker run --net=host --pid=host --rm calico/ctl:v1.0.0 node status > /dev/null; do sleep 3; done && echo Calico running"        
@@ -380,14 +383,6 @@ ssh_authorized_keys:
 {{end}}
 
 write_files:
-  - path: /opt/bin/kube-aws-stack-name
-    owner: root:root
-    permissions: 0700
-    content: |
-      #!/bin/bash -e
-      . {{.StackNameEnvFileName}}
-      echo ${{.StackNameEnvVarName}}
-
 {{if .AwsEnvironment.Enabled}}
   - path: /opt/bin/set-aws-environment
     owner: root:root
@@ -406,7 +401,7 @@ write_files:
         {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
           -ec \
           '
-            cfn-init -v -c "aws-environment" --region {{.Region}} --resource {{.LogicalName}} --stack '$(/opt/bin/kube-aws-stack-name)'
+            cfn-init -v -c "aws-environment" --region {{.Region}} --resource {{.LogicalName}} --stack '${{.StackNameEnvVarName}}'
           '
 {{end}}
 
@@ -427,7 +422,7 @@ write_files:
         {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
           -ec \
           '
-            cfn-signal -e 0 --region {{.Region}} --resource {{.LogicalName}} --stack '$(/opt/bin/kube-aws-stack-name)'
+            cfn-signal -e 0 --region {{.Region}} --resource {{.LogicalName}} --stack '${{.StackNameEnvVarName}}'
           '
 
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
@@ -449,7 +444,7 @@ write_files:
         {{.AWSCliImageRepo}}:{{.AWSCliTag}} --exec=/bin/bash -- \
           -ec \
           '
-            cfn-init -v -c "etcd-client" --region {{.Region}} --resource {{.LogicalName}} --stack '$(/opt/bin/kube-aws-stack-name)'
+            cfn-init -v -c "etcd-client" --region {{.Region}} --resource {{.LogicalName}} --stack '${{.StackNameEnvVarName}}'
           '
 
       rkt rm --uuid-file=/var/run/coreos/cfn-etcd-environment.uuid || :
