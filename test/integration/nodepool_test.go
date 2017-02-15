@@ -116,10 +116,6 @@ etcdEndpoints: "10.0.0.1"
 			},
 			NodeLabels: cfg.NodeLabels{},
 			Taints:     []cfg.Taint{},
-			WaitSignal: cfg.WaitSignal{
-				Enabled:      false,
-				MaxBatchSize: 1,
-			},
 		}
 
 		actual := c.Experimental
@@ -160,8 +156,6 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
-  waitSignal:
-    enabled: true
   kube2IamSupport:
     enabled: true
 `,
@@ -201,10 +195,6 @@ experimental:
 						},
 						Taints: []cfg.Taint{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
-						},
-						WaitSignal: cfg.WaitSignal{
-							Enabled:      true,
-							MaxBatchSize: 1,
 						},
 						Kube2IamSupport: cfg.Kube2IamSupport{
 							Enabled: true,
@@ -600,18 +590,6 @@ vpcId: vpc-1a2b3c4d
 # vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
 vpcCIDR: "10.1.0.0/16"
 `,
-		},
-		{
-			context: "WithSpotFleetWithExperimentalWaitSignal",
-			configYaml: minimalValidConfigYaml + `
-worker:
-  spotFleet:
-    targetCapacity: 10
-experimental:
-  waitSignal:
-    enabled: true
-`,
-			expectedErrorMessage: "The experimental feature `waitSignal` assumes a node pool is managed by an ASG rather than a Spot Fleet.",
 		},
 		{
 			context: "WithSpotFleetWithInvalidRootVolumeType",

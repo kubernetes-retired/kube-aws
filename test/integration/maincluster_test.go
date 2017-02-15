@@ -72,10 +72,6 @@ func TestMainClusterConfig(t *testing.T) {
 			},
 			NodeLabels: config.NodeLabels{},
 			Taints:     []config.Taint{},
-			WaitSignal: config.WaitSignal{
-				Enabled:      false,
-				MaxBatchSize: 1,
-			},
 		}
 
 		actual := c.Experimental
@@ -220,8 +216,6 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
-  waitSignal:
-    enabled: true
   kube2IamSupport:
     enabled: true
 `,
@@ -266,10 +260,6 @@ experimental:
 						},
 						Taints: []config.Taint{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
-						},
-						WaitSignal: config.WaitSignal{
-							Enabled:      true,
-							MaxBatchSize: 1,
 						},
 						Kube2IamSupport: config.Kube2IamSupport{
 							Enabled: true,
