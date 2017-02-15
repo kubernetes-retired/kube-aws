@@ -125,6 +125,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # Disk type for worker node (one of standard, io1, or gp2)
 #workerRootVolumeType: gp2
 
+# if you specify workerManagedIamRoleName the role created will not suffix the random id at the end
+# Role will be created with "Ref": {"AWS::StackName"}-{"AWS::Region"}-yourManagedRole
+# to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
+#workerManagedIamRoleName: "yourManagedRole"
+
 # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
 #workerRootVolumeIOPS: 0
 
@@ -394,7 +399,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #tlsCertDurationDays: 365
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.5.2_coreos.0
+# kubernetesVersion: v1.5.3_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImageRepo: quay.io/coreos/hyperkube
@@ -427,6 +432,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # you are responsible for making sure that nodes have correct certificates by the time
 # daemons start up.
 # manageCertificates: true
+
+# When enabled, autoscaling groups managing worker and controller nodes wait for nodes to be up and running.
+#waitSignal:
+#  enabled: true
+#   maxBatchSize: 1
 
 # Experimental features will change in backward-incompatible ways
 # experimental:
@@ -465,23 +475,22 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     - key: dedicated
 #       value: search
 #       effect: NoSchedule
-#   # When enabled, autoscaling groups managing worker and controller nodes wait for nodes to be up and running.
-#   # Although this is still an experimental feature, it is recommended to be enabled and
-#   # it will even be enabled by default in the near future.
-#   waitSignal:
-#     enabled: true
 #   plugins:
 #     # When enabled, you also need to configure a minimum set of role bindings or everything breaks.
 #     # See https://github.com/coreos/kube-aws/issues/230 for more information.
 #     rbac:
 #       enabled: true
 #     authentication:
-#       See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication
-#       for more information.
+#       # See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication
+#       # for more information.
 #       webhook:
 #         enabled: true
 #         cacheTTL: 1m0s
 #         configBase64: base64-encoded-webhook-yaml
+#      # When enabled it will grant sts:assumeRole permission to everyrole in the IAM Worker Role.
+#      kube2IamSupport:
+#        enabled: true
+#
 
 # AWS Tags for cloudformation stack resources
 #stackTags:

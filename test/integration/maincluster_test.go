@@ -53,6 +53,12 @@ func TestMainClusterConfig(t *testing.T) {
 				MaxAge:  30,
 				LogPath: "/dev/stdout",
 			},
+			Authentication: config.Authentication{
+				Webhook: config.Webhook{
+					Enabled:  false,
+					CacheTTL: "5m0s",
+				},
+			},
 			AwsEnvironment: config.AwsEnvironment{
 				Enabled: false,
 			},
@@ -72,16 +78,6 @@ func TestMainClusterConfig(t *testing.T) {
 			},
 			NodeLabels: config.NodeLabels{},
 			Taints:     []config.Taint{},
-			WaitSignal: config.WaitSignal{
-				Enabled:      false,
-				MaxBatchSize: 1,
-			},
-			Authentication: config.Authentication{
-				Webhook: config.Webhook{
-					Enabled:  false,
-					CacheTTL: "5m0s",
-				},
-			},
 		}
 
 		actual := c.Experimental
@@ -226,7 +222,7 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
-  waitSignal:
+  kube2IamSupport:
     enabled: true
 `,
 			assertConfig: []ConfigTester{
@@ -277,9 +273,8 @@ experimental:
 						Taints: []config.Taint{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
-						WaitSignal: config.WaitSignal{
-							Enabled:      true,
-							MaxBatchSize: 1,
+						Kube2IamSupport: config.Kube2IamSupport{
+							Enabled: true,
 						},
 					}
 
@@ -1133,6 +1128,21 @@ routeTableId: rtb-1a2b3c4d
 							expected,
 							actual,
 						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerManagedIamRoleName",
+			configYaml: minimalValidConfigYaml + `
+workerManagedIamRoleName: "yourManagedRole"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					if c.WorkerManagedIamRoleName != "yourManagedRole" {
+						t.Errorf("workerManagedIamRoleName: expected=yourManagedRole actual=%s", c.WorkerManagedIamRoleName)
 					}
 				},
 			},
