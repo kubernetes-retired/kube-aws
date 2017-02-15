@@ -549,7 +549,7 @@ write_files:
            /usr/bin/aws \
              --region {{.Region}} ec2 create-tags \
              --resource $instance_id \
-             --tags '"'"'Key=KubernetesCluster,Value="{{.ClusterName}}"'"'"' '"'"'Key=Name,Value="{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'
+             --tags '"'"'Key=KubernetesCluster,Value="{{.ClusterName}}"'"'"' '"'"'Key=Name,Value="{{.ClusterName}}-{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'
            echo done.'
 
       sudo rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
