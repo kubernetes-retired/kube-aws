@@ -216,6 +216,8 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
+  kube2IamSupport:
+    enabled: true
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
@@ -258,6 +260,9 @@ experimental:
 						},
 						Taints: []config.Taint{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
+						},
+						Kube2IamSupport: config.Kube2IamSupport{
+							Enabled: true,
 						},
 					}
 
@@ -1111,6 +1116,21 @@ routeTableId: rtb-1a2b3c4d
 							expected,
 							actual,
 						)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerManagedIamRoleName",
+			configYaml: minimalValidConfigYaml + `
+workerManagedIamRoleName: "yourManagedRole"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Cluster, t *testing.T) {
+					if c.WorkerManagedIamRoleName != "yourManagedRole" {
+						t.Errorf("workerManagedIamRoleName: expected=yourManagedRole actual=%s", c.WorkerManagedIamRoleName)
 					}
 				},
 			},
