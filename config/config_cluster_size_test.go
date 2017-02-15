@@ -37,15 +37,15 @@ func TestASGsOnlyMinConfigured(t *testing.T) {
 func TestASGsOnlyMaxConfigured(t *testing.T) {
 	configuredMax := 3
 	// we expect min to be equal to main count if only max specified
-	checkControllerASG(nil, nil, &configuredMax, nil, 1, 3, 2, "", t)
-	checkWorkerASG(nil, nil, &configuredMax, nil, 1, 3, 2, "", t)
+	checkControllerASG(nil, nil, &configuredMax, nil, 1, 3, 1, "", t)
+	checkWorkerASG(nil, nil, &configuredMax, nil, 1, 3, 1, "", t)
 }
 
 func TestASGsMinMaxConfigured(t *testing.T) {
 	configuredMin := 2
 	configuredMax := 5
-	checkControllerASG(nil, &configuredMin, &configuredMax, nil, 2, 5, 4, "", t)
-	checkWorkerASG(nil, &configuredMin, &configuredMax, nil, 2, 5, 4, "", t)
+	checkControllerASG(nil, &configuredMin, &configuredMax, nil, 2, 5, 1, "", t)
+	checkWorkerASG(nil, &configuredMin, &configuredMax, nil, 2, 5, 1, "", t)
 }
 
 func TestASGsInvalidMin(t *testing.T) {

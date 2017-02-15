@@ -15,7 +15,7 @@ var (
 	configPath = "cluster.yaml"
 )
 
-func stackTemplateOptions(s3URI string, prettyPrint bool) config.StackTemplateOptions {
+func stackTemplateOptions(s3URI string, prettyPrint bool, skipWait bool) config.StackTemplateOptions {
 	return config.StackTemplateOptions{
 		TLSAssetsDir:          "credentials",
 		ControllerTmplFile:    "userdata/cloud-config-controller",
@@ -24,5 +24,6 @@ func stackTemplateOptions(s3URI string, prettyPrint bool) config.StackTemplateOp
 		StackTemplateTmplFile: "stack-template.json",
 		S3URI:       s3URI,
 		PrettyPrint: prettyPrint,
+		SkipWait:    skipWait,
 	}
 }

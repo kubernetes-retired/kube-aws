@@ -157,7 +157,7 @@
         ]
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      {{if .Experimental.WaitSignal.Enabled}}
+      {{if .WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.MinWorkerCount}}",
@@ -173,9 +173,9 @@
           {{else}}
           "{{.WorkerRollingUpdateMinInstancesInService}}"
           {{end}},
-          {{if .Experimental.WaitSignal.Enabled}}
+          {{if .WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
-          "MaxBatchSize" : "{{.Experimental.WaitSignal.MaxBatchSize}}",
+          "MaxBatchSize" : "{{.WaitSignal.MaxBatchSize}}",
           "PauseTime": "{{.WorkerCreateTimeout}}"
           {{else}}
           "MaxBatchSize" : "1",
@@ -302,7 +302,7 @@
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },
-                {{if .Experimental.WaitSignal.Enabled}}
+                {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
                   "Effect": "Allow",

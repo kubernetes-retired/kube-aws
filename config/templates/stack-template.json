@@ -52,7 +52,7 @@
         ]
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      {{if .Experimental.WaitSignal.Enabled}}
+      {{if .WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.MinWorkerCount}}",
@@ -68,9 +68,9 @@
           {{else}}
           "{{.WorkerRollingUpdateMinInstancesInService}}"
           {{end}},
-          {{if .Experimental.WaitSignal.Enabled}}
+          {{if .WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
-          "MaxBatchSize" : "{{.Experimental.WaitSignal.MaxBatchSize}}",
+          "MaxBatchSize" : "{{.WaitSignal.MaxBatchSize}}",
           "PauseTime": "{{.WorkerCreateTimeout}}"
           {{else}}
           "MaxBatchSize" : "1",
@@ -153,7 +153,7 @@
           { "Ref" : "ElbAPIServer" }
         ]
       },
-      {{if .Experimental.WaitSignal.Enabled}}
+      {{if .WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.MinControllerCount}}",
@@ -165,7 +165,7 @@
         "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : "{{.ControllerRollingUpdateMinInstancesInService}}",
           "MaxBatchSize" : "1",
-          {{if .Experimental.WaitSignal.Enabled}}
+          {{if .WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
           "PauseTime": "{{.ControllerCreateTimeout}}"
           {{else}}
@@ -317,7 +317,7 @@
 		  ],
 		  "Resource": "arn:aws:s3:::{{$.UserDataControllerS3Path}}"
 		},
-                {{if .Experimental.WaitSignal.Enabled}}
+                {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
                   "Effect": "Allow",
@@ -431,7 +431,7 @@
                   "Resource" : "{{.KMSKeyARN}}"
                 },
                 {{end}}
-                {{if .Experimental.WaitSignal.Enabled}}
+                {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
                   "Effect": "Allow",

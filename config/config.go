@@ -59,10 +59,6 @@ func NewDefaultCluster() *Cluster {
 			},
 		},
 		[]Taint{},
-		WaitSignal{
-			Enabled:      false,
-			MaxBatchSize: 1,
-		},
 		Kube2IamSupport{
 			Enabled: false,
 		},
@@ -83,6 +79,7 @@ func NewDefaultCluster() *Cluster {
 			MapPublicIPs:       true,
 			Experimental:       experimental,
 			ManageCertificates: true,
+			WaitSignal:         WaitSignal{Enabled: true, MaxBatchSize: 1},
 		},
 		KubeClusterSettings: KubeClusterSettings{
 			DNSServiceIP: "10.3.0.10",
@@ -99,6 +96,7 @@ func NewDefaultCluster() *Cluster {
 			WorkerTenancy:          "default",
 		},
 		ControllerSettings: ControllerSettings{
+			Controller:               model.NewDefaultController(),
 			ControllerCount:          1,
 			ControllerCreateTimeout:  "PT15M",
 			ControllerInstanceType:   "t2.medium",
@@ -339,6 +337,7 @@ type DeploymentSettings struct {
 	SSHAuthorizedKeys   []string          `yaml:"sshAuthorizedKeys,omitempty"`
 	Experimental        Experimental      `yaml:"experimental"`
 	ManageCertificates  bool              `yaml:"manageCertificates,omitempty"`
+	WaitSignal          WaitSignal        `yaml:"waitSignal"`
 }
 
 // Part of configuration which is specific to worker nodes
@@ -419,7 +418,6 @@ type Experimental struct {
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
 	Taints                   []Taint                  `yaml:"taints"`
-	WaitSignal               WaitSignal               `yaml:"waitSignal"`
 	Kube2IamSupport          Kube2IamSupport          `yaml:"kube2IamSupport,omitempty"`
 }
 
@@ -668,6 +666,7 @@ type StackTemplateOptions struct {
 	StackTemplateTmplFile string
 	S3URI                 string
 	PrettyPrint           bool
+	SkipWait              bool
 }
 
 func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
@@ -705,6 +704,10 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 	stackConfig.S3URI = strings.TrimSuffix(opts.S3URI, "/")
 
 	stackConfig.StackTemplateOptions = opts
+
+	if opts.SkipWait {
+		stackConfig.WaitSignal.Enabled = false
+	}
 
 	return &stackConfig, nil
 }
@@ -1251,10 +1254,6 @@ func (c WorkerDeploymentSettings) Valid() error {
 
 	if numSGs > 4 {
 		return fmt.Errorf("number of user provided security groups must be less than or equal to 4 but was %d (actual EC2 limit is 5 but one of them is reserved for kube-aws) : %v", numSGs, sgRefs)
-	}
-
-	if c.SpotFleet.Enabled() && c.Experimental.WaitSignal.Enabled {
-		return fmt.Errorf("The experimental feature `waitSignal` assumes a node pool is managed by an ASG rather than a Spot Fleet.")
 	}
 
 	return nil
