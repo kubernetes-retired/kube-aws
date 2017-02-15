@@ -40,9 +40,16 @@ type LaunchSpecification struct {
 	RootVolumeIOPS   int    `yaml:"rootVolumeIOPS,omitempty"`
 }
 
+func NewDefaultController() Controller {
+	return Controller{
+		AutoScalingGroup: AutoScalingGroup{RollingUpdateMinInstancesInService: 1},
+	}
+}
+
 func NewDefaultWorker() Worker {
 	return Worker{
-		SpotFleet: newDefaultSpotFleet(),
+		SpotFleet:        newDefaultSpotFleet(),
+		AutoScalingGroup: AutoScalingGroup{RollingUpdateMinInstancesInService: 1},
 	}
 }
 

@@ -129,9 +129,7 @@ customize_worker() {
   #
 
   echo -e 'experimental:\n  nodeDrainer:\n    enabled: true' >> cluster.yaml
-  if [ "${KUBE_AWS_WAIT_SIGNAL_ENABLED}" != "" ]; then
-    echo -e '  waitSignal:\n    enabled: true' >> cluster.yaml
-  fi
+
   if [ "${KUBE_AWS_AWS_NODE_LABELS_ENABLED}" != "" ]; then
     echo -e '  awsNodeLabels:\n    enabled: true' >> cluster.yaml
   fi

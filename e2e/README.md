@@ -118,7 +118,7 @@ The test cluster created by the `e2e/run` script can be customized via various e
 
 `KUBE_AWS_NODE_LABELS_ENABLED=1`: Enable the `nodeLabels` experimental feature to tag node pool(s) with example user-provided tags.
 
-`KUBE_AWS_WAIT_SIGNAL_ENABLED=1`: Enable the `waitSignal` experimental feature.
+`KUBE_AWS_WAIT_SIGNAL_ENABLED=1`: Enable the `waitSignal` feature.
 
 `KUBE_AWS_AWS_ENV_ENABLED=1`: Enable the `awsEnvironment` experimental feature.
 
