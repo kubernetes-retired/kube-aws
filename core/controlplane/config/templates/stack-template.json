@@ -33,7 +33,7 @@
           {
             "Key": "Name",
             "PropagateAtLaunch": "true",
-            "Value": "{{.ClusterName}}-kube-aws-controller"
+            "Value": "{{.ClusterName}}-{{.StackName}}-kube-aws-controller"
           }
         ],
         "VPCZoneIdentifier": [
@@ -359,7 +359,7 @@
           },
           {
             "Key": "Name",
-            "Value": "{{$.ClusterName}}-kube-aws-etcd-{{$etcdIndex}}"
+            "Value": "{{$.ClusterName}}-{{$.StackName}}-kube-aws-etcd-{{$etcdIndex}}"
           }
         ],
         "Tenancy": "{{$.EtcdTenancy}}",

@@ -139,7 +139,7 @@
           {
             "Key": "Name",
             "PropagateAtLaunch": "true",
-            "Value": "{{.StackName}}-kube-aws-worker"
+            "Value": "{{.ClusterName}}-{{.StackName}}-kube-aws-worker"
           }
         ],
         {{if .LoadBalancer.Enabled}}
