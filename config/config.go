@@ -59,6 +59,9 @@ func NewDefaultCluster() *Cluster {
 			},
 		},
 		[]Taint{},
+		Kube2IamSupport{
+			Enabled: false,
+		},
 	}
 
 	return &Cluster{
@@ -339,17 +342,18 @@ type DeploymentSettings struct {
 
 // Part of configuration which is specific to worker nodes
 type WorkerSettings struct {
-	model.Worker           `yaml:"worker,omitempty"`
-	WorkerCount            int      `yaml:"workerCount,omitempty"`
-	WorkerCreateTimeout    string   `yaml:"workerCreateTimeout,omitempty"`
-	WorkerInstanceType     string   `yaml:"workerInstanceType,omitempty"`
-	WorkerRootVolumeType   string   `yaml:"workerRootVolumeType,omitempty"`
-	WorkerRootVolumeIOPS   int      `yaml:"workerRootVolumeIOPS,omitempty"`
-	WorkerRootVolumeSize   int      `yaml:"workerRootVolumeSize,omitempty"`
-	WorkerSpotPrice        string   `yaml:"workerSpotPrice,omitempty"`
-	WorkerSecurityGroupIds []string `yaml:"workerSecurityGroupIds,omitempty"`
-	WorkerTenancy          string   `yaml:"workerTenancy,omitempty"`
-	WorkerTopologyPrivate  bool     `yaml:"workerTopologyPrivate,omitempty"`
+	model.Worker             `yaml:"worker,omitempty"`
+	WorkerCount              int      `yaml:"workerCount,omitempty"`
+	WorkerCreateTimeout      string   `yaml:"workerCreateTimeout,omitempty"`
+	WorkerInstanceType       string   `yaml:"workerInstanceType,omitempty"`
+	WorkerRootVolumeType     string   `yaml:"workerRootVolumeType,omitempty"`
+	WorkerRootVolumeIOPS     int      `yaml:"workerRootVolumeIOPS,omitempty"`
+	WorkerRootVolumeSize     int      `yaml:"workerRootVolumeSize,omitempty"`
+	WorkerSpotPrice          string   `yaml:"workerSpotPrice,omitempty"`
+	WorkerSecurityGroupIds   []string `yaml:"workerSecurityGroupIds,omitempty"`
+	WorkerTenancy            string   `yaml:"workerTenancy,omitempty"`
+	WorkerTopologyPrivate    bool     `yaml:"workerTopologyPrivate,omitempty"`
+	WorkerManagedIamRoleName string   `yaml:"workerManagedIamRoleName,omitempty"`
 }
 
 // Part of configuration which is specific to controller nodes
@@ -414,6 +418,7 @@ type Experimental struct {
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
 	Taints                   []Taint                  `yaml:"taints"`
+	Kube2IamSupport          Kube2IamSupport          `yaml:"kube2IamSupport,omitempty"`
 }
 
 type AwsEnvironment struct {
@@ -487,6 +492,10 @@ func (t Taint) String() string {
 type WaitSignal struct {
 	Enabled      bool `yaml:"enabled"`
 	MaxBatchSize int  `yaml:"maxBatchSize"`
+}
+
+type Kube2IamSupport struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 const (
