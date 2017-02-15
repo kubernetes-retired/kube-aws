@@ -76,6 +76,11 @@ coreos:
             EnvironmentFile=/etc/kubernetes/cni/docker_opts_cni.env
             ExecStartPre=/usr/bin/systemctl is-active flanneld.service
 
+        - name: 60-logfilelimit.conf
+          content: |
+            [Service]
+            Environment="DOCKER_OPTS=--log-opt max-size=50m --log-opt max-file=3"
+
     - name: flanneld.service
       drop-ins:
         - name: 10-etcd.conf
