@@ -530,6 +530,19 @@
       },
       "Type": "AWS::EC2::NetworkInterface"
     },
+    {{if not $.EtcdDataVolumeEphemeral}}
+    "InstanceEtcd{{$etcdIndex}}ebs": {
+      "Properties": {
+          "AvailabilityZone": "{{ $etcdInstance.SubnetAvailabilityZone}}",
+          "Size": "{{$.EtcdDataVolumeSize}}",
+          {{if gt $.EtcdDataVolumeIOPS 0}}
+          "Iops": "{{$.EtcdDataVolumeIOPS}}",
+          {{end}}
+          "VolumeType": "{{$.EtcdDataVolumeType}}"
+      },
+      "Type": "AWS::EC2::Volume"
+    },
+    {{end}}
     "InstanceEtcd{{$etcdIndex}}": {
       "Properties": {
         "BlockDeviceMappings": [
@@ -542,24 +555,14 @@
               {{end}}
               "VolumeType": "{{$.EtcdRootVolumeType}}"
             }
-          },
+          }
+          {{if $.EtcdDataVolumeEphemeral}}
+          ,
           {
             "DeviceName": "/dev/xvdf",
-            {{if $.EtcdDataVolumeEphemeral}}
             "VirtualName" : "ephemeral0"
-            {{else}}
-            "Ebs": {
-              "VolumeSize": "{{$.EtcdDataVolumeSize}}",
-              {{if gt $.EtcdDataVolumeIOPS 0}}
-              "Iops": "{{$.EtcdDataVolumeIOPS}}",
-              {{end}}
-              {{if $.EtcdDataVolumeEncrypted}}
-              "Encrypted": {{$.EtcdDataVolumeEncrypted}},
-              {{end}}
-              "VolumeType": "{{$.EtcdDataVolumeType}}"
-            }
-            {{end}}
           }
+          {{end}}
         ],
         "IamInstanceProfile": {
           "Ref": "IAMInstanceProfileEtcd"
@@ -585,6 +588,12 @@
         ],
         "Tenancy": "{{$.EtcdTenancy}}",
         "UserData": { "Fn::FindInMap" : [ "EtcdInstanceParams", "UserData", "cloudconfig"] }
+        {{if not $.EtcdDataVolumeEphemeral}}
+        ,
+        "Volumes": [
+            { "VolumeId": { "Ref": "InstanceEtcd{{$etcdIndex}}ebs" }, "Device": "/dev/xvdf" }
+        ]
+        {{end}}
       },
       {{if $etcdInstance.DependencyExists}}
       "DependsOn": [{{$etcdInstance.DependencyRef}}],

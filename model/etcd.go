@@ -34,6 +34,10 @@ func (i etcdInstanceImpl) SubnetRef() string {
 	return i.subnet.Ref()
 }
 
+func (i etcdInstanceImpl) SubnetAvailabilityZone() string {
+	return i.subnet.AvailabilityZone
+}
+
 func (i etcdInstanceImpl) DependencyExists() bool {
 	return i.subnet.Private && i.subnet.ManageRouteToNATGateway()
 }
