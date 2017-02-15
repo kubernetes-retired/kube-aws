@@ -290,7 +290,7 @@ coreos:
         ExecStart=/opt/bin/taint-and-uncordon
 {{end}}
 
-{{ if .Experimental.WaitSignal.Enabled }}
+{{ if .WaitSignal.Enabled }}
     - name: cfn-signal.service
       command: start
       content: |
