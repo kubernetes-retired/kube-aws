@@ -7,6 +7,8 @@ import (
 	"github.com/coreos/kube-aws/cluster"
 	"github.com/coreos/kube-aws/config"
 	"github.com/spf13/cobra"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -20,6 +22,7 @@ var (
 
 	validateOpts = struct {
 		awsDebug bool
+		skipWait bool
 		s3URI    string
 	}{}
 )
@@ -41,12 +44,28 @@ func init() {
 }
 
 func runCmdValidate(cmd *cobra.Command, args []string) error {
+	// Up flags.
+	required := []struct {
+		name, val string
+	}{
+		{"--s3-uri", validateOpts.s3URI},
+	}
+	var missing []string
+	for _, req := range required {
+		if req.val == "" {
+			missing = append(missing, strconv.Quote(req.name))
+		}
+	}
+	if len(missing) != 0 {
+		return fmt.Errorf("Missing required flag(s): %s", strings.Join(missing, ", "))
+	}
+
 	cfg, err := config.ClusterFromFile(configPath)
 	if err != nil {
 		return fmt.Errorf("Unable to load cluster config: %v", err)
 	}
 
-	opts := stackTemplateOptions(validateOpts.s3URI, validateOpts.awsDebug)
+	opts := stackTemplateOptions(validateOpts.s3URI, validateOpts.awsDebug, validateOpts.skipWait)
 
 	cluster, err := cluster.NewCluster(cfg, opts, validateOpts.awsDebug)
 	if err != nil {

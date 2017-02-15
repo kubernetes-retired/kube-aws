@@ -428,6 +428,11 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 # daemons start up.
 # manageCertificates: true
 
+# When enabled, autoscaling groups managing worker and controller nodes wait for nodes to be up and running.
+#waitSignal:
+#  enabled: true
+#   maxBatchSize: 1
+
 # Experimental features will change in backward-incompatible ways
 # experimental:
 #   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
@@ -465,11 +470,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     - key: dedicated
 #       value: search
 #       effect: NoSchedule
-#   # When enabled, autoscaling groups managing worker and controller nodes wait for nodes to be up and running.
-#   # Although this is still an experimental feature, it is recommended to be enabled and
-#   # it will even be enabled by default in the near future.
-#   waitSignal:
-#     enabled: true
 #   plugins:
 #     # When enabled, you also need to configure a minimum set of role bindings or everything breaks.
 #     # See https://github.com/coreos/kube-aws/issues/230 for more information.

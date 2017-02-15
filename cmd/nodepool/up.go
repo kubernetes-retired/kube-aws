@@ -78,9 +78,6 @@ func runCmdUp(cmd *cobra.Command, args []string) error {
 		if err := ioutil.WriteFile(templatePath, stackTemplate, 0600); err != nil {
 			return fmt.Errorf("Error writing %s : %v", templatePath, err)
 		}
-		if conf.KMSKeyARN == "" {
-			fmt.Printf("BEWARE: %s contains your TLS secrets!\n", templatePath)
-		}
 		return nil
 	}
 
