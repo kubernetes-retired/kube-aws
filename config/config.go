@@ -58,6 +58,13 @@ func NewDefaultCluster() *Cluster {
 				Enabled: false,
 			},
 		},
+		Authentication{
+			Webhook{
+				Enabled:  false,
+				CacheTTL: "5m0s",
+				Config:   "",
+			},
+		},
 		[]Taint{},
 		Kube2IamSupport{
 			Enabled: false,
@@ -417,8 +424,19 @@ type Experimental struct {
 	NodeDrainer              NodeDrainer              `yaml:"nodeDrainer"`
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
+	Authentication           Authentication           `yaml:"authentication"`
 	Taints                   []Taint                  `yaml:"taints"`
 	Kube2IamSupport          Kube2IamSupport          `yaml:"kube2IamSupport,omitempty"`
+}
+
+type Authentication struct {
+	Webhook Webhook `yaml:"webhook"`
+}
+
+type Webhook struct {
+	Enabled  bool   `yaml:"enabled"`
+	CacheTTL string `yaml:"cacheTTL"`
+	Config   string `yaml:"configBase64"`
 }
 
 type AwsEnvironment struct {

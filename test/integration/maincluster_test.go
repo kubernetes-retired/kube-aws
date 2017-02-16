@@ -53,6 +53,12 @@ func TestMainClusterConfig(t *testing.T) {
 				MaxAge:  30,
 				LogPath: "/dev/stdout",
 			},
+			Authentication: config.Authentication{
+				Webhook: config.Webhook{
+					Enabled:  false,
+					CacheTTL: "5m0s",
+				},
+			},
 			AwsEnvironment: config.AwsEnvironment{
 				Enabled: false,
 			},
@@ -256,6 +262,12 @@ experimental:
 						Plugins: config.Plugins{
 							Rbac: config.Rbac{
 								Enabled: true,
+							},
+						},
+						Authentication: config.Authentication{
+							Webhook: config.Webhook{
+								Enabled:  false,
+								CacheTTL: "5m0s",
 							},
 						},
 						Taints: []config.Taint{
