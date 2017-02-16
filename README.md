@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/coreos/kube-aws)](https://goreportcard.com/report/github.com/coreos/kube-aws)
 [![Build Status](https://travis-ci.org/coreos/kube-aws.svg?branch=master)](https://travis-ci.org/coreos/kube-aws)
 
-**Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases][github-release] instead of the `master` branch in order to get stable binaries.
+**Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases](https://github.com/coreos/kube-aws/releases) instead of the `master` branch in order to get stable binaries.
 
 This is the source of the `kube-aws` tool and the installation artifacts used by the official Kubernetes on AWS documentation.
 
@@ -91,8 +91,8 @@ Launch:
 ```
 $ kube-aws up --s3-uri s3://<your-bucket>/<optional-prefix>
 
-# Or export your cloudformation stack
-$ kube-aws up --export
+# Or export your cloudformation stack and dependent assets into the `exported/` directory
+$ kube-aws up --s3-uri s3://<your-bucket>/<optional-prefix> --export
 
 # Access the cluster
 $ KUBECONFIG=kubeconfig kubectl get nodes --show-labels
@@ -102,27 +102,14 @@ Update:
 
 ```
 $ $EDITOR cluster.yaml
+# Update all the cfn stacks including the one for control-plane and the ones for worker node pools
 $ kube-aws update --s3-uri s3://<your-bucket>/<optional-prefix>
-```
-
-Node Pool:
-
-```
-$ kube-aws node-pools init --node-pool-name my-pool
-$ kube-aws node-pools render stack --node-pool-name my-pool
-$ kube-aws node-pools validate --node-pool-name my-pool \
-  --s3-uri s3://<your-bucket>/<optional-prefix>
-$ kube-aws node-pools up --node-pool-name my-pool \
-  --s3-uri s3://<your-bucket>/<optional-prefix>
-$ $EDITOR node-pools/my-pool/cluster.yaml
-$ kube-aws node-pools update --node-pool-name my-pool \
-  --s3-uri s3://<your-bucket>/<optional-prefix>
 ```
 
 Destroy:
 
 ```
-$ kube-aws node-pools destroy --node-pool-name my-pool
+# Destroy all the cfn stacks including the one for control-plane and the ones for worker node pools
 $ kube-aws destroy
 ```
 
