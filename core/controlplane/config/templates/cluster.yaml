@@ -232,7 +232,7 @@ worker:
 #      amiId:
 #      kubernetesVersion: 1.6.0-alpha.1
 #      hyperkubeImageRepo:
-#      AwsCliImageRepo: quay.io/coroes/awscli
+#      AwsCliImageRepo: quay.io/coreos/awscli
 #      awsCliTag: edge
 #      sshAuthorizedKeys:
 
