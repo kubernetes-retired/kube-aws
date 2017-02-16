@@ -2,7 +2,7 @@ package integration
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/coreos/kube-aws/test/helper"
 	"os"
 	"testing"

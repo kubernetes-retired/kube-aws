@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/coreos/kube-aws/cluster"
-	"github.com/coreos/kube-aws/config"
+	"github.com/coreos/kube-aws/core/controlplane/cluster"
+	"github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/spf13/cobra"
 )
 

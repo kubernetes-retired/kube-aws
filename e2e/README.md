@@ -45,61 +45,27 @@ KUBE_AWS_DEPLOY_TO_EXISTING_VPC=1 \
 
 ## Common configurations used for validating kube-aws releases
 
-### For deployments to new VPCs
+### For deployments to new VPCs managed by kube-aws
 
 #### With Calico
 
 ```
-KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
-KUBE_AWS_NODE_POOL_INDEX=1 \
-KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
-KUBE_AWS_AWS_ENV_ENABLED=1 \
 KUBE_AWS_USE_CALICO=true \
 KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
 ```
 
 #### Without Calico
 
-##### ASG based worker nodes
-
 ```
-KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
-KUBE_AWS_NODE_POOL_INDEX=1 \
-KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
-KUBE_AWS_AWS_ENV_ENABLED=1 \
 KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
 ```
 
-##### Spot Fleet based worker nodes
-
-With omitting `KUBE_AWS_AWS_ENV_ENABLED` because the `awsEnvironment` feature doesn't support Spot Fleet
-
-```
-KUBE_AWS_SPOT_FLEET_ENABLED=1 \
-KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
-KUBE_AWS_NODE_POOL_INDEX=1 \
-KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
-UBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all
-```
-
-### For deployments to exising VPCs
+### For deployments to existing VPCs not managed bu kube-aws
 
 #### With Calico
 
 ```
 KUBE_AWS_DEPLOY_TO_EXISTING_VPC=1 \
-KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1 \
-KUBE_AWS_NODE_POOL_INDEX=1 \
-KUBE_AWS_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_NODE_LABELS_ENABLED=1 \
-KUBE_AWS_WAIT_SIGNAL_ENABLED=1 \
-KUBE_AWS_AWS_ENV_ENABLED=1 \
 KUBE_AWS_USE_CALICO=true \
 KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
 ```
@@ -109,18 +75,6 @@ KUBE_AWS_CLUSTER_NAME=kubeawstest sh -c './run all'
 The test cluster created by the `e2e/run` script can be customized via various environment variables.
 
 `KUBE_AWS_DEPLOY_TO_EXISTING_VPC=1`: Set to `1` if you'd like the script to provision a VPC before running kube-aws and then deploying a kubernetes cluster to it.
-
-`KUBE_AWS_CLUSTER_AUTOSCALER_ENABLED=1`: Set to `1` if you'd like to tag the resulting cloudformation stack with the sourth-of-truth for cluster-autoscaler.
-
-`KUBE_AWS_NODE_POOL_INDEX=1`: Set to an integer greater than 1 if you'd like to provision additional node pool(s).
-
-`KUBE_AWS_AWS_NODE_LABELS_ENABLED=1`: Enable the `awsNodeLabels` experimental feature by automatically modifying `cluster.yaml`.
-
-`KUBE_AWS_NODE_LABELS_ENABLED=1`: Enable the `nodeLabels` experimental feature to tag node pool(s) with example user-provided tags.
-
-`KUBE_AWS_WAIT_SIGNAL_ENABLED=1`: Enable the `waitSignal` feature.
-
-`KUBE_AWS_AWS_ENV_ENABLED=1`: Enable the `awsEnvironment` experimental feature.
 
 `KUBE_AWS_USE_CALICO=true`: Enable Calico throughout the cluster.
 

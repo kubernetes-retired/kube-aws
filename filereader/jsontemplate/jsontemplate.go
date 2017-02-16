@@ -40,6 +40,16 @@ func GetBytes(filename string, data interface{}, prettyPrint bool) ([]byte, erro
 	return buff.Bytes(), nil
 }
 
+func GetString(filename string, data interface{}, prettyPrint bool) (string, error) {
+	bytes, err := GetBytes(filename, data, prettyPrint)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
+}
+
 func getContextString(buf []byte, offset, lineCount int) string {
 	// Prevent index out of range errors when we meet errors at the very end of json
 	bufsize := len(buf)

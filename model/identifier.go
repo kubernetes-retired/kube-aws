@@ -1,16 +1,28 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
 type Identifier struct {
 	ID                string `yaml:"id,omitempty"`
 	IDFromStackOutput string `yaml:"idFromStackOutput,omitempty"`
+	IDFromFn          string `yaml:"idFromFn,omitempty"`
 }
 
 func (i Identifier) HasIdentifier() bool {
 	return i.ID != "" || i.IDFromStackOutput != ""
+}
+
+func (i Identifier) Validate() error {
+	if i.IDFromFn != "" {
+		var jsonHolder map[string]interface{}
+		if err := json.Unmarshal([]byte(i.IDFromFn), &jsonHolder); err != nil {
+			return fmt.Errorf("idFromRef must be a valid json expression but was not: %s", i.IDFromFn)
+		}
+	}
+	return nil
 }
 
 func (i Identifier) Ref(logicalNameProvider func() string) string {
@@ -18,6 +30,8 @@ func (i Identifier) Ref(logicalNameProvider func() string) string {
 		return fmt.Sprintf(`{ "Fn::ImportValue" : %q }`, i.IDFromStackOutput)
 	} else if i.ID != "" {
 		return fmt.Sprintf(`"%s"`, i.ID)
+	} else if i.IDFromFn != "" {
+		return i.IDFromFn
 	} else {
 		return fmt.Sprintf(`{ "Ref" : %q }`, logicalNameProvider())
 	}
@@ -30,6 +44,8 @@ func (i Identifier) RefOrError(logicalNameProvider func() (string, error)) (stri
 		return fmt.Sprintf(`{ "Fn::ImportValue" : %q }`, i.IDFromStackOutput), nil
 	} else if i.ID != "" {
 		return fmt.Sprintf(`"%s"`, i.ID), nil
+	} else if i.IDFromFn != "" {
+		return i.IDFromFn, nil
 	} else {
 		logicalName, err := logicalNameProvider()
 		if err != nil {
