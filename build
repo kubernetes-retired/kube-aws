@@ -18,8 +18,9 @@ fi
 
 echo Building kube-aws ${VERSION}
 
-go generate ./config
-go generate ./nodepool/config
+go generate ./core/controlplane/config
+go generate ./core/nodepool/config
+go generate ./core/root/config
 
 if [[ ! "${BUILD_GOOS:-}" == "" ]];then
   export GOOS=$BUILD_GOOS
@@ -27,4 +28,4 @@ fi
 if [[ ! "${BUILD_GOARCH:-}" == "" ]];then
   export GOARCH=$BUILD_GOARCH
 fi
-go build -ldflags "-X github.com/coreos/kube-aws/cluster.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./
+go build -ldflags "-X github.com/coreos/kube-aws/core/controlplane/cluster.VERSION=${VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./
