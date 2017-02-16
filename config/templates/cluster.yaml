@@ -480,10 +480,16 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #     # See https://github.com/coreos/kube-aws/issues/230 for more information.
 #     rbac:
 #       enabled: true
-#    # When enabled it will grant sts:assumeRole permission to everyrole in the IAM Worker Role.
-
-#    kube2IamSupport:
-#      enabled: true
+#     authentication:
+#       # See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication
+#       # for more information.
+#       webhook:
+#         enabled: true
+#         cacheTTL: 1m0s
+#         configBase64: base64-encoded-webhook-yaml
+#      # When enabled it will grant sts:assumeRole permission to everyrole in the IAM Worker Role.
+#      kube2IamSupport:
+#        enabled: true
 #
 
 # AWS Tags for cloudformation stack resources

@@ -97,6 +97,12 @@ etcdEndpoints: "10.0.0.1"
 				MaxAge:  30,
 				LogPath: "/dev/stdout",
 			},
+			Authentication: cfg.Authentication{
+				Webhook: cfg.Webhook{
+					Enabled:  false,
+					CacheTTL: "5m0s",
+				},
+			},
 			AwsEnvironment: cfg.AwsEnvironment{
 				Enabled: false,
 			},
@@ -198,6 +204,12 @@ experimental:
 						},
 						Kube2IamSupport: cfg.Kube2IamSupport{
 							Enabled: true,
+						},
+						Authentication: cfg.Authentication{
+							Webhook: cfg.Webhook{
+								Enabled:  false,
+								CacheTTL: "5m0s",
+							},
 						},
 					}
 
