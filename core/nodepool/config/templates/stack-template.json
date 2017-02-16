@@ -116,7 +116,7 @@
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
-          "Ref": "LaunchConfigurationWorker"
+          "Ref": "{{.LogicalName}}LC"
         },
         "MaxSize": "{{.MaxCount}}",
         "MetricsCollection": [
@@ -187,7 +187,7 @@
       "Metadata": {{template "Metadata" .}}
     },
 
-    "LaunchConfigurationWorker": {
+    "{{.LogicalName}}LC": {
       "Properties": {
         "BlockDeviceMappings": [
           {
