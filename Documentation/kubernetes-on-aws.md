@@ -30,36 +30,15 @@ Each of the steps will cover:
 
 Let's get started.
 
+## Announcement to regular users of kube-aws
+
+Older versions of kube-aws releases had been signed by the CoreOS key and were able to be verified with [CoreOS Application Signing Public Key](https://coreos.com/security/app-signing-key/).
+However, the signing process is postponed since v0.9.3. Please read the issue [#288](https://github.com/coreos/kube-aws/issues/288) for more information.
+
 ## Download kube-aws
 
 Go to the [releases](https://github.com/coreos/kube-aws/releases) and download the latest release tarball for your architecture.
 
-Currently, binaries coming from the final release for each version are signed so you should download the corresponding signature (.sig) as well. If you've decided to download a non-final release you can skip down to "Extract the binary:".
-
-Import the [CoreOS Application Signing Public Key](https://coreos.com/security/app-signing-key/):
-
-```sh
-gpg2 --keyserver pgp.mit.edu --recv-key FC8A365E
-```
-
-Validate the key fingerprint:
-
-```sh
-gpg2 --fingerprint FC8A365E
-```
-The correct key fingerprint is `18AD 5014 C99E F7E3 BA5F  6CE9 50BD D3E0 FC8A 365E`
-
-Go to the [releases](https://github.com/coreos/kube-aws/releases) and download the latest release tarball and detached signature (.sig) for your architecture.
-
-Validate the tarball's GPG signature:
-
-```sh
-PLATFORM=linux-amd64
-# Or
-PLATFORM=darwin-amd64
-
-gpg2 --verify kube-aws-${PLATFORM}.tar.gz.sig kube-aws-${PLATFORM}.tar.gz
-```
 Extract the binary:
 
 ```sh
