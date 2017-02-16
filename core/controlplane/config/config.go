@@ -848,6 +848,15 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot instances", c.WorkerTenancy)
 	}
 
+	clusterNamePlaceholder := "<my-cluster-name>"
+	nestedStackNamePlaceHolder := "<my-nested-stack-name>"
+	replacer := strings.NewReplacer(clusterNamePlaceholder, "", nestedStackNamePlaceHolder, "")
+	simulatedLcName := fmt.Sprintf("%s-%s-1N2C4K3LLBEDZ-%sLC-BC2S9P3JG2QD", clusterNamePlaceholder, nestedStackNamePlaceHolder, c.Controller.LogicalName())
+	limit := 63 - len(replacer.Replace(simulatedLcName))
+	if c.Experimental.AwsNodeLabels.Enabled && len(c.ClusterName) > limit {
+		return fmt.Errorf("awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"%s\") exceeds the limit of %d", c.ClusterName, limit)
+	}
+
 	return nil
 }
 

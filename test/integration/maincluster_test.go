@@ -1915,6 +1915,34 @@ worker:
 			expectedErrorMessage: "Effect must be NoSchdule or PreferNoSchedule, but was UnknownEffect",
 		},
 		{
+			context: "WithAwsNodeLabelEnabledForTooLongClusterNameAndPoolName",
+			configYaml: minimalValidConfigYaml + `
+# clusterName + nodePools[].name should be less than or equal to 25 characters or the launch configuration name
+# "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
+# See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
+clusterName: my_cluster1 # 11 characters
+worker:
+  nodePools:
+  - name: workernodepool1 # 15 characters
+    awsNodeLabels:
+      enabled: true
+`,
+			expectedErrorMessage: "awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"my_cluster1\") + node pool's name(=\"workernodepool1\") exceeds the limit of 25",
+		},
+		{
+			context: "WithAwsNodeLabelEnabledForTooLongClusterName",
+			configYaml: minimalValidConfigYaml + `
+# clusterName should be less than or equal to 21 characters or the launch configuration name
+# "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
+# See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
+clusterName: my_long_long_cluster_1 # 22 characters
+experimental:
+  awsNodeLabels:
+     enabled: true
+`,
+			expectedErrorMessage: "awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"my_long_long_cluster_1\") exceeds the limit of 21",
+		},
+		{
 			context: "WithNonZeroWorkerCount",
 			configYaml: minimalValidConfigYaml + `
 workerCount: 1

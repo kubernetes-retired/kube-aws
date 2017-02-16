@@ -253,6 +253,15 @@ func (c ProvidedConfig) valid() error {
 		return err
 	}
 
+	clusterNamePlaceholder := "<my-cluster-name>"
+	nestedStackNamePlaceHolder := "<my-nested-stack-name>"
+	replacer := strings.NewReplacer(clusterNamePlaceholder, "", nestedStackNamePlaceHolder, "")
+	simulatedLcName := fmt.Sprintf("%s-%s-1N2C4K3LLBEDZ-%sLC-BC2S9P3JG2QD", clusterNamePlaceholder, nestedStackNamePlaceHolder, c.LogicalName())
+	limit := 63 - len(replacer.Replace(simulatedLcName))
+	if c.Experimental.AwsNodeLabels.Enabled && len(c.ClusterName+c.NodePoolName) > limit {
+		return fmt.Errorf("awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"%s\") + node pool's name(=\"%s\") exceeds the limit of %d", c.ClusterName, c.NodePoolName, limit)
+	}
+
 	return nil
 }
 
