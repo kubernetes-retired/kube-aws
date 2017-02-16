@@ -293,7 +293,11 @@ experimental:
       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
   awsNodeLabels:
     enabled: true
+  clusterAutoscalerSupport:
+    enabled: true
   ephemeralImageStorage:
+    enabled: true
+  kube2IamSupport:
     enabled: true
   loadBalancer:
     enabled: true
@@ -343,7 +347,7 @@ worker:
 							Enabled: true,
 						},
 						ClusterAutoscalerSupport: controlplane_config.ClusterAutoscalerSupport{
-							Enabled: false,
+							Enabled: true,
 						},
 						EphemeralImageStorage: controlplane_config.EphemeralImageStorage{
 							Enabled:    true,
@@ -351,7 +355,7 @@ worker:
 							Filesystem: "xfs",
 						},
 						Kube2IamSupport: controlplane_config.Kube2IamSupport{
-							Enabled: false,
+							Enabled: true,
 						},
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
@@ -467,6 +471,47 @@ worker:
 					p := c.NodePools[0]
 					if reflect.DeepEqual(expected, p.Experimental) {
 						t.Errorf("experimental settings for node pool didn't match : expected=%v actual=%v", expected, p.Experimental)
+					}
+				},
+			},
+		},
+		{
+			context: "WithKube2IamSupport",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  managedIamRoleName: mycontrollerrole
+experimental:
+  kube2IamSupport:
+    enabled: true
+worker:
+  nodePools:
+  - name: pool1
+    managedIamRoleName: myworkerrole
+    kube2IamSupport:
+      enabled: true
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+				func(c *config.Config, t *testing.T) {
+					expectedControllerRoleName := "mycontrollerrole"
+					expectedWorkerRoleName := "myworkerrole"
+
+					if expectedControllerRoleName != c.Controller.ManagedIamRoleName {
+						t.Errorf("controller's managedIamRoleName didn't match : expected=%v actual=%v", expectedControllerRoleName, c.Controller.ManagedIamRoleName)
+					}
+
+					if !c.Experimental.Kube2IamSupport.Enabled {
+						t.Errorf("controller's experimental.kube2IamSupport should be enabled but was not: %+v", c.Experimental)
+					}
+
+					p := c.NodePools[0]
+					if expectedWorkerRoleName != p.ManagedIamRoleName {
+						t.Errorf("worker node pool's managedIamRoleName didn't match : expected=%v actual=%v", expectedWorkerRoleName, p.ManagedIamRoleName)
+					}
+
+					if !p.Kube2IamSupport.Enabled {
+						t.Errorf("worker node pool's kube2IamSupport should be enabled but was not: %+v", p.Experimental)
 					}
 				},
 			},
@@ -1847,11 +1892,12 @@ etcdDataVolumeIOPS: 104
 		{
 			context: "WithClusterAutoscalerEnabledForControlPlane",
 			configYaml: minimalValidConfigYaml + `
-experimental:
-  clusterAutoscalerSupport:
-    enabled: true
+controller:
+  clusterAutoscaler:
+    minSize: 1
+    maxSize: 10
 `,
-			expectedErrorMessage: "cluster-autoscaler support can't be enabled for a control plane because " +
+			expectedErrorMessage: "cluster-autoscaler can't be enabled for a control plane because " +
 				"allowing so for a group of controller nodes spreading over 2 or more availability zones " +
 				"results in unreliability while scaling nodes out.",
 		},

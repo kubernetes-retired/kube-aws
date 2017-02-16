@@ -178,6 +178,9 @@
           "Version": "2012-10-17"
         },
         "Path": "/",
+        {{if .Controller.ManagedIamRoleName }}
+        "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::StackName"},"-",{"Ref": "AWS::Region"},"-","{{.Controller.ManagedIamRoleName}}"]]},
+        {{end}}
         "Policies": [
           {
             "PolicyDocument": {
@@ -220,6 +223,25 @@
                   "Action": "autoscaling:Describe*",
                   "Effect": "Allow",
                   "Resource": [ "*" ]
+                },
+                {{end}}
+                {{if .Experimental.ClusterAutoscalerSupport.Enabled}}
+                {
+                "Effect": "Allow",
+                  "Action": [
+                    "autoscaling:DescribeAutoScalingGroups",
+                    "autoscaling:DescribeAutoScalingInstances",
+                    "autoscaling:SetDesiredCapacity",
+                    "autoscaling:TerminateInstanceInAutoScalingGroup"
+                  ],
+                  "Resource": "*"
+                },
+                {{end}}
+                {{if .Experimental.Kube2IamSupport.Enabled }}
+                {
+                  "Action": "sts:AssumeRole",
+                  "Effect":"Allow",
+                  "Resource":"*"
                 },
                 {{end}}
                 {{if .ManageCertificates}}

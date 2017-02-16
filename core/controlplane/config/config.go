@@ -804,12 +804,6 @@ func (c Cluster) valid() error {
 		vpcNet = deploymentValidationResult.vpcNet
 	}
 
-	if c.Experimental.ClusterAutoscalerSupport.Enabled {
-		return errors.New("cluster-autoscaler support can't be enabled for a control plane because " +
-			"allowing so for a group of controller nodes spreading over 2 or more availability zones " +
-			"results in unreliability while scaling nodes out.")
-	}
-
 	_, podNet, err := net.ParseCIDR(c.PodCIDR)
 	if err != nil {
 		return fmt.Errorf("invalid podCIDR: %v", err)
@@ -1109,7 +1103,8 @@ func (c ControllerSettings) Valid() error {
 	if c.ControllerCount != 1 && (c.AutoScalingGroup.MinSize != nil && *c.AutoScalingGroup.MinSize != 0 || c.AutoScalingGroup.MaxSize != 0) {
 		return fmt.Errorf("`controller.autoScalingGroup.minSize` and `controller.autoScalingGroup.maxSize` can only be specified without `controllerCount`")
 	}
-	if err := c.AutoScalingGroup.Valid(); err != nil {
+
+	if err := c.Controller.Validate(); err != nil {
 		return err
 	}
 
