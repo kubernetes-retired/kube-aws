@@ -219,7 +219,6 @@ worker:
 #          value: search
 #          effect: NoSchedule
 #      # When enabled, autoscaling groups managing worker nodes wait for nodes to be up and running.
-#      # Although this is still an experimental feature, it is recommended to be enabled and
 #      # This is enabled by default.
 #      waitSignal:
 #        enabled: true
