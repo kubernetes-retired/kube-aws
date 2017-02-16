@@ -15,7 +15,7 @@
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
-          "Ref": "LaunchConfigurationController"
+          "Ref": "{{.Controller.LogicalName}}LC"
         },
         "MaxSize": "{{.MaxControllerCount}}",
         "MetricsCollection": [
@@ -399,7 +399,7 @@
       "Type": "AWS::EC2::Instance"
     },
     {{end}}
-    "LaunchConfigurationController": {
+    "{{.Controller.LogicalName}}LC": {
       "Properties": {
         "BlockDeviceMappings": [
           {
