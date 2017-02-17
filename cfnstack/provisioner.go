@@ -115,6 +115,15 @@ func (c *Provisioner) CreateStack(cfSvc CreationService, s3Svc S3ObjectPutterSer
 		return nil, fmt.Errorf("[bug] kube-aws skipped template upload")
 	}
 }
+func (c *Provisioner) EstimateTemplateCost(cfSvc CRUDService, body string, parameters []*cloudformation.Parameter) (*cloudformation.EstimateTemplateCostOutput, error) {
+
+	input := cloudformation.EstimateTemplateCostInput{
+		TemplateBody: &body,
+		Parameters:   parameters,
+	}
+	templateCost, err := cfSvc.EstimateTemplateCost(&input)
+	return templateCost, err
+}
 
 func (c *Provisioner) CreateStackAtURLAndWait(cfSvc CRUDService, templateURL string) error {
 	resp, err := c.createStackFromTemplateURL(cfSvc, templateURL)
