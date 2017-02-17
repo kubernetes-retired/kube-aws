@@ -89,14 +89,14 @@ See [the detailed comments in `cluster.yaml`](https://github.com/coreos/kube-aws
 Utilizing Spot Fleet gives us chances to dramatically reduce cost being spent on EC2 instances powering Kubernetes worker nodes while achieving reasonable availability.
 AWS says cost reduction is up to 90% but the cost would slightly vary among instance types and other users' bids.
 
-Spot Fleet support may change in backward-incompatible ways as it is still an experimenta feature.
+Spot Fleet support may change in backward-incompatible ways as it is still an experimental feature.
 So, please use this feature at your own risk.
 However, we'd greatly appreciate your feedbacks because they do accelerate improvements in this area!
 
 ### Known Limitations
 
-* Running `kube-aws node-pools update` to increase or decrease `targetCapacity` of a spot fleet resulst in a complete replacement of the Spot Fleet hence some downtime. [This is due to how CloudFormation works for updating a Spot Fleet](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520)
-   * It is recommented to temporarily bring up an another, spare node pool to maintain the whole cluster capacity at a certain level while replacing the spot fleet
+* Running `kube-aws node-pools update` to increase or decrease `targetCapacity` of a spot fleet results in a complete replacement of the Spot Fleet hence some downtime. [This is due to how CloudFormation works for updating a Spot Fleet](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520)
+   * It is recommended to temporarily bring up an another, spare node pool to maintain the whole cluster capacity at a certain level while replacing the spot fleet.
 
 ### Pre-requisites
 
