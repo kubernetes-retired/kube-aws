@@ -138,7 +138,7 @@ func (c *Cluster) Assets() (cfnstack.Assets, error) {
 
 	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI).
 		Add("userdata-controller", c.UserDataController).
-		Add("userdata-worker", c.UserDataWorker).
+		Add("userdata-etcd", c.UserDataEtcd).
 		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
 		Build(), nil
 }

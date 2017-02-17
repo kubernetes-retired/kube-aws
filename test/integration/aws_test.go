@@ -3,6 +3,7 @@ package integration
 import (
 	"fmt"
 	"github.com/coreos/kube-aws/core/controlplane/config"
+	"github.com/coreos/kube-aws/model"
 	"github.com/coreos/kube-aws/test/helper"
 	"os"
 	"testing"
@@ -28,13 +29,14 @@ func useRealAWS() bool {
 }
 
 type kubeAwsSettings struct {
-	clusterName     string
-	externalDNSName string
-	keyName         string
-	kmsKeyArn       string
-	region          string
-	mainClusterYaml string
-	encryptService  config.EncryptService
+	clusterName                   string
+	etcdNodeDefaultInternalDomain string
+	externalDNSName               string
+	keyName                       string
+	kmsKeyArn                     string
+	region                        string
+	mainClusterYaml               string
+	encryptService                config.EncryptService
 }
 
 func newKubeAwsSettingsFromEnv(t *testing.T) kubeAwsSettings {
@@ -65,12 +67,13 @@ region: "%s"
 			region,
 		)
 		return kubeAwsSettings{
-			clusterName:     clusterName,
-			externalDNSName: externalDnsName,
-			keyName:         keyName,
-			kmsKeyArn:       kmsKeyArn,
-			region:          region,
-			mainClusterYaml: yaml,
+			clusterName:                   clusterName,
+			etcdNodeDefaultInternalDomain: model.RegionForName(region).PrivateDomainName(),
+			externalDNSName:               externalDnsName,
+			keyName:                       keyName,
+			kmsKeyArn:                     kmsKeyArn,
+			region:                        region,
+			mainClusterYaml:               yaml,
 		}
 	} else {
 		return kubeAwsSettings{
@@ -81,7 +84,8 @@ keyName: test-key-name
 kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 region: us-west-1
 `, clusterName),
-			encryptService: helper.DummyEncryptService{},
+			encryptService:                helper.DummyEncryptService{},
+			etcdNodeDefaultInternalDomain: model.RegionForName("us-west-1").PrivateDomainName(),
 		}
 	}
 }

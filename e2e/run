@@ -7,6 +7,7 @@ TESTINFRA_DIR=${E2E_DIR}/testinfra
 KUBE_AWS_TEST_INFRA_STACK_NAME=${KUBE_AWS_TEST_INFRA_STACK_NAME:-${KUBE_AWS_CLUSTER_NAME}-testinfra}
 SRC_DIR=$(cd $(dirname $0); cd ..; pwd)
 KUBECONFIG=${WORK_DIR}/kubeconfig
+ETCD_COUNT=${ETCD_COUNT:-1}
 
 export KUBECONFIG
 
@@ -99,7 +100,7 @@ configure() {
     echo 'useCalico: true' >> cluster.yaml
   fi
 
-  customize_worker
+  customize_cluster_yaml
 
   ${KUBE_AWS_CMD} render
 
@@ -111,7 +112,7 @@ configure() {
   find .
 }
 
-customize_worker() {
+customize_cluster_yaml() {
   echo Writing to $(pwd)/cluster.yaml
 
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
@@ -211,7 +212,20 @@ waitSignal:
   enabled: true
 awsNodeLabels:
   enabled: true
+etcdCount: $ETCD_COUNT
 " >> cluster.yaml
+
+  if [ "${ETCD_MEMBER_IDENTITY_PROVIDER}" != "" ]; then
+    echo -e "
+# etcd configuration
+etcd:
+  memberIdentityProvider: ${ETCD_MEMBER_IDENTITY_PROVIDER}
+" >> cluster.yaml
+  fi
+
+  if [ "${ETCD_INTERNAL_DOMAIN_NAME}" != "" ]; then
+    echo -e "  internalDomainName: ${ETCD_INTERNAL_DOMAIN_NAME}" >> cluster.yaml
+  fi
 }
 
 clean() {
@@ -227,7 +241,7 @@ up() {
 
   starttime=$(date +%s)
 
-  ${KUBE_AWS_CMD} up --s3-uri ${KUBE_AWS_S3_URI}
+  ${KUBE_AWS_CMD} up --s3-uri ${KUBE_AWS_S3_URI} --pretty-print
 
   set +vx
 
