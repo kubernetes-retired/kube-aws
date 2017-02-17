@@ -302,6 +302,55 @@ worker:
 #    # References subnets defined under the top-level `subnets` key by their names
 #    - name: ManagedPrivateSubnet1
 #    - name: ManagedPrivateSubnet2
+#
+#  # The strategy to provide your etcd nodes, in combination with floating EBS volumes, stable member identities. Defaults to "eip".
+#  #
+#  # Available options: eip, eni
+#  #
+#  # With every option, etcd nodes communicate to each other via their private IPs.
+#  #
+#  # eip: Use EC2 public hostnames stabilized with EIPs and "resolved eventually to private IPs"
+#  #      Requires Amazon DNS (at the second IP of your VPC, e.g. 10.0.0.2) to work.
+#  #      1st recommendation because less moving parts and relatively easy disaster recovery for a single-AZ etcd cluster.
+#  #      If you run a single-AZ etcd cluster and the AZ failed, EBS volumes created from latest snapshots and EIPs can be reused in an another AZ to reproduce your etcd cluster in the AZ.
+#  #
+#  # eni: [EXPERIMENTAL] Use secondary ENIs and Route53 record sets to provide etcd nodes stable hostnames
+#  #      Requires Amazon DNS (at the second IP of your VPC, e.g. 10.0.0.2) or an another DNS which can resolve dns names in the hosted zone managed by kube-aws to work.
+#  #      2nd recommendation because relatively easy disaster recovery for a single-AZ etcd cluster but more moving parts than "eip".
+#  #      If you run a single-AZ etcd cluster and the AZ failed, EBS volumes created from latest snapshots and record sets can be reused in an another AZ to reproduce your etcd cluster in the AZ.
+#  #
+#  memberIdentityProvider: eip
+#
+#  # Domain of the hostname used for etcd peer discovery.
+#  # Used only when `memberIdentityProvider: eni` for TLS key/cert generation
+#  # If omitted, defaults to "ec2.internal" for us-east-1 region and "<region>.compute.internal" otherwise
+#  internalDomainName:
+#
+#  # Set to `false` to disable creation of record sets.
+#  # Used only when `memberIdentityProvider` is set to `eni`
+#  # When disabled, it's your responsibility to configure all the etcd nodes so that
+#  # they can resolve each other's FQDN(specified via the below `etcd.nods[].fqdn` settings) via your DNS(can be the Amazon DNS or your own DNS. Configure it with e.g. coroes-cloudinit)
+#  manageRecordSets:
+#
+#  # Advanced configuration used only when `memberIdentityProvider: eni`
+#  hostedZone:
+#    # The hosted zone where record sets for etcd nodes managed by kube-aws are created
+#    # If omitted, kube-aws creates a hosted zone for you
+#    id:
+#
+#  # CAUTION: Advanced configuration. This should be omitted unless you have very deep knowledge of etcd and kube-aws
+#  nodes:
+#  - # The name of this etcd node. Specified only when you want to customize the etcd member's name shown in ETCD_INITIAL_CLUSTER and ETCD_NAME
+#    name: etcd0
+#    # The FQDN of this etcd node
+#    # Usually this should be omitted so that kube-aws can choose a proper value.
+#    # Specified only when `memberIdentityProvider: eni` and `manageRecordSets: false` i.e.
+#    # it is your responsibility to properly configure EC2 instances to use a DNS which is able to resolve the FQDN.
+#    fqdn: etcd0.<internalDomainName>
+#  - name: etcd1
+#    fqdn: etcd1.<internalDomainName>
+#  - name: etcd2
+#    fqdn: etcd2.<internalDomainName>
 
 # Instance type for etcd node
 # etcdInstanceType: t2.medium
