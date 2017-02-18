@@ -49,6 +49,11 @@ func TestMainClusterConfig(t *testing.T) {
 
 	hasDefaultExperimentalFeatures := func(c *config.Config, t *testing.T) {
 		expected := controlplane_config.Experimental{
+			Admission: controlplane_config.Admission{
+				PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
+					Enabled: false,
+				},
+			},
 			AuditLog: controlplane_config.AuditLog{
 				Enabled: false,
 				MaxAge:  30,
@@ -278,6 +283,9 @@ availabilityZone: us-west-1c
 			context: "WithExperimentalFeatures",
 			configYaml: minimalValidConfigYaml + `
 experimental:
+  admission:
+    podSecurityPolicy:
+      enabled: true
   auditLog:
     enabled: true
     maxage: 100
@@ -325,6 +333,11 @@ worker:
 				asgBasedNodePoolHasWaitSignalEnabled,
 				func(c *config.Config, t *testing.T) {
 					expected := controlplane_config.Experimental{
+						Admission: controlplane_config.Admission{
+							PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
+								Enabled: true,
+							},
+						},
 						AuditLog: controlplane_config.AuditLog{
 							Enabled: true,
 							MaxAge:  100,
@@ -397,6 +410,9 @@ worker:
 worker:
   nodePools:
   - name: pool1
+    admission:
+      podSecurityPolicy:
+        enabled: true
     auditLog:
       enabled: true
       maxage: 100
