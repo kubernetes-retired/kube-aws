@@ -26,6 +26,11 @@ const (
 
 func NewDefaultCluster() *Cluster {
 	experimental := Experimental{
+		Admission{
+			PodSecurityPolicy{
+				Enabled: false,
+			},
+		},
 		AuditLog{
 			Enabled: false,
 			MaxAge:  30,
@@ -418,6 +423,7 @@ type Cluster struct {
 }
 
 type Experimental struct {
+	Admission                Admission                `yaml:"admission"`
 	AuditLog                 AuditLog                 `yaml:"auditLog"`
 	Authentication           Authentication           `yaml:"authentication"`
 	AwsEnvironment           AwsEnvironment           `yaml:"awsEnvironment"`
@@ -430,6 +436,14 @@ type Experimental struct {
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
 	Taints                   []Taint                  `yaml:"taints"`
+}
+
+type Admission struct {
+	PodSecurityPolicy PodSecurityPolicy `yaml:"podSecurityPolicy"`
+}
+
+type PodSecurityPolicy struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type AuditLog struct {
