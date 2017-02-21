@@ -9,14 +9,6 @@ This is the source of the `kube-aws` tool and the installation artifacts used by
 
 View the full instructions at [GitHub](/Documentation/kubernetes-on-aws.md) or at [the CoreOS documentation website](https://coreos.com/kubernetes/docs/latest/kubernetes-on-aws.html).
 
----
-
-CoreOS is interested in learning more about how people are launching clusters on AWS - fill out [this survey](https://docs.google.com/forms/d/e/1FAIpQLSf7rktZ_1QABIPkzYqxlMuGSE4W82ZFUYmyYk0ER7tqHMPBRg/viewform) to help us out.
-
-This survey is meant for those who are currently running at least some workloads (dev, staging, or prod) on Kubernetes on AWS. Once we have received enough responses, we will share our learnings, anonymized and in aggregate, with the general Kubernetes community.
-
----
-
 `kube-aws` is a command-line tool to create/update/destroy Kubernetes clusters on AWS.
 
 ## Features
