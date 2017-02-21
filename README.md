@@ -16,11 +16,6 @@ View the latest manual for the `kube-aws` tool on [GitHub](/Documentation/kubern
 * Deployment to an existing VPC
 * Powered by various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
 
-## Design Decisions
-
-* CoreOS as the host OS
-* Allow exporting CloudFormation stack templates for further customizations
-
 ## Getting Started
 
 Check out our getting started tutorial on launching your first Kubernetes cluster in AWS.
