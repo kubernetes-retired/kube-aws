@@ -17,6 +17,7 @@ type NodePoolConfig struct {
 	SecurityGroupIds   []string               `yaml:"securityGroupIds,omitempty"`
 	Tenancy            string                 `yaml:"tenancy,omitempty"`
 	CustomSettings     map[string]interface{} `yaml:"customSettings,omitempty"`
+	VolumeMounts       []VolumeMount          `yaml:"volumeMounts,omitempty"`
 }
 
 type ClusterAutoscaler struct {
@@ -106,6 +107,10 @@ func (c NodePoolConfig) Valid() error {
 		return err
 	}
 
+	if err := ValidateVolumeMounts(c.VolumeMounts); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -137,5 +142,6 @@ func (c LaunchSpecification) Valid() error {
 	if err := c.RootVolume.Validate(); err != nil {
 		return err
 	}
+
 	return nil
 }
