@@ -177,6 +177,21 @@ Resources:
       - Key: Name
         Value: !Join [ "-", [ "Ref":"Id" , "private" ] ]
 
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Join [ "-", [ "Ref":"Id" , "target-group" ] ]
+      Port: "80"
+      Protocol: HTTP
+      HealthCheckIntervalSeconds: "30"
+      HealthCheckPort: "80"
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: "/"
+      HealthCheckTimeoutSeconds: "5"
+      HealthyThresholdCount: "3"
+      UnhealthyThresholdCount: "5"
+      VpcId: !Ref VPC
+
   PrivateLBSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -259,6 +274,8 @@ Outputs:
     Value: !Ref PublicLB
   PrivateLB:
     Value: !Ref PrivateLB
+  TargetGroup:
+    Value: !Ref TargetGroup
   PublicLBDNSName:
     Value: !GetAtt PublicLB.DNSName
   PrivateLBDNSName:

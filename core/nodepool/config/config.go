@@ -317,6 +317,12 @@ func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
 		}
 	}
 
+	if c.Experimental.TargetGroup.Enabled {
+		for _, sgId := range c.Experimental.TargetGroup.SecurityGroupIds {
+			refs = append(refs, fmt.Sprintf(`"%s"`, sgId))
+		}
+	}
+
 	for _, sgId := range c.SecurityGroupIds {
 		refs = append(refs, fmt.Sprintf(`"%s"`, sgId))
 	}
