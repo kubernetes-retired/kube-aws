@@ -610,7 +610,7 @@ func (c Cluster) Config() (*Config, error) {
 
 	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
 
-		//Round-robbin etcd instances across all available subnets
+		//Round-robin etcd instances across all available subnets
 		subnetIndex := etcdIndex % len(config.Etcd.Subnets)
 		subnet := config.Etcd.Subnets[subnetIndex]
 
