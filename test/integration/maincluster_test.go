@@ -305,6 +305,12 @@ experimental:
       - manuallymanagedlb
     securityGroupIds:
       - sg-12345678
+  targetGroup:
+    enabled: true
+    arns:
+      - arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx
+    securityGroupIds:
+      - sg-12345678
   nodeDrainer:
     enabled: true
   nodeLabels:
@@ -360,6 +366,11 @@ worker:
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},
+							SecurityGroupIds: []string{"sg-12345678"},
+						},
+						TargetGroup: controlplane_config.TargetGroup{
+							Enabled:          true,
+							Arns:             []string{"arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx"},
 							SecurityGroupIds: []string{"sg-12345678"},
 						},
 						NodeDrainer: controlplane_config.NodeDrainer{
@@ -419,6 +430,12 @@ worker:
         - manuallymanagedlb
       securityGroupIds:
         - sg-12345678
+    targetGroup:
+      enabled: true
+      arns:
+        - arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx
+      securityGroupIds:
+        - sg-12345678
     nodeDrainer:
       enabled: true
     nodeLabels:
@@ -456,6 +473,11 @@ worker:
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},
+							SecurityGroupIds: []string{"sg-12345678"},
+						},
+						TargetGroup: controlplane_config.TargetGroup{
+							Enabled:          true,
+							Arns:             []string{"arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx"},
 							SecurityGroupIds: []string{"sg-12345678"},
 						},
 						NodeDrainer: controlplane_config.NodeDrainer{
@@ -1741,6 +1763,49 @@ worker:
 			},
 		},
 		{
+			context: "WithWorkerAndALBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    securityGroupIds:
+    - sg-12345678
+    - sg-abcdefab
+    targetGroup:
+      enabled: true
+      securityGroupIds:
+        - sg-23456789
+        - sg-bcdefabc
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				func(c *config.Config, t *testing.T) {
+					p := c.NodePools[0]
+					expectedWorkerSecurityGroupIds := []string{
+						`sg-12345678`, `sg-abcdefab`,
+					}
+					if !reflect.DeepEqual(p.SecurityGroupIds, expectedWorkerSecurityGroupIds) {
+						t.Errorf("WorkerSecurityGroupIds didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupIds, p.SecurityGroupIds)
+					}
+
+					expectedALBSecurityGroupIds := []string{
+						`sg-23456789`, `sg-bcdefabc`,
+					}
+					if !reflect.DeepEqual(p.TargetGroup.SecurityGroupIds, expectedALBSecurityGroupIds) {
+						t.Errorf("LBSecurityGroupIds didn't match: expected=%v actual=%v", expectedALBSecurityGroupIds, p.TargetGroup.SecurityGroupIds)
+					}
+
+					expectedWorkerSecurityGroupRefs := []string{
+						`"sg-23456789"`, `"sg-bcdefabc"`, `"sg-12345678"`, `"sg-abcdefab"`,
+						`{"Fn::ImportValue" : {"Fn::Sub" : "${ControlPlaneStackName}-WorkerSecurityGroup"}}`,
+					}
+					if !reflect.DeepEqual(p.SecurityGroupRefs(), expectedWorkerSecurityGroupRefs) {
+						t.Errorf("SecurityGroupRefs didn't match: expected=%v actual=%v", expectedWorkerSecurityGroupRefs, p.SecurityGroupRefs())
+					}
+				},
+			},
+		},
+		{
 			context: "WithDedicatedInstanceTenancy",
 			configYaml: minimalValidConfigYaml + `
 workerTenancy: dedicated
@@ -1990,6 +2055,24 @@ worker:
     - sg-abcdefab
     - sg-23456789
     loadBalancer:
+      enabled: true
+      securityGroupIds:
+        - sg-bcdefabc
+        - sg-34567890
+`,
+			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
+		{
+			context: "WithWorkerAndALBSecurityGroupIds",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    securityGroupIds:
+    - sg-12345678
+    - sg-abcdefab
+    - sg-23456789
+    targetGroup:
       enabled: true
       securityGroupIds:
         - sg-bcdefabc

@@ -156,6 +156,12 @@ worker:
       names:
       - $(testinfra_public_lb)
       securityGroupIds:
+      - $(testinfra_public_lb_backend_sg)
+    targetGroup:
+      enabled: true
+      arns:
+      - $(testinfra_target_group)
+      securityGroupIds:
       - $(testinfra_public_lb_backend_sg)" >> cluster.yaml
   fi
 
@@ -189,6 +195,12 @@ worker:
       enabled: true
       names:
       - $(testinfra_public_lb)
+      securityGroupIds:
+      - $(testinfra_public_lb_backend_sg)
+    targetGroup:
+      enabled: true
+      arns:
+      - $(testinfra_target_group)
       securityGroupIds:
       - $(testinfra_public_lb_backend_sg)" >> cluster.yaml
   fi
@@ -404,6 +416,10 @@ testinfra_public_lb_backend_sg() {
 
 testinfra_public_lb() {
   testinfra_output PublicLB
+}
+
+testinfra_target_group() {
+  testinfra_output TargetGroup
 }
 
 testinfra_glue_sg() {

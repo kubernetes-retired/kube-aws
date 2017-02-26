@@ -202,6 +202,15 @@ worker:
 #        names: [ "manuallymanagedelb" ]
 #        # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
 #        securityGroupIds: [ "sg-87654321" ]
+#      # Configuration for external managed ALBs Target Groups for worker nodes
+#      targetGroup:
+#        enabled: true
+#        # ARNs of ALBs Target Groups attached to worker nodes
+#        arns:
+#        - arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx
+#        # IDs of "glue" security groups attached to worker nodes to allow the ALBs Target Groups to communicate with worker nodes
+#        securityGroupIds: [ "sg-87654321" ]
+
 #      # If you specify managedIamRoleName the role created for worker nodes will not suffix the random id at the end
 #      # Role will be created with "Ref": {"AWS::StackName"}-{"AWS::Region"}-yourManagedRole
 #      # to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html

@@ -58,6 +58,9 @@ func NewDefaultCluster() *Cluster {
 		LoadBalancer{
 			Enabled: false,
 		},
+		TargetGroup{
+			Enabled: false,
+		},
 		NodeDrainer{
 			Enabled: false,
 		},
@@ -426,6 +429,7 @@ type Experimental struct {
 	EphemeralImageStorage    EphemeralImageStorage    `yaml:"ephemeralImageStorage"`
 	Kube2IamSupport          Kube2IamSupport          `yaml:"kube2IamSupport,omitempty"`
 	LoadBalancer             LoadBalancer             `yaml:"loadBalancer"`
+	TargetGroup              TargetGroup              `yaml:"targetGroup"`
 	NodeDrainer              NodeDrainer              `yaml:"nodeDrainer"`
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
@@ -493,6 +497,12 @@ func (l NodeLabels) String() string {
 type LoadBalancer struct {
 	Enabled          bool     `yaml:"enabled"`
 	Names            []string `yaml:"names"`
+	SecurityGroupIds []string `yaml:"securityGroupIds"`
+}
+
+type TargetGroup struct {
+	Enabled          bool     `yaml:"enabled"`
+	Arns             []string `yaml:"arns"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
 }
 
