@@ -168,8 +168,9 @@ func (c *Cluster) NewTLSAssets(caKey *rsa.PrivateKey, caCert *x509.Certificate) 
 	}
 
 	adminConfig := tlsutil.ClientCertConfig{
-		CommonName: "kube-admin",
-		Duration:   certDuration,
+		CommonName:   "kube-admin",
+		Organization: []string{"system:masters"},
+		Duration:     certDuration,
 	}
 	adminCert, err := tlsutil.NewSignedClientCertificate(adminConfig, adminKey, caCert, caKey)
 	if err != nil {
