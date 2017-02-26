@@ -150,6 +150,14 @@
           {{end}}
         ],
         {{end}}
+        {{if .TargetGroup.Enabled}}
+        "TargetGroupARNs" : [
+          {{range $index, $tg := .TargetGroup.Arns}}
+          {{if $index}},{{end}}
+          "{{$tg}}"
+          {{end}}
+        ],
+        {{end}}
         "VPCZoneIdentifier": [
           {{range $index, $subnet := .Subnets}}
           {{if gt $index 0}},{{end}}
@@ -352,7 +360,7 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-                {{if .LoadBalancer.Enabled}}
+                {{if or .LoadBalancer.Enabled  .TargetGroup.Enabled}}
                 {
                   "Action": "elasticloadbalancing:*",
                   "Effect": "Allow",
