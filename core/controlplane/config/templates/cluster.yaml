@@ -233,6 +233,7 @@ worker:
 #        enabled: true
 #        # Max number of nodes concurrently updated
 #        maxBatchSize: 1
+#
 #      # Other less common customizations per node pool
 #      # All these settings default to the top-level ones
 #      keyName:
@@ -243,6 +244,9 @@ worker:
 #      AwsCliImageRepo: quay.io/coreos/awscli
 #      awsCliTag: edge
 #      sshAuthorizedKeys:
+#      # User-provided YAML map available in control-plane's stack-template.json
+#      customSettings:
+#        key1: [ 1, 2, 3 ]
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
@@ -626,6 +630,6 @@ worker:
 #  Name: "Kubernetes"
 #  Environment: "Production"
 
-# User-provided YAML map available in stack-template.json
+# User-provided YAML map available in control-plane's stack-template.json
 #customSettings:
 #  key1: [ 1, 2, 3 ]

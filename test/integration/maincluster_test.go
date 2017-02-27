@@ -373,6 +373,48 @@ availabilityZone: us-west-1c
 		assertCluster []ClusterTester
 	}{
 		{
+			context: "WithCustomSettings",
+			configYaml: minimalValidConfigYaml + `
+customSettings:
+  stack-type: control-plane
+worker:
+  nodePools:
+  - name: pool1
+    customSettings:
+      stack-type: node-pool
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+				func(c *config.Config, t *testing.T) {
+					p := c.NodePools[0]
+
+					{
+						expected := map[string]interface{}{
+							"stack-type": "control-plane",
+						}
+						actual := c.CustomSettings
+						if !reflect.DeepEqual(expected, actual) {
+							t.Errorf("customSettings didn't match : expected=%v actual=%v", expected, actual)
+						}
+					}
+
+					{
+						expected := map[string]interface{}{
+							"stack-type": "node-pool",
+						}
+						actual := p.CustomSettings
+						if !reflect.DeepEqual(expected, actual) {
+							t.Errorf("customSettings didn't match : expected=%v actual=%v", expected, actual)
+						}
+					}
+				},
+			},
+			assertCluster: []ClusterTester{
+				hasDefaultCluster,
+			},
+		},
+		{
 			context: "WithExperimentalFeatures",
 			configYaml: minimalValidConfigYaml + `
 experimental:
