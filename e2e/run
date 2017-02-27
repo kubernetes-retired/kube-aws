@@ -242,6 +242,8 @@ up() {
 
   echo Done. it took $(($endtime - $starttime)) seconds until kubeapiserver to be in service.
 
+  ${KUBE_AWS_CMD} status
+
   set -vx
 }
 
