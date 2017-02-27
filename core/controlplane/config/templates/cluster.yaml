@@ -568,6 +568,10 @@ worker:
 
 # Experimental features will change in backward-incompatible ways
 # experimental:
+#   # Enable admission controllers
+#   admission:
+#     podSecurityPolicy:
+#       enabled: true
 #   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #   awsEnvironment:
 #     enabled: true
