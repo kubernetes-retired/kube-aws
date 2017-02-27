@@ -215,7 +215,12 @@ func (c clusterImpl) Assets() (cfnstack.Assets, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error while rendering template : %v", err)
 	}
-	assets := cfnstack.NewAssetsBuilder(c.stackName(), c.opts.S3URI).Add(REMOTE_STACK_TEMPLATE_FILENAME, stackTemplate).Build()
+	s3URI := fmt.Sprintf("%s/kube-aws/clusters/%s/exported/stacks",
+		strings.TrimSuffix(c.opts.S3URI, "/"),
+		c.controlPlane.ClusterName,
+	)
+
+	assets := cfnstack.NewAssetsBuilder(c.stackName(), s3URI).Add(REMOTE_STACK_TEMPLATE_FILENAME, stackTemplate).Build()
 
 	cpAssets, err := c.controlPlane.Assets()
 	if err != nil {
