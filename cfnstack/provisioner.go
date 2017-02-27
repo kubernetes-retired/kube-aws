@@ -53,7 +53,7 @@ func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, content string, fi
 		return "", err
 	}
 
-	return loc.URL, nil
+	return loc.URL(), nil
 }
 
 func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset Asset) error {

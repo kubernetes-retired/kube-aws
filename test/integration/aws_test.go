@@ -23,13 +23,6 @@ func (r testEnv) get(name string) string {
 	return v
 }
 
-const minimalMainClusterYaml = `clusterName: test-cluster-name
-externalDNSName: test.staging.core-os.net
-keyName: test-key-name
-kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
-region: us-west-1
-`
-
 func useRealAWS() bool {
 	return os.Getenv("KUBE_AWS_INTEGRATION_TEST") != ""
 }
@@ -47,8 +40,14 @@ type kubeAwsSettings struct {
 func newKubeAwsSettingsFromEnv(t *testing.T) kubeAwsSettings {
 	env := testEnv{t: t}
 
+	clusterName, clusterNameExists := os.LookupEnv("KUBE_AWS_CLUSTER_NAME")
+
+	if !clusterNameExists || clusterName == "" {
+		clusterName = "kubeaws-it"
+		t.Logf(`Falling back clusterName to a stub value "%s" for tests of validating stack templates. No assets will actually be uploaded to S3 and no clusters will be created with CloudFormation`, clusterName)
+	}
+
 	if useRealAWS() {
-		clusterName := env.get("KUBE_AWS_CLUSTER_NAME")
 		externalDnsName := fmt.Sprintf("%s.%s", clusterName, env.get("KUBE_AWS_DOMAIN"))
 		keyName := env.get("KUBE_AWS_KEY_NAME")
 		kmsKeyArn := env.get("KUBE_AWS_KMS_KEY_ARN")
@@ -75,8 +74,14 @@ region: "%s"
 		}
 	} else {
 		return kubeAwsSettings{
-			mainClusterYaml: minimalMainClusterYaml,
-			encryptService:  helper.DummyEncryptService{},
+			clusterName: clusterName,
+			mainClusterYaml: fmt.Sprintf(`clusterName: %s
+externalDNSName: test.staging.core-os.net
+keyName: test-key-name
+kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
+region: us-west-1
+`, clusterName),
+			encryptService: helper.DummyEncryptService{},
 		}
 	}
 }

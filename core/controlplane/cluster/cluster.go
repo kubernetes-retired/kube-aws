@@ -148,7 +148,12 @@ func (c *Cluster) TemplateURL() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return assets.FindAssetByStackAndFileName(c.StackName(), STACK_TEMPLATE_FILENAME).URL, nil
+	asset, err := assets.FindAssetByStackAndFileName(c.StackName(), STACK_TEMPLATE_FILENAME)
+	if err != nil {
+		return "", fmt.Errorf("failed to get template URL: %v", err)
+	}
+
+	return asset.URL(), nil
 }
 
 func (c *Cluster) ValidateStack() (string, error) {
