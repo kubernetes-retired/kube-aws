@@ -2,6 +2,7 @@ package integration
 
 import (
 	"fmt"
+	"github.com/coreos/kube-aws/cfnstack"
 	controlplane_config "github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/coreos/kube-aws/core/root"
 	"github.com/coreos/kube-aws/core/root/config"
@@ -14,9 +15,26 @@ import (
 )
 
 type ConfigTester func(c *config.Config, t *testing.T)
+type ClusterTester func(c root.Cluster, t *testing.T)
 
 // Integration testing with real AWS services including S3, KMS, CloudFormation
 func TestMainClusterConfig(t *testing.T) {
+	s3URI, s3URIExists := os.LookupEnv("KUBE_AWS_S3_DIR_URI")
+
+	if !s3URIExists || s3URI == "" {
+		s3URI = "s3://examplebucket/exampledir"
+		t.Logf(`Falling back s3URI to a stub value "%s" for tests of validating stack templates. No assets will actually be uploaded to S3`, s3URI)
+	}
+
+	s3Loc, err := cfnstack.S3URIFromString(s3URI)
+	s3Bucket := s3Loc.Bucket()
+	s3Dir := s3Loc.PathComponents()[0]
+
+	if err != nil {
+		t.Errorf("failed to parse s3 uri: %v", err)
+		t.FailNow()
+	}
+
 	hasDefaultEtcdSettings := func(c *config.Config, t *testing.T) {
 		subnet1 := model.NewPublicSubnet("us-west-1c", "10.0.0.0/24")
 		subnet1.Name = "Subnet0"
@@ -271,13 +289,88 @@ func TestMainClusterConfig(t *testing.T) {
 
 	kubeAwsSettings := newKubeAwsSettingsFromEnv(t)
 
+	hasDefaultCluster := func(c root.Cluster, t *testing.T) {
+		assets, err := c.Assets()
+		if err != nil {
+			t.Errorf("failed to list assets: %v", err)
+			t.FailNow()
+		}
+
+		t.Run("Assets/RootStackTemplate", func(t *testing.T) {
+			cluster := kubeAwsSettings.clusterName
+			stack := kubeAwsSettings.clusterName
+			file := "stack.json"
+			expected := cfnstack.Asset{
+				Content: "",
+				AssetLocation: cfnstack.AssetLocation{
+					ID:     cfnstack.NewAssetID(stack, file),
+					Bucket: s3Bucket,
+					Key:    s3Dir + "/kube-aws/clusters/" + cluster + "/exported/stacks/" + stack + "/" + file,
+					Path:   stack + "/stack.json",
+				},
+			}
+			actual, err := assets.FindAssetByStackAndFileName(stack, file)
+			if err != nil {
+				t.Errorf("failed to find asset: %v", err)
+			}
+			if expected.ID != actual.ID {
+				t.Errorf(
+					"Asset id didn't match: expected=%v actual=%v",
+					expected.ID,
+					actual.ID,
+				)
+			}
+			if expected.Key != actual.Key {
+				t.Errorf(
+					"Asset key didn't match: expected=%v actual=%v",
+					expected.Key,
+					actual.Key,
+				)
+			}
+		})
+
+		t.Run("Assets/ControlplaneStackTemplate", func(t *testing.T) {
+			cluster := kubeAwsSettings.clusterName
+			stack := "control-plane"
+			file := "stack.json"
+			expected := cfnstack.Asset{
+				Content: string(controlplane_config.StackTemplateTemplate),
+				AssetLocation: cfnstack.AssetLocation{
+					ID:     cfnstack.NewAssetID(stack, file),
+					Bucket: s3Bucket,
+					Key:    s3Dir + "/kube-aws/clusters/" + cluster + "/exported/stacks/" + stack + "/" + file,
+					Path:   stack + "/stack.json",
+				},
+			}
+			actual, err := assets.FindAssetByStackAndFileName(stack, file)
+			if err != nil {
+				t.Errorf("failed to find asset: %v", err)
+			}
+			if expected.ID != actual.ID {
+				t.Errorf(
+					"Asset id didn't match: expected=%v actual=%v",
+					expected.ID,
+					actual.ID,
+				)
+			}
+			if expected.Key != actual.Key {
+				t.Errorf(
+					"Asset key didn't match: expected=%v actual=%v",
+					expected.Key,
+					actual.Key,
+				)
+			}
+		})
+	}
+
 	minimalValidConfigYaml := kubeAwsSettings.mainClusterYaml + `
 availabilityZone: us-west-1c
 `
 	validCases := []struct {
-		context      string
-		configYaml   string
-		assertConfig []ConfigTester
+		context       string
+		configYaml    string
+		assertConfig  []ConfigTester
+		assertCluster []ClusterTester
 	}{
 		{
 			context: "WithExperimentalFeatures",
@@ -413,6 +506,9 @@ worker:
 						t.Errorf("experimental settings shouldn't be inherited to a node pool but it did : toplevel=%v nodepool=%v", expected, p.Experimental)
 					}
 				},
+			},
+			assertCluster: []ClusterTester{
+				hasDefaultCluster,
 			},
 		},
 		{
@@ -1907,13 +2003,6 @@ etcdDataVolumeIOPS: 104
 			})
 
 			helper.WithDummyCredentials(func(dummyTlsAssetsDir string) {
-				s3URI, s3URIExists := os.LookupEnv("KUBE_AWS_S3_DIR_URI")
-
-				if !s3URIExists || s3URI == "" {
-					s3URI = "s3://examplebucket/exampledir"
-					t.Logf(`Falling back s3URI to a stub value "%s" for tests of validating stack templates. No assets will actually be uploaded to S3`, s3URI)
-				}
-
 				var stackTemplateOptions = root.NewOptions(s3URI, false, false)
 				stackTemplateOptions.TLSAssetsDir = dummyTlsAssetsDir
 				stackTemplateOptions.ControllerTmplFile = "../../core/controlplane/config/templates/cloud-config-controller"
@@ -1928,6 +2017,12 @@ etcdDataVolumeIOPS: 104
 					t.Errorf("failed to create cluster driver : %v", err)
 					t.FailNow()
 				}
+
+				t.Run("AssertCluster", func(t *testing.T) {
+					for _, assertion := range validCase.assertCluster {
+						assertion(cluster, t)
+					}
+				})
 
 				t.Run("ValidateUserData", func(t *testing.T) {
 					if err := cluster.ValidateUserData(); err != nil {
