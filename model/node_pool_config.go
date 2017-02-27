@@ -13,9 +13,10 @@ type NodePoolConfig struct {
 	InstanceType       string            `yaml:"instanceType,omitempty"`
 	ManagedIamRoleName string            `yaml:"managedIamRoleName,omitempty"`
 	RootVolume         `yaml:",inline"`
-	SpotPrice          string   `yaml:"spotPrice,omitempty"`
-	SecurityGroupIds   []string `yaml:"securityGroupIds,omitempty"`
-	Tenancy            string   `yaml:"tenancy,omitempty"`
+	SpotPrice          string                 `yaml:"spotPrice,omitempty"`
+	SecurityGroupIds   []string               `yaml:"securityGroupIds,omitempty"`
+	Tenancy            string                 `yaml:"tenancy,omitempty"`
+	CustomSettings     map[string]interface{} `yaml:"customSettings,omitempty"`
 }
 
 type ClusterAutoscaler struct {
