@@ -25,15 +25,6 @@ const (
 	REMOTE_STACK_TEMPLATE_FILENAME = "stack.json"
 )
 
-type Info struct {
-	Name           string
-	ControllerHost string
-}
-
-func (i *Info) String() string {
-	return fmt.Sprintf("Name=%s, ControllerHost=%s", i.Name, i.ControllerHost)
-}
-
 func (c clusterImpl) Export() error {
 	assets, err := c.assets()
 
@@ -102,10 +93,6 @@ func (c clusterImpl) EstimateCost() ([]string, error) {
 
 }
 
-func (c clusterImpl) Info() (*Info, error) {
-	return &Info{}, nil
-}
-
 type Cluster interface {
 	Create() error
 	Export() error
@@ -117,7 +104,7 @@ type Cluster interface {
 	ValidateUserData() error
 }
 
-func ClusterFromFile(configPath string, opts Options, awsDebug bool) (Cluster, error) {
+func ClusterFromFile(configPath string, opts options, awsDebug bool) (Cluster, error) {
 	cfg, err := config.ConfigFromFile(configPath)
 	if err != nil {
 		return nil, err
@@ -125,7 +112,7 @@ func ClusterFromFile(configPath string, opts Options, awsDebug bool) (Cluster, e
 	return ClusterFromConfig(cfg, opts, awsDebug)
 }
 
-func ClusterFromConfig(cfg *config.Config, opts Options, awsDebug bool) (Cluster, error) {
+func ClusterFromConfig(cfg *config.Config, opts options, awsDebug bool) (Cluster, error) {
 	cpOpts := controlplane_cfg.StackTemplateOptions{
 		TLSAssetsDir:          opts.TLSAssetsDir,
 		ControllerTmplFile:    opts.ControllerTmplFile,
@@ -178,7 +165,7 @@ func ClusterFromConfig(cfg *config.Config, opts Options, awsDebug bool) (Cluster
 type clusterImpl struct {
 	controlPlane *controlplane.Cluster
 	nodePools    []*nodepool.Cluster
-	opts         Options
+	opts         options
 	session      *session.Session
 }
 
@@ -191,6 +178,11 @@ func (c clusterImpl) Create() error {
 	}
 
 	return c.stackProvisioner().CreateStackAtURLAndWait(cfSvc, stackTemplateURL)
+}
+
+func (c clusterImpl) Info() (*Info, error) {
+	describer := NewClusterDescriber(c.controlPlane.ClusterName, c.stackName(), c.session)
+	return describer.Info()
 }
 
 func (c clusterImpl) prepareTemplateWithAssets() (string, error) {

@@ -1914,17 +1914,14 @@ etcdDataVolumeIOPS: 104
 					t.Logf(`Falling back s3URI to a stub value "%s" for tests of validating stack templates. No assets will actually be uploaded to S3`, s3URI)
 				}
 
-				var stackTemplateOptions = root.Options{
-					TLSAssetsDir:                      dummyTlsAssetsDir,
-					ControllerTmplFile:                "../../core/controlplane/config/templates/cloud-config-controller",
-					WorkerTmplFile:                    "../../core/controlplane/config/templates/cloud-config-worker",
-					EtcdTmplFile:                      "../../core/controlplane/config/templates/cloud-config-etcd",
-					RootStackTemplateTmplFile:         "../../core/root/config/templates/stack-template.json",
-					NodePoolStackTemplateTmplFile:     "../../core/nodepool/config/templates/stack-template.json",
-					ControlPlaneStackTemplateTmplFile: "../../core/controlplane/config/templates/stack-template.json",
-					S3URI:    s3URI,
-					SkipWait: false,
-				}
+				var stackTemplateOptions = root.NewOptions(s3URI, false, false)
+				stackTemplateOptions.TLSAssetsDir = dummyTlsAssetsDir
+				stackTemplateOptions.ControllerTmplFile = "../../core/controlplane/config/templates/cloud-config-controller"
+				stackTemplateOptions.WorkerTmplFile = "../../core/controlplane/config/templates/cloud-config-worker"
+				stackTemplateOptions.EtcdTmplFile = "../../core/controlplane/config/templates/cloud-config-etcd"
+				stackTemplateOptions.RootStackTemplateTmplFile = "../../core/root/config/templates/stack-template.json"
+				stackTemplateOptions.NodePoolStackTemplateTmplFile = "../../core/nodepool/config/templates/stack-template.json"
+				stackTemplateOptions.ControlPlaneStackTemplateTmplFile = "../../core/controlplane/config/templates/stack-template.json"
 
 				cluster, err := root.ClusterFromConfig(providedConfig, stackTemplateOptions, false)
 				if err != nil {
