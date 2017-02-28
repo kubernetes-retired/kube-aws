@@ -174,8 +174,19 @@ worker:
 #          # Must be within the range between 100 and 2000
 #          # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #          #rootVolumeIOPS:
+#
 #        - weightedCapacity: 2
 #          instanceType: c4.xlarge
+#
+#    #  # Additional EBS volumes mounted on the worker
+#    #  # No additional EBS volume by default. All parameter values do not default - they must be explicitly defined
+#    #  volumeMounts:
+#    #  - type: "gp2"
+#    #    iops: 0
+#    #    sizeGb: 30
+#    #    # Follow the aws convention of '/dev/xvd*' where '*' is a single letter from 'f' to 'z'
+#    #    device: "/dev/xvdf"
+#    #    mountPath: "/ebs"
 #      # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #      awsEnvironment:
 #        enabled: true
