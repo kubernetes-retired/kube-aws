@@ -381,46 +381,6 @@ func (c *ClusterRef) validateDNSConfig(r53 r53Service) error {
 		return nil
 	}
 
-	if c.HostedZoneID == "" {
-		//TODO(colhom): When HostedZone parameter is gone, this block can be removed
-		//Config will gaurantee that HostedZoneID is set from the get-go
-		listHostedZoneInput := route53.ListHostedZonesByNameInput{
-			DNSName: aws.String(c.HostedZone),
-		}
-
-		zonesResp, err := r53.ListHostedZonesByName(&listHostedZoneInput)
-		if err != nil {
-			return fmt.Errorf("Error validating HostedZone: %s", err)
-		}
-
-		zones := zonesResp.HostedZones
-
-		if len(zones) == 0 {
-			return fmt.Errorf("hosted zone %s does not exist", c.HostedZone)
-		}
-
-		var matchingZone *route53.HostedZone
-		for _, zone := range zones {
-			if aws.StringValue(zone.Name) == c.HostedZone {
-				if matchingZone != nil {
-					//This means we've found another match, and HostedZone is ambiguous
-					return fmt.Errorf("multiple hosted-zones found for DNS name \"%s\"", c.HostedZone)
-				}
-				matchingZone = zone
-			} else {
-				/* Weird API semantics: if we see a zone which doesn't match the name
-				   we've exhausted all zones which match the name
-				  http://docs.aws.amazon.com/cli/latest/reference/route53/list-hosted-zones-by-name.html#options */
-
-				break
-			}
-		}
-		if matchingZone == nil {
-			return fmt.Errorf("hosted zone %s does not exist", c.HostedZone)
-		}
-		c.HostedZoneID = aws.StringValue(matchingZone.Id)
-	}
-
 	hzOut, err := r53.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(c.HostedZoneID)})
 	if err != nil {
 		return fmt.Errorf("error getting hosted zone %s: %v", c.HostedZoneID, err)
@@ -445,7 +405,7 @@ func (c *ClusterRef) validateDNSConfig(r53 r53Service) error {
 				return fmt.Errorf(
 					"RecordSet for \"%s\" already exists in Hosted Zone \"%s.\"",
 					c.ExternalDNSName,
-					c.HostedZone,
+					c.HostedZoneID,
 				)
 			}
 		}
