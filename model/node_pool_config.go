@@ -111,6 +111,10 @@ func (c NodePoolConfig) Valid() error {
 		return err
 	}
 
+	if c.InstanceType == "t2.micro" || c.InstanceType == "t2.nano" {
+		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/coreos/kube-aws/issues/258 for more information`)
+	}
+
 	return nil
 }
 
