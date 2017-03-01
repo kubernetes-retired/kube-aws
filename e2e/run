@@ -155,15 +155,15 @@ worker:
     loadBalancer:
       enabled: true
       names:
-      - $(testinfra_public_lb)
+      - $(testinfra_public_elb)
       securityGroupIds:
-      - $(testinfra_public_lb_backend_sg)
+      - $(testinfra_public_elb_backend_sg)
     targetGroup:
       enabled: true
       arns:
       - $(testinfra_target_group)
       securityGroupIds:
-      - $(testinfra_public_lb_backend_sg)" >> cluster.yaml
+      - $(testinfra_public_alb_backend_sg)" >> cluster.yaml
   fi
 
   echo -e "
@@ -195,15 +195,15 @@ worker:
     loadBalancer:
       enabled: true
       names:
-      - $(testinfra_public_lb)
+      - $(testinfra_public_elb)
       securityGroupIds:
-      - $(testinfra_public_lb_backend_sg)
+      - $(testinfra_public_elb_backend_sg)
     targetGroup:
       enabled: true
       arns:
       - $(testinfra_target_group)
       securityGroupIds:
-      - $(testinfra_public_lb_backend_sg)" >> cluster.yaml
+      - $(testinfra_public_alb_backend_sg)" >> cluster.yaml
   fi
 
   echo -e "
@@ -426,12 +426,16 @@ testinfra_public_routetable() {
   testinfra_output PublicRouteTable
 }
 
-testinfra_public_lb_backend_sg() {
-  testinfra_output PublicLBBackendSG
+testinfra_public_elb_backend_sg() {
+  testinfra_output PublicELBBackendSG
 }
 
-testinfra_public_lb() {
-  testinfra_output PublicLB
+testinfra_public_alb_backend_sg() {
+  testinfra_output PublicALBBackendSG
+}
+
+testinfra_public_elb() {
+  testinfra_output PublicELB
 }
 
 testinfra_target_group() {
