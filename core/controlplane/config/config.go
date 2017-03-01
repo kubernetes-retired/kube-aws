@@ -191,10 +191,6 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 }
 
 func (c *Cluster) Load() error {
-	// HostedZone needs to end with a '.', amazon will not append it for you.
-	// as it will with RecordSets
-	c.HostedZone = WithTrailingDot(c.HostedZone)
-
 	// If the user specified no subnets, we assume that a single AZ configuration with the default instanceCIDR is demanded
 	if len(c.Subnets) == 0 && c.InstanceCIDR == "" {
 		c.InstanceCIDR = "10.0.0.0/24"
@@ -420,7 +416,6 @@ type Cluster struct {
 	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
 	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
 	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
-	HostedZone             string `yaml:"hostedZone,omitempty"`
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
 	ProvidedEncryptService EncryptService
 	CustomSettings         map[string]interface{} `yaml:"customSettings,omitempty"`
@@ -787,15 +782,8 @@ func (c Config) InternetGatewayRef() string {
 
 func (c Cluster) valid() error {
 	if c.CreateRecordSet {
-		if c.HostedZone == "" && c.HostedZoneID == "" {
-			return errors.New("hostedZone or hostedZoneID must be specified createRecordSet is true")
-		}
-		if c.HostedZone != "" && c.HostedZoneID != "" {
-			return errors.New("hostedZone and hostedZoneID cannot both be specified")
-		}
-
-		if c.HostedZone != "" {
-			fmt.Printf("Warning: the 'hostedZone' parameter is deprecated. Use 'hostedZoneId' instead\n")
+		if c.HostedZoneID == "" {
+			return errors.New("hostedZoneID must be specified when createRecordSet is true")
 		}
 
 		if c.RecordSetTTL < 1 {
@@ -805,6 +793,12 @@ func (c Cluster) valid() error {
 		if c.RecordSetTTL != NewDefaultCluster().RecordSetTTL {
 			return errors.New(
 				"recordSetTTL should not be modified when createRecordSet is false",
+			)
+		}
+
+		if c.HostedZoneID != "" {
+			return errors.New(
+				"hostedZoneId should not be modified when createRecordSet is false",
 			)
 		}
 	}
