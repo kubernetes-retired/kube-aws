@@ -15,6 +15,7 @@ import (
 	"github.com/coreos/kube-aws/coreos/amiregistry"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
 	"github.com/coreos/kube-aws/model"
+	"github.com/coreos/kube-aws/model/derived"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -630,32 +631,10 @@ func (c Cluster) Config() (*Config, error) {
 		config.AMI = c.AmiId
 	}
 
-	config.EtcdInstances = make([]model.EtcdInstance, config.EtcdCount)
-
-	for etcdIndex := 0; etcdIndex < config.EtcdCount; etcdIndex++ {
-
-		//Round-robin etcd instances across all available subnets
-		subnetIndex := etcdIndex % len(config.Etcd.Subnets)
-		subnet := config.Etcd.Subnets[subnetIndex]
-
-		var instance model.EtcdInstance
-
-		if subnet.ManageNATGateway() {
-			ngw, err := c.FindNATGatewayForPrivateSubnet(subnet)
-
-			if err != nil {
-				return nil, fmt.Errorf("failed getting a NAT gateway for the subnet %s in %v: %v", subnet.LogicalName(), c.NATGateways(), err)
-			}
-
-			instance = model.NewEtcdInstanceDependsOnNewlyCreatedNGW(subnet, *ngw)
-		} else {
-			instance = model.NewEtcdInstance(subnet)
-		}
-
-		config.EtcdInstances[etcdIndex] = instance
-
-		//http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html#concepts-private-addresses
-
+	var err error
+	config.EtcdNodes, err = derived.NewEtcdNodes(c.Etcd.Nodes, c.EtcdCluster())
+	if err != nil {
+		return nil, fmt.Errorf("failed to derived etcd nodes configuration: %v", err)
 	}
 
 	// Populate top-level subnets to model
@@ -668,6 +647,12 @@ func (c Cluster) Config() (*Config, error) {
 	config.IsChinaRegion = strings.HasPrefix(config.Region, "cn")
 
 	return &config, nil
+}
+
+func (c *Cluster) EtcdCluster() derived.EtcdCluster {
+	region := model.RegionForName(c.Region)
+	etcdNetwork := derived.NewNetwork(c.Etcd.Subnets, c.NATGateways())
+	return derived.NewEtcdCluster(c.Etcd.Cluster, region, etcdNetwork, c.EtcdCount)
 }
 
 // releaseVersionIsGreaterThan will return true if the supplied version is greater then
@@ -731,7 +716,7 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 	if stackConfig.UserDataController, err = userdatatemplate.GetString(opts.ControllerTmplFile, stackConfig.Config); err != nil {
 		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
 	}
-	if stackConfig.userDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config); err != nil {
+	if stackConfig.UserDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config); err != nil {
 		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
 	}
 
@@ -750,7 +735,7 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 type Config struct {
 	Cluster
 
-	EtcdInstances []model.EtcdInstance
+	EtcdNodes []derived.EtcdNode
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
@@ -762,6 +747,18 @@ type Config struct {
 // This is NOT intended to be used to reference stack name from cloud-config as the target of awscli or cfn-bootstrap-tools commands e.g. `cfn-init` and `cfn-signal`
 func (c Cluster) StackName() string {
 	return "control-plane"
+}
+
+func (c Cluster) StackNameEnvVarName() string {
+	return "KUBE_AWS_STACK_NAME"
+}
+
+func (c Cluster) EtcdNodeEnvFileName() string {
+	return "/var/run/coreos/etcd-node.env"
+}
+
+func (c Cluster) EtcdIndexEnvVarName() string {
+	return "KUBE_AWS_ETCD_INDEX"
 }
 
 func (c Config) VPCLogicalName() string {
