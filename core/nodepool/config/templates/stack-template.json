@@ -43,9 +43,10 @@
         "/var/run/coreos/etcd-environment": {
           "content": { "Fn::Join" : [ "", [
             "ETCD_ENDPOINTS='",
-            {{range $index, $_ := $.EtcdInstances}}
+            {{range $index, $instance := $.EtcdNodes}}
             {{if $index}}",", {{end}} "https://",
-              { "Fn::ImportValue" : "{{$.ClusterName}}-InstanceEtcd{{$index}}PrivateDnsName" }, ":2379",
+            {{$instance.ImportedAdvertisedFQDNRef}},
+            ":2379",
             {{end}}
             "'\n"
           ]]}
