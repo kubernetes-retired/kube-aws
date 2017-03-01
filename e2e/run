@@ -392,7 +392,7 @@ testinfra_up() {
   aws cloudformation create-stack \
     --template-body file://$(pwd)/stack-template.yaml \
     --stack-name ${KUBE_AWS_TEST_INFRA_STACK_NAME} \
-    --parameter ParameterKey=AZ1,ParameterValue=${KUBE_AWS_AZ_1}
+    --parameter ParameterKey=AZ1,ParameterValue=${KUBE_AWS_AZ_1} ParameterKey=Id,ParameterValue=${KUBE_AWS_CLUSTER_NAME}-infra
   aws cloudformation wait stack-create-complete \
     --stack-name ${KUBE_AWS_TEST_INFRA_STACK_NAME}
 }
