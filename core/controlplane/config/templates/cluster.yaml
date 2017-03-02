@@ -179,14 +179,14 @@ worker:
 #          instanceType: c4.xlarge
 #
 #    #  # Additional EBS volumes mounted on the worker
-#    #  # No additional EBS volume by default. All parameter values do not default - they must be explicitly defined
+#    #  # No additional EBS volumes by default. All parameter values do not default - they must be explicitly defined
 #    #  volumeMounts:
 #    #  - type: "gp2"
 #    #    iops: 0
-#    #    sizeGb: 30
+#    #    size: 30
 #    #    # Follow the aws convention of '/dev/xvd*' where '*' is a single letter from 'f' to 'z'
 #    #    device: "/dev/xvdf"
-#    #    mountPath: "/ebs"
+#    #    path: "/ebs"
 #      # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #      awsEnvironment:
 #        enabled: true
