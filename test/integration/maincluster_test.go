@@ -415,6 +415,19 @@ worker:
 			},
 		},
 		{
+			context: "WithEtcdDataVolumeEncrypted",
+			configYaml: minimalValidConfigYaml + `
+etcdDataVolumeEncrypted: true
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if !c.EtcdDataVolumeEncrypted {
+						t.Errorf("Etcd data volume should be encrypted but was not: %v", c.Etcd)
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdMemberIdentityProviderEIP",
 			configYaml: minimalValidConfigYaml + `
 etcd:
