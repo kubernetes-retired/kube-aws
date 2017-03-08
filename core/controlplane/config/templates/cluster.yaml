@@ -110,7 +110,7 @@ worker:
 #      # Number of worker nodes to create for an autoscaling group based pool
 #      count: 1
 #      # If omitted, public subnets are created by kube-aws and used for worker nodes
-#      subnet:
+#      subnets:
 #      - # References subnets defined under the top-level `subnets` key by their names
 #        name: ManagedPublicSubnet1
 #      # Auto Scaling Group definition for workers. If only `workerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
