@@ -357,6 +357,10 @@ worker:
 #    fqdn: etcd1.<internalDomainName>
 #  - name: etcd2
 #    fqdn: etcd2.<internalDomainName>
+#
+#  # ARN of the KMS key used to encrypt the etcd data volume. The account default key will be used if `etcdDataVolumeEncrypted`
+#  # is enable and `etcd.kmsKeyArn` is omitted.
+#  kmsKeyArn: "{{.Etcd.KMSKeyARN}}"
 
 # Instance type for etcd node
 # etcdInstanceType: t2.medium
