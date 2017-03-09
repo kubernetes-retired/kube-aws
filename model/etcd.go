@@ -68,3 +68,7 @@ func (e Etcd) HostedZoneLogicalName() (string, error) {
 	}
 	return "EtcdHostedZone", nil
 }
+
+func (e Etcd) KMSKeyARN() string {
+	return e.Cluster.KMSKeyARN
+}

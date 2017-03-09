@@ -891,6 +891,10 @@ func (c Cluster) valid() error {
 		return err
 	}
 
+	if err := c.EtcdSettings.Valid(); err != nil {
+		return err
+	}
+
 	if c.WorkerTenancy != "default" && c.WorkerSpotPrice != "" {
 		return fmt.Errorf("selected worker tenancy (%s) is incompatible with spot instances", c.WorkerTenancy)
 	}
@@ -1170,6 +1174,14 @@ func (c ControllerSettings) Valid() error {
 
 	if err := c.Controller.Validate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (e EtcdSettings) Valid() error {
+	if !e.EtcdDataVolumeEncrypted && e.Etcd.KMSKeyARN() != "" {
+		return fmt.Errorf("`etcd.kmsKeyArn` can only be specified when `etcdDataVolumeEncrypted` is enabled")
 	}
 
 	return nil
