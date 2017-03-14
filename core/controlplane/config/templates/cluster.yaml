@@ -198,7 +198,7 @@ worker:
 #        enabled: true
 #      # Will provision worker nodes with IAM permissions to run cluster-autoscaler
 #      clusterAutoscalerSupport:
-#        enable: true
+#        enabled: true
 #      # This option has not yet been tested with rkt as container runtime
 #      ephemeralImageStorage:
 #        enabled: true
