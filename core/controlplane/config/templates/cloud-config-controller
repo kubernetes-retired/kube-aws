@@ -76,8 +76,8 @@ coreos:
             EnvironmentFile=-/run/flannel/etcd-endpoints.opts
             ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
             ExecStartPre=/bin/sh -ec "echo FLANNELD_ETCD_ENDPOINTS=${ETCD_ENDPOINTS} >/run/flannel/etcd-endpoints.opts"
-            {{- if .TLSAssetsEncryptionEnabled }}
-            ExecStartPre=/opt/bin/decrypt-tls-assets
+            {{- if .AssetsEncryptionEnabled }}
+            ExecStartPre=/opt/bin/decrypt-assets
             {{- end}}
             ExecStartPre=/usr/bin/etcdctl \
             --ca-file=/etc/kubernetes/ssl/ca.pem \
@@ -747,25 +747,25 @@ write_files:
 
 {{ end }}
 
-{{if .TLSAssetsEncryptionEnabled }}
-  - path: /opt/bin/decrypt-tls-assets
+{{if .AssetsEncryptionEnabled }}
+  - path: /opt/bin/decrypt-assets
     owner: root:root
     permissions: 0700
     content: |
       #!/bin/bash -e
 
       rkt run \
-        --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
-        --mount=volume=ssl,target=/etc/kubernetes/ssl \
-        --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
+        --volume=kube,kind=host,source=/etc/kubernetes,readOnly=false \
+        --mount=volume=kube,target=/etc/kubernetes \
+        --uuid-file-save=/var/run/coreos/decrypt-assets.uuid \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
         --net=host \
         --trust-keys-from-https \
         {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=/bin/bash -- \
           -ec \
-          'echo decrypting tls assets
+          'echo decrypting assets
            shopt -s nullglob
-           for encKey in /etc/kubernetes/ssl/*.pem.enc; do
+           for encKey in /etc/kubernetes/{ssl,{{if .AuthTokensConfig.HasTokens}}auth{{end}}}/*.enc; do
              echo decrypting $encKey
              f=$(mktemp $encKey.XXXXXXXX)
              /usr/bin/aws \
@@ -778,7 +778,7 @@ write_files:
            done;
            echo done.'
 
-      rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid || :
+      rkt rm --uuid-file=/var/run/coreos/decrypt-assets.uuid || :
 {{ end }}
 
   - path: /opt/bin/taint-and-uncordon
@@ -929,6 +929,9 @@ write_files:
           - --service-cluster-ip-range={{.ServiceCIDR}}
           - --secure-port=443
           - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
+          {{ if .AuthTokensConfig.HasTokens }}
+          - --token-auth-file=/etc/kubernetes/auth/tokens.csv
+          {{ end }}
           {{if .Experimental.AuditLog.Enabled}}
           - --audit-log-maxage={{.Experimental.AuditLog.MaxAge}}
           - --audit-log-path={{.Experimental.AuditLog.LogPath}}
@@ -971,11 +974,16 @@ write_files:
           - mountPath: /etc/ssl/certs
             name: ssl-certs-host
             readOnly: true
+          {{if .AuthTokensConfig.HasTokens}}
+          - mountPath: /etc/kubernetes/auth
+            name: auth-kubernetes
+            readOnly: true
+          {{end}}
           {{if .Experimental.Authentication.Webhook.Enabled}}
           - mountPath: /etc/kubernetes/webhooks
             name: kubernetes-webhooks
             readOnly: true
-          {{ end }}
+          {{end}}
         volumes:
         - hostPath:
             path: /etc/kubernetes/ssl
@@ -983,6 +991,11 @@ write_files:
         - hostPath:
             path: /usr/share/ca-certificates
           name: ssl-certs-host
+        {{if .AuthTokensConfig.HasTokens}}
+        - hostPath:
+            path: /etc/kubernetes/auth
+          name: auth-kubernetes
+        {{end}}
         {{if .Experimental.Authentication.Webhook.Enabled}}
         - hostPath:
             path: /etc/kubernetes/webhooks
@@ -1425,24 +1438,30 @@ write_files:
           - port: 80
             targetPort: 9090
 
+{{ if .AuthTokensConfig.HasTokens }}
+  - path: /etc/kubernetes/auth/tokens.csv{{if .AssetsEncryptionEnabled}}.enc{{end}}
+    encoding: gzip+base64
+    content: {{.AuthTokensConfig.Contents}}
+{{ end }}
+
 {{ if .ManageCertificates }}
-  - path: /etc/kubernetes/ssl/ca.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
 
-  - path: /etc/kubernetes/ssl/apiserver.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/apiserver.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerCert}}
 
-  - path: /etc/kubernetes/ssl/apiserver-key.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/apiserver-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.APIServerKey}}
 
-  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientCert}}
 
-  - path: /etc/kubernetes/ssl/etcd-client-key.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientKey}}
 {{ end }}
