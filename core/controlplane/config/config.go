@@ -701,7 +701,7 @@ func releaseVersionIsGreaterThan(minVersion semver.Version, release string) (boo
 }
 
 type StackTemplateOptions struct {
-	TLSAssetsDir          string
+	AssetsDir             string
 	ControllerTmplFile    string
 	EtcdTmplFile          string
 	StackTemplateTmplFile string
@@ -718,10 +718,14 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 		return nil, err
 	}
 
+	// TODO: Check if new tests are needed to verify the auth token file is handled correctly
+
 	if c.ManageCertificates {
-		if c.TLSAssetsEncryptionEnabled() {
+		if c.AssetsEncryptionEnabled() {
 			var compactAssets *CompactTLSAssets
-			compactAssets, err = ReadOrCreateCompactTLSAssets(opts.TLSAssetsDir, KMSConfig{
+			var compactAuthTokens *CompactAuthTokens
+
+			compactAssets, err = ReadOrCreateCompactTLSAssets(opts.AssetsDir, KMSConfig{
 				Region:         stackConfig.Config.Region,
 				KMSKeyARN:      c.KMSKeyARN,
 				EncryptService: c.ProvidedEncryptService,
@@ -729,13 +733,31 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 			if err != nil {
 				return nil, err
 			}
-			stackConfig.Config.TLSConfig = compactAssets
-		} else {
-			rawAssets, err := ReadOrCreateUnecryptedCompactTLSAssets(opts.TLSAssetsDir)
+
+			compactAuthTokens, err = ReadOrCreateCompactAuthTokens(opts.AssetsDir, KMSConfig{
+				Region:         stackConfig.Config.Region,
+				KMSKeyARN:      c.KMSKeyARN,
+				EncryptService: c.ProvidedEncryptService,
+			})
 			if err != nil {
 				return nil, err
 			}
+
+			stackConfig.Config.TLSConfig = compactAssets
+			stackConfig.Config.AuthTokensConfig = compactAuthTokens
+		} else {
+			rawAssets, err := ReadOrCreateUnecryptedCompactTLSAssets(opts.AssetsDir)
+			if err != nil {
+				return nil, err
+			}
+
+			rawAuthTokens, err := ReadOrCreateUnecryptedCompactAuthTokens(opts.AssetsDir)
+			if err != nil {
+				return nil, err
+			}
+
 			stackConfig.Config.TLSConfig = rawAssets
+			stackConfig.Config.AuthTokensConfig = rawAuthTokens
 		}
 	}
 
@@ -763,6 +785,9 @@ type Config struct {
 	Cluster
 
 	EtcdNodes []derived.EtcdNode
+
+	// Encoded auth tokens
+	AuthTokensConfig *CompactAuthTokens
 
 	// Encoded TLS assets
 	TLSConfig *CompactTLSAssets
@@ -944,7 +969,7 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 	if c.ClusterName == "" {
 		return nil, errors.New("clusterName must be set")
 	}
-	if c.KMSKeyARN == "" && c.TLSAssetsEncryptionEnabled() {
+	if c.KMSKeyARN == "" && c.AssetsEncryptionEnabled() {
 		return nil, errors.New("kmsKeyArn must be set")
 	}
 
@@ -1045,7 +1070,7 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 	return &DeploymentValidationResult{vpcNet: vpcNet}, nil
 }
 
-func (c DeploymentSettings) TLSAssetsEncryptionEnabled() bool {
+func (c DeploymentSettings) AssetsEncryptionEnabled() bool {
 	return c.ManageCertificates && c.Region.SupportsKMS()
 }
 
@@ -1178,7 +1203,7 @@ func (c ControllerSettings) Valid() error {
 func (c Experimental) Valid() error {
 	for _, taint := range c.Taints {
 		if taint.Effect != "NoSchedule" && taint.Effect != "PreferNoSchedule" {
-			return fmt.Errorf("Effect must be NoSchdule or PreferNoSchedule, but was %s", taint.Effect)
+			return fmt.Errorf("Effect must be NoSchedule or PreferNoSchedule, but was %s", taint.Effect)
 		}
 	}
 

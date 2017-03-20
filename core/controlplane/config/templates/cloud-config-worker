@@ -85,8 +85,8 @@ coreos:
             EnvironmentFile=-/run/flannel/etcd-endpoints.opts
             ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
             ExecStartPre=/bin/sh -ec "echo FLANNELD_ETCD_ENDPOINTS=${ETCD_ENDPOINTS} >/run/flannel/etcd-endpoints.opts"
-            {{- if .TLSAssetsEncryptionEnabled}}
-            ExecStartPre=/opt/bin/decrypt-tls-assets
+            {{- if .AssetsEncryptionEnabled}}
+            ExecStartPre=/opt/bin/decrypt-assets
             {{- end}}
             Environment="ETCD_SSL_DIR=/etc/kubernetes/ssl"
             TimeoutStartSec=120
@@ -514,30 +514,30 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientCert}}
 
-  - path: /etc/kubernetes/ssl/etcd-client-key.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientKey}}
 
-  - path: /etc/kubernetes/ssl/worker.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/worker.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.WorkerCert}}
 
-  - path: /etc/kubernetes/ssl/worker-key.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/worker-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.WorkerKey}}
 
-  - path: /etc/kubernetes/ssl/ca.pem{{if .TLSAssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
 
 {{ end }}
 
-{{ if .TLSAssetsEncryptionEnabled }}
-  - path: /opt/bin/decrypt-tls-assets
+{{ if .AssetsEncryptionEnabled }}
+  - path: /opt/bin/decrypt-assets
     owner: root:root
     permissions: 0700
     content: |
@@ -546,7 +546,7 @@ write_files:
       rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
-        --uuid-file-save=/var/run/coreos/decrypt-tls-assets.uuid \
+        --uuid-file-save=/var/run/coreos/decrypt-assets.uuid \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
         --net=host \
         --trust-keys-from-https \
@@ -567,7 +567,7 @@ write_files:
            done;
            echo done.'
 
-      rkt rm --uuid-file=/var/run/coreos/decrypt-tls-assets.uuid || :
+      rkt rm --uuid-file=/var/run/coreos/decrypt-assets.uuid || :
 {{ end }}
 
 {{if .SpotFleet.Enabled}}
