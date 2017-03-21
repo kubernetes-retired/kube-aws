@@ -6,6 +6,18 @@ import (
 	"os"
 )
 
+func WithTempDir(fn func(dir string)) {
+	dir, err := ioutil.TempDir("", "test-temp-dir")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer os.RemoveAll(dir)
+
+	fn(dir)
+}
+
 func WithDummyCredentials(fn func(dir string)) {
 	dir, err := ioutil.TempDir("", "dummy-credentials")
 

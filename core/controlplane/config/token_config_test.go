@@ -77,7 +77,7 @@ func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to cache encrypted auth tokens.
+				t.Errorf(`failed to content encrypted auth tokens.
 	encrypted auth tokens must not change after their first creation but they did change:
 	created = %v
 	read = %v`, created, read)
@@ -102,7 +102,7 @@ func TestReadOrCreateEmptyUnEcryptedCompactAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to cache unencrypted auth tokens.
+				t.Errorf(`failed to content unencrypted auth tokens.
  	unencrypted auth tokens must not change after their first creation but they did change:
  	created = %v
  	read = %v`, created, read)
@@ -139,7 +139,7 @@ func TestReadOrCreateCompactNonEmptyValidAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to cache encrypted auth tokens.
+				t.Errorf(`failed to content encrypted auth tokens.
 	encrypted auth tokens must not change after their first creation but they did change:
 	created = %v
 	read = %v`, created, read)
