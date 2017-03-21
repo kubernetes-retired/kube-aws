@@ -7,6 +7,7 @@ import (
 	"fmt"
 	controlplane "github.com/coreos/kube-aws/core/controlplane/config"
 	nodepool "github.com/coreos/kube-aws/core/nodepool/config"
+	"github.com/coreos/kube-aws/model"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
@@ -14,15 +15,27 @@ import (
 type UnmarshalledConfig struct {
 	controlplane.Cluster `yaml:",inline"`
 	WorkerConfig         `yaml:"worker,omitempty"`
+	model.UnknownKeys    `yaml:",inline"`
 }
 
 type WorkerConfig struct {
-	NodePools []*nodepool.ProvidedConfig `yaml:"nodePools,omitempty"`
+	NodePools         []*nodepool.ProvidedConfig `yaml:"nodePools,omitempty"`
+	model.UnknownKeys `yaml:",inline"`
 }
 
 type Config struct {
 	*controlplane.Cluster
-	NodePools []*nodepool.ProvidedConfig
+	NodePools         []*nodepool.ProvidedConfig
+	model.UnknownKeys `yaml:",inline"`
+}
+
+type unknownKeysSupport interface {
+	FailWhenUnknownKeysFound(keyPath string) error
+}
+
+type unknownKeyValidation struct {
+	unknownKeysSupport
+	keyPath string
 }
 
 func newDefaultUnmarshalledConfig() *UnmarshalledConfig {
@@ -56,9 +69,41 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 		if err := np.Load(cpConfig); err != nil {
 			return nil, fmt.Errorf("invalid node pool at index %d: %v", i, err)
 		}
+
+		if err := failFastWhenUnknownKeysFound([]unknownKeyValidation{
+			{np, fmt.Sprintf("worker.nodePools[%d]", i)},
+			{np.AutoScalingGroup, fmt.Sprintf("worker.nodePools[%d].autoScalingGroup", i)},
+			{np.ClusterAutoscaler, fmt.Sprintf("worker.nodePools[%d].clusterAutoscaler", i)},
+			{np.SpotFleet, fmt.Sprintf("worker.nodePools[%d].spotFleet", i)},
+		}); err != nil {
+			return nil, err
+		}
 	}
 
-	return &Config{Cluster: cpCluser, NodePools: nodePools}, nil
+	cfg := &Config{Cluster: cpCluser, NodePools: nodePools}
+
+	if err := failFastWhenUnknownKeysFound([]unknownKeyValidation{
+		{c, ""},
+		{c.WorkerConfig, "worker"},
+		{c.Etcd, "etcd"},
+		{c.Controller, "controller"},
+		{c.Controller.AutoScalingGroup, "controller.autoScalingGroup"},
+		{c.Controller.ClusterAutoscaler, "controller.ClusterAutoscaler"},
+		{c.Experimental, "experimental"},
+	}); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func failFastWhenUnknownKeysFound(vs []unknownKeyValidation) error {
+	for _, v := range vs {
+		if err := v.unknownKeysSupport.FailWhenUnknownKeysFound(v.keyPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ConfigFromBytesWithEncryptService(data []byte, encryptService controlplane.EncryptService) (*Config, error) {

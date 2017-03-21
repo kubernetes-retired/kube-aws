@@ -5,9 +5,10 @@ import (
 )
 
 type Etcd struct {
-	Subnets []Subnet    `yaml:"subnets,omitempty"`
-	Nodes   []EtcdNode  `yaml:"nodes,omitempty"`
-	Cluster EtcdCluster `yaml:",inline"`
+	Subnets     []Subnet    `yaml:"subnets,omitempty"`
+	Nodes       []EtcdNode  `yaml:"nodes,omitempty"`
+	Cluster     EtcdCluster `yaml:",inline"`
+	UnknownKeys `yaml:",inline"`
 }
 
 func (i Etcd) LogicalName() string {

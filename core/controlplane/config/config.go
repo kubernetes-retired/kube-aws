@@ -29,56 +29,56 @@ const (
 
 func NewDefaultCluster() *Cluster {
 	experimental := Experimental{
-		Admission{
+		Admission: Admission{
 			PodSecurityPolicy{
 				Enabled: false,
 			},
 		},
-		AuditLog{
+		AuditLog: AuditLog{
 			Enabled: false,
 			MaxAge:  30,
 			LogPath: "/dev/stdout",
 		},
-		Authentication{
+		Authentication: Authentication{
 			Webhook{
 				Enabled:  false,
 				CacheTTL: "5m0s",
 				Config:   "",
 			},
 		},
-		AwsEnvironment{
+		AwsEnvironment: AwsEnvironment{
 			Enabled: false,
 		},
-		AwsNodeLabels{
+		AwsNodeLabels: AwsNodeLabels{
 			Enabled: false,
 		},
-		ClusterAutoscalerSupport{
+		ClusterAutoscalerSupport: ClusterAutoscalerSupport{
 			Enabled: false,
 		},
-		EphemeralImageStorage{
+		EphemeralImageStorage: EphemeralImageStorage{
 			Enabled:    false,
 			Disk:       "xvdb",
 			Filesystem: "xfs",
 		},
-		Kube2IamSupport{
+		Kube2IamSupport: Kube2IamSupport{
 			Enabled: false,
 		},
-		LoadBalancer{
+		LoadBalancer: LoadBalancer{
 			Enabled: false,
 		},
-		TargetGroup{
+		TargetGroup: TargetGroup{
 			Enabled: false,
 		},
-		NodeDrainer{
+		NodeDrainer: NodeDrainer{
 			Enabled: false,
 		},
-		NodeLabels{},
-		Plugins{
-			Rbac{
+		NodeLabels: NodeLabels{},
+		Plugins: Plugins{
+			Rbac: Rbac{
 				Enabled: false,
 			},
 		},
-		[]Taint{},
+		Taints: []Taint{},
 	}
 
 	return &Cluster{
@@ -464,6 +464,7 @@ type Experimental struct {
 	NodeLabels               NodeLabels               `yaml:"nodeLabels"`
 	Plugins                  Plugins                  `yaml:"plugins"`
 	Taints                   []Taint                  `yaml:"taints"`
+	model.UnknownKeys        `yaml:",inline"`
 }
 
 type Admission struct {
