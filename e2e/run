@@ -215,8 +215,9 @@ worker:
 # controller configuration
 waitSignal:
   enabled: true
-awsNodeLabels:
-  enabled: true
+experimental:
+  awsNodeLabels:
+    enabled: true
 etcdCount: $ETCD_COUNT
 " >> cluster.yaml
 

@@ -172,16 +172,13 @@ vpcCIDR: 10.5.0.0/16
 vpcId: vpc-xxx1
 routeTableId: rtb-xxxxxx
 instanceCIDR: 10.5.11.0/24
-controllerIP: 10.5.11.10
 `, `
 vpcCIDR: 192.168.1.0/24
 vpcId: vpc-xxx2
 instanceCIDR: 192.168.1.50/28
-controllerIP: 192.168.1.50
 `, `
 vpcCIDR: 192.168.1.0/24
 vpcId: vpc-xxx2
-controllerIP: 192.168.1.5
 subnets:
   - instanceCIDR: 192.168.1.0/28
   - instanceCIDR: 192.168.1.32/28
@@ -194,29 +191,24 @@ subnets:
 vpcCIDR: 10.0.0.0/16
 vpcId: vpc-xxx3 #vpc does not exist
 instanceCIDR: 10.0.0.0/24
-controllerIP: 10.0.0.50
 routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 10.10.0.0/16 #vpc cidr does match existing vpc-xxx1
 vpcId: vpc-xxx1
 instanceCIDR: 10.10.0.0/24
-controllerIP: 10.10.0.50
 routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 10.5.0.0/16
 instanceCIDR: 10.5.2.0/28 #instance cidr conflicts with existing subnet
-controllerIP: 10.5.2.10
 vpcId: vpc-xxx1
 routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 192.168.1.0/24
 instanceCIDR: 192.168.1.100/26 #instance cidr conflicts with existing subnet
-controllerIP: 192.168.1.80
 vpcId: vpc-xxx2
 routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 192.168.1.0/24
-controllerIP: 192.168.1.80
 vpcId: vpc-xxx2
 routeTableId: rtb-xxxxxx
 subnets:
