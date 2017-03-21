@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/coreos/coreos-cloudinit/config/validate"
+	"github.com/coreos/kube-aws/test/helper"
 )
 
 var numEncryption int
@@ -63,19 +64,34 @@ func TestCloudConfigTemplating(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed generating tls ca: %v", err)
 	}
-	assets, err := cluster.NewTLSAssets(caKey, caCert)
-	if err != nil {
-		t.Fatalf("Error generating default assets: %v", err)
-	}
+	opts := CredentialsOptions{}
 
-	encryptedAssets, err := assets.Encrypt(cfg.KMSKeyARN, &dummyEncryptService{})
-	if err != nil {
-		t.Fatalf("failed to compress TLS assets: %v", err)
-	}
+	var compactAssets *CompactTLSAssets
 
-	compactAssets, err := encryptedAssets.Compact()
-	if err != nil {
-		t.Fatalf("failed to compress TLS assets: %v", err)
+	helper.WithTempDir(func(dir string) {
+		_, err = cluster.NewTLSAssetsOnDisk(dir, opts, caKey, caCert)
+		if err != nil {
+			t.Fatalf("Error generating default assets: %v", err)
+		}
+
+		cachedEncryptor := CachedEncryptor{
+			bytesEncryptionService: bytesEncryptionService{kmsKeyARN: cfg.KMSKeyARN, kmsSvc: &dummyEncryptService{}},
+		}
+
+		encryptedAssets, err := ReadOrEncryptTLSAssets(dir, cachedEncryptor)
+		if err != nil {
+			t.Fatalf("failed to compress TLS assets: %v", err)
+		}
+
+		compactAssets, err = encryptedAssets.Compact()
+		if err != nil {
+			t.Fatalf("failed to compress TLS assets: %v", err)
+		}
+	})
+
+	if compactAssets == nil {
+		t.Fatalf("compactAssets is unexpectedly nil")
+		t.FailNow()
 	}
 
 	cfg.TLSConfig = compactAssets

@@ -11,14 +11,8 @@ import (
 	"os"
 )
 
-type CredentialsOptions struct {
-	GenerateCA bool
-	CaKeyPath  string
-	CaCertPath string
-}
-
 type CredentialsRenderer interface {
-	RenderFiles(CredentialsOptions) error
+	RenderFiles(config.CredentialsOptions) error
 }
 
 type credentialsRendererImpl struct {
@@ -31,7 +25,7 @@ func NewCredentialsRenderer(c *config.Cluster) CredentialsRenderer {
 	}
 }
 
-func (r credentialsRendererImpl) RenderFiles(renderCredentialsOpts CredentialsOptions) error {
+func (r credentialsRendererImpl) RenderFiles(renderCredentialsOpts config.CredentialsOptions) error {
 	cluster := r.c
 	fmt.Printf("Generating TLS credentials...\n")
 	var caKey *rsa.PrivateKey
@@ -67,12 +61,9 @@ func (r credentialsRendererImpl) RenderFiles(renderCredentialsOpts CredentialsOp
 	}
 
 	fmt.Printf("-> Generating new TLS assets\n")
-	assets, err := cluster.NewTLSAssets(caKey, caCert)
+	_, err := cluster.NewTLSAssetsOnDisk(dir, renderCredentialsOpts, caKey, caCert)
 	if err != nil {
-		return fmt.Errorf("Error generating default assets: %v", err)
-	}
-	if err := assets.WriteToDir(dir, renderCredentialsOpts.GenerateCA); err != nil {
-		return fmt.Errorf("Error create assets: %v", err)
+		return err
 	}
 
 	fmt.Printf("-> Generating auth token file\n")

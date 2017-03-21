@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/coreos/kube-aws/core/root"
-	"github.com/coreos/kube-aws/core/root/render"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ var (
 		SilenceUsage: true,
 	}
 
-	renderCredentialsOpts = render.CredentialsOptions{}
+	renderCredentialsOpts = config.CredentialsOptions{}
 
 	cmdRenderStack = &cobra.Command{
 		Use:          "stack",
