@@ -18,11 +18,13 @@ type NodePoolConfig struct {
 	Tenancy            string                 `yaml:"tenancy,omitempty"`
 	CustomSettings     map[string]interface{} `yaml:"customSettings,omitempty"`
 	VolumeMounts       []VolumeMount          `yaml:"volumeMounts,omitempty"`
+	UnknownKeys        `yaml:",inline"`
 }
 
 type ClusterAutoscaler struct {
-	MinSize int `yaml:"minSize"`
-	MaxSize int `yaml:"maxSize"`
+	MinSize     int `yaml:"minSize"`
+	MaxSize     int `yaml:"maxSize"`
+	UnknownKeys `yaml:",inline"`
 }
 
 func (a ClusterAutoscaler) Enabled() bool {
