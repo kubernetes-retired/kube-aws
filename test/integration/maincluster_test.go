@@ -973,7 +973,7 @@ worker:
 					actual := c.Experimental
 
 					if !reflect.DeepEqual(expected, actual) {
-						t.Errorf("experimental settings didn't match : expected=%v actual=%v", expected, actual)
+						t.Errorf("experimental settings didn't match : expected=%+v actual=%+v", expected, actual)
 					}
 
 					p := c.NodePools[0]
@@ -1293,8 +1293,6 @@ vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be private
 mapPublicIPs: false
-# This can't be false because kube-aws won't create public subbnets which are required by an external lb when mapPublicIPs=false
-controllerLoadBalancerPrivate: true
 subnets:
 - availabilityZone: us-west-1a
   instanceCIDR: "10.0.1.0/24"
@@ -1366,8 +1364,6 @@ vpcId: vpc-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be public
 mapPublicIPs: true
-# This can't be true because kube-aws won't create private subnets which are required by an internal lb when mapPublicIPs=true
-controllerLoadBalancerPrivate: false
 # internetGatewayId should be omitted as we assume that the route table specified by routeTableId already contain a route to one
 #internetGatewayId:
 subnets:
@@ -2717,6 +2713,82 @@ worker:
         - sg-34567890
 `,
 			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
+		},
+		{
+			context: "WithUnknownKeyInControlPlane",
+			configYaml: minimalValidConfigYaml + `
+# Must be "nodePools"
+nodePool:
+- name: pool1
+`,
+			expectedErrorMessage: "unknown keys found: nodePool",
+		},
+		{
+			context: "WithUnknownKeyInControlPlaneExperimentals",
+			configYaml: minimalValidConfigYaml + `
+# Settings for an experimental feature must be under the "experimental" field. Ignored.
+nodeDrainer:
+  enabled: true
+`,
+			expectedErrorMessage: "unknown keys found: nodeDrainer",
+		},
+		{
+			context: "WithUnknownKeyInController",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  foo: 1
+`,
+			expectedErrorMessage: "unknown keys found in controller: foo",
+		},
+		{
+			context: "WithUnknownKeyInControllerASG",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  autoScalingGroup:
+    foo: 1
+`,
+			expectedErrorMessage: "unknown keys found in controller.autoScalingGroup: foo",
+		},
+		{
+			context: "WithUnknownKeyInEtcd",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  foo: 1
+`,
+			expectedErrorMessage: "unknown keys found in etcd: foo",
+		},
+		{
+			context: "WithUnknownKeyInWorkerNodePoolASG",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    autoScalingGroup:
+      foo: 1
+`,
+			expectedErrorMessage: "unknown keys found in worker.nodePools[0].autoScalingGroup: foo",
+		},
+		{
+			context: "WithUnknownKeyInWorkerNodePoolSpotFleet",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    spotFleet:
+      bar: 1
+`,
+			expectedErrorMessage: "unknown keys found in worker.nodePools[0].spotFleet: bar",
+		},
+		{
+			context: "WithUnknownKeyInWorkerNodePoolCA",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    clusterAutoscaler:
+      baz: 1
+`,
+			expectedErrorMessage: "unknown keys found in worker.nodePools[0].clusterAutoscaler: baz",
 		},
 	}
 

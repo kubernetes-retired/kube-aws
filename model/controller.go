@@ -9,6 +9,7 @@ type Controller struct {
 	LoadBalancer       ControllerElb     `yaml:"loadBalancer,omitempty"`
 	ManagedIamRoleName string            `yaml:"managedIamRoleName,omitempty"`
 	Subnets            []Subnet          `yaml:"subnets,omitempty"`
+	UnknownKeys        `yaml:",inline"`
 }
 
 func NewDefaultController() Controller {
