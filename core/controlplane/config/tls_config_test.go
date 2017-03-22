@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"github.com/coreos/kube-aws/model"
 	"github.com/coreos/kube-aws/test/helper"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"reflect"
 )
 
-func genTLSAssets(t *testing.T) *RawTLSAssets {
+func genTLSAssets(t *testing.T) *RawTLSAssetsOnMemory {
 	cluster, err := ClusterFromBytes([]byte(singleAzConfigYaml))
 	if err != nil {
 		t.Fatalf("failed generating config: %v", err)
@@ -23,7 +24,7 @@ func genTLSAssets(t *testing.T) *RawTLSAssets {
 	if err != nil {
 		t.Fatalf("failed generating tls ca: %v", err)
 	}
-	assets, err := cluster.NewTLSAssets(caKey, caCert)
+	assets, err := cluster.NewTLSAssetsOnMemory(caKey, caCert)
 	if err != nil {
 		t.Fatalf("failed generating tls: %v", err)
 	}
@@ -134,22 +135,35 @@ func TestReadOrCreateCompactTLSAssets(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to cache encrypted tls assets.
+				t.Errorf(`failed to content encrypted tls assets.
 	encrypted tls assets must not change after their first creation but they did change:
 	created = %v
 	read = %v`, created, read)
 			}
 		})
 
-		t.Run("RemoveOneOrMoreCacheFilesToRegenerateAll", func(t *testing.T) {
+		t.Run("RemoveFilesToRegenerate", func(t *testing.T) {
 			original, err := ReadOrCreateCompactTLSAssets(dir, kmsConfig)
 
 			if err != nil {
 				t.Errorf("failed to read the original encrypted tls assets : %v", err)
 			}
 
-			if err := os.Remove(filepath.Join(dir, "ca.pem.enc")); err != nil {
-				t.Errorf("failed to remove ca.pem.enc for test setup : %v", err)
+			files := []string{
+				"ca", "admin", "admin-key", "worker", "worker-key", "apiserver", "apiserver-key",
+				"etcd", "etcd-key", "etcd-client", "etcd-client-key",
+			}
+
+			for _, f := range files {
+				filename := fmt.Sprintf("%s.pem.enc", f)
+				if err := os.Remove(filepath.Join(dir, filename)); err != nil {
+					t.Errorf("failed to remove %s for test setup : %v", filename, err)
+					t.FailNow()
+				}
+			}
+
+			if err := os.Remove(filepath.Join(dir, "ca-key.pem.enc")); err == nil {
+				t.Error("ca-key.pem.enc should not exist")
 				t.FailNow()
 			}
 
@@ -233,7 +247,7 @@ func TestReadOrCreateUnEcryptedCompactTLSAssets(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to cache unencrypted tls assets.
+				t.Errorf(`failed to content unencrypted tls assets.
  	unencrypted tls assets must not change after their first creation but they did change:
  	created = %v
  	read = %v`, created, read)

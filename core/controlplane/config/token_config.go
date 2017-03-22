@@ -21,13 +21,13 @@ type AuthTokens struct {
 }
 
 // Contents of the CSV file holding auth tokens.
-type RawAuthTokens struct {
-	AuthTokens
+type RawAuthTokensOnDisk struct {
+	AuthTokens RawCredentialOnDisk
 }
 
 // Encrypted contents of the CSV file holding auth tokens.
-type EncryptedAuthTokens struct {
-	AuthTokens
+type EncryptedAuthTokensOnDisk struct {
+	AuthTokens EncryptedCredentialOnDisk
 }
 
 // Encrypted -> gzip -> base64 encoded auth token file contents.
@@ -35,11 +35,19 @@ type CompactAuthTokens struct {
 	Contents string
 }
 
-func (c *Cluster) NewAuthTokens() *RawAuthTokens {
+func NewAuthTokens() AuthTokens {
 	// Uses an empty file as the default auth token file
-	return &RawAuthTokens{AuthTokens{
+	return AuthTokens{
 		Contents: make([]byte, 0),
-	}}
+	}
+}
+
+func NewAuthTokensOnDisk(dir string) (*RawAuthTokensOnDisk, error) {
+	authToken := NewAuthTokens()
+	if err := authToken.WriteToDir(dir); err != nil {
+		return nil, fmt.Errorf("error creating auth token file: %v", err)
+	}
+	return ReadRawAuthTokens(dir)
 }
 
 func validateAuthTokens(authTokens []byte) error {
@@ -62,36 +70,23 @@ func validateAuthTokens(authTokens []byte) error {
 	return nil
 }
 
-func ReadRawAuthTokens(dirname string) (*RawAuthTokens, error) {
+func ReadRawAuthTokens(dirname string) (*RawAuthTokensOnDisk, error) {
 	authTokensPath := filepath.Join(dirname, "tokens.csv")
-	authTokens, err := ioutil.ReadFile(authTokensPath)
+
+	data, err := RawCredentialFileFromPath(authTokensPath)
 	if err != nil {
 		return nil, err
 	}
 
+	authTokens := data.content
 	if err = validateAuthTokens(authTokens); err != nil {
 		return nil, err
 	}
 
-	return &RawAuthTokens{AuthTokens{
-		Contents: authTokens,
-	}}, nil
+	return &RawAuthTokensOnDisk{AuthTokens: *data}, nil
 }
 
-func ReadEncryptedAuthTokens(dirname string) (*EncryptedAuthTokens, error) {
-	authTokensEncPath := filepath.Join(dirname, "tokens.csv.enc")
-	authTokensEnc, err := ioutil.ReadFile(authTokensEncPath)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &EncryptedAuthTokens{AuthTokens{
-		Contents: authTokensEnc,
-	}}, nil
-}
-
-func (r *RawAuthTokens) WriteToDir(dirname string) error {
+func (r AuthTokens) WriteToDir(dirname string) error {
 	authTokensPath := filepath.Join(dirname, "tokens.csv")
 
 	if err := ioutil.WriteFile(authTokensPath, r.Contents, 0600); err != nil {
@@ -101,49 +96,7 @@ func (r *RawAuthTokens) WriteToDir(dirname string) error {
 	return nil
 }
 
-func (r *RawAuthTokens) Encrypt(kMSKeyARN string, kmsSvc EncryptService) (*EncryptedAuthTokens, error) {
-	var err error
-	encrypt := func(data []byte) []byte {
-		if len(data) == 0 {
-			return []byte{}
-		}
-
-		if err != nil {
-			return []byte{}
-		}
-
-		encryptInput := kms.EncryptInput{
-			KeyId:     aws.String(kMSKeyARN),
-			Plaintext: data,
-		}
-
-		var encryptOutput *kms.EncryptOutput
-		if encryptOutput, err = kmsSvc.Encrypt(&encryptInput); err != nil {
-			return []byte{}
-		}
-		return encryptOutput.CiphertextBlob
-	}
-
-	encryptedAuthTokens := &EncryptedAuthTokens{AuthTokens{
-		Contents: encrypt(r.Contents),
-	}}
-	if err != nil {
-		return nil, err
-	}
-	return encryptedAuthTokens, nil
-}
-
-func (r *EncryptedAuthTokens) WriteToDir(dirname string) error {
-	authTokensPath := filepath.Join(dirname, "tokens.csv.enc")
-
-	if err := ioutil.WriteFile(authTokensPath, r.Contents, 0600); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *AuthTokens) Compact() (*CompactAuthTokens, error) {
+func (r *RawAuthTokensOnDisk) Compact() (*CompactAuthTokens, error) {
 	var err error
 	compact := func(data []byte) string {
 		if len(data) == 0 {
@@ -162,7 +115,7 @@ func (r *AuthTokens) Compact() (*CompactAuthTokens, error) {
 	}
 
 	compactAuthTokens := &CompactAuthTokens{
-		Contents: compact(r.Contents),
+		Contents: compact(r.AuthTokens.content),
 	}
 	if err != nil {
 		return nil, err
@@ -170,40 +123,73 @@ func (r *AuthTokens) Compact() (*CompactAuthTokens, error) {
 	return compactAuthTokens, nil
 }
 
-func ReadOrCreateEncryptedAuthTokens(dirname string, kmsConfig KMSConfig) (*EncryptedAuthTokens, error) {
-	var kmsSvc EncryptService
+func (r *EncryptedAuthTokensOnDisk) Compact() (*CompactAuthTokens, error) {
+	var err error
+	compact := func(data []byte) string {
+		if len(data) == 0 {
+			return ""
+		}
 
-	encryptedTokens, err := ReadEncryptedAuthTokens(dirname)
-	if err != nil {
-		rawAuthTokens, err := ReadRawAuthTokens(dirname)
 		if err != nil {
-			return nil, err
+			return ""
 		}
 
-		awsConfig := aws.NewConfig().
-			WithRegion(kmsConfig.Region.String()).
-			WithCredentialsChainVerboseErrors(true)
-
-		// TODO Cleaner way to inject this dependency
-		if kmsConfig.EncryptService == nil {
-			kmsSvc = kms.New(session.New(awsConfig))
-		} else {
-			kmsSvc = kmsConfig.EncryptService
+		var out string
+		if out, err = gzipcompressor.CompressData(data); err != nil {
+			return ""
 		}
-
-		encryptedTokens, err = rawAuthTokens.Encrypt(kmsConfig.KMSKeyARN, kmsSvc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to encrypt auth tokens: %v", err)
-		}
-
-		// The fact KMS encryption produces different ciphertexts for the same plaintext had been
-		// causing unnecessary node replacements(https://github.com/coreos/kube-aws/issues/107)
-		// Write encrypted tls assets for caching purpose so that we can avoid that.
-		encryptedTokens.WriteToDir(dirname)
+		return out
 	}
 
-	return encryptedTokens, nil
+	compactAuthTokens := &CompactAuthTokens{
+		Contents: compact(r.AuthTokens.content),
+	}
+	if err != nil {
+		return nil, err
+	}
+	return compactAuthTokens, nil
+}
 
+func ReadOrEncryptAuthTokens(dirname string, encryptor CachedEncryptor) (*EncryptedAuthTokensOnDisk, error) {
+	authTokenPath := filepath.Join(dirname, "tokens.csv")
+	if _, err := ReadRawAuthTokens(dirname); err != nil {
+		return nil, err
+	}
+
+	data, err := encryptor.EncryptedCredentialFromPath(authTokenPath)
+	if err != nil {
+		return nil, err
+	}
+	if err := data.Persist(); err != nil {
+		return nil, err
+	}
+	return &EncryptedAuthTokensOnDisk{
+		AuthTokens: *data,
+	}, nil
+}
+
+func ReadOrCreateEncryptedAuthTokens(dirname string, kmsConfig KMSConfig) (*EncryptedAuthTokensOnDisk, error) {
+	var kmsSvc EncryptService
+
+	awsConfig := aws.NewConfig().
+		WithRegion(kmsConfig.Region.String()).
+		WithCredentialsChainVerboseErrors(true)
+
+	// TODO Cleaner way to inject this dependency
+	if kmsConfig.EncryptService == nil {
+		kmsSvc = kms.New(session.New(awsConfig))
+	} else {
+		kmsSvc = kmsConfig.EncryptService
+	}
+
+	encryptor := CachedEncryptor{
+		bytesEncryptionService: bytesEncryptionService{
+			kmsKeyARN: kmsConfig.KMSKeyARN,
+			kmsSvc:    kmsSvc,
+		},
+	}
+
+	return ReadOrEncryptAuthTokens(dirname, encryptor)
 }
 
 func ReadOrCreateCompactAuthTokens(dirname string, kmsConfig KMSConfig) (*CompactAuthTokens, error) {
