@@ -163,7 +163,7 @@ func TestReadOrCreateCompactTLSAssets(t *testing.T) {
 			}
 
 			if err := os.Remove(filepath.Join(dir, "ca-key.pem.enc")); err == nil {
-				t.Error("ca-key-.pem.enc should not exist")
+				t.Error("ca-key.pem.enc should not exist")
 				t.FailNow()
 			}
 
