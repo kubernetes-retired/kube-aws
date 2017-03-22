@@ -281,6 +281,21 @@
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },{{end}}
+                {{if $.Etcd.KMSKeyARN -}}
+                {{/* Required for mounting encrypted data volume */}}
+                {
+                "Action": [
+                  "kms:CreateGrant",
+                  "kms:Decrypt",
+                  "kms:Describe*",
+                  "kms:Encrypt",
+                  "kms:GenerateDataKey*",
+                  "kms:ReEncrypt*"
+                ],
+                "Effect": "Allow",
+                "Resource": "{{ $.Etcd.KMSKeyARN }}"
+                },
+                {{end -}}
                 {
                   "Action": "ec2:DescribeTags",
                   "Effect": "Allow",
@@ -413,6 +428,9 @@
           {{end}}
           {{if $.EtcdDataVolumeEncrypted}}
           "Encrypted": {{$.EtcdDataVolumeEncrypted}},
+          {{if $.Etcd.KMSKeyARN}}
+          "KmsKeyId": "{{$.Etcd.KMSKeyARN}}",
+          {{end}}
           {{end}}
           "VolumeType": "{{$.EtcdDataVolumeType}}",
           "Tags": [
