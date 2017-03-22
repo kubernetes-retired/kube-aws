@@ -91,7 +91,7 @@ func (c *Cluster) Assets() (cfnstack.Assets, error) {
 	}
 
 	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI).
-		Add("userdata-worker", c.UserDataWorker).
+		Add(c.UserDataWorkerFileName(), c.UserDataWorker).
 		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
 		Build(), nil
 }

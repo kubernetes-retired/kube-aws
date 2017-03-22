@@ -252,13 +252,13 @@ name: pool1
 			t.Errorf("error creating cluster: %v", err)
 		}
 
-		path, err := cluster.UserDataWorkerS3Path()
+		path, err := cluster.UserDataWorkerS3Prefix()
 		if err != nil {
 			t.Errorf("failed to get worker user data path in s3: %v", err)
 		}
 
 		if path != "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/pool1/userdata-worker" {
-			t.Errorf("UserDataControllerS3Path returned an unexpected value: %s", path)
+			t.Errorf("UserDataControllerS3Prefix returned an unexpected value: %s", path)
 		}
 	})
 }
