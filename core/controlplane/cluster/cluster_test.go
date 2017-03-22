@@ -494,13 +494,13 @@ stackTags:
 				t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
 			}
 
-			path, err := cluster.UserDataControllerS3Path()
+			path, err := cluster.UserDataControllerS3Prefix()
 			if err != nil {
 				t.Errorf("failed to get controller user data path in s3: %v", err)
 			}
 
 			if path != "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/control-plane/userdata-controller" {
-				t.Errorf("UserDataControllerS3Path returned an unexpected value: %s", path)
+				t.Errorf("UserDataControllerS3Prefix returned an unexpected value: %s", path)
 			}
 		})
 	}

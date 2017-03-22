@@ -180,7 +180,7 @@
 		  "Action": [
 			"s3:GetObject"
 		  ],
-		  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Path}}"
+		  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
 		},
                 {{if .WaitSignal.Enabled}}
                 {
@@ -350,7 +350,7 @@
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataEtcdS3Path}}"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataEtcdS3Prefix}}*"
                 }
               ],
               "Version": "2012-10-17"
@@ -583,20 +583,19 @@
         ],
         "PlacementTenancy": "{{$.EtcdTenancy}}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
-          "#!/bin/bash",
-          "# userdata hash: {{ $.UserDataEtcd | sha1 }}",
+          "#!/bin/bash -xe",
           {"Fn::Join":["",[ "echo '{{$.StackNameEnvVarName}}=", { "Ref": "AWS::StackName" }, "' >> {{$.EtcdNodeEnvFileName}}" ]]},
           "echo '{{$.EtcdIndexEnvVarName}}={{$etcdIndex}}' >> {{$.EtcdNodeEnvFileName}}",
           " . /etc/environment",
           "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
           "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
-          "USERDATA_FILE=userdata-etcd",
+          "USERDATA_FILE={{$.UserDataEtcdFileName}}",
           "/usr/bin/rkt run \\",
           "   --net=host \\",
           "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
           "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
           "   --trust-keys-from-https \\",
-          "   {{$.AWSCliImage.Options}}{{$.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ $.S3URI }}/{{ $.StackName }}/$USERDATA_FILE /var/run/coreos/",
+          "   {{$.AWSCliImage.Options}}{{$.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ $.UserDataEtcdS3URI }} /var/run/coreos/$USERDATA_FILE",
           "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
         ]]}}
       },
@@ -630,18 +629,17 @@
         ],
         "PlacementTenancy": "{{ .ControllerTenancy }}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
-		"#!/bin/bash",
-                "# userdata hash: {{ .UserDataController | sha1 }}",
+		"#!/bin/bash -xe",
 		" . /etc/environment",
                 "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
 	        "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
-		"USERDATA_FILE=userdata-controller",
+		"USERDATA_FILE={{.UserDataControllerFileName}}",
 		"/usr/bin/rkt run \\",
 		"   --net=host \\",
 		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
 		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
    		"   --trust-keys-from-https \\",
-		"   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .S3URI }}/{{ .StackName }}/$USERDATA_FILE /var/run/coreos/",
+		"   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .UserDataControllerS3URI }} /var/run/coreos/$USERDATA_FILE",
 		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
 			]]}}
       },
