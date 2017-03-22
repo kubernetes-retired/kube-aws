@@ -67,9 +67,9 @@ func (r credentialsRendererImpl) RenderFiles(renderCredentialsOpts config.Creden
 	}
 
 	fmt.Printf("-> Generating auth token file\n")
-	authToken := cluster.NewAuthTokens()
-	if err := authToken.WriteToDir(dir); err != nil {
-		return fmt.Errorf("Error create auth token file: %v", err)
+	_, err = config.NewAuthTokensOnDisk(dir)
+	if err != nil {
+		return err
 	}
 
 	return nil

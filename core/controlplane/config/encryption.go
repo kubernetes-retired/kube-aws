@@ -15,6 +15,10 @@ type bytesEncryptionService struct {
 }
 
 func (s bytesEncryptionService) Encrypt(data []byte) ([]byte, error) {
+	if len(data) == 0 {
+		return []byte{}, nil
+	}
+
 	encryptInput := kms.EncryptInput{
 		KeyId:     aws.String(s.kmsKeyARN),
 		Plaintext: data,
