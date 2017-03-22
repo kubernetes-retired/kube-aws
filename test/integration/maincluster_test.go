@@ -415,6 +415,22 @@ etcdDataVolumeEncrypted: true
 			},
 		},
 		{
+			context: "WithEtcdDataVolumeEncryptedKMSKeyARN",
+			configYaml: minimalValidConfigYaml + `
+etcdDataVolumeEncrypted: true
+etcd:
+  kmsKeyArn: arn:aws:kms:eu-west-1:XXX:key/XXX
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					expected := "arn:aws:kms:eu-west-1:XXX:key/XXX"
+					if c.Etcd.KMSKeyARN() != expected {
+						t.Errorf("Etcd data volume KMS Key ARN didn't match : expected=%v actual=%v", expected, c.Etcd.KMSKeyARN())
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdMemberIdentityProviderEIP",
 			configYaml: minimalValidConfigYaml + `
 etcd:
