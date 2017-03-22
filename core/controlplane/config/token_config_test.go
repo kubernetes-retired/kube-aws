@@ -13,15 +13,6 @@ import (
 	"github.com/coreos/kube-aws/test/helper"
 )
 
-func genAuthTokens(t *testing.T) *RawAuthTokens {
-	cluster, err := ClusterFromBytes([]byte(singleAzConfigYaml))
-	if err != nil {
-		t.Fatalf("failed generating config: %v", err)
-	}
-
-	return cluster.NewAuthTokens()
-}
-
 // The default token file is empty, and since encryption/compaction only
 // happens if the token file is not empty, we need a way to create a sample
 // token file in order to cover both scenarios
@@ -40,7 +31,7 @@ func writeSampleInvalidAuthTokenFile(dir string, t *testing.T) {
 }
 
 func TestAuthTokenGeneration(t *testing.T) {
-	authTokens := genAuthTokens(t)
+	authTokens := NewAuthTokens()
 
 	if len(authTokens.Contents) > 0 {
 		t.Errorf("expected default auth tokens to be an empty string, but was %v", authTokens.Contents)
@@ -77,7 +68,7 @@ func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to content encrypted auth tokens.
+				t.Errorf(`failed to cache encrypted auth tokens.
 	encrypted auth tokens must not change after their first creation but they did change:
 	created = %v
 	read = %v`, created, read)
@@ -102,7 +93,7 @@ func TestReadOrCreateEmptyUnEcryptedCompactAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to content unencrypted auth tokens.
+				t.Errorf(`failed to cache unencrypted auth tokens.
  	unencrypted auth tokens must not change after their first creation but they did change:
  	created = %v
  	read = %v`, created, read)
@@ -139,7 +130,7 @@ func TestReadOrCreateCompactNonEmptyValidAuthTokens(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(created, read) {
-				t.Errorf(`failed to content encrypted auth tokens.
+				t.Errorf(`failed to cache encrypted auth tokens.
 	encrypted auth tokens must not change after their first creation but they did change:
 	created = %v
 	read = %v`, created, read)
