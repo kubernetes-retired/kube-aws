@@ -18,6 +18,7 @@ import (
 	"github.com/coreos/kube-aws/model/derived"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
+	"sort"
 )
 
 const (
@@ -527,7 +528,13 @@ func (l NodeLabels) Enabled() bool {
 // Returns key=value pairs separated by ',' to be passed to kubelet's `--node-labels` flag
 func (l NodeLabels) String() string {
 	labels := []string{}
-	for k, v := range l {
+	keys := []string{}
+	for k, _ := range l {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		v := l[k]
 		labels = append(labels, fmt.Sprintf("%s=%s", k, v))
 	}
 	return strings.Join(labels, ",")
