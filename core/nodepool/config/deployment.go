@@ -96,6 +96,7 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	c.AWSCliImage.MergeIfEmpty(main.AWSCliImage)
 	c.CalicoCtlImage.MergeIfEmpty(main.CalicoCtlImage)
 	c.PauseImage.MergeIfEmpty(main.PauseImage)
+	c.FlannelImage.MergeIfEmpty(main.FlannelImage)
 
 	if len(c.SSHAuthorizedKeys) == 0 {
 		c.SSHAuthorizedKeys = main.SSHAuthorizedKeys
