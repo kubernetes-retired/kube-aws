@@ -87,6 +87,18 @@ coreos:
             set /coreos.com/network/config '{"Network" : "{{.PodCIDR}}", "Backend" : {"Type" : "vxlan"}}'
             TimeoutStartSec=120
 
+{{if .FlannelImage.RktPullDocker}}
+        - name: 20-flannel-custom-image.conf
+          content: |
+            [Unit]
+            PartOf=flanneld.service
+            Before=docker.service
+
+            [Service]
+            Environment="FLANNEL_IMAGE={{.FlannelImage.RktRepo}}"
+            Environment="RKT_RUN_ARGS={{.FlannelImage.Options}}"
+{{end}}
+
     - name: kubelet.service
       command: start
       runtime: true
@@ -96,9 +108,9 @@ coreos:
         After=cfn-etcd-environment.service
         [Service]
         EnvironmentFile=-/etc/etcd-environment
-        Environment=KUBELET_VERSION={{.K8sVer}}
-        Environment=KUBELET_ACI={{ .HyperkubeImage.RktRepoWithoutTag }}
-        Environment="RKT_OPTS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
+        Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
+        Environment=KUBELET_IMAGE_URL={{ .HyperkubeImage.RktRepoWithoutTag }}
+        Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
         --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
         --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
         --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
@@ -338,14 +350,16 @@ ssh_authorized_keys:
       content: |
         [Unit]
         Description=Pull and tag a mirror image for pause-amd64
-        After=docker.service
         Wants=docker.service
 
         [Service]
-        Restart=on-failure
+        Type=oneshot
         RemainAfterExit=true
         ExecStartPre=/usr/bin/docker pull {{.PauseImage.RepoWithTag}}
-        ExecStart=/usr/bin/docker tag  {{.PauseImage.RepoWithTag}} gcr.io/google_containers/pause-amd64:3.0
+        ExecStart=/usr/bin/docker tag {{.PauseImage.RepoWithTag}} gcr.io/google_containers/pause-amd64:3.0
+        ExecStop=/bin/true
+        [Install]
+        WantedBy=install-kube-system.service
 {{end}}
 write_files:
 {{if .Experimental.AwsEnvironment.Enabled}}
