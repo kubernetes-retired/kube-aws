@@ -18,6 +18,7 @@ import (
 	"github.com/coreos/kube-aws/model/derived"
 	"github.com/coreos/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
+	"regexp"
 	"sort"
 )
 
@@ -846,6 +847,11 @@ func (c Config) InternetGatewayRef() string {
 }
 
 func (c Cluster) valid() error {
+	validClusterNaming := regexp.MustCompile("^[a-zA-Z0-9-:]+$")
+	if !validClusterNaming.MatchString(c.ClusterName) {
+		return fmt.Errorf("clusterName(=%s) is malformed. It must consist only of alphanumeric characters, colons, or hyphens", c.ClusterName)
+	}
+
 	if c.CreateRecordSet {
 		if c.HostedZoneID == "" {
 			return errors.New("hostedZoneID must be specified when createRecordSet is true")
