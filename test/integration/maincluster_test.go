@@ -350,7 +350,8 @@ func TestMainClusterConfig(t *testing.T) {
 		})
 	}
 
-	minimalValidConfigYaml := kubeAwsSettings.mainClusterYaml + `
+	mainClusterYaml := kubeAwsSettings.mainClusterYaml()
+	minimalValidConfigYaml := mainClusterYaml + `
 availabilityZone: us-west-1c
 `
 	validCases := []struct {
@@ -359,6 +360,11 @@ availabilityZone: us-west-1c
 		assertConfig  []ConfigTester
 		assertCluster []ClusterTester
 	}{
+		{
+			// See https://github.com/kubernetes-incubator/kube-aws/issues/365
+			context:    "WithClusterNameContainsHyphens",
+			configYaml: kubeAwsSettings.withClusterName("my-cluster").minimumValidClusterYaml(),
+		},
 		{
 			context: "WithCustomSettings",
 			configYaml: minimalValidConfigYaml + `
@@ -1302,7 +1308,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecated",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
@@ -1373,7 +1379,7 @@ subnets:
 		},
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecated",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
@@ -1446,7 +1452,7 @@ subnets:
 		},
 		{
 			context: "WithNetworkTopologyExplicitSubnets",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
@@ -1555,7 +1561,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyImplicitSubnets",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
@@ -1632,7 +1638,7 @@ subnets:
 		},
 		{
 			context: "WithNetworkTopologyControllerPrivateLB",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
@@ -1733,7 +1739,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyControllerPublicLB",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
@@ -1834,7 +1840,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyExistingSubnets",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 subnets:
 - name: private1
@@ -1927,7 +1933,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyExistingNATGateways",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 subnets:
 - name: private1
@@ -2025,7 +2031,7 @@ worker:
 		},
 		{
 			context: "WithNetworkTopologyExistingNATGatewayEIPs",
-			configYaml: kubeAwsSettings.mainClusterYaml + `
+			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 subnets:
 - name: private1
@@ -2617,6 +2623,12 @@ controller:
 				"results in unreliability while scaling nodes out.",
 		},
 		{
+			// See https://github.com/kubernetes-incubator/kube-aws/issues/365
+			context:              "WithClusterNameContainsDots",
+			configYaml:           kubeAwsSettings.withClusterName("my.cluster").minimumValidClusterYaml(),
+			expectedErrorMessage: "clusterName(=my.cluster) is malformed. It must consist only of alphanumeric characters, colons, or hyphens",
+		},
+		{
 			context: "WithInvalidTaint",
 			configYaml: minimalValidConfigYaml + `
 worker:
@@ -2635,14 +2647,14 @@ worker:
 # clusterName + nodePools[].name should be less than or equal to 25 characters or the launch configuration name
 # "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
 # See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
-clusterName: my_cluster1 # 11 characters
+clusterName: my-cluster1 # 11 characters
 worker:
   nodePools:
   - name: workernodepool1 # 15 characters
     awsNodeLabels:
       enabled: true
 `,
-			expectedErrorMessage: "awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"my_cluster1\") + node pool's name(=\"workernodepool1\") exceeds the limit of 25",
+			expectedErrorMessage: "awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"my-cluster1\") + node pool's name(=\"workernodepool1\") exceeds the limit of 25",
 		},
 		{
 			context: "WithAwsNodeLabelEnabledForTooLongClusterName",
@@ -2650,12 +2662,12 @@ worker:
 # clusterName should be less than or equal to 21 characters or the launch configuration name
 # "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
 # See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
-clusterName: my_long_long_cluster_1 # 22 characters
+clusterName: my-long-long-cluster-1 # 22 characters
 experimental:
   awsNodeLabels:
      enabled: true
 `,
-			expectedErrorMessage: "awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"my_long_long_cluster_1\") exceeds the limit of 21",
+			expectedErrorMessage: "awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"my-long-long-cluster-1\") exceeds the limit of 21",
 		},
 		{
 			context: "WithNonZeroWorkerCount",
