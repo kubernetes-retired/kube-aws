@@ -99,3 +99,8 @@ func (s kubeAwsSettings) withClusterName(n string) kubeAwsSettings {
 	s.clusterName = n
 	return s
 }
+
+func (s kubeAwsSettings) withRegion(r string) kubeAwsSettings {
+	s.region = r
+	return s
+}
