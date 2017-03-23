@@ -77,6 +77,31 @@ func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
 	})
 }
 
+func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
+	helper.WithDummyCredentials(func(dir string) {
+		kmsConfig := KMSConfig{
+			KMSKeyARN:      "keyarn",
+			Region:         model.RegionForName("us-west-1"),
+			EncryptService: &dummyEncryptService{},
+		}
+
+		if err := os.Remove(filepath.Join(dir, "tokens.csv")); err != nil {
+			t.Errorf("failed to remove tokens.csv for test setup : %v", err)
+			t.FailNow()
+		}
+
+		created, err := ReadOrCreateCompactAuthTokens(dir, kmsConfig)
+
+		if err != nil {
+			t.Errorf("failed to read or update compact auth tokens in %s : %v", dir, err)
+		}
+
+		if len(created.Contents) > 0 {
+			t.Errorf("compacted auth tokens expected to be an empty string, but was %s", created.Contents)
+		}
+	})
+}
+
 func TestReadOrCreateEmptyUnEcryptedCompactAuthTokens(t *testing.T) {
 	helper.WithDummyCredentials(func(dir string) {
 		t.Run("CachedToPreventUnnecessaryNodeReplacementOnUnencrypted", func(t *testing.T) {
