@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"errors"
+	"github.com/coreos/kube-aws/cfnresource"
 	cfg "github.com/coreos/kube-aws/core/controlplane/config"
 	"github.com/coreos/kube-aws/coreos/amiregistry"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
@@ -54,6 +55,13 @@ type StackTemplateOptions struct {
 	PrettyPrint           bool
 	S3URI                 string
 	SkipWait              bool
+}
+
+// NestedStackName returns a sanitized name of this node pool which is usable as a valid cloudformation nested stack name
+func (c ProvidedConfig) NestedStackName() string {
+	// Convert stack name into something valid as a cfn resource name or
+	// we'll end up with cfn errors like "Template format error: Resource name test5-controlplane is non alphanumeric"
+	return strings.Title(strings.Replace(c.StackName(), "-", "", -1))
 }
 
 func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
@@ -259,6 +267,10 @@ func (c ProvidedConfig) valid() error {
 	limit := 63 - len(replacer.Replace(simulatedLcName))
 	if c.Experimental.AwsNodeLabels.Enabled && len(c.ClusterName+c.NodePoolName) > limit {
 		return fmt.Errorf("awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"%s\") + node pool's name(=\"%s\") exceeds the limit of %d", c.ClusterName, c.NodePoolName, limit)
+	}
+
+	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.ManagedIamRoleName, c.Region.String()); e != nil {
+		return e
 	}
 
 	return nil

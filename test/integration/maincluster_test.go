@@ -1110,14 +1110,14 @@ worker:
 			context: "WithKube2IamSupport",
 			configYaml: minimalValidConfigYaml + `
 controller:
-  managedIamRoleName: mycontrollerrole
+  managedIamRoleName: myrole1
 experimental:
   kube2IamSupport:
     enabled: true
 worker:
   nodePools:
   - name: pool1
-    managedIamRoleName: myworkerrole
+    managedIamRoleName: myrole2
     kube2IamSupport:
       enabled: true
 `,
@@ -1125,8 +1125,8 @@ worker:
 				hasDefaultEtcdSettings,
 				asgBasedNodePoolHasWaitSignalEnabled,
 				func(c *config.Config, t *testing.T) {
-					expectedControllerRoleName := "mycontrollerrole"
-					expectedWorkerRoleName := "myworkerrole"
+					expectedControllerRoleName := "myrole1"
+					expectedWorkerRoleName := "myrole2"
 
 					if expectedControllerRoleName != c.Controller.ManagedIamRoleName {
 						t.Errorf("controller's managedIamRoleName didn't match : expected=%v actual=%v", expectedControllerRoleName, c.Controller.ManagedIamRoleName)
@@ -2333,14 +2333,14 @@ routeTableId: rtb-1a2b3c4d
 worker:
   nodePools:
   - name: pool1
-    managedIamRoleName: "yourManagedRole"
+    managedIamRoleName: "myManagedRole"
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
 				hasDefaultExperimentalFeatures,
 				func(c *config.Config, t *testing.T) {
-					if c.NodePools[0].ManagedIamRoleName != "yourManagedRole" {
-						t.Errorf("managedIamRoleName: expected=yourManagedRole actual=%s", c.NodePools[0].ManagedIamRoleName)
+					if c.NodePools[0].ManagedIamRoleName != "myManagedRole" {
+						t.Errorf("managedIamRoleName: expected=myManagedRole actual=%s", c.NodePools[0].ManagedIamRoleName)
 					}
 				},
 			},
@@ -2817,6 +2817,24 @@ worker:
       baz: 1
 `,
 			expectedErrorMessage: "unknown keys found in worker.nodePools[0].clusterAutoscaler: baz",
+		},
+		{
+			context: "WithTooLongControllerIAMRoleName",
+			configYaml: kubeAwsSettings.withClusterName("kubeaws-it-main").withRegion("ap-northeast-1").minimumValidClusterYaml() + `
+controller:
+  managedIamRoleName: foobarba
+`,
+			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Controlplane-PRK1CVQNY7XZ-ap-northeast-1-foobarba) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Controlplane) + managed iam role name(=foobarba) should be less than or equal to 34",
+		},
+		{
+			context: "WithTooLongWorkerIAMRoleName",
+			configYaml: kubeAwsSettings.withClusterName("kubeaws-it-main").withRegion("ap-northeast-1").minimumValidClusterYaml() + `
+worker:
+  nodePools:
+  - name: pool1
+    managedIamRoleName: foobarbazbaraaa
+`,
+			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Pool1-PRK1CVQNY7XZ-ap-northeast-1-foobarbazbaraaa) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Pool1) + managed iam role name(=foobarbazbaraaa) should be less than or equal to 34",
 		},
 	}
 

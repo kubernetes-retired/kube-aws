@@ -63,6 +63,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  # Role will be created with "Ref": {"AWS::StackName"}-{"AWS::Region"}-yourManagedRole
 #  # to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
 #  # This is also intended to be used in combination with .experimental.kube2IamSupport. See #297 for more information.
+#  #
+#  # ATTENTION: Consider limiting number of characters in clusterName and managedIamRoleName to avoid the resulting IAM
+#  # role name's length from exceeding the AWS limit: 64
+#  # See https://github.com/kubernetes-incubator/kube-aws/issues/347
 #  managedIamRoleName: "yourManagedRole"
 #  # If omitted, public subnets are created by kube-aws and used for controller nodes
 #  subnets:
@@ -143,6 +147,10 @@ worker:
 #      # Role will be created with "Ref": {"AWS::StackName"}-{"AWS::Region"}-yourManagedRole
 #      # to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
 #      # This is also intended to be used in combination with kube2IamSupport. See #297 for more information.
+#      #
+#      # ATTENTION: Consider limiting number of characters in clusterName, nodePools[].name and managedIamRoleName to
+#      # avoid the resulting IAM role name's length from exceeding the AWS limit: 64
+#      # See https://github.com/kubernetes-incubator/kube-aws/issues/347
 #      managedIamRoleName: "yourManagedRole"
 #
 #      # Additional EBS volumes mounted on the worker
