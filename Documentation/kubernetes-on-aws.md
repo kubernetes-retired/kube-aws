@@ -25,7 +25,9 @@ Each of the steps will cover:
   * Create the additional pool of worker nodes
   * Adjust template configuration for each pool of worker nodes
   * Required to support [cluster-autoscaler](https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler)
-* [Step 6: Destroy][aws-step-6]
+* [Step 6: Configure add-ons][aws-step-6]
+  * Configure various Kubernetes add-ons
+* [Step 7: Destroy][aws-step-7]
   * Destroy the cluster
 
 Let's get started.
@@ -106,4 +108,5 @@ $ aws ec2 describe-instances
 [aws-step-3]: kubernetes-on-aws-launch.md
 [aws-step-4]: kube-aws-cluster-updates.md
 [aws-step-5]: kubernetes-on-aws-node-pool.md
-[aws-step-6]: kubernetes-on-aws-destroy.md
+[aws-step-6]: kubernetes-on-aws-add-ons.md
+[aws-step-7]: kubernetes-on-aws-destroy.md
