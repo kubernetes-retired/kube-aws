@@ -77,7 +77,7 @@ func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
 	})
 }
 
-func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
+func TestReadOrCreateCompactNonExistentAuthTokens(t *testing.T) {
 	helper.WithDummyCredentials(func(dir string) {
 		kmsConfig := KMSConfig{
 			KMSKeyARN:      "keyarn",
