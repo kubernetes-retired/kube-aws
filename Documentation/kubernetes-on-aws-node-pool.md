@@ -144,11 +144,13 @@ Please read [the AWS documentation describing Spot Fleet Allocation Strategy](ht
 
 Please also see [the detailed comments in `cluster.yaml`](https://github.com/coreos/kube-aws/blob/master/nodepool/config/templates/cluster.yaml) and [the GitHub issue summarizing the initial implementation](https://github.com/coreos/kube-aws/issues/112) of this feature for further information.
 
-When you are done with your cluster, [destroy your cluster][aws-step-6]
+You can optionally [configure various Kubernetes add-ons][aws-step-6] according to your requirements.
+When you are done with your cluster, [destroy your cluster][aws-step-7]
 
 [aws-step-1]: kubernetes-on-aws.md
 [aws-step-2]: kubernetes-on-aws-render.md
 [aws-step-3]: kubernetes-on-aws-launch.md
 [aws-step-4]: kube-aws-cluster-updates.md
 [aws-step-5]: kubernetes-on-aws-node-pool.md
-[aws-step-6]: kubernetes-on-aws-destroy.md
+[aws-step-6]: kubernetes-on-aws-add-ons.md
+[aws-step-7]: kubernetes-on-aws-destroy.md
