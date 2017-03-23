@@ -52,4 +52,5 @@ Once you have successfully updated your cluster, you are ready to [add node pool
 [aws-step-3]: kubernetes-on-aws-launch.md
 [aws-step-4]: kube-aws-cluster-updates.md
 [aws-step-5]: kubernetes-on-aws-node-pool.md
-[aws-step-6]: kubernetes-on-aws-destroy.md
+[aws-step-6]: kubernetes-on-aws-add-ons.md
+[aws-step-7]: kubernetes-on-aws-destroy.md
