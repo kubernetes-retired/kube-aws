@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -152,6 +153,12 @@ func (r *EncryptedAuthTokensOnDisk) Compact() (*CompactAuthTokens, error) {
 
 func ReadOrEncryptAuthTokens(dirname string, encryptor CachedEncryptor) (*EncryptedAuthTokensOnDisk, error) {
 	authTokenPath := filepath.Join(dirname, "tokens.csv")
+
+	// Auto-creates the auth token file, useful for those coming from previous versions of kube-aws
+	if _, err := os.Stat(authTokenPath); os.IsNotExist(err) {
+		os.OpenFile(authTokenPath, os.O_RDONLY|os.O_CREATE, 0600)
+	}
+
 	if _, err := ReadRawAuthTokens(dirname); err != nil {
 		return nil, err
 	}
