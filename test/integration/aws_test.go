@@ -35,7 +35,6 @@ type kubeAwsSettings struct {
 	keyName                       string
 	kmsKeyArn                     string
 	region                        string
-	mainClusterYaml               string
 	encryptService                config.EncryptService
 }
 
@@ -54,18 +53,6 @@ func newKubeAwsSettingsFromEnv(t *testing.T) kubeAwsSettings {
 		keyName := env.get("KUBE_AWS_KEY_NAME")
 		kmsKeyArn := env.get("KUBE_AWS_KMS_KEY_ARN")
 		region := env.get("KUBE_AWS_REGION")
-		yaml := fmt.Sprintf(`clusterName: %s
-externalDNSName: "%s"
-keyName: "%s"
-kmsKeyArn: "%s"
-region: "%s"
-`,
-			clusterName,
-			externalDnsName,
-			keyName,
-			kmsKeyArn,
-			region,
-		)
 		return kubeAwsSettings{
 			clusterName:                   clusterName,
 			etcdNodeDefaultInternalDomain: model.RegionForName(region).PrivateDomainName(),
@@ -73,19 +60,42 @@ region: "%s"
 			keyName:                       keyName,
 			kmsKeyArn:                     kmsKeyArn,
 			region:                        region,
-			mainClusterYaml:               yaml,
 		}
 	} else {
 		return kubeAwsSettings{
-			clusterName: clusterName,
-			mainClusterYaml: fmt.Sprintf(`clusterName: %s
-externalDNSName: test.staging.core-os.net
-keyName: test-key-name
-kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
-region: us-west-1
-`, clusterName),
-			encryptService:                helper.DummyEncryptService{},
+			clusterName:                   clusterName,
 			etcdNodeDefaultInternalDomain: model.RegionForName("us-west-1").PrivateDomainName(),
+			externalDNSName:               "test.staging.core-os.net",
+			keyName:                       "test-key-name",
+			kmsKeyArn:                     "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx",
+			region:                        "us-west-1",
+			encryptService:                helper.DummyEncryptService{},
 		}
 	}
+}
+
+func (s kubeAwsSettings) mainClusterYaml() string {
+	return fmt.Sprintf(`clusterName: %s
+externalDNSName: "%s"
+keyName: "%s"
+kmsKeyArn: "%s"
+region: "%s"
+`,
+		s.clusterName,
+		s.externalDNSName,
+		s.keyName,
+		s.kmsKeyArn,
+		s.region,
+	)
+}
+
+func (s kubeAwsSettings) minimumValidClusterYaml() string {
+	return s.mainClusterYaml() + fmt.Sprintf(`
+availabilityZone: %s
+`, s.region+"a")
+}
+
+func (s kubeAwsSettings) withClusterName(n string) kubeAwsSettings {
+	s.clusterName = n
+	return s
 }
