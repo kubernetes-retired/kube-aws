@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/coreos/go-semver/semver"
+	"github.com/coreos/kube-aws/cfnresource"
 	"github.com/coreos/kube-aws/coreos/amiregistry"
 	"github.com/coreos/kube-aws/filereader/userdatatemplate"
 	"github.com/coreos/kube-aws/model"
@@ -846,6 +847,13 @@ func (c Config) InternetGatewayRef() string {
 	}
 }
 
+// NestedStackName returns a sanitized name of this control-plane which is usable as a valid cloudformation nested stack name
+func (c Cluster) NestedStackName() string {
+	// Convert stack name into something valid as a cfn resource name or
+	// we'll end up with cfn errors like "Template format error: Resource name test5-controlplane is non alphanumeric"
+	return strings.Title(strings.Replace(c.StackName(), "-", "", -1))
+}
+
 func (c Cluster) valid() error {
 	validClusterNaming := regexp.MustCompile("^[a-zA-Z0-9-:]+$")
 	if !validClusterNaming.MatchString(c.ClusterName) {
@@ -949,6 +957,10 @@ func (c Cluster) valid() error {
 
 	if c.ControllerInstanceType == "t2.micro" || c.EtcdInstanceType == "t2.micro" || c.ControllerInstanceType == "t2.nano" || c.EtcdInstanceType == "t2.nano" {
 		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/coreos/kube-aws/issues/258 for more information`)
+	}
+
+	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.Controller.ManagedIamRoleName, c.Region.String()); e != nil {
+		return e
 	}
 
 	return nil
