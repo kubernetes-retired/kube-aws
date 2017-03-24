@@ -351,10 +351,12 @@ ssh_authorized_keys:
         [Unit]
         Description=Pull and tag a mirror image for pause-amd64
         Wants=docker.service
+        After=docker.service
 
         [Service]
-        Type=oneshot
+        Restart=on-failure
         RemainAfterExit=true
+        ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/docker pull {{.PauseImage.RepoWithTag}}
         ExecStart=/usr/bin/docker tag {{.PauseImage.RepoWithTag}} gcr.io/google_containers/pause-amd64:3.0
         ExecStop=/bin/true
