@@ -37,10 +37,10 @@ func (e CachedEncryptor) EncryptedCredentialFromPath(filePath string) (*Encrypte
 	cache, err := EncryptedCredentialCacheFromPath(filePath)
 	if err != nil {
 		cache, err = EncryptedCredentialCacheFromRawCredential(raw, e.bytesEncryptionService)
-		fmt.Printf("INFO: generated \"%s\" by encrypting \"%s\"\n", cache.filePath, raw.filePath)
 		if err != nil {
 			return nil, err
 		}
+		fmt.Printf("INFO: generated \"%s\" by encrypting \"%s\"\n", cache.filePath, raw.filePath)
 	} else if raw.Fingerprint() != cache.Fingerprint() {
 		fmt.Printf("INFO: \"%s\" is not up-to-date. kube-aws is regenerating it from \"%s\"\n", cache.filePath, raw.filePath)
 		cache, err = EncryptedCredentialCacheFromRawCredential(raw, e.bytesEncryptionService)
