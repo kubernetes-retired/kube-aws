@@ -110,8 +110,8 @@ Clone this repository to the appropriate path under the GOPATH.
 
 ```
 $ export GOPATH=$HOME/go
-$ mkdir -p $GOPATH/src/github.com/coreos/
-$ git clone git@github.com:coreos/kube-aws.git $GOPATH/src/github.com/coreos/kube-aws
+$ mkdir -p $GOPATH/src/github.com/kubernetes-incubator/
+$ git clone git@github.com:kubernetes-incubator/kube-aws.git $GOPATH/src/github.com/kubernetes-incubator/kube-aws
 ```
 
 Run `make build` to compile `kube-aws` locally.

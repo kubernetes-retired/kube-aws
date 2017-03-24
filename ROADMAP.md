@@ -33,7 +33,7 @@ Please file an issue to make suggestions on this roadmap!
     * Private subnets and NAT gateways for etcd, controller and worker nodes
     * Deployments to existing subnets
   * Rethink how node pools are implemented
-    * See https://github.com/coreos/kube-aws/issues/238
+    * See https://github.com/kubernetes-incubator/kube-aws/issues/238
 
 ## v0.9.5
 
