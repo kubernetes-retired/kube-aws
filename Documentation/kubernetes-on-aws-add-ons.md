@@ -35,7 +35,7 @@ Finally, an example `cluster.yaml` usable with kube2iam would look like:
 ```yaml
 # for controller nodes
 controller:
-  managedIamRoleName: myworkerrole
+  managedIamRoleName: mycontrollerrole
  
 experimental:
   kube2IamSupport:
@@ -45,7 +45,7 @@ experimental:
 worker:
   nodePools:
   - name: mypool
-    managedIamRoleName: mycontrollerrole
+    managedIamRoleName: myworkerrole
     kube2IamSupport:
       enabled: true
  ```
