@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	controlplane "github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/core/nodepool/config"
-	"github.com/coreos/kube-aws/test/helper"
+	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 )
 
 type dummyEC2CreateVolumeService struct {

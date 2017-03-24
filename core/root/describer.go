@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/coreos/kube-aws/core/controlplane/cluster"
-	"github.com/coreos/kube-aws/core/root/config"
+	"github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
+	"github.com/kubernetes-incubator/kube-aws/core/root/config"
 )
 
 type Info struct {

@@ -2,8 +2,8 @@ package root
 
 import (
 	"fmt"
-	controlplane "github.com/coreos/kube-aws/core/controlplane/cluster"
-	nodepool "github.com/coreos/kube-aws/core/nodepool/cluster"
+	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
+	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
 )
 
 type TemplateParams struct {

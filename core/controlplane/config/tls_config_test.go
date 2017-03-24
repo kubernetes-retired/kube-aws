@@ -7,8 +7,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/test/helper"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -117,7 +117,7 @@ func TestReadOrCreateCompactTLSAssets(t *testing.T) {
 			EncryptService: &dummyEncryptService{},
 		}
 
-		// See https://github.com/coreos/kube-aws/issues/107
+		// See https://github.com/kubernetes-incubator/kube-aws/issues/107
 		t.Run("CachedToPreventUnnecessaryNodeReplacement", func(t *testing.T) {
 			created, err := ReadOrCreateCompactTLSAssets(dir, kmsConfig)
 

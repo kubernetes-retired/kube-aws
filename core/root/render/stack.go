@@ -3,11 +3,11 @@ package render
 import (
 	"bytes"
 	"fmt"
-	controlplane "github.com/coreos/kube-aws/core/controlplane/config"
-	nodepool "github.com/coreos/kube-aws/core/nodepool/config"
-	"github.com/coreos/kube-aws/core/root/config"
-	"github.com/coreos/kube-aws/core/root/defaults"
-	"github.com/coreos/kube-aws/filegen"
+	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/core/root/config"
+	"github.com/kubernetes-incubator/kube-aws/core/root/defaults"
+	"github.com/kubernetes-incubator/kube-aws/filegen"
 	"path/filepath"
 	"text/template"
 )

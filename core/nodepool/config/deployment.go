@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	cfg "github.com/coreos/kube-aws/core/controlplane/config"
+	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 )
 
 func (c DeploymentSettings) ValidateInputs() error {

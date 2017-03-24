@@ -2,8 +2,8 @@ package integration
 
 import (
 	"fmt"
-	cfg "github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/core/nodepool/config"
+	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
 	"strings"
 	"testing"
 )
