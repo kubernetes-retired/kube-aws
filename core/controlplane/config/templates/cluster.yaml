@@ -268,7 +268,7 @@ worker:
 #      # Tag the cloudformation stack with the key `kube-aws:cluster-autoscaler:scale-specs` with the value containing
 #      # source of truth for cluster-autoscaler to update their autoscaling target and its min/max size.
 #      # Currently, enabling this configuration doesn't automatically deploy cluster-autoscaler itself.
-#      # Please read [the original issue](https://github.com/coreos/kube-aws/issues/148) carefully for more information.
+#      # Please read [the original issue](https://github.com/kubernetes-incubator/kube-aws/issues/148) carefully for more information.
 #      clusterAutoscaler:
 #        minSize: 1
 #        maxSize: 3
@@ -766,7 +766,7 @@ worker:
 # Beware that an EFS file system can not be mounted from mutiple subnets from the same availability zone and
 # therefore this feature won't work like you might have expected when you're deploying your cluster to an existing VPC and
 # wanted to mount an existing EFS to the subnet(s) created by kube-aws
-# See https://github.com/coreos/kube-aws/issues/208 for more information
+# See https://github.com/kubernetes-incubator/kube-aws/issues/208 for more information
 #elasticFileSystemId: fs-47a2c22e
 
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
@@ -833,7 +833,7 @@ worker:
 #       effect: NoSchedule
 #   plugins:
 #     # When enabled, you also need to configure a minimum set of role bindings or everything breaks.
-#     # See https://github.com/coreos/kube-aws/issues/230 for more information.
+#     # See https://github.com/kubernetes-incubator/kube-aws/issues/230 for more information.
 #     rbac:
 #       enabled: true
 #
