@@ -4,9 +4,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
-	"github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/core/root/defaults"
-	"github.com/coreos/kube-aws/tlsutil"
+	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/core/root/defaults"
+	"github.com/kubernetes-incubator/kube-aws/tlsutil"
 	"io/ioutil"
 	"os"
 )

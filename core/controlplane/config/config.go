@@ -12,12 +12,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/coreos/kube-aws/cfnresource"
-	"github.com/coreos/kube-aws/coreos/amiregistry"
-	"github.com/coreos/kube-aws/filereader/userdatatemplate"
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/model/derived"
-	"github.com/coreos/kube-aws/netutil"
+	"github.com/kubernetes-incubator/kube-aws/cfnresource"
+	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
+	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/model/derived"
+	"github.com/kubernetes-incubator/kube-aws/netutil"
 	yaml "gopkg.in/yaml.v2"
 	"regexp"
 	"sort"
@@ -242,7 +242,7 @@ func (c *Cluster) SetDefaults() {
 		}
 
 		// DEPRECATED AND REMOVED IN THE FUTURE
-		// See https://github.com/coreos/kube-aws/pull/284#issuecomment-275998862
+		// See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275998862
 		//
 		// This implies a deployment to an existing VPC with a route table with a preconfigured Internet Gateway
 		// and all the subnets created by kube-aws are public
@@ -255,7 +255,7 @@ func (c *Cluster) SetDefaults() {
 		}
 
 		// DEPRECATED AND REMOVED IN THE FUTURE
-		// See https://github.com/coreos/kube-aws/pull/284#issuecomment-275998862
+		// See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275998862
 		//
 		// This implies a deployment to an existing VPC with a route table with a preconfigured NAT Gateway
 		// and all the subnets created by kube-aws are private
@@ -956,7 +956,7 @@ func (c Cluster) valid() error {
 	}
 
 	if c.ControllerInstanceType == "t2.micro" || c.EtcdInstanceType == "t2.micro" || c.ControllerInstanceType == "t2.nano" || c.EtcdInstanceType == "t2.nano" {
-		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/coreos/kube-aws/issues/258 for more information`)
+		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/kubernetes-incubator/kube-aws/issues/258 for more information`)
 	}
 
 	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.Controller.ManagedIamRoleName, c.Region.String()); e != nil {

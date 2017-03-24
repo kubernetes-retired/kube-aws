@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/test/helper"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 )
 
 // The default token file is empty, and since encryption/compaction only
@@ -46,7 +46,7 @@ func TestReadOrCreateCompactEmptyAuthTokens(t *testing.T) {
 			EncryptService: &dummyEncryptService{},
 		}
 
-		// See https://github.com/coreos/kube-aws/issues/107
+		// See https://github.com/kubernetes-incubator/kube-aws/issues/107
 		t.Run("CachedToPreventUnnecessaryNodeReplacement", func(t *testing.T) {
 			created, err := ReadOrCreateCompactAuthTokens(dir, kmsConfig)
 
@@ -137,7 +137,7 @@ func TestReadOrCreateCompactNonEmptyValidAuthTokens(t *testing.T) {
 
 		writeSampleValidAuthTokenFile(dir, t)
 
-		// See https://github.com/coreos/kube-aws/issues/107
+		// See https://github.com/kubernetes-incubator/kube-aws/issues/107
 		t.Run("CachedToPreventUnnecessaryNodeReplacement", func(t *testing.T) {
 			created, err := ReadOrCreateCompactAuthTokens(dir, kmsConfig)
 

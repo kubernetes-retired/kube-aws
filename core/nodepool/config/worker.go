@@ -1,8 +1,8 @@
 package config
 
 import (
-	cfg "github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/model"
+	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
 type WorkerNodePoolConfig struct {

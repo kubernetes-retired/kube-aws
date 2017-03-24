@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/coreos/kube-aws/cfnstack"
-	"github.com/coreos/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/cfnstack"
+	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
 	"text/tabwriter"
 )
 

@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/test/helper"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 	"testing"
 )
 

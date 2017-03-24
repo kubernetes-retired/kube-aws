@@ -2,12 +2,12 @@ package integration
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/cfnstack"
-	controlplane_config "github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/core/root"
-	"github.com/coreos/kube-aws/core/root/config"
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/test/helper"
+	"github.com/kubernetes-incubator/kube-aws/cfnstack"
+	controlplane_config "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/core/root"
+	"github.com/kubernetes-incubator/kube-aws/core/root/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 	"os"
 	"reflect"
 	"strings"
@@ -1311,7 +1311,7 @@ worker:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be private
 mapPublicIPs: false
@@ -1382,7 +1382,7 @@ subnets:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-276008202
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be public
 mapPublicIPs: true
@@ -1455,7 +1455,7 @@ subnets:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
@@ -1564,7 +1564,7 @@ worker:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
@@ -1641,7 +1641,7 @@ subnets:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1
@@ -1742,7 +1742,7 @@ worker:
 			configYaml: mainClusterYaml + `
 vpcId: vpc-1a2b3c4d
 # routeTableId must be omitted
-# See https://github.com/coreos/kube-aws/pull/284#issuecomment-275962332
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
 subnets:
 - name: private1

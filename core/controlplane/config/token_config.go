@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
 
-	"github.com/coreos/kube-aws/gzipcompressor"
+	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 )
 
 // Contents of the CSV file holding auth tokens.

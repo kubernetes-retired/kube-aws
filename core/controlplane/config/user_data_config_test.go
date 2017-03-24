@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/coreos/coreos-cloudinit/config/validate"
-	"github.com/coreos/kube-aws/test/helper"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 )
 
 var numEncryption int

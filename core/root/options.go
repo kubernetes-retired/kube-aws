@@ -1,6 +1,6 @@
 package root
 
-import "github.com/coreos/kube-aws/core/root/defaults"
+import "github.com/kubernetes-incubator/kube-aws/core/root/defaults"
 
 type options struct {
 	AssetsDir                         string

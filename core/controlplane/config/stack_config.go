@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/coreos/userdatavalidation"
-	"github.com/coreos/kube-aws/filereader/jsontemplate"
-	"github.com/coreos/kube-aws/fingerprint"
+	"github.com/kubernetes-incubator/kube-aws/coreos/userdatavalidation"
+	"github.com/kubernetes-incubator/kube-aws/filereader/jsontemplate"
+	"github.com/kubernetes-incubator/kube-aws/fingerprint"
 	"net/url"
 )
 

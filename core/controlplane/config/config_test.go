@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/netutil"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/netutil"
 )
 
 const minimalConfigYaml = `externalDNSName: test.staging.core-os.net

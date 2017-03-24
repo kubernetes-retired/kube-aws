@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"errors"
-	"github.com/coreos/kube-aws/cfnresource"
-	cfg "github.com/coreos/kube-aws/core/controlplane/config"
-	"github.com/coreos/kube-aws/coreos/amiregistry"
-	"github.com/coreos/kube-aws/filereader/userdatatemplate"
-	"github.com/coreos/kube-aws/model"
-	"github.com/coreos/kube-aws/model/derived"
+	"github.com/kubernetes-incubator/kube-aws/cfnresource"
+	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
+	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/model/derived"
 	"gopkg.in/yaml.v2"
 	"strconv"
 )

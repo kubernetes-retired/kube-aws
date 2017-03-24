@@ -5,9 +5,9 @@ package config
 
 import (
 	"fmt"
-	controlplane "github.com/coreos/kube-aws/core/controlplane/config"
-	nodepool "github.com/coreos/kube-aws/core/nodepool/config"
-	"github.com/coreos/kube-aws/model"
+	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
