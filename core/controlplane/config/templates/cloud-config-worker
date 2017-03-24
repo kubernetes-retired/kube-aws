@@ -101,8 +101,19 @@ coreos:
             [Service]
             Environment="FLANNEL_IMAGE={{.FlannelImage.RktRepo}}"
             Environment="RKT_RUN_ARGS={{.FlannelImage.Options}}"
-{{end}}
 
+    - name: flannel-docker-opts.service
+      drop-ins:
+        - name: 10-flannel-docker-options.conf
+          content: |
+            [Unit]
+            PartOf=flanneld.service
+            Before=docker.service
+
+            [Service]
+            Environment="FLANNEL_IMAGE={{.FlannelImage.RktRepo}}"
+            Environment="RKT_RUN_ARGS={{.FlannelImage.Options}} --uuid-file-save=/var/lib/coreos/flannel-wrapper2.uuid"
+{{end}}
     - name: kubelet.service
       command: start
       runtime: true
