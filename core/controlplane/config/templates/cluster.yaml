@@ -435,6 +435,7 @@ worker:
 
 # Use ephemeral instance storage for etcd data volume instead of EBS?
 # (Recommended set to true for high-throughput control planes)
+# CAUTION: Currently broken. Please don't turn this on until it is fixed in https://github.com/kubernetes-incubator/kube-aws/pull/417
 # etcdDataVolumeEphemeral: false
 
 # Data volume size (GiB) for etcd node
