@@ -111,6 +111,7 @@ func NewDefaultCluster() *Cluster {
 			KubeDashboardImage:          model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-amd64", Tag: "v1.5.1", RktPullDocker: false},
 			CalicoCtlImage:              model.Image{Repo: "calico/ctl", Tag: "v1.0.0", RktPullDocker: false},
 			PauseImage:                  model.Image{Repo: "gcr.io/google_containers/pause-amd64", Tag: "3.0", RktPullDocker: false},
+			FlannelImage:                model.Image{Repo: "quay.io/coreos/flannel", Tag: "v0.6.2", RktPullDocker: false},
 		},
 		KubeClusterSettings: KubeClusterSettings{
 			DNSServiceIP: "10.3.0.10",
@@ -386,6 +387,7 @@ type DeploymentSettings struct {
 	AddonResizerImage           model.Image `yaml:"addonResizerImage,omitempty"`
 	KubeDashboardImage          model.Image `yaml:"kubeDashboardImage,omitempty"`
 	PauseImage                  model.Image `yaml:"pauseImage,omitempty"`
+	FlannelImage                model.Image `yaml:"flannelImage,omitempty"`
 }
 
 // Part of configuration which is specific to worker nodes
