@@ -754,6 +754,12 @@ worker:
 #  tag: 3.0
 #  rktPullDocker: false
 
+# Flannel image repository to use.This allow pulling flannel image from a docker repo.
+#flannelImage:
+#  repo: quay.io/coreos/flannel
+#  tag: v0.6.2
+#  rktPullDocker: false
+
 # Use Calico for network policy.
 # useCalico: false
 
