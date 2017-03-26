@@ -72,7 +72,7 @@ If you've chosen to power your worker nodes in a node pool with an auto scaling 
 
 Please read [the AWS documentation](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html#aws-properties-as-group-prop) for more information on `MinSize`, `MaxSize`, `MinInstancesInService` for ASGs.
 
-```
+```yaml
 worker:
   nodePools:
   - name: pool1
