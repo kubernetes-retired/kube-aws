@@ -140,6 +140,7 @@ func NewDefaultCluster() *Cluster {
 		CreateRecordSet:     false,
 		RecordSetTTL:        300,
 		CustomSettings:      make(map[string]interface{}),
+		ExportKubeResources: false,
 	}
 }
 
@@ -414,7 +415,7 @@ type Cluster struct {
 	EtcdSettings           `yaml:",inline"`
 	FlannelSettings        `yaml:",inline"`
 	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
-	APIServerServiceIP    string `yaml:"-"`
+	APIServerServiceIP     string `yaml:"-"`
 	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
 	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
@@ -422,6 +423,8 @@ type Cluster struct {
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
 	ProvidedEncryptService EncryptService
 	CustomSettings         map[string]interface{} `yaml:"customSettings,omitempty"`
+	ExportKubeResources    bool                   `yaml:"exportKubeResources,omitempty"`
+	KubeResourcesS3Path    string                 `yaml:"-"`
 }
 
 type Experimental struct {
