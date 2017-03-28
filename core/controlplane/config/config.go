@@ -730,12 +730,28 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 		return nil, err
 	}
 
-	// TODO: Check if new tests are needed to verify the auth token file is handled correctly
+	var compactAssets *CompactTLSAssets
+	var compactAuthTokens *CompactAuthTokens
 
+	if c.AssetsEncryptionEnabled() {
+		compactAuthTokens, err = ReadOrCreateCompactAuthTokens(opts.AssetsDir, KMSConfig{
+			Region:         stackConfig.Config.Region,
+			KMSKeyARN:      c.KMSKeyARN,
+			EncryptService: c.ProvidedEncryptService,
+		})
+		if err != nil {
+			return nil, err
+		}
+		stackConfig.Config.AuthTokensConfig = compactAuthTokens
+	} else {
+		rawAuthTokens, err := ReadOrCreateUnecryptedCompactAuthTokens(opts.AssetsDir)
+		if err != nil {
+			return nil, err
+		}
+		stackConfig.Config.AuthTokensConfig = rawAuthTokens
+	}
 	if c.ManageCertificates {
 		if c.AssetsEncryptionEnabled() {
-			var compactAssets *CompactTLSAssets
-			var compactAuthTokens *CompactAuthTokens
 
 			compactAssets, err = ReadOrCreateCompactTLSAssets(opts.AssetsDir, KMSConfig{
 				Region:         stackConfig.Config.Region,
@@ -746,30 +762,14 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 				return nil, err
 			}
 
-			compactAuthTokens, err = ReadOrCreateCompactAuthTokens(opts.AssetsDir, KMSConfig{
-				Region:         stackConfig.Config.Region,
-				KMSKeyARN:      c.KMSKeyARN,
-				EncryptService: c.ProvidedEncryptService,
-			})
-			if err != nil {
-				return nil, err
-			}
-
 			stackConfig.Config.TLSConfig = compactAssets
-			stackConfig.Config.AuthTokensConfig = compactAuthTokens
 		} else {
 			rawAssets, err := ReadOrCreateUnecryptedCompactTLSAssets(opts.AssetsDir)
 			if err != nil {
 				return nil, err
 			}
 
-			rawAuthTokens, err := ReadOrCreateUnecryptedCompactAuthTokens(opts.AssetsDir)
-			if err != nil {
-				return nil, err
-			}
-
 			stackConfig.Config.TLSConfig = rawAssets
-			stackConfig.Config.AuthTokensConfig = rawAuthTokens
 		}
 	}
 
