@@ -712,6 +712,12 @@ worker:
 #  tag: 1.4
 #  rktPullDocker: false
 
+# kube rescheduler image repository to use.
+#kubeReschedulerImage:
+#  repo: gcr.io/google-containers/rescheduler
+#  tag: v0.2.2
+#  rktPullDocker: false
+
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  gcr.io/google_containers/dnsmasq-metrics-amd64
@@ -788,6 +794,13 @@ worker:
 #waitSignal:
 #  enabled: true
 #   maxBatchSize: 1
+
+# Addon features
+addons:
+  # When enabled, Kubernetes rescheduler is deployed to the cluster controller(s)
+  # This feature is experimental currently so may not be production ready
+  rescheduler:
+    enabled: false
 
 # Experimental features will change in backward-incompatible ways
 # experimental:

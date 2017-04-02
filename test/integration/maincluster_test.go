@@ -2842,6 +2842,23 @@ worker:
 			expectedErrorMessage: "unknown keys found in worker.nodePools[0].clusterAutoscaler: baz",
 		},
 		{
+			context: "WithUnknownKeyInAddons",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  blah: 5
+`,
+			expectedErrorMessage: "unknown keys found in addons: blah",
+		},
+		{
+			context: "WithUnknownKeyInReschedulerAddon",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  rescheduler:
+    foo: yeah
+`,
+			expectedErrorMessage: "unknown keys found in addons.rescheduler: foo",
+		},
+		{
 			context: "WithTooLongControllerIAMRoleName",
 			configYaml: kubeAwsSettings.withClusterName("kubeaws-it-main").withRegion("ap-northeast-1").minimumValidClusterYaml() + `
 controller:
