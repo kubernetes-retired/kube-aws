@@ -476,69 +476,53 @@ write_files:
     owner: root:root
     content: |
       #!/bin/bash -e
-      {{ if .UseCalico }}
-      /bin/bash /opt/bin/populate-tls-calico-etcd
-      /usr/bin/docker run --rm --net=host -v /srv/kubernetes/manifests:/host/manifests {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl apply -f /host/manifests/calico.yaml
-      {{ end }}
 
-      post_yaml() {
-          /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-          --data-binary "$1" "$2"
-      }
-
-      post_yaml_status_code(){
-          /usr/bin/curl  -H "Content-Type: application/yaml" -XPOST \
-          --write-out %{http_code} --silent --output /dev/null \
-          --data-binary "$1" "$2"
+      kubectl() {
+          /usr/bin/docker run --rm --net=host -v /srv/kubernetes/manifests:/srv/kubernetes/manifests {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
       }
 
       mfdir=/srv/kubernetes/manifests
+
+      {{ if .UseCalico }}
+      /bin/bash /opt/bin/populate-tls-calico-etcd
+      kubectl apply -f "${mfdir}/calico.yaml"
+      {{ end }}
+
+      # Deployments
       for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml; do
-          post_yaml "@$mfdir/$manifest" \
-          "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+          kubectl apply -f "${mfdir}/$manifest"
       done
 
-      post_yaml "@$mfdir/kube-dashboard-rc.yaml" \
-      "http://127.0.0.1:8080/api/v1/namespaces/kube-system/replicationcontrollers"
+      # Replicationcontrollers
+      kubectl apply -f "${mfdir}/kube-dashboard-rc.yaml"
 
+      # Services
       for manifest in {kube-dns,heapster,kube-dashboard}-svc.yaml;do
-          post_yaml "@$mfdir/$manifest" \
-          "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services"
+          kubectl apply -f "${mfdir}/$manifest"
       done
 
       {{- if .Addons.Rescheduler.Enabled }}
-      mfdir=/srv/kubernetes/manifests
-      post_yaml "@$mfdir/kube-rescheduler-de.yaml" \
-      "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
+      kubectl apply -f "@$mfdir/kube-rescheduler-de.yaml"
       {{- end }}
 
       {{if .Experimental.Plugins.Rbac.Enabled}}
-      # k8s > 1.5 already have this clusterRole, so we accept http.code != 200
       mfdir=/srv/kubernetes/rbac
-      if [[ $(post_yaml_status_code "@mfdir/cluster-roles/cluster-admin.yaml" \
-          "http://127.0.0.1:8081/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles") -ne "200" ]] ; then
-          echo 'Failed to create the cluster role named "cluster-admin". It is ok if you are using k8s newer than 1.5'
+      # k8s > 1.5 already have this clusterRole, so we accept http.code != 200
+      if ! kubectl create -f "${mfdir}/cluster-roles/cluster-admin.yaml"; then
+         echo 'Failed to create the cluster role named "cluster-admin". It is ok if you are using k8s newer than 1.5'
       fi
 
       for manifest in {bootstrapped-node,}; do
-          post_yaml "@${mfdir}/cluster-roles/$manifest.yaml" \
-          "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles"
+          kubectl apply -f "@${mfdir}/cluster-roles/$manifest.yaml"
       done
 
-      post_yaml "@${mfdir}/cluster-roles/cluster-admin.yaml" \
-      "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles" |true
-
       for manifest in {system-worker,kube-worker,kube-admin,bootstrapped-node}; do
-          post_yaml "@${mfdir}/cluster-role-bindings/$manifest.yaml" \
-          "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterrolebindings"
+          kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
       done
 
       {{ if .Experimental.TLSBootstrap.Enabled }}
-      post_yaml "@${mfdir}/cluster-roles/kubelet-bootstrap.yaml" \
-      "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterroles" |true
-
-      post_yaml "@${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" \
-      "http://127.0.0.1:8080/apis/rbac.authorization.k8s.io/v1alpha1/clusterrolebindings" |true
+      kubectl create -f "@${mfdir}/cluster-roles/kubelet-bootstrap.yaml" | echo 'Failed to create the cluster role named "kubelet-bootstrap". Skipping'
+      kubectl create -f "@${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" |  | echo 'Failed to create the cluster role binding "kubelet-bootstrap". Skipping'
       {{ end }}
       {{ end }}
 
