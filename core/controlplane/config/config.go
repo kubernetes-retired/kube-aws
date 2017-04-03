@@ -227,6 +227,28 @@ func (c *Cluster) Load() error {
 
 	c.SetDefaults()
 
+	if c.ExternalDNSName != "" {
+		// TODO: Deprecate externalDNSName?
+
+		if len(c.APIEndpointConfigs) != 0 {
+			return errors.New("invalid cluster: you can only specify either externalDNSName or apiEndpoints, but not both")
+		}
+
+		subnetRefs := []model.SubnetReference{}
+		for _, s := range c.Controller.LoadBalancer.Subnets {
+			subnetRefs = append(subnetRefs, model.SubnetReference{Name: s.Name})
+		}
+
+		c.APIEndpointConfigs = model.NewDefaultAPIEndpoints(
+			c.ExternalDNSName,
+			subnetRefs,
+			c.HostedZoneID,
+			c.CreateRecordSet,
+			c.RecordSetTTL,
+			c.Controller.LoadBalancer.Private,
+		)
+	}
+
 	return nil
 }
 
@@ -326,6 +348,7 @@ func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptServi
 // Part of configuration which is shared between controller nodes and worker nodes.
 // Its name is prefixed with `Kube` because it doesn't relate to etcd.
 type KubeClusterSettings struct {
+	APIEndpointConfigs model.APIEndpoints `yaml:"apiEndpoints,omitempty"`
 	// Required by kubelet to locate the kube-apiserver
 	ExternalDNSName string `yaml:"externalDNSName,omitempty"`
 	// Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
@@ -689,6 +712,13 @@ func (c Cluster) Config() (*Config, error) {
 		}
 	}
 
+	apiEndpoints, err := derived.NewAPIEndpoints(c.APIEndpointConfigs, c.Subnets)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cluster: %v", err)
+	}
+
+	config.APIEndpoints = apiEndpoints
+
 	return &config, nil
 }
 
@@ -810,6 +840,8 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 type Config struct {
 	Cluster
 
+	APIEndpoints derived.APIEndpoints
+
 	EtcdNodes []derived.EtcdNode
 
 	AuthTokensConfig *CompactAuthTokens
@@ -858,6 +890,23 @@ func (c Config) InternetGatewayRef() string {
 	} else {
 		return fmt.Sprintf(`{ "Ref" : %q }`, c.InternetGatewayLogicalName())
 	}
+}
+
+// ExternalDNSNames returns all the DNS names of Kubernetes API endpoints should be covered in the TLS cert for k8s API
+func (c Cluster) ExternalDNSNames() []string {
+	names := []string{}
+
+	if c.ExternalDNSName != "" {
+		names = append(names, c.ExternalDNSName)
+	}
+
+	for _, e := range c.APIEndpointConfigs {
+		names = append(names, e.DNSName)
+	}
+
+	sort.Strings(names)
+
+	return names
 }
 
 // NestedStackName returns a sanitized name of this control-plane which is usable as a valid cloudformation nested stack name
@@ -988,8 +1037,12 @@ type InfrastructureValidationResult struct {
 }
 
 func (c KubeClusterSettings) Valid() (*InfrastructureValidationResult, error) {
-	if c.ExternalDNSName == "" {
-		return nil, errors.New("externalDNSName must be set")
+	if c.ExternalDNSName == "" && len(c.APIEndpointConfigs) == 0 {
+		return nil, errors.New("Either externalDNSName or apiEndpoints must be set")
+	}
+
+	if err := c.APIEndpointConfigs.Validate(); err != nil {
+		return nil, err
 	}
 
 	dnsServiceIPAddr := net.ParseIP(c.DNSServiceIP)
@@ -1346,6 +1399,11 @@ func (c *Cluster) ValidateExistingVPC(existingVPCCIDR string, existingSubnetCIDR
 	}
 
 	return nil
+}
+
+// ManageELBLogicalNames returns all the logical names of the cfn resources corresponding to ELBs managed by kube-aws for API endpoints
+func (c *Config) ManagedELBLogicalNames() []string {
+	return c.APIEndpoints.ManagedELBLogicalNames()
 }
 
 func WithTrailingDot(s string) string {

@@ -34,6 +34,8 @@ type ComputedConfig struct {
 
 type ProvidedConfig struct {
 	MainClusterSettings
+	// APIEndpoint is the k8s api endpoint to which worker nodes in this node pool communicate
+	APIEndpoint             derived.APIEndpoint
 	cfg.KubeClusterSettings `yaml:",inline"`
 	WorkerNodePoolConfig    `yaml:",inline"`
 	DeploymentSettings      `yaml:",inline"`
@@ -146,6 +148,11 @@ func ClusterFromBytes(data []byte, main *cfg.Config) (*ProvidedConfig, error) {
 	return c, nil
 }
 
+func (c *ProvidedConfig) ExternalDNSName() string {
+	fmt.Println("WARN: ExternalDNSName is deprecated and will be removed in v0.9.7. Please use APIEndpoint.Name instead")
+	return c.APIEndpoint.DNSName
+}
+
 func (c *ProvidedConfig) Load(main *cfg.Config) error {
 	defaults := newDefaultCluster()
 	if c.Count == nil {
@@ -207,6 +214,28 @@ define one or more public subnets in cluster.yaml or explicitly reference privat
 	}
 
 	c.EtcdNodes = main.EtcdNodes
+
+	var apiEndpoint derived.APIEndpoint
+	if c.APIEndpointName != "" {
+		found, err := main.APIEndpoints.FindByName(c.APIEndpointName)
+		if err != nil {
+			return fmt.Errorf("failed to find an API endpoint named \"%s\": %v", c.APIEndpointName, err)
+		}
+		apiEndpoint = *found
+	} else {
+		if len(main.APIEndpoints) > 1 {
+			return errors.New("worker.nodePools[].apiEndpointName must not be empty when there's 2 or more api endpoints under the key `apiEndpoints")
+		}
+		apiEndpoint = main.APIEndpoints.GetDefault()
+	}
+
+	if !apiEndpoint.LoadBalancer.ManageELBRecordSet() {
+		fmt.Printf(`WARN: the worker node pool "%s" is associated to a k8s API endpoint behind the DNS name "%s" managed by YOU!
+Please never point the DNS record for it to a different k8s cluster, especially when the name is a "stable" one which is shared among multiple k8s clusters for achieving blue-green deployments of k8s clusters!
+kube-aws can't save users from mistakes like that
+`, c.NodePoolName, apiEndpoint.DNSName)
+	}
+	c.APIEndpoint = apiEndpoint
 
 	return nil
 }
