@@ -502,7 +502,7 @@ write_files:
       done
 
       {{- if .Addons.Rescheduler.Enabled }}
-      kubectl apply -f "@$mfdir/kube-rescheduler-de.yaml"
+      kubectl apply -f "${mfdir}/kube-rescheduler-de.yaml"
       {{- end }}
 
       {{if .Experimental.Plugins.Rbac.Enabled}}
@@ -513,7 +513,7 @@ write_files:
       fi
 
       for manifest in {bootstrapped-node,}; do
-          kubectl apply -f "@${mfdir}/cluster-roles/$manifest.yaml"
+          kubectl apply -f "${mfdir}/cluster-roles/$manifest.yaml"
       done
 
       for manifest in {system-worker,kube-worker,kube-admin,bootstrapped-node}; do
@@ -521,8 +521,8 @@ write_files:
       done
 
       {{ if .Experimental.TLSBootstrap.Enabled }}
-      kubectl create -f "@${mfdir}/cluster-roles/kubelet-bootstrap.yaml" | echo 'Failed to create the cluster role named "kubelet-bootstrap". Skipping'
-      kubectl create -f "@${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" |  | echo 'Failed to create the cluster role binding "kubelet-bootstrap". Skipping'
+      kubectl create -f "${mfdir}/cluster-roles/kubelet-bootstrap.yaml" | echo 'Failed to create the cluster role named "kubelet-bootstrap". Skipping'
+      kubectl create -f "${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" |  | echo 'Failed to create the cluster role binding "kubelet-bootstrap". Skipping'
       {{ end }}
       {{ end }}
 
