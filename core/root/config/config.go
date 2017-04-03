@@ -16,11 +16,11 @@ import (
 
 type UnmarshalledConfig struct {
 	controlplane.Cluster `yaml:",inline"`
-	WorkerConfig         `yaml:"worker,omitempty"`
+	Worker               `yaml:"worker,omitempty"`
 	model.UnknownKeys    `yaml:",inline"`
 }
 
-type WorkerConfig struct {
+type Worker struct {
 	APIEndpointName   string                     `yaml:"apiEndpointName,omitempty"`
 	NodePools         []*nodepool.ProvidedConfig `yaml:"nodePools,omitempty"`
 	model.UnknownKeys `yaml:",inline"`
@@ -44,7 +44,7 @@ type unknownKeyValidation struct {
 func newDefaultUnmarshalledConfig() *UnmarshalledConfig {
 	return &UnmarshalledConfig{
 		Cluster: *controlplane.NewDefaultCluster(),
-		WorkerConfig: WorkerConfig{
+		Worker: Worker{
 			NodePools: []*nodepool.ProvidedConfig{},
 		},
 	}
@@ -77,11 +77,11 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 		}
 	}
 
-	if len(cpConfig.APIEndpoints) > 1 && c.WorkerConfig.APIEndpointName == "" && anyNodePoolIsMissingAPIEndpointName {
+	if len(cpConfig.APIEndpoints) > 1 && c.Worker.APIEndpointName == "" && anyNodePoolIsMissingAPIEndpointName {
 		return nil, errors.New("worker.apiEndpointName must not be empty when there're 2 or more API endpoints under the key `apiEndpoints` and one of worker.nodePools[] are missing apiEndpointName")
 	}
 
-	if c.WorkerConfig.APIEndpointName != "" {
+	if c.Worker.APIEndpointName != "" {
 		if _, err := cpConfig.APIEndpoints.FindByName(c.APIEndpointName); err != nil {
 			return nil, fmt.Errorf("invalid value for worker.apiEndpointName: no API endpoint named \"%s\" found", c.APIEndpointName)
 		}
@@ -89,13 +89,13 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 
 	for i, np := range nodePools {
 		if np.APIEndpointName == "" {
-			if c.WorkerConfig.APIEndpointName == "" {
+			if c.Worker.APIEndpointName == "" {
 				if len(cpConfig.APIEndpoints) > 1 {
 					return nil, errors.New("worker.apiEndpointName can be omitted only when there's only 1 api endpoint under apiEndpoints")
 				}
 				np.APIEndpointName = cpConfig.APIEndpoints.GetDefault().Name
 			} else {
-				np.APIEndpointName = c.WorkerConfig.APIEndpointName
+				np.APIEndpointName = c.Worker.APIEndpointName
 			}
 		}
 
@@ -115,17 +115,31 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 
 	cfg := &Config{Cluster: cpCluster, NodePools: nodePools}
 
-	if err := failFastWhenUnknownKeysFound([]unknownKeyValidation{
+	validations := []unknownKeyValidation{
 		{c, ""},
-		{c.WorkerConfig, "worker"},
+		{c.Worker, "worker"},
 		{c.Etcd, "etcd"},
+		{c.Etcd.RootVolume, "etcd.rootVolume"},
+		{c.Etcd.DataVolume, "etcd.dataVolume"},
 		{c.Controller, "controller"},
 		{c.Controller.AutoScalingGroup, "controller.autoScalingGroup"},
 		{c.Controller.ClusterAutoscaler, "controller.clusterAutoscaler"},
+		{c.Controller.RootVolume, "controller.rootVolume"},
 		{c.Experimental, "experimental"},
 		{c.Addons, "addons"},
 		{c.Addons.Rescheduler, "addons.rescheduler"},
-	}); err != nil {
+	}
+
+	for i, np := range c.Worker.NodePools {
+		validations = append(validations, unknownKeyValidation{np, fmt.Sprintf("worker.nodePools[%d]", i)})
+		validations = append(validations, unknownKeyValidation{np.RootVolume, fmt.Sprintf("worker.nodePools[%d].rootVolume", i)})
+
+		for j, endpoint := range np.APIEndpointConfigs {
+			validations = append(validations, unknownKeyValidation{endpoint, fmt.Sprintf("worker.nodePools[%d].apiEndpoints[%d]", i, j)})
+		}
+	}
+
+	if err := failFastWhenUnknownKeysFound(validations); err != nil {
 		return nil, err
 	}
 
