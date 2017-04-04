@@ -24,15 +24,137 @@ coreos:
         [Install]
         RequiredBy=format-etcd2-volume.service
 
-    - name: etcd2.service
+    {{if .Etcd.DisasterRecovery.SupportsEtcdVersion .Etcd.Version -}}
+    - name: etcdadm-reconfigure.service
+      enable: true
+      content: |
+        [Unit]
+        Description=etcdadm reconfigure runner
+        BindsTo={{.Etcd.SystemdUnitName}}
+        Before={{.Etcd.SystemdUnitName}}
+        Wants=cfn-etcd-environment.service
+        After=cfn-etcd-environment.service
+        After=network.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        RestartSec=5
+        EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/var/run/coreos/etcdadm-environment
+        ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
+        ExecStartPre=/usr/bin/mkdir -p /var/run/coreos/etcdadm/snapshots
+        ExecStart=/opt/bin/etcdadm reconfigure
+        {{if .Etcd.DisasterRecovery.IsAutomatedForEtcdVersion .Etcd.Version -}}
+        ExecStartPost=/usr/bin/systemctl start etcdadm-check.timer
+        {{end -}}
+        TimeoutStartSec=120
+
+        [Install]
+        WantedBy=cfn-etcd-environment.service
+
+    - name: etcdadm-update-status.service
+      enable: true
+      content: |
+        [Unit]
+        Description=etcdadm update status
+        BindsTo={{.Etcd.SystemdUnitName}}
+        After={{.Etcd.SystemdUnitName}}
+        After=network.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        RestartSec=5
+        EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/var/run/coreos/etcdadm-environment
+        ExecStart=/opt/bin/etcdadm member_status_set_started
+        {{if .Etcd.Snapshot.IsAutomatedForEtcdVersion .Etcd.Version -}}
+        ExecStartPost=/usr/bin/systemctl start etcdadm-save.timer
+        {{end -}}
+        TimeoutStartSec=120
+    {{- end}}
+
+    - name: etcdadm-check.service
+      enable: true
+      content: |
+        [Unit]
+        Description=etcd health check
+
+        [Service]
+        Type=simple
+        EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/var/run/coreos/etcdadm-environment
+        Restart=no
+        ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
+        ExecStart=/opt/bin/etcdadm check
+        TimeoutStartSec=120
+
+    {{if .Etcd.DisasterRecovery.IsAutomatedForEtcdVersion .Etcd.Version -}}
+    - name: etcdadm-check.timer
+      enable: true
+      content: |
+        [Unit]
+        Description=periodic etcd health check
+
+        [Timer]
+        OnBootSec=120sec
+        # Actual interval would be OnUnitInactiveSec+0~AccuracySec=10+0~5 sec
+        OnUnitInactiveSec=10sec
+        AccuracySec=5sec
+
+        [Install]
+        WantedBy=timers.target
+    {{- end}}
+
+    - name: etcdadm-save.service
+      enable: true
+      content: |
+        [Unit]
+        Description=etcd snapshot
+
+        [Service]
+        Type=simple
+        EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/var/run/coreos/etcdadm-environment
+        Restart=no
+        ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
+        ExecStart=/opt/bin/etcdadm save
+        TimeoutStartSec=300
+
+    {{if .Etcd.Snapshot.IsAutomatedForEtcdVersion .Etcd.Version -}}
+    - name: etcdadm-save.timer
+      enable: true
+      content: |
+        [Unit]
+        Description=periodic etcd snapshot
+
+        [Timer]
+        OnBootSec=120sec
+        # Actual interval would be 60+0~5 sec
+        OnUnitInactiveSec=60sec
+        AccuracySec=5sec
+
+        [Install]
+        WantedBy=timers.target
+    {{- end}}
+
+    - name: {{.Etcd.SystemdUnitName}}
       drop-ins:
-        - name: 20-etcd2-aws-cluster.conf
+        - name: 20-aws-cluster.conf
           content: |
-            {{- if .AssetsEncryptionEnabled}}
             [Unit]
+            {{- if .AssetsEncryptionEnabled}}
             Wants=decrypt-assets.service cfn-etcd-environment.service
             After=decrypt-assets.service cfn-etcd-environment.service
             {{- end}}
+            {{if .Etcd.DisasterRecovery.Automated -}}
+            {{/* can be `Wants` if you like etcd-member to not stop when etcdadm-reconfigure failed */}}
+            BindsTo=etcdadm-reconfigure.service etcdadm-update-status.service
+            After=etcdadm-reconfigure.service
+            Before=etcdadm-update-status.service
+            {{end -}}
+
             [Service]
             EnvironmentFile=-/etc/etcd-environment
 
@@ -49,7 +171,7 @@ coreos:
       enable: true
       content: |
         [Unit]
-        Before=etcd2.service
+        Before={{.Etcd.SystemdUnitName}}
 
         [Mount]
         What=/dev/xvdf
@@ -57,7 +179,7 @@ coreos:
         Type=ext4
 
         [Install]
-        RequiredBy=etcd2.service
+        RequiredBy={{.Etcd.SystemdUnitName}}
 
     - name: format-etcd2-volume.service
       enable: true
@@ -82,15 +204,15 @@ coreos:
       content: |
         [Unit]
         Description=decrypt etcd2 tls assets using amazon kms
-        Before=etcd2.service
+        Before={{.Etcd.SystemdUnitName}}
 
         [Service]
         Restart=on-failure
         RemainAfterExit=yes
         ExecStartPre=/usr/bin/rkt run \
           --uuid-file-save=/var/run/coreos/decrypt-assets.uuid \
-          --volume=ssl,kind=host,source=/etc/etcd2/ssl,readOnly=false \
-          --mount=volume=ssl,target=/etc/etcd2/ssl \
+          --volume=ssl,kind=host,source=/etc/ssl/certs,readOnly=false \
+          --mount=volume=ssl,target=/etc/ssl/certs \
           --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
           --mount volume=dns,target=/etc/resolv.conf \
           --net=host \
@@ -99,7 +221,7 @@ coreos:
             -ec \
             'echo decrypting tls assets; \
              shopt -s nullglob; \
-             for encKey in /etc/etcd2/ssl/*.pem.enc; do \
+             for encKey in /etc/ssl/certs/*.pem.enc; do \
              echo decrypting $encKey; \
              /usr/bin/aws \
                --region {{.Region}} kms decrypt \
@@ -112,7 +234,7 @@ coreos:
         ExecStart=-/usr/bin/rkt rm --uuid-file=/var/run/coreos/decrypt-assets.uuid
 
         [Install]
-        RequiredBy=etcd2.service
+        RequiredBy={{.Etcd.SystemdUnitName}}
 {{ end }}
 
 {{ if .WaitSignal.Enabled }}
@@ -120,13 +242,13 @@ coreos:
       command: start
       content: |
         [Unit]
-        Wants=etcd2.service
-        After=etcd2.service
+        Wants={{.Etcd.SystemdUnitName}}
+        After={{.Etcd.SystemdUnitName}}
 
         [Service]
         Type=oneshot
         EnvironmentFile={{.EtcdNodeEnvFileName}}
-        ExecStartPre=/usr/bin/systemctl is-active etcd2.service
+        ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
         ExecStart=/opt/bin/cfn-signal
 {{end}}
 
@@ -387,14 +509,14 @@ write_files:
 
       echo "KUBE_AWS_ASSUMED_HOSTNAME=$advertised_hostname
       ETCD_NAME=$name
-      ETCD_PEER_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
-      ETCD_PEER_CERT_FILE=/etc/etcd2/ssl/etcd.pem
-      ETCD_PEER_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+      ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_PEER_CERT_FILE=/etc/ssl/certs/etcd.pem
+      ETCD_PEER_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
       ETCD_CLIENT_CERT_AUTH=true
-      ETCD_TRUSTED_CA_FILE=/etc/etcd2/ssl/ca.pem
-      ETCD_CERT_FILE=/etc/etcd2/ssl/etcd.pem
-      ETCD_KEY_FILE=/etc/etcd2/ssl/etcd-key.pem
+      ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_CERT_FILE=/etc/ssl/certs/etcd.pem
+      ETCD_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
       ETCD_INITIAL_CLUSTER_STATE=new
       ETCD_DATA_DIR=/var/lib/etcd2
@@ -445,15 +567,19 @@ write_files:
 
       /usr/bin/sed -i "s/^ETCDCTL_ENDPOINT.*$/ETCDCTL_ENDPOINT=https:\/\/$(cat /var/run/coreos/advertised-hostname):2379/" /etc/environment
 
+  - path: /opt/bin/etcdadm
+    permissions: 0755
+    encoding: gzip+base64
+    content: {{.Etcdadm}}
 
   - path: /etc/environment
     permissions: 0644
     content: |
       COREOS_PUBLIC_IPV4=$public_ipv4
       COREOS_PRIVATE_IPV4=$private_ipv4
-      ETCDCTL_CA_FILE=/etc/etcd2/ssl/ca.pem
-      ETCDCTL_CERT_FILE=/etc/etcd2/ssl/etcd-client.pem
-      ETCDCTL_KEY_FILE=/etc/etcd2/ssl/etcd-client-key.pem
+      ETCDCTL_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCDCTL_CERT_FILE=/etc/ssl/certs/etcd-client.pem
+      ETCDCTL_KEY_FILE=/etc/ssl/certs/etcd-client-key.pem
       ETCDCTL_ENDPOINT=
 
   - path: /opt/bin/ext4-format-volume-once
@@ -495,23 +621,23 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/etcd2/ssl/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.CACert}}
 
-  - path: /etc/etcd2/ssl/etcd-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdKey}}
 
-  - path: /etc/etcd2/ssl/etcd.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdCert}}
 
-  - path: /etc/etcd2/ssl/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientCert}}
 
-  - path: /etc/etcd2/ssl/etcd-client-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-client-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.TLSConfig.EtcdClientKey}}
 

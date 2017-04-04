@@ -3014,6 +3014,42 @@ controller:
 			expectedErrorMessage: "clusterName(=my.cluster) is malformed. It must consist only of alphanumeric characters, colons, or hyphens",
 		},
 		{
+			context: "WithEtcdAutomatedDisasterRecoveryRequiresAutomatedSnapshot",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  version: 3
+  snapshot:
+    automated: false
+  disasterRecovery:
+    automated: true
+`,
+			expectedErrorMessage: "`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated",
+		},
+		{
+			context: "WithEtcdAutomatedDisasterRecoveryDoesntSupportEtcd2",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  version: 2
+  snapshot:
+    automated: true
+  disasterRecovery:
+    automated: false
+`,
+			expectedErrorMessage: "`etcd.snapshot.automated` is set to true for enabling automated snapshot. However the feature is available only for etcd version 3",
+		},
+		{
+			context: "WithEtcdAutomatedSnapshotDoesntSupportEtcd2",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  version: 2
+  snapshot:
+    automated: false
+  disasterRecovery:
+    automated: true
+`,
+			expectedErrorMessage: "`etcd.disasterRecovery.automated` is set to true for enabling automated disaster recovery. However the feature is available only for etcd version 3",
+		},
+		{
 			context: "WithInvalidTaint",
 			configYaml: minimalValidConfigYaml + `
 worker:
@@ -3030,7 +3066,7 @@ worker:
 			context: "WithAwsNodeLabelEnabledForTooLongClusterNameAndPoolName",
 			configYaml: minimalValidConfigYaml + `
 # clusterName + nodePools[].name should be less than or equal to 25 characters or the launch configuration name
-# "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
+# "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-WorkersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
 # See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
 clusterName: my-cluster1 # 11 characters
 worker:
@@ -3047,12 +3083,12 @@ worker:
 # clusterName should be less than or equal to 21 characters or the launch configuration name
 # "mykubeawsclustername-mynestedstackname-1N2C4K3LLBEDZ-ControllersLC-BC2S9P3JG2QD" exceeds the limit of 63 characters
 # See https://kubernetes.io/docs/user-guide/labels/#syntax-and-character-set
-clusterName: my-long-long-cluster-1 # 22 characters
+clusterName: mycluster # 9
 experimental:
   awsNodeLabels:
      enabled: true
 `,
-			expectedErrorMessage: "awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"my-long-long-cluster-1\") exceeds the limit of 21",
+			expectedErrorMessage: "awsNodeLabels can't be enabled for controllers because the total number of characters in clusterName(=\"mycluster\") exceeds the limit of 8",
 		},
 		{
 			context: "WithMultiAPIEndpointsInvalidLB",
