@@ -2,6 +2,8 @@ package config
 
 //go:generate go run ../../../codegen/templates_gen.go CloudConfigController=cloud-config-controller CloudConfigWorker=cloud-config-worker CloudConfigEtcd=cloud-config-etcd DefaultClusterConfig=cluster.yaml KubeConfigTemplate=kubeconfig.tmpl StackTemplateTemplate=stack-template.json
 //go:generate gofmt -w templates.go
+//go:generate go run ../../../codegen/files_gen.go Etcdadm=../../../etcdadm/etcdadm
+//go:generate gofmt -w files.go
 
 import (
 	"errors"
@@ -17,6 +19,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
+	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/model/derived"
 	"github.com/kubernetes-incubator/kube-aws/netutil"
@@ -1077,6 +1080,11 @@ func (c Cluster) NestedStackName() string {
 	return strings.Title(strings.Replace(c.StackName(), "-", "", -1))
 }
 
+// Etcdadm returns the content of the etcdadm script to be embedded into cloud-config-etcd
+func (c *Config) Etcdadm() (string, error) {
+	return gzipcompressor.CompressData(Etcdadm)
+}
+
 func (c Cluster) valid() error {
 	validClusterNaming := regexp.MustCompile("^[a-zA-Z0-9-:]+$")
 	if !validClusterNaming.MatchString(c.ClusterName) {
@@ -1171,7 +1179,7 @@ func (c Cluster) valid() error {
 
 	clusterNamePlaceholder := "<my-cluster-name>"
 	nestedStackNamePlaceHolder := "<my-nested-stack-name>"
-	replacer := strings.NewReplacer(clusterNamePlaceholder, "", nestedStackNamePlaceHolder, "")
+	replacer := strings.NewReplacer(clusterNamePlaceholder, "", nestedStackNamePlaceHolder, c.StackName())
 	simulatedLcName := fmt.Sprintf("%s-%s-1N2C4K3LLBEDZ-%sLC-BC2S9P3JG2QD", clusterNamePlaceholder, nestedStackNamePlaceHolder, c.Controller.LogicalName())
 	limit := 63 - len(replacer.Replace(simulatedLcName))
 	if c.Experimental.AwsNodeLabels.Enabled && len(c.ClusterName) > limit {
@@ -1465,9 +1473,23 @@ func (c ControllerSettings) Valid() error {
 	return nil
 }
 
+// Valid returns an error when there's any user error in the `etcd` settings
 func (e EtcdSettings) Valid() error {
 	if !e.Etcd.DataVolume.Encrypted && e.Etcd.KMSKeyARN() != "" {
 		return errors.New("`etcd.kmsKeyArn` can only be specified when `etcdDataVolumeEncrypted` is enabled")
+	}
+
+	if e.Etcd.Version().Is3() {
+		if e.Etcd.DisasterRecovery.Automated && !e.Etcd.Snapshot.Automated {
+			return errors.New("`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated")
+		}
+	} else {
+		if e.Etcd.DisasterRecovery.Automated {
+			return errors.New("`etcd.disasterRecovery.automated` is set to true for enabling automated disaster recovery. However the feature is available only for etcd version 3")
+		}
+		if e.Etcd.Snapshot.Automated {
+			return errors.New("`etcd.snapshot.automated` is set to true for enabling automated snapshot. However the feature is available only for etcd version 3")
+		}
 	}
 
 	return nil

@@ -7,7 +7,9 @@ TESTINFRA_DIR=${E2E_DIR}/testinfra
 KUBE_AWS_TEST_INFRA_STACK_NAME=${KUBE_AWS_TEST_INFRA_STACK_NAME:-${KUBE_AWS_CLUSTER_NAME}-testinfra}
 SRC_DIR=$(cd $(dirname $0); cd ..; pwd)
 KUBECONFIG=${WORK_DIR}/kubeconfig
-ETCD_COUNT=${ETCD_COUNT:-1}
+ETCD_COUNT=${ETCD_COUNT:-3}
+CONTROLLER_COUNT=${CONTROLLER_COUNT:-2}
+ETCD_VERSION=${ETCD_VERSION:-3}
 
 export KUBECONFIG
 
@@ -114,6 +116,11 @@ configure() {
   find .
 }
 
+kube-aws() {
+  cd ${WORK_DIR}
+  ${KUBE_AWS_CMD} "$@"
+}
+
 validate() {
   cd ${WORK_DIR}
   ${KUBE_AWS_CMD} validate --s3-uri ${KUBE_AWS_S3_URI}
@@ -215,6 +222,8 @@ worker:
 
   echo -e "
 # controller configuration
+controller:
+  count: $CONTROLLER_COUNT
 waitSignal:
   enabled: true
 experimental:
@@ -222,13 +231,25 @@ experimental:
     enabled: true
 # etcd configuration
 etcd:
-  count: $ETCD_COUNT
-" >> cluster.yaml
+  count: $ETCD_COUNT" >> cluster.yaml
+
+  if [ "${ETCD_VERSION}" != "" ]; then
+    echo -e "  version: 3" >> cluster.yaml
+  fi
+
+  if [ "${ETCD_DISASTER_RECOVERY_AUTOMATED}" != "" ]; then
+    echo -e "  disasterRecovery:
+    automated: true" >> cluster.yaml
+  fi
+
+
+  if [ "${ETCD_DISASTER_RECOVERY_AUTOMATED}" != "" ]; then
+    echo -e "  snapshot:
+    automated: true" >> cluster.yaml
+  fi
 
   if [ "${ETCD_MEMBER_IDENTITY_PROVIDER}" != "" ]; then
-    echo -e "
-  memberIdentityProvider: ${ETCD_MEMBER_IDENTITY_PROVIDER}
-" >> cluster.yaml
+    echo -e "  memberIdentityProvider: ${ETCD_MEMBER_IDENTITY_PROVIDER}" >> cluster.yaml
   fi
 
   if [ "${ETCD_INTERNAL_DOMAIN_NAME}" != "" ]; then
