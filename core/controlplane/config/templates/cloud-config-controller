@@ -57,6 +57,12 @@ coreos:
             After=var-lib-docker.mount
             Wants=var-lib-docker.mount
 {{end}}
+        - name: 10-post-start-check.conf
+          content: |
+            [Service]
+            RestartSec=10
+            ExecStartPost=/usr/bin/docker pull {{.PauseImage.RepoWithTag}}
+
         - name: 40-flannel.conf
           content: |
             [Unit]
