@@ -486,7 +486,7 @@ write_files:
       #!/bin/bash -e
 
       kubectl() {
-          /usr/bin/docker run --rm --net=host -v /srv/kubernetes/manifests:/srv/kubernetes/manifests {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
+          /usr/bin/docker run --rm --net=host -v /srv/kubernetes:/srv/kubernetes {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
       }
 
       mfdir=/srv/kubernetes/manifests
@@ -856,7 +856,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/cluster-admin.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
             name: cluster-admin
         rules:
@@ -871,7 +871,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/bootstrapped-node.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
             name: bootstrapped-node
         rules:
@@ -903,7 +903,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kube-admin.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: kube-admin
         subjects:
@@ -917,7 +917,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kube-worker.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: kube-worker
         subjects:
@@ -932,7 +932,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/system-worker.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: system-worker
         subjects:
@@ -949,7 +949,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/bootstrapped-node.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: bootstrapped-node
         subjects:
@@ -965,7 +965,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/kubelet-bootstrap.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: kubelet-bootstrap
         rules:
@@ -982,7 +982,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kubelet-bootstrap.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1alpha1
+        apiVersion: rbac.authorization.k8s.io/v1beta1
         metadata:
           name: kubelet-bootstrap
         subjects:
@@ -1087,7 +1087,7 @@ write_files:
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1{{if .Experimental.Plugins.Rbac.Enabled}},rbac.authorization.k8s.io/v1alpha1=true{{ end }}{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}
+          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1{{if .Experimental.Plugins.Rbac.Enabled}},rbac.authorization.k8s.io/v1beta1=true{{ end }}{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}
           - --cloud-provider=aws
           livenessProbe:
             httpGet:
@@ -1195,7 +1195,7 @@ write_files:
         hostNetwork: true
         volumes:
         {{if .Experimental.DisableSecurityGroupIngress}}
-        - hostPath: 
+        - hostPath:
             path: /etc/kubernetes/additional-configs
           name: additional-configs
         {{end}}
