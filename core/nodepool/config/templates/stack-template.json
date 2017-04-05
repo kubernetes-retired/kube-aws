@@ -328,6 +328,15 @@
                   ],
                   "Resource": "arn:aws:s3:::{{$.UserDataWorkerS3Path}}"
                 },
+                {{ if .ExportKubeResources }}
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                   "s3:PutObject"
+                  ],
+                  "Resource": "arn:aws:s3:::{{ .KubeResourcesS3Path }}/*"
+                },
+                {{end}}
                 {{if .Kube2IamSupport.Enabled }}
                 {
                   "Action": "sts:AssumeRole",

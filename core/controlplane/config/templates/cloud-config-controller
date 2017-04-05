@@ -439,7 +439,7 @@ write_files:
       }
 
       mfdir=/srv/kubernetes/manifests
-      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de}.yaml; do
+      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de{{ if .ExportKubeResources }},cluster-dump{{ end }}.yaml; do
           post_yaml "@$mfdir/$manifest" \
           "http://127.0.0.1:8080/apis/extensions/v1beta1/namespaces/kube-system/deployments"
       done
@@ -726,6 +726,119 @@ write_files:
       sed -i -e "s#\$ETCDCERT#$etcd_cert#g" /srv/kubernetes/manifests/calico.yaml
       sed -i -e "s#\$ETCDKEY#$etcd_key#g" /srv/kubernetes/manifests/calico.yaml
 
+{{ end }}
+{{ if .ExportKubeResources }}
+  - path: /srv/kubernetes/manifests/cluster-dump.yaml
+    content: |
+      ---
+      apiVersion: extensions/v1beta1
+      kind: Deployment
+      metadata:
+        name: cluster-dump
+        namespace: kube-system
+        labels:
+          k8s-app: cluster-dump-policy
+      spec:
+        replicas: 1
+        template:
+          metadata:
+            name: cluster-dump
+            namespace: kube-system
+            labels:
+              k8s-app: cluster-dump-policy
+          spec:
+            containers:
+            - name: cluster-dump-dumper
+              image: {{.HyperkubeImageRepo}}:{{.K8sVer}}
+              command: ["/bin/bash", "-c" ]
+              args:
+                - |
+                    set -x ;
+                    DUMP_DIR_COMPLETE=/cluster-dump/complete ;
+                    mkdir -p ${DUMP_DIR_COMPLETE} ;
+                    while true; do
+                      TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
+                      DUMP_DIR=/cluster-dump/tmp/${TIMESTAMP} ;
+                      mkdir -p ${DUMP_DIR} ;
+                      RESOURCES_OUT_NAMESPACE=( namespaces persistentvolumes nodes storageclasses ) ;
+                      for r in ${RESOURCES_OUT_NAMESPACE[@]};do
+                        echo " Searching for resources: ${r}" ;
+                        /kubectl get --export -o=json ${r} | \
+                        jq '.items[] |
+                            del(.status,
+                            .metadata.uid,
+                            .metadata.selfLink,
+                            .metadata.resourceVersion,
+                            .metadata.creationTimestamp,
+                            .metadata.generation,
+                            .spec.claimRef
+                          )' > ${DUMP_DIR}/${r}.json ;
+                      done ;
+                      RESOURCES_IN_NAMESPACE=( componentstatuses configmaps daemonsets deployments endpoints events horizontalpodautoscalers
+                      ingresses jobs limitranges networkpolicies  persistentvolumeclaims pods podsecuritypolicies podtemplates replicasets
+                      replicationcontrollers resourcequotas secrets serviceaccounts services statefulsets thirdpartyresources ) ;
+                      for ns in $(jq -r '.metadata.name' < ${DUMP_DIR}/namespaces.json);do
+                        echo "Searching in namespace: ${ns}" ;
+                        mkdir -p ${DUMP_DIR}/${ns} ;
+                        for r in ${RESOURCES_IN_NAMESPACE[@]};do
+                          echo " Searching for resources: ${r}" ;
+                          /kubectl --namespace=${ns} get --export -o=json ${r} | \
+                          jq '.items[] |
+                            select(.type!="kubernetes.io/service-account-token") |
+                            del(
+                              .spec.clusterIP,
+                              .metadata.uid,
+                              .metadata.selfLink,
+                              .metadata.resourceVersion,
+                              .metadata.creationTimestamp,
+                              .metadata.generation,
+                              .metadata.annotations."pv.kubernetes.io/bind-completed",
+                              .status,
+                              .spec.template.spec.securityContext,
+                              .spec.template.spec.dnsPolicy,
+                              .spec.template.spec.terminationGracePeriodSeconds,
+                              .spec.template.spec.restartPolicy
+                            )' > ${DUMP_DIR}/${ns}/${r}.json && touch /probe-token ;
+                        done ;
+                      done ;
+                    mv ${DUMP_DIR} ${DUMP_DIR_COMPLETE}/${TIMESTAMP} ;
+                    rm -r -f ${DUMP_DIR} ;
+                    sleep 24h ;
+                    done
+              livenessProbe:
+                exec:
+                  command: ["/bin/bash", "-c", "(( $(date +%s) - $(stat -c%Y /probe-token) < 25*60*60 ))" ]
+                initialDelaySeconds: 240
+                periodSeconds: 10
+              volumeMounts:
+              - name: dump-dir
+                mountPath: /cluster-dump
+                readOnly: false
+            - name: cluster-dump-pusher
+              image: {{.AWSCliImageRepo}}:{{.AWSCliTag}}
+              command: ["/bin/bash", "-c" ]
+              args:
+                - |
+                    set -x ;
+                    DUMP_DIR_COMPLETE=/cluster-dump/complete ;
+                    while true; do
+                      for FILE in ${DUMP_DIR_COMPLETE}/* ; do
+                        aws s3 mv ${FILE} s3://{{ .KubeResourcesS3Path }}/$(basename ${FILE}) --recursive && rm -r -f ${FILE} && touch /probe-token ;
+                      done ;
+                      sleep 1m ;
+                    done
+              livenessProbe:
+                exec:
+                  command: ["/bin/bash", "-c", "(( $(date +%s) - $(stat -c%Y /probe-token) < 25*60*60 ))" ]
+                initialDelaySeconds: 240
+                periodSeconds: 10
+              volumeMounts:
+              - name: dump-dir
+                mountPath: /cluster-dump
+                readOnly: false
+            volumes:
+            - name: dump-dir
+              emptyDir: {}
 {{ end }}
 
   - path: /opt/bin/decrypt-tls-assets

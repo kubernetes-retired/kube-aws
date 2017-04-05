@@ -44,7 +44,9 @@ type DeploymentSettings struct {
 }
 
 type MainClusterSettings struct {
-	EtcdNodes []derived.EtcdNode
+	EtcdNodes           []derived.EtcdNode
+	ExportKubeResources bool
+	KubeResourcesS3Path string
 }
 
 type StackTemplateOptions struct {
@@ -80,6 +82,7 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 
 	baseS3URI := strings.TrimSuffix(opts.S3URI, "/")
 	stackConfig.S3URI = fmt.Sprintf("%s/kube-aws/clusters/%s/exported/stacks", baseS3URI, c.ClusterName)
+	stackConfig.KubeResourcesS3Path = fmt.Sprintf("%s/clusterBackup", strings.TrimPrefix(opts.S3URI, "s3://"))
 
 	if opts.SkipWait {
 		enabled := false
@@ -171,6 +174,7 @@ define one or more public subnets in cluster.yaml or explicitly reference privat
 	}
 
 	c.EtcdNodes = main.EtcdNodes
+	c.ExportKubeResources = main.ExportKubeResources
 
 	return nil
 }
