@@ -160,9 +160,14 @@ coreos:
                        --cert-file /etc/kubernetes/ssl/etcd-client.pem \
                        --endpoints "${ETCD_ENDPOINTS}" \
                        cluster-health
+        {{if .UseCalico -}}
+        ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
+        {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers={{.APIServerEndpoint}} \
-        --network-plugin-dir=/etc/kubernetes/cni/net.d \
+        --cni-conf-dir=/etc/kubernetes/cni/net.d \
+        {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
+        --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
@@ -810,6 +815,28 @@ write_files:
         }
 
 {{ else }}
+
+  - path: /etc/kubernetes/cni/net.d/10-calico.conf
+    content: |
+      {
+        "name": "calico",
+        "type": "flannel",
+        "delegate": {
+          "type": "calico",
+          "etcd_endpoints": "#ETCD_ENDPOINTS#",
+          "etcd_key_file": "/etc/kubernetes/ssl/etcd-client-key.pem",
+          "etcd_cert_file": "/etc/kubernetes/ssl/etcd-client.pem",
+          "etcd_ca_cert_file": "/etc/kubernetes/ssl/ca.pem",
+          "log_level": "info",
+          "policy": {
+            "type": "k8s",
+            "k8s_api_root": "https://{{.APIEndpoint.DNSName}}/api/v1/",
+            "k8s_client_key": "/etc/kubernetes/ssl/worker-key.pem",
+            "k8s_client_certificate": "/etc/kubernetes/ssl/worker.pem",
+            "k8s_certificate_authority": "/etc/kubernetes/ssl/ca.pem"
+          }
+        }
+      }
 
   # http://docs.projectcalico.org/v2.0/usage/configuration/
   - path: /etc/modules-load.d/nf.conf
