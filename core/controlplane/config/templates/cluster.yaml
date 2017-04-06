@@ -933,6 +933,11 @@ worker:
 #  enabled: true
 #   maxBatchSize: 1
 
+# Exports all Kubernetes resources (in .json format) to a bucket 's3://S3URI/clusterBackup/*'.
+# The export process executes on start-up and repeats every 24 hours.
+#kubeResourcesAutosave:
+#  enabled: false
+
 # Addon features
 addons:
   # When enabled, Kubernetes rescheduler is deployed to the cluster controller(s)

@@ -43,6 +43,8 @@ Check out our getting started tutorial on launching your first Kubernetes cluste
   * Configure various Kubernetes add-ons
 * [Step 7: Destroy](/Documentation/kubernetes-on-aws-destroy.md)
   * Destroy the cluster
+* **Optional Features**
+  * [Backup Kubernetes resources](/Documentation/kubernetes-on-aws-backup-restore.md)
 
 ## Examples
 
