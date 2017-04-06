@@ -165,9 +165,14 @@ coreos:
                        cluster-health
 
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /srv/kubernetes/manifests  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
+        {{if .UseCalico -}}
+        ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
+        {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --api-servers=http://localhost:8080 \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
+        {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
+        --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
@@ -628,10 +633,14 @@ write_files:
               k8s-app: calico-node
             annotations:
               scheduler.alpha.kubernetes.io/critical-pod: ''
-              scheduler.alpha.kubernetes.io/tolerations: |
-                [{"key": "node.alpha.kubernetes.io/role", "value": "master", "effect": "NoSchedule" },
-                {"key":"CriticalAddonsOnly", "operator":"Exists"}]
           spec:
+            tolerations:
+            - key: "node.alpha.kubernetes.io/role"
+              operator: "Equal"
+              value: "master"
+              effect: "NoSchedule"
+            - key: "CriticalAddonsOnly"
+              operator: "Exists"
             hostNetwork: true
             containers:
               - name: calico-node
@@ -677,30 +686,6 @@ write_files:
                   - mountPath: /etc/resolv.conf
                     name: dns
                     readOnly: true
-              - name: install-cni
-                image: {{ .CalicoCniImage.RepoWithTag }}
-                imagePullPolicy: Always
-                command: ["/install-cni.sh"]
-                env:
-                  - name: ETCD_ENDPOINTS
-                    valueFrom:
-                      configMapKeyRef:
-                        name: calico-config
-                        key: etcd_endpoints
-                  - name: CNI_NETWORK_CONFIG
-                    valueFrom:
-                      configMapKeyRef:
-                        name: calico-config
-                        key: cni_network_config
-                  - name: CNI_NET_DIR
-                    value: "/etc/kubernetes/cni/net.d"
-                volumeMounts:
-                  - mountPath: /host/opt/cni/bin
-                    name: cni-bin-dir
-                  - mountPath: /host/etc/cni/net.d
-                    name: cni-net-dir
-                  - mountPath: /calico-secrets
-                    name: etcd-certs
             volumes:
               - name: lib-modules
                 hostPath:
@@ -732,9 +717,6 @@ write_files:
           k8s-app: calico-policy
         annotations:
           scheduler.alpha.kubernetes.io/critical-pod: ''
-          scheduler.alpha.kubernetes.io/tolerations: |
-            [{"key": "node.alpha.kubernetes.io/role", "value": "master", "effect": "NoSchedule" },
-            {"key":"CriticalAddonsOnly", "operator":"Exists"}]
 
       spec:
         replicas: 1
@@ -745,6 +727,13 @@ write_files:
             labels:
               k8s-app: calico-policy
           spec:
+            tolerations:
+            - key: "node.alpha.kubernetes.io/role"
+              operator: "Equal"
+              value: "master"
+              effect: "NoSchedule"
+            - key: "CriticalAddonsOnly"
+              operator: "Exists"
             hostNetwork: true
             containers:
               - name: calico-policy-controller
@@ -1262,8 +1251,10 @@ write_files:
               k8s-app: kube-rescheduler
             annotations:
               scheduler.alpha.kubernetes.io/critical-pod: ''
-              scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
           spec:
+            tolerations:
+            - key: "CriticalAddonsOnly"
+              operator: "Exists"
             hostNetwork: true
             containers:
             - name: kube-rescheduler
@@ -1291,8 +1282,10 @@ write_files:
                 k8s-app: kube-dns-autoscaler
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
-                scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
             spec:
+              tolerations:
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
               containers:
               - name: autoscaler
                 image: {{ .ClusterAutoscalerImage.RepoWithTag }}
@@ -1338,8 +1331,10 @@ write_files:
                 k8s-app: kube-dns
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
-                scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
             spec:
+              tolerations:
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
               containers:
               - name: kubedns
                 image: {{ .KubeDnsImage.RepoWithTag }}
@@ -1501,8 +1496,10 @@ write_files:
                 version: v1.3.0
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
-                scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
             spec:
+              tolerations:
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
               containers:
                 - image: {{ .HeapsterImage.RepoWithTag }}
                   name: heapster
@@ -1594,8 +1591,10 @@ write_files:
                 kubernetes.io/cluster-service: "true"
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
-                scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
             spec:
+              tolerations:
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
               containers:
               - name: kubernetes-dashboard
                 image: {{ .KubeDashboardImage.RepoWithTag }}
@@ -1679,6 +1678,25 @@ write_files:
         }
 
 {{ else }}
+
+  - path: /etc/kubernetes/cni/net.d/10-calico.conf
+    content: |
+      {
+        "name": "calico",
+        "type": "flannel",
+        "delegate": {
+          "type": "calico",
+          "etcd_endpoints": "#ETCD_ENDPOINTS#",
+          "etcd_key_file": "/etc/kubernetes/ssl/etcd-client-key.pem",
+          "etcd_cert_file": "/etc/kubernetes/ssl/etcd-client.pem",
+          "etcd_ca_cert_file": "/etc/kubernetes/ssl/ca.pem",
+          "log_level": "info",
+          "policy": {
+            "type": "k8s",
+            "k8s_api_root": "http://127.0.0.1:8080/api/v1/"
+          }
+        }
+      }
 
   # http://docs.projectcalico.org/v2.0/usage/configuration/
   - path: /etc/modules-load.d/nf.conf

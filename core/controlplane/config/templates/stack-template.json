@@ -884,6 +884,23 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
+    {{if $.UseCalico -}}
+    {{/* Required by calico-policy-controller when calico is enabled. See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137 */}}
+    "SecurityGroupControllerIngressFromControllerToController": {
+      "Properties": {
+        "FromPort": 443,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 443
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    {{end -}}
     "SecurityGroupControllerIngressFromControllerToKubelet": {
       "Properties": {
         "FromPort": 10250,

@@ -95,6 +95,7 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	c.HyperkubeImage.Tag = c.K8sVer
 	c.AWSCliImage.MergeIfEmpty(main.AWSCliImage)
 	c.CalicoCtlImage.MergeIfEmpty(main.CalicoCtlImage)
+	c.CalicoCniImage.MergeIfEmpty(main.CalicoCniImage)
 	c.PauseImage.MergeIfEmpty(main.PauseImage)
 	c.FlannelImage.MergeIfEmpty(main.FlannelImage)
 

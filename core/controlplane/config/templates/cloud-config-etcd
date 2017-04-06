@@ -164,6 +164,12 @@ coreos:
             ExecStartPre=/usr/bin/systemctl is-active decrypt-assets.service
             {{- end}}
             ExecStartPre=/usr/bin/chown -R etcd:etcd /var/lib/etcd2
+        {{if .Etcd.Version.Is3 }}
+        - name: 40-version.conf
+          content: |
+            [Service]
+            Environment="ETCD_IMAGE_TAG=v{{.Etcd.Version}}"
+        {{end}}
       enable: true
       command: start
 

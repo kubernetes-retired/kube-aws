@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	k8sVer = "v1.5.5_coreos.0"
+	k8sVer = "v1.6.1_coreos.0"
 
 	credentialsDir = "credentials"
 	userDataDir    = "userdata"
@@ -105,7 +105,7 @@ func NewDefaultCluster() *Cluster {
 			HyperkubeImage:              model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                 model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
 			CalicoNodeImage:             model.Image{Repo: "quay.io/calico/node", Tag: "v1.1.0", RktPullDocker: false},
-			CalicoCniImage:              model.Image{Repo: "quay.io/calico/cni", Tag: "v1.6.1", RktPullDocker: false},
+			CalicoCniImage:              model.Image{Repo: "quay.io/calico/cni", Tag: "v1.6.2", RktPullDocker: false},
 			CalicoPolicyControllerImage: model.Image{Repo: "quay.io/calico/kube-policy-controller", Tag: "v0.5.4", RktPullDocker: false},
 			ClusterAutoscalerImage:      model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.0.0", RktPullDocker: false},
 			KubeDnsImage:                model.Image{Repo: "gcr.io/google_containers/kubedns-amd64", Tag: "1.9", RktPullDocker: false},
