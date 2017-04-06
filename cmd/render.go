@@ -26,14 +26,6 @@ var (
 		SilenceUsage: true,
 	}
 
-	cmdRenderTokenFile = &cobra.Command{
-		Use:          "token-file",
-		Short:        "Render auth token file",
-		Long:         ``,
-		RunE:         runCmdRenderTokenFile,
-		SilenceUsage: true,
-	}
-
 	renderTLSCredentialsOpts = config.CredentialsOptions{}
 
 	cmdRenderStack = &cobra.Command{
@@ -49,7 +41,6 @@ func init() {
 	RootCmd.AddCommand(cmdRender)
 
 	cmdRender.AddCommand(cmdRenderTLSCredentials)
-	cmdRender.AddCommand(cmdRenderTokenFile)
 	cmdRender.AddCommand(cmdRenderStack)
 
 	cmdRenderTLSCredentials.Flags().BoolVar(&renderTLSCredentialsOpts.GenerateCA, "generate-ca", false, "if generating credentials, generate root CA key and cert. NOT RECOMMENDED FOR PRODUCTION USE- use '-ca-key-path' and '-ca-cert-path' options to provide your own certificate authority assets")
@@ -64,9 +55,6 @@ func runCmdRender(cmd *cobra.Command, args []string) error {
 
 	if _, err := os.Stat(renderTLSCredentialsOpts.CaKeyPath); os.IsNotExist(err) {
 		renderTLSCredentialsOpts.GenerateCA = true
-	}
-	if err := runCmdRenderTokenFile(cmdRenderTLSCredentials, args); err != nil {
-		return err
 	}
 	if err := runCmdRenderTLSCredentials(cmdRenderTLSCredentials, args); err != nil {
 		return err
@@ -95,8 +83,7 @@ func runCmdRenderStack(cmd *cobra.Command, args []string) error {
 Next steps:
 1. (Optional) Validate your changes to %s with "kube-aws validate"
 2. (Optional) Further customize the cluster by modifying templates in ./stack-templates or cloud-configs in ./userdata.
-3. (Optional) Add more authentication tokens in ./credentials/tokens.csv
-4. Start the cluster with "kube-aws up".
+3. Start the cluster with "kube-aws up".
 `
 
 	fmt.Printf(successMsg, configPath)
@@ -109,16 +96,4 @@ func runCmdRenderTLSCredentials(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read cluster config: %v", err)
 	}
 	return cluster.RenderTLSCerts(renderTLSCredentialsOpts)
-}
-
-func runCmdRenderTokenFile(cmd *cobra.Command, args []string) error {
-	cluster, err := root.CredentialsRendererFromFile(configPath)
-	if err != nil {
-		return fmt.Errorf("failed to read cluster config: %v", err)
-	}
-
-	if err = cluster.RenderAuthTokenFile(); err != nil {
-		return err
-	}
-	return nil
 }

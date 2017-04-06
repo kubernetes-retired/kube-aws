@@ -60,6 +60,45 @@ func TestRandomKubeletBootstrapTokenString(t *testing.T) {
 	}
 }
 
+func TestAuthTokensFileExists(t *testing.T) {
+	t.Run("NoAuthTokenFile", func(t *testing.T) {
+		helper.WithTempDir(func(dir string) {
+			exists := AuthTokensFileExists(dir)
+			if exists {
+				t.Errorf("Expected auth token file not to exist, but it does")
+			}
+		})
+	})
+
+	t.Run("EmptyAuthTokenFile", func(t *testing.T) {
+		helper.WithTempDir(func(dir string) {
+			authTokensFile := fmt.Sprintf("%s/tokens.csv", dir)
+			if err := ioutil.WriteFile(authTokensFile, []byte(""), 0600); err != nil {
+				t.Errorf("Error writing the empty auth token file: %v", err)
+			}
+
+			exists := AuthTokensFileExists(dir)
+			if exists {
+				t.Errorf("Expected auth token file not to exist, but it does")
+			}
+		})
+	})
+
+	t.Run("NonEmptyAuthTokenFile", func(t *testing.T) {
+		helper.WithTempDir(func(dir string) {
+			authTokensFile := fmt.Sprintf("%s/tokens.csv", dir)
+			if err := ioutil.WriteFile(authTokensFile, []byte("dummy-token"), 0600); err != nil {
+				t.Errorf("Error writing the empty auth token file: %v", err)
+			}
+
+			exists := AuthTokensFileExists(dir)
+			if !exists {
+				t.Errorf("Expected auth token file to exist, but it does not")
+			}
+		})
+	})
+}
+
 func TestRandomBootstrapTokenRecord(t *testing.T) {
 	record, err := RandomBootstrapTokenRecord()
 	if err != nil {
@@ -85,17 +124,18 @@ func TestCreateRawAuthTokens(t *testing.T) {
 	t.Run("EmptyAuthTokenFile", func(t *testing.T) {
 		helper.WithTempDir(func(dir string) {
 			filename := fmt.Sprintf("%s/tokens.csv", dir)
-			err := CreateRawAuthTokens(false, dir)
+			created, err := CreateRawAuthTokens(false, dir)
 			if err != nil {
 				t.Errorf("expected error to be nil, but was: %v", err)
 			}
 
-			contents, err := ioutil.ReadFile(filename)
-			if err != nil {
-				t.Errorf("expected err to be nil, but was: %v", err)
+			// Do not create the auth token file if there's no bootstrap token to be added
+			if created {
+				t.Errorf("expected auth token file not to be created, but it was")
 			}
-			if len(contents) > 0 {
-				t.Errorf("expected auth token file to be empty, but it contained: %v", contents)
+
+			if _, err := os.Stat(filename); err == nil {
+				t.Errorf("expected file not to exist, but it does: %v", filename)
 			}
 		})
 	})
@@ -103,9 +143,14 @@ func TestCreateRawAuthTokens(t *testing.T) {
 	t.Run("TokenFileWithBootstrapToken", func(t *testing.T) {
 		helper.WithTempDir(func(dir string) {
 			filename := fmt.Sprintf("%s/tokens.csv", dir)
-			err := CreateRawAuthTokens(true, dir)
+			created, err := CreateRawAuthTokens(true, dir)
 			if err != nil {
 				t.Errorf("expected err to be nil, but was: %v", err)
+			}
+
+			// Create auth token file with random bootstrap token in it
+			if !created {
+				t.Errorf("expected auth token file to be created, but it was not")
 			}
 
 			contents, err := ioutil.ReadFile(filename)
