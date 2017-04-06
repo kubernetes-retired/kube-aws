@@ -150,6 +150,9 @@ func NewDefaultCluster() *Cluster {
 		CreateRecordSet:     false,
 		RecordSetTTL:        300,
 		CustomSettings:      make(map[string]interface{}),
+		KubeResourcesAutosave: KubeResourcesAutosave{
+			Enabled: false,
+		},
 	}
 }
 
@@ -643,6 +646,7 @@ type Cluster struct {
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
 	ProvidedEncryptService EncryptService
 	CustomSettings         map[string]interface{} `yaml:"customSettings,omitempty"`
+	KubeResourcesAutosave  `yaml:"kubeResourcesAutosave,omitempty"`
 }
 
 type Experimental struct {
@@ -715,6 +719,11 @@ type EphemeralImageStorage struct {
 
 type Kube2IamSupport struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type KubeResourcesAutosave struct {
+	Enabled bool `yaml:"enabled"`
+	S3Path  string
 }
 
 type NodeDrainer struct {
