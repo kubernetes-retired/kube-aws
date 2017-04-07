@@ -2,10 +2,12 @@ package config
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/coreos/userdatavalidation"
-	"github.com/coreos/kube-aws/filereader/jsontemplate"
-	"github.com/coreos/kube-aws/fingerprint"
 	"net/url"
+	"strings"
+
+	"github.com/kubernetes-incubator/kube-aws/coreos/userdatavalidation"
+	"github.com/kubernetes-incubator/kube-aws/filereader/jsontemplate"
+	"github.com/kubernetes-incubator/kube-aws/fingerprint"
 )
 
 type StackConfig struct {
@@ -85,6 +87,30 @@ func (c *StackConfig) UserDataEtcdS3URI() (string, error) {
 // UserDataEtcdFileName is used to upload and download userdata-etcd-<fingerprint> files
 func (c *StackConfig) UserDataEtcdFileName() string {
 	return "userdata-etcd-" + fingerprint.SHA256(c.UserDataEtcd)
+}
+
+func (c *StackConfig) EtcdSnapshotsS3Path() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in EtcdSnapshotsS3Path : %v", err)
+	}
+	return fmt.Sprintf("%s%s/etcd-snapshots", s3uri.Host, s3uri.Path), nil
+}
+
+func (c *StackConfig) EtcdSnapshotsS3Bucket() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in EtcdSnapshotsS3Bucket : %v", err)
+	}
+	return s3uri.Host, nil
+}
+
+func (c *StackConfig) EtcdSnapshotsS3Prefix() (string, error) {
+	s3uri, err := url.Parse(c.S3URI)
+	if err != nil {
+		return "", fmt.Errorf("Error in EtcdSnapshotsS3Prefix : %v", err)
+	}
+	return strings.TrimLeft(s3uri.Path, "/"), nil
 }
 
 func (c *StackConfig) ValidateUserData() error {

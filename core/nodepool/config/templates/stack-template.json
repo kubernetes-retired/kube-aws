@@ -11,7 +11,7 @@
   "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
   "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
   "   --trust-keys-from-https \\",
-  "   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp {{ .UserDataWorkerS3URI }} /var/run/coreos/$USERDATA_FILE",
+  "   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .UserDataWorkerS3URI }} /var/run/coreos/$USERDATA_FILE",
   "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
 ]]}}
 {{end}}
@@ -85,11 +85,11 @@
               {
                 "DeviceName": "/dev/xvda",
                 "Ebs": {
-                  "VolumeSize": "{{$spec.RootVolumeSize}}",
-                  {{if gt $spec.RootVolumeIOPS 0}}
-                  "Iops": "{{$spec.RootVolumeIOPS}}",
+                  "VolumeSize": "{{$spec.RootVolume.Size}}",
+                  {{if gt $spec.RootVolume.IOPS 0}}
+                  "Iops": "{{$spec.RootVolume.IOPS}}",
                   {{end}}
-                  "VolumeType": "{{$spec.RootVolumeType}}"
+                  "VolumeType": "{{$spec.RootVolume.Type}}"
                 }
               }{{range $volumeMountSpecIndex, $volumeMountSpec := $.VolumeMounts}},
               {
@@ -212,11 +212,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{.RootVolumeSize}}",
-              {{if gt .RootVolumeIOPS 0}}
-              "Iops": "{{.RootVolumeIOPS}}",
+              "VolumeSize": "{{.RootVolume.Size}}",
+              {{if gt .RootVolume.IOPS 0}}
+              "Iops": "{{.RootVolume.IOPS}}",
               {{end}}
-              "VolumeType": "{{.RootVolumeType}}"
+              "VolumeType": "{{.RootVolume.Type}}"
             }
           }{{range $volumeMountSpecIndex, $volumeMountSpec := .VolumeMounts}},
           {
@@ -290,7 +290,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
+                  "ec2.{{.Region.PublicDomainName}}"
                 ]
               }
             }
@@ -325,7 +325,7 @@
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:aws:s3:::{{$.UserDataWorkerS3Prefix}}*"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataWorkerS3Prefix}}*"
                 },
                 {{ if .ExportKubeResources }}
                 {
@@ -343,7 +343,7 @@
                   "Resource":"*"
                 },
                 {{end}}
-				{{if .ManageCertificates}}
+                {{if .AssetsEncryptionEnabled }}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
@@ -356,7 +356,7 @@
                   "Effect": "Allow",
                   "Resource":
                     { "Fn::Join": [ "", [
-                      "arn:aws:cloudformation:",
+                      "arn:{{.Region.Partition}}:cloudformation:",
                       { "Ref": "AWS::Region" },
                       ":",
                       { "Ref": "AWS::AccountId" },

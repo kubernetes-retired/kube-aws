@@ -2,7 +2,7 @@ package derived
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
 type EtcdNode interface {
@@ -129,7 +129,7 @@ func (i etcdNodeImpl) defaultPublicDNSNameRefFromIPRef(ipRef string) string {
                 { "Fn::Join" : [ "-", { "Fn::Split" : [ ".", %s ] } ] }
                 ]]},
                 "%s"
-                ]]}`, ipRef, i.region().PublicDomainName())
+                ]]}`, ipRef, i.region().PublicComputeDomainName())
 }
 
 func (i etcdNodeImpl) AdvertisedFQDNRef() (string, error) {

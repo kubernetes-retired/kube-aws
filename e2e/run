@@ -1,13 +1,15 @@
 #!/bin/bash
 
-KUBE_AWS_CMD=${KUBE_AWS_CMD:-$GOPATH/src/github.com/coreos/kube-aws/bin/kube-aws}
+KUBE_AWS_CMD=${KUBE_AWS_CMD:-$GOPATH/src/github.com/kubernetes-incubator/kube-aws/bin/kube-aws}
 E2E_DIR=$(cd $(dirname $0); pwd)
 WORK_DIR=${E2E_DIR}/assets/${KUBE_AWS_CLUSTER_NAME}
 TESTINFRA_DIR=${E2E_DIR}/testinfra
 KUBE_AWS_TEST_INFRA_STACK_NAME=${KUBE_AWS_TEST_INFRA_STACK_NAME:-${KUBE_AWS_CLUSTER_NAME}-testinfra}
 SRC_DIR=$(cd $(dirname $0); cd ..; pwd)
 KUBECONFIG=${WORK_DIR}/kubeconfig
-ETCD_COUNT=${ETCD_COUNT:-1}
+ETCD_COUNT=${ETCD_COUNT:-3}
+CONTROLLER_COUNT=${CONTROLLER_COUNT:-2}
+ETCD_VERSION=${ETCD_VERSION:-}
 
 export KUBECONFIG
 
@@ -27,6 +29,8 @@ if [ "${KUBE_AWS_REGION}" == "" ]; then
   echo KUBE_AWS_REGION is not set. Run this command like $USAGE_EXAMPLE 1>&2
   exit 1
 fi
+# set the AWS CLI default region to the region we are deploying to, otherwise a mismatch with the user env will cause all `aws` commands to fail
+export AWS_DEFAULT_REGION=${KUBE_AWS_REGION}
 
 if [ "${KUBE_AWS_AVAILABILITY_ZONE}" == "" ]; then
   echo KUBE_AWS_REGION is not set. Run this command like $USAGE_EXAMPLE 1>&2
@@ -110,6 +114,11 @@ configure() {
 
   echo Generated configuration files in ${WORK_DIR}:
   find .
+}
+
+kube-aws() {
+  cd ${WORK_DIR}
+  ${KUBE_AWS_CMD} "$@"
 }
 
 validate() {
@@ -213,19 +222,34 @@ worker:
 
   echo -e "
 # controller configuration
+controller:
+  count: $CONTROLLER_COUNT
 waitSignal:
   enabled: true
-awsNodeLabels:
-  enabled: true
-etcdCount: $ETCD_COUNT
-" >> cluster.yaml
-
-  if [ "${ETCD_MEMBER_IDENTITY_PROVIDER}" != "" ]; then
-    echo -e "
+experimental:
+  awsNodeLabels:
+    enabled: true
 # etcd configuration
 etcd:
-  memberIdentityProvider: ${ETCD_MEMBER_IDENTITY_PROVIDER}
-" >> cluster.yaml
+  count: $ETCD_COUNT" >> cluster.yaml
+
+  if [ "${ETCD_VERSION}" != "" ]; then
+    echo -e "  version: ${ETCD_VERSION}" >> cluster.yaml
+  fi
+
+  if [ "${ETCD_DISASTER_RECOVERY_AUTOMATED}" != "" ]; then
+    echo -e "  disasterRecovery:
+    automated: true" >> cluster.yaml
+  fi
+
+
+  if [ "${ETCD_DISASTER_RECOVERY_AUTOMATED}" != "" ]; then
+    echo -e "  snapshot:
+    automated: true" >> cluster.yaml
+  fi
+
+  if [ "${ETCD_MEMBER_IDENTITY_PROVIDER}" != "" ]; then
+    echo -e "  memberIdentityProvider: ${ETCD_MEMBER_IDENTITY_PROVIDER}" >> cluster.yaml
   fi
 
   if [ "${ETCD_INTERNAL_DOMAIN_NAME}" != "" ]; then
@@ -264,6 +288,11 @@ up() {
   ${KUBE_AWS_CMD} status
 
   set -vx
+}
+
+status() {
+  cd ${WORK_DIR}
+  ${KUBE_AWS_CMD} status
 }
 
 main_destroy() {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/coreos/kube-aws/cfnstack"
-	"github.com/coreos/kube-aws/core/root/config"
+	"github.com/kubernetes-incubator/kube-aws/cfnstack"
+	"github.com/kubernetes-incubator/kube-aws/core/root/config"
 )
 
 type DestroyOptions struct {
@@ -30,7 +30,7 @@ func ClusterDestroyerFromFile(configPath string, opts DestroyOptions) (ClusterDe
 	stackName := cfg.RootStackName()
 
 	awsConfig := aws.NewConfig().
-		WithRegion(region).
+		WithRegion(region.String()).
 		WithCredentialsChainVerboseErrors(true)
 
 	if opts.AwsDebug {

@@ -2,7 +2,7 @@ package derived
 
 import (
 	"fmt"
-	"github.com/coreos/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
 type EtcdCluster struct {
@@ -33,7 +33,7 @@ func (c EtcdCluster) DNSNames() []string {
 	var dnsName string
 	if c.GetMemberIdentityProvider() == model.MemberIdentityProviderEIP {
 		// Used when `etcd.memberIdentityProvider` is set to "eip"
-		dnsName = fmt.Sprintf("*.%s", c.region.PublicDomainName())
+		dnsName = fmt.Sprintf("*.%s", c.region.PublicComputeDomainName())
 	}
 	if c.GetMemberIdentityProvider() == model.MemberIdentityProviderENI {
 		if c.InternalDomainName != "" {

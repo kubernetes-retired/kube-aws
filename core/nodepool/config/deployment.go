@@ -2,7 +2,8 @@ package config
 
 import (
 	"fmt"
-	cfg "github.com/coreos/kube-aws/core/controlplane/config"
+
+	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 )
 
 func (c DeploymentSettings) ValidateInputs() error {
@@ -43,7 +44,7 @@ func (c DeploymentSettings) ValidateInputs() error {
 	// * ContainerRuntime
 	// * KMSKeyARN
 
-	if c.Region != "" {
+	if !c.Region.IsEmpty() {
 		return fmt.Errorf("although you can't customize `region` per node pool but you did specify \"%s\" in your cluster.yaml", c.Region)
 	}
 	if c.ContainerRuntime != "" {
@@ -89,17 +90,17 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 		c.K8sVer = main.K8sVer
 	}
 
-	if c.HyperkubeImageRepo == "" {
-		c.HyperkubeImageRepo = main.HyperkubeImageRepo
-	}
+	// Use main images if not defined in nodepool configuration
+	c.HyperkubeImage.MergeIfEmpty(main.HyperkubeImage)
+	c.HyperkubeImage.Tag = c.K8sVer
+	c.AWSCliImage.MergeIfEmpty(main.AWSCliImage)
+	c.CalicoCtlImage.MergeIfEmpty(main.CalicoCtlImage)
+	c.CalicoCniImage.MergeIfEmpty(main.CalicoCniImage)
+	c.PauseImage.MergeIfEmpty(main.PauseImage)
+	c.FlannelImage.MergeIfEmpty(main.FlannelImage)
 
-	if c.AWSCliImageRepo == "" {
-		c.AWSCliImageRepo = main.AWSCliImageRepo
-	}
-
-	if c.AWSCliTag == "" {
-		c.AWSCliTag = main.AWSCliTag
-	}
+	// Inherit main TLS bootstrap config
+	c.Experimental.TLSBootstrap = main.Experimental.TLSBootstrap
 
 	if len(c.SSHAuthorizedKeys) == 0 {
 		c.SSHAuthorizedKeys = main.SSHAuthorizedKeys

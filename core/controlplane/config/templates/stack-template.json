@@ -27,6 +27,11 @@
             "Key": "Name",
             "PropagateAtLaunch": "true",
             "Value": "{{.ClusterName}}-{{.StackName}}-kube-aws-controller"
+          },
+          {
+            "Key": "kubernetes.io/role/master",
+            "PropagateAtLaunch": "true",
+            "Value": ""
           }
         ],
         "VPCZoneIdentifier": [
@@ -36,14 +41,17 @@
           {{end}}
         ],
         "LoadBalancerNames" : [
-          { "Ref" : "ElbAPIServer" }
+          {{range $i, $ref := .APIEndpoints.ELBRefs -}}
+          {{- if gt $i 0}},{{end}}
+          {{ $ref }}
+          {{- end}}
         ]
       },
       {{if .WaitSignal.Enabled}}
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "{{.MinControllerCount}}",
-          "Timeout" : "{{.ControllerCreateTimeout}}"
+          "Timeout" : "{{.Controller.CreateTimeout}}"
         }
       },
       {{end}}
@@ -53,7 +61,7 @@
           "MaxBatchSize" : "1",
           {{if .WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
-          "PauseTime": "{{.ControllerCreateTimeout}}"
+          "PauseTime": "{{.Controller.CreateTimeout}}"
           {{else}}
           "PauseTime": "PT2M"
           {{end}}
@@ -94,24 +102,8 @@
           }
         }
       },
-      "DependsOn": ["{{$.Etcd.LogicalName}}{{minus $.EtcdCount 1}}"]
+      "DependsOn": ["{{$.Etcd.LogicalName}}{{minus $.Etcd.Count 1}}"]
     },
-    {{ if .CreateRecordSet }}
-    "ExternalDNS": {
-      "Type": "AWS::Route53::RecordSet",
-      "Properties": {
-        {{if .HostedZoneID}}
-        "HostedZoneId": "{{.HostedZoneID}}",
-        {{else}}
-        "HostedZoneName": "{{.HostedZone}}",
-        {{end}}
-        "Name": "{{.ExternalDNSName}}",
-        "TTL": {{.RecordSetTTL}},
-        "ResourceRecords": [{ "Fn::GetAtt": ["ElbAPIServer", "DNSName"]}],
-        "Type": "CNAME"
-      }
-    },
-    {{ end }}
     "IAMInstanceProfileController": {
       "Properties": {
         "Path": "/",
@@ -145,7 +137,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
+                  "ec2.{{.Region.PublicDomainName}}"
                 ]
               }
             }
@@ -175,7 +167,7 @@
 		  "Action": [
 			"s3:GetObject"
 		  ],
-		  "Resource": "arn:aws:s3:::{{$.UserDataControllerS3Prefix}}*"
+		  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
 		},
                 {{if .WaitSignal.Enabled}}
                 {
@@ -183,7 +175,7 @@
                   "Effect": "Allow",
                   "Resource":
                     { "Fn::Join": [ "", [
-                      "arn:aws:cloudformation:",
+                      "arn:{{.Region.Partition}}:cloudformation:",
                       { "Ref": "AWS::Region" },
                       ":",
                       { "Ref": "AWS::AccountId" },
@@ -219,7 +211,7 @@
                   "Resource":"*"
                 },
                 {{end}}
-                {{if .ManageCertificates}}
+                {{if .AssetsEncryptionEnabled}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
@@ -259,7 +251,7 @@
               "Effect": "Allow",
               "Principal": {
                 "Service": [
-                  "ec2.amazonaws.com{{if .IsChinaRegion}}.cn{{end}}"
+                  "ec2.{{.Region.PublicDomainName}}"
                 ]
               }
             }
@@ -270,12 +262,27 @@
         "Policies": [
           {
             "PolicyDocument": {
-              "Statement": [{{if .ManageCertificates}}
+              "Statement": [{{if .AssetsEncryptionEnabled}}
                 {
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
                 },{{end}}
+                {{if $.Etcd.KMSKeyARN -}}
+                {{/* Required for mounting encrypted data volume */}}
+                {
+                "Action": [
+                  "kms:CreateGrant",
+                  "kms:Decrypt",
+                  "kms:Describe*",
+                  "kms:Encrypt",
+                  "kms:GenerateDataKey*",
+                  "kms:ReEncrypt*"
+                ],
+                "Effect": "Allow",
+                "Resource": "{{ $.Etcd.KMSKeyARN }}"
+                },
+                {{end -}}
                 {
                   "Action": "ec2:DescribeTags",
                   "Effect": "Allow",
@@ -330,7 +337,34 @@
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:aws:s3:::{{$.UserDataEtcdS3Prefix}}*"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataEtcdS3Prefix}}*"
+                },
+                {{/* Required for `etcdadm reconfigure` to check existence of an etcd snapshot in S3 */}}
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:List*"
+                  ],
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
+                  "Condition": {
+                    "StringLike": {
+                      "s3:prefix": "{{$.EtcdSnapshotsS3Prefix}}/*"
+                    }
+                  }
+                },
+                {{/* Required for `etcdadm save` to save etcd snapshots in S3 */}}
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:*"
+                  ],
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Path}}/*"
+                },
+                {{/* Required for `etcdadm reconfigure` to determine the number of active etcd nodes */}}
+                {
+                  "Action": "ec2:DescribeInstances",
+                  "Resource": "*",
+                  "Effect": "Allow"
                 }
               ],
               "Version": "2012-10-17"
@@ -398,18 +432,21 @@
       "Type": "AWS::EC2::EIP"
     },
     {{end}}
-    {{if not $.EtcdDataVolumeEphemeral}}
+    {{if not $.Etcd.DataVolume.Ephemeral}}
     "{{$etcdInstance.EBSLogicalName}}": {
       "Properties": {
           "AvailabilityZone": "{{$etcdInstance.SubnetAvailabilityZone}}",
-          "Size": "{{$.EtcdDataVolumeSize}}",
-          {{if gt $.EtcdDataVolumeIOPS 0}}
-          "Iops": "{{$.EtcdDataVolumeIOPS}}",
+          "Size": "{{$.Etcd.DataVolume.Size}}",
+          {{if gt $.Etcd.DataVolume.IOPS 0}}
+          "Iops": "{{$.Etcd.DataVolume.IOPS}}",
           {{end}}
-          {{if $.EtcdDataVolumeEncrypted}}
-          "Encrypted": {{$.EtcdDataVolumeEncrypted}},
+          {{if $.Etcd.DataVolume.Encrypted}}
+          "Encrypted": {{$.Etcd.DataVolume.Encrypted}},
+          {{if $.Etcd.KMSKeyARN}}
+          "KmsKeyId": "{{$.Etcd.KMSKeyARN}}",
           {{end}}
-          "VolumeType": "{{$.EtcdDataVolumeType}}",
+          {{end}}
+          "VolumeType": "{{$.Etcd.DataVolume.Type}}",
           "Tags": [
             {
               "Key": "kube-aws:etcd:index",
@@ -461,6 +498,11 @@
             "Key": "Name",
             "PropagateAtLaunch": "true",
             "Value": "{{$.ClusterName}}-{{$.StackName}}-kube-aws-etcd-{{$etcdIndex}}"
+          },
+          {
+            "Key": "kube-aws:role",
+            "PropagateAtLaunch": "true",
+            "Value": "etcd"
           }
         ],
         "VPCZoneIdentifier": [
@@ -471,7 +513,7 @@
       "CreationPolicy" : {
         "ResourceSignal" : {
           "Count" : "1",
-          "Timeout" : "{{$.ControllerCreateTimeout}}"
+          "Timeout" : "{{$.Controller.CreateTimeout}}"
         }
       },
       {{end}}
@@ -481,7 +523,7 @@
           "MaxBatchSize" : "1",
           {{if $.WaitSignal.Enabled}}
           "WaitOnResourceSignals" : "true",
-          "PauseTime": "{{$.ControllerCreateTimeout}}"
+          "PauseTime": "{{$.Controller.CreateTimeout}}"
           {{else}}
           "PauseTime": "PT2M"
           {{end}}
@@ -504,6 +546,57 @@
                     {{$etcdInstance.AdvertisedFQDNRef}},
                     ":2380",
                     {{end}}
+                  "'\n"
+                ]]}
+              },
+              "/var/run/coreos/etcdadm-environment": {
+                "content": { "Fn::Join" : [ "", [
+                  "ETCD_ENDPOINTS='",
+                    {{range $index, $etcdInstance := $.EtcdNodes}}
+                    {{if $index}}",", {{end}}
+                    "https://",
+                    {{$etcdInstance.AdvertisedFQDNRef}},
+                    ":2379",
+                    {{end}}
+                  "'\n",
+                  "AWS_DEFAULT_REGION='",
+                    "{{$.Region}}",
+                  "'\n",
+                  "KUBERNETES_CLUSTER='",
+                    "{{$.ClusterName}}",
+                  "'\n",
+                  "ETCDCTL_CACERT='",
+                    "/etc/ssl/certs/ca.pem",
+                  "'\n",
+                  "ETCDCTL_CERT='",
+                    "/etc/ssl/certs/etcd-client.pem",
+                  "'\n",
+                  "ETCDCTL_KEY='",
+                    "/etc/ssl/certs/etcd-client-key.pem",
+                  "'\n",
+                  "ETCDCTL_CA_FILE='",
+                    "/etc/ssl/certs/ca.pem",
+                  "'\n",
+                  "ETCDCTL_CERT_FILE='",
+                    "/etc/ssl/certs/etcd-client.pem",
+                  "'\n",
+                  "ETCDCTL_KEY_FILE='",
+                    "/etc/ssl/certs/etcd-client-key.pem",
+                  "'\n",
+                  "ETCDADM_MEMBER_SYSTEMD_SERVICE_NAME='",
+                    "etcd-member",
+                  "'\n",
+                  "ETCDADM_CLUSTER_SNAPSHOTS_S3_URI='",
+                    "s3://{{$.EtcdSnapshotsS3Path}}",
+                  "'\n",
+                  "ETCDADM_STATE_FILES_DIR='",
+                    "/var/run/coreos/etcdadm",
+                  "'\n",
+                  "ETCDADM_MEMBER_COUNT='",
+                    "{{$.Etcd.Count}}",
+                  "'\n",
+                  "ETCDADM_MEMBER_INDEX='",
+                    "{{$etcdIndex}}",
                   "'\n"
                 ]]}
               }
@@ -532,14 +625,14 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{$.EtcdRootVolumeSize}}",
-              {{if gt $.EtcdRootVolumeIOPS 0}}
-              "Iops": "{{$.EtcdRootVolumeIOPS}}",
+              "VolumeSize": "{{$.Etcd.RootVolume.Size}}",
+              {{if gt $.Etcd.RootVolume.IOPS 0}}
+              "Iops": "{{$.Etcd.RootVolume.IOPS}}",
               {{end}}
-              "VolumeType": "{{$.EtcdRootVolumeType}}"
+              "VolumeType": "{{$.Etcd.RootVolume.Type}}"
             }
           }
-          {{if $.EtcdDataVolumeEphemeral}}
+          {{if $.Etcd.DataVolume.Ephemeral}}
           ,
           {
             "DeviceName": "/dev/xvdf",
@@ -551,14 +644,14 @@
           "Ref": "IAMInstanceProfileEtcd"
         },
         "ImageId": "{{$.AMI}}",
-        "InstanceType": "{{$.EtcdInstanceType}}",
+        "InstanceType": "{{$.Etcd.InstanceType}}",
         {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}
         "SecurityGroups": [
           {
             "Ref": "SecurityGroupEtcd"
           }
         ],
-        "PlacementTenancy": "{{$.EtcdTenancy}}",
+        "PlacementTenancy": "{{$.Etcd.Tenancy}}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
           "#!/bin/bash -xe",
           {"Fn::Join":["",[ "echo '{{$.StackNameEnvVarName}}=", { "Ref": "AWS::StackName" }, "' >> {{$.EtcdNodeEnvFileName}}" ]]},
@@ -572,7 +665,7 @@
           "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
           "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
           "   --trust-keys-from-https \\",
-          "   {{$.AWSCliImageRepo}}:{{$.AWSCliTag}} -- aws s3 --region $REGION  cp {{ $.UserDataEtcdS3URI }} /var/run/coreos/$USERDATA_FILE",
+          "   {{$.AWSCliImage.Options}}{{$.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ $.UserDataEtcdS3URI }} /var/run/coreos/$USERDATA_FILE",
           "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
         ]]}}
       },
@@ -585,11 +678,11 @@
           {
             "DeviceName": "/dev/xvda",
             "Ebs": {
-              "VolumeSize": "{{.ControllerRootVolumeSize}}",
-              {{if gt .ControllerRootVolumeIOPS 0}}
-              "Iops": "{{.ControllerRootVolumeIOPS}}",
+              "VolumeSize": "{{.Controller.RootVolume.Size}}",
+              {{if gt .Controller.RootVolume.IOPS 0}}
+              "Iops": "{{.Controller.RootVolume.IOPS}}",
               {{end}}
-              "VolumeType": "{{.ControllerRootVolumeType}}"
+              "VolumeType": "{{.Controller.RootVolume.Type}}"
             }
           }
         ],
@@ -597,14 +690,14 @@
           "Ref": "IAMInstanceProfileController"
         },
         "ImageId": "{{.AMI}}",
-        "InstanceType": "{{.ControllerInstanceType}}",
+        "InstanceType": "{{.Controller.InstanceType}}",
         {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
         "SecurityGroups": [
           {
             "Ref": "SecurityGroupController"
           }
         ],
-        "PlacementTenancy": "{{ .ControllerTenancy }}",
+        "PlacementTenancy": "{{ .Controller.Tenancy }}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
 		"#!/bin/bash -xe",
 		" . /etc/environment",
@@ -616,7 +709,7 @@
 		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
 		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
    		"   --trust-keys-from-https \\",
-		"   {{.AWSCliImageRepo}}:{{.AWSCliTag}} -- aws s3 --region $REGION  cp {{ .UserDataControllerS3URI }} /var/run/coreos/$USERDATA_FILE",
+		"   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .UserDataControllerS3URI }} /var/run/coreos/$USERDATA_FILE",
 		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
 			]]}}
       },
@@ -639,7 +732,21 @@
   {{end}}
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
-    "ElbAPIServer" : {
+    {{range $i, $apiEndpoint := $.APIEndpoints -}}
+    {{if .LoadBalancer.ManageELB -}}
+    {{if .LoadBalancer.ManageELBRecordSet -}}
+    "{{.LoadBalancer.RecordSetLogicalName}}": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "HostedZoneId": "{{.LoadBalancer.HostedZoneRef}}",
+        "Name": "{{$apiEndpoint.DNSName}}",
+        "TTL": {{.LoadBalancer.RecordSetTTL}},
+        "ResourceRecords": [{{.LoadBalancer.DNSNameRef}}],
+        "Type": "CNAME"
+      }
+    },
+    {{ end -}}
+    "{{.LoadBalancer.LogicalName}}" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
         "CrossZone" : true,
@@ -654,7 +761,7 @@
           "IdleTimeout" : "3600"
         },
         "Subnets" : [
-          {{range $index, $subnet := .Controller.LoadBalancer.Subnets}}
+          {{range $index, $subnet := .LoadBalancer.Subnets}}
           {{if gt $index 0}},{{end}}
           {{$subnet.Ref}}
           {{end}}
@@ -667,7 +774,7 @@
             "Protocol" : "TCP"
           }
         ],
-        {{if .Controller.LoadBalancer.Private}}
+        {{if .LoadBalancer.Private}}
         "Scheme": "internal",
         {{else}}
         "Scheme": "internet-facing",
@@ -677,6 +784,8 @@
         ]
       }
     },
+    {{end -}}
+    {{end -}}
     "SecurityGroupElbAPIServer" : {
       "Properties": {
         "GroupDescription": {
@@ -775,6 +884,23 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
+    {{if $.UseCalico -}}
+    {{/* Required by calico-policy-controller when calico is enabled. See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137 */}}
+    "SecurityGroupControllerIngressFromControllerToController": {
+      "Properties": {
+        "FromPort": 443,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 443
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    {{end -}}
     "SecurityGroupControllerIngressFromControllerToKubelet": {
       "Properties": {
         "FromPort": 10250,

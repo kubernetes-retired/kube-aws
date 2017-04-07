@@ -15,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/coreos/kube-aws/cfnstack"
-	"github.com/coreos/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/cfnstack"
+	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 )
 
 // VERSION set by build script
@@ -26,7 +26,7 @@ const STACK_TEMPLATE_FILENAME = "stack.json"
 
 func NewClusterRef(cfg *config.Cluster, awsDebug bool) *ClusterRef {
 	awsConfig := aws.NewConfig().
-		WithRegion(cfg.Region).
+		WithRegion(cfg.Region.String()).
 		WithCredentialsChainVerboseErrors(true)
 
 	if awsDebug {
@@ -136,7 +136,7 @@ func (c *Cluster) Assets() (cfnstack.Assets, error) {
 		return nil, fmt.Errorf("Error while rendering template : %v", err)
 	}
 
-	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI).
+	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI, c.StackConfig.Region).
 		Add(c.UserDataControllerFileName(), c.UserDataController).
 		Add(c.UserDataEtcdFileName(), c.UserDataEtcd).
 		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
@@ -156,15 +156,17 @@ func (c *Cluster) TemplateURL() (string, error) {
 	return asset.URL(), nil
 }
 
+// ValidateStack validates the CloudFormation stack for this control plane already uploaded to S3
 func (c *Cluster) ValidateStack() (string, error) {
 	if err := c.ValidateUserData(); err != nil {
 		return "", fmt.Errorf("failed to validate userdata : %v", err)
 	}
-	stackTemplate, err := c.RenderStackTemplateAsString()
+
+	templateURL, err := c.TemplateURL()
 	if err != nil {
-		return "", fmt.Errorf("Error while rendering stack template : %v", err)
+		return "", fmt.Errorf("failed to get template url : %v", err)
 	}
-	return c.stackProvisioner().Validate(stackTemplate)
+	return c.stackProvisioner().ValidateStackAtURL(templateURL)
 }
 
 func (c *Cluster) RenderTemplateAsString() (string, error) {
@@ -197,6 +199,7 @@ func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
 		c.StackName(),
 		c.StackTags,
 		c.S3URI,
+		c.Region,
 		stackPolicyBody,
 		c.session)
 }
@@ -345,11 +348,6 @@ func (c *Cluster) Update() (string, error) {
 	return updateOutput, err
 }
 
-func (c *ClusterRef) Info() (*Info, error) {
-	describer := NewClusterDescriber(c.ClusterName, c.StackName(), c.session)
-	return describer.Info()
-}
-
 func (c *ClusterRef) Destroy() error {
 	return cfnstack.NewDestroyer(c.StackName(), c.session).Destroy()
 }
@@ -441,9 +439,9 @@ func (c *ClusterRef) validateControllerRootVolume(ec2Svc ec2Service) error {
 	controllerRootVolume := &ec2.CreateVolumeInput{
 		DryRun:           aws.Bool(true),
 		AvailabilityZone: aws.String(c.AvailabilityZones()[0]),
-		Iops:             aws.Int64(int64(c.ControllerRootVolumeIOPS)),
-		Size:             aws.Int64(int64(c.ControllerRootVolumeSize)),
-		VolumeType:       aws.String(c.ControllerRootVolumeType),
+		Iops:             aws.Int64(int64(c.Controller.RootVolume.IOPS)),
+		Size:             aws.Int64(int64(c.Controller.RootVolume.Size)),
+		VolumeType:       aws.String(c.Controller.RootVolume.Type),
 	}
 
 	if _, err := ec2Svc.CreateVolume(controllerRootVolume); err != nil {

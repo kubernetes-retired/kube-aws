@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/coreos/kube-aws/core/root"
-	"github.com/coreos/kube-aws/core/root/render"
+	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/spf13/cobra"
 )
 
@@ -18,15 +18,15 @@ var (
 		SilenceUsage: true,
 	}
 
-	cmdRenderCredentials = &cobra.Command{
+	cmdRenderTLSCredentials = &cobra.Command{
 		Use:          "credentials",
 		Short:        "Render TLS credentials",
 		Long:         ``,
-		RunE:         runCmdRenderCredentials,
+		RunE:         runCmdRenderTLSCredentials,
 		SilenceUsage: true,
 	}
 
-	renderCredentialsOpts = render.CredentialsOptions{}
+	renderTLSCredentialsOpts = config.CredentialsOptions{}
 
 	cmdRenderStack = &cobra.Command{
 		Use:          "stack",
@@ -40,27 +40,27 @@ var (
 func init() {
 	RootCmd.AddCommand(cmdRender)
 
-	cmdRender.AddCommand(cmdRenderCredentials)
-	cmdRenderCredentials.Flags().BoolVar(&renderCredentialsOpts.GenerateCA, "generate-ca", false, "if generating credentials, generate root CA key and cert. NOT RECOMMENDED FOR PRODUCTION USE- use '-ca-key-path' and '-ca-cert-path' options to provide your own certificate authority assets")
-	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.CaKeyPath, "ca-key-path", "./credentials/ca-key.pem", "path to pem-encoded CA RSA key")
-	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.CaCertPath, "ca-cert-path", "./credentials/ca.pem", "path to pem-encoded CA x509 certificate")
-
+	cmdRender.AddCommand(cmdRenderTLSCredentials)
 	cmdRender.AddCommand(cmdRenderStack)
+
+	cmdRenderTLSCredentials.Flags().BoolVar(&renderTLSCredentialsOpts.GenerateCA, "generate-ca", false, "if generating credentials, generate root CA key and cert. NOT RECOMMENDED FOR PRODUCTION USE- use '-ca-key-path' and '-ca-cert-path' options to provide your own certificate authority assets")
+	cmdRenderTLSCredentials.Flags().StringVar(&renderTLSCredentialsOpts.CaKeyPath, "ca-key-path", "./credentials/ca-key.pem", "path to pem-encoded CA RSA key")
+	cmdRenderTLSCredentials.Flags().StringVar(&renderTLSCredentialsOpts.CaCertPath, "ca-cert-path", "./credentials/ca.pem", "path to pem-encoded CA x509 certificate")
 }
 func runCmdRender(cmd *cobra.Command, args []string) error {
-	fmt.Printf("WARNING: 'kube-aws render' is deprecated. See 'kube-aws render --help' for usage\n")
+	fmt.Println("WARNING: 'kube-aws render' is deprecated. See 'kube-aws render --help' for usage")
 	if len(args) != 0 {
 		return fmt.Errorf("render takes no arguments\n")
 	}
 
-	if _, err := os.Stat(renderCredentialsOpts.CaKeyPath); os.IsNotExist(err) {
-		renderCredentialsOpts.GenerateCA = true
+	if _, err := os.Stat(renderTLSCredentialsOpts.CaKeyPath); os.IsNotExist(err) {
+		renderTLSCredentialsOpts.GenerateCA = true
 	}
-	if err := runCmdRenderCredentials(cmdRenderCredentials, args); err != nil {
+	if err := runCmdRenderTLSCredentials(cmdRenderTLSCredentials, args); err != nil {
 		return err
 	}
 
-	if err := runCmdRenderStack(cmdRenderCredentials, args); err != nil {
+	if err := runCmdRenderStack(cmdRenderTLSCredentials, args); err != nil {
 		return err
 	}
 
@@ -90,11 +90,10 @@ Next steps:
 	return nil
 }
 
-func runCmdRenderCredentials(cmd *cobra.Command, args []string) error {
+func runCmdRenderTLSCredentials(cmd *cobra.Command, args []string) error {
 	cluster, err := root.CredentialsRendererFromFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read cluster config: %v", err)
 	}
-
-	return cluster.RenderFiles(renderCredentialsOpts)
+	return cluster.RenderTLSCerts(renderTLSCredentialsOpts)
 }

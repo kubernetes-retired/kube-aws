@@ -1,9 +1,11 @@
 # Kubernetes on AWS (kube-aws)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/coreos/kube-aws)](https://goreportcard.com/report/github.com/coreos/kube-aws)
-[![Build Status](https://travis-ci.org/coreos/kube-aws.svg?branch=master)](https://travis-ci.org/coreos/kube-aws)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubernetes-incubator/kube-aws)](https://goreportcard.com/report/github.com/kubernetes-incubator/kube-aws)
+[![Build Status](https://travis-ci.org/kubernetes-incubator/kube-aws.svg?branch=master)](https://travis-ci.org/kubernetes-incubator/kube-aws)
+[![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](LICENSE)
 
-**Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases](https://github.com/coreos/kube-aws/releases) instead of the `master` branch in order to get stable binaries.
+
+**Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases](https://github.com/kubernetes-incubator/kube-aws/releases) instead of the `master` branch in order to get stable binaries.
 
 `kube-aws` is a command-line tool to create/update/destroy Kubernetes clusters on AWS.
 
@@ -37,7 +39,9 @@ Check out our getting started tutorial on launching your first Kubernetes cluste
   * Create the additional pool of worker nodes
   * Adjust template configuration for each pool of worker nodes
   * Required to support [cluster-autoscaler](https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler)
-* [Step 6: Destroy](/Documentation/kubernetes-on-aws-destroy.md)
+* [Step 6: Configure add-ons](/Documentation/kubernetes-on-aws-add-ons.md)
+  * Configure various Kubernetes add-ons
+* [Step 7: Destroy](/Documentation/kubernetes-on-aws-destroy.md)
   * Destroy the cluster
 
 ## Examples
@@ -106,8 +110,8 @@ Clone this repository to the appropriate path under the GOPATH.
 
 ```
 $ export GOPATH=$HOME/go
-$ mkdir -p $GOPATH/src/github.com/coreos/
-$ git clone git@github.com:coreos/kube-aws.git $GOPATH/src/github.com/coreos/kube-aws
+$ mkdir -p $GOPATH/src/github.com/kubernetes-incubator/
+$ git clone git@github.com:kubernetes-incubator/kube-aws.git $GOPATH/src/github.com/kubernetes-incubator/kube-aws
 ```
 
 Run `make build` to compile `kube-aws` locally.
@@ -147,6 +151,18 @@ Extra or advanced topics in for kube-aws:
 The following links can be useful for development:
 
 - [AWS CloudFormation resource types](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+
+## Kubernetes Incubator
+
+This is a [Kubernetes Incubator project](https://github.com/kubernetes/community/blob/master/incubator.md). The project was established 2017-03-15. The incubator team for the project is:
+
+- Sponsor: Tim Hockin (@thockin)
+- Champion: Mike Danese (@mikedanese)
+- SIG: sig-aws
+
+### Code of conduct
+
+Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
 
 ## Contributing
 

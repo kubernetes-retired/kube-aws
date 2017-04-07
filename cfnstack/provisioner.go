@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"strings"
 	"time"
 )
@@ -17,20 +18,22 @@ type Provisioner struct {
 	stackPolicyBody string
 	session         *session.Session
 	s3URI           string
+	region          model.Region
 }
 
-func NewProvisioner(name string, stackTags map[string]string, s3URI string, stackPolicyBody string, session *session.Session) *Provisioner {
+func NewProvisioner(name string, stackTags map[string]string, s3URI string, region model.Region, stackPolicyBody string, session *session.Session) *Provisioner {
 	return &Provisioner{
 		stackName:       name,
 		stackTags:       stackTags,
 		stackPolicyBody: stackPolicyBody,
 		session:         session,
 		s3URI:           s3URI,
+		region:          region,
 	}
 }
 
 func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, content string, filename string) (string, error) {
-	locProvider := newAssetLocationProvider(c.stackName, c.s3URI)
+	locProvider := newAssetLocationProvider(c.stackName, c.s3URI, c.region)
 	loc, err := locProvider.locationFor(filename)
 	if err != nil {
 		return "", err
@@ -281,17 +284,13 @@ func (c *Provisioner) waitUntilStackGetsUpdated(cfSvc CRUDService, updateOutput 
 	}
 }
 
-func (c *Provisioner) Validate(stackBody string) (string, error) {
-	validateInput := cloudformation.ValidateTemplateInput{}
+func (c *Provisioner) ValidateStackAtURL(templateURL string) (string, error) {
+	if templateURL == "" {
+		return "", errors.New("[bug] ValidateStackAtURL: templateURL must not be nil")
+	}
 
-	templateURL, uploadErr := c.uploadStackAssets(s3.New(c.session), stackBody, map[string]string{})
-
-	if uploadErr != nil {
-		return "", fmt.Errorf("template upload failed: %v", uploadErr)
-	} else if templateURL != nil {
-		validateInput.TemplateURL = templateURL
-	} else {
-		return "", fmt.Errorf("[bug] kube-aws skipped template upload")
+	validateInput := cloudformation.ValidateTemplateInput{
+		TemplateURL: aws.String(templateURL),
 	}
 
 	cfSvc := cloudformation.New(c.session)

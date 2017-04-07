@@ -2,12 +2,61 @@ package model
 
 import (
 	"errors"
+	"strings"
 )
 
 type Etcd struct {
-	Subnets []Subnet    `yaml:"subnets,omitempty"`
-	Nodes   []EtcdNode  `yaml:"nodes,omitempty"`
-	Cluster EtcdCluster `yaml:",inline"`
+	Cluster          EtcdCluster          `yaml:",inline"`
+	DataVolume       DataVolume           `yaml:"dataVolume,omitempty"`
+	DisasterRecovery EtcdDisasterRecovery `yaml:"disasterRecovery,omitempty"`
+	Snapshot         EtcdSnapshot         `yaml:"snapshot,omitempty"`
+	EC2Instance      `yaml:",inline"`
+	Nodes            []EtcdNode `yaml:"nodes,omitempty"`
+	Subnets          []Subnet   `yaml:"subnets,omitempty"`
+	UnknownKeys      `yaml:",inline"`
+}
+
+type EtcdVersion string
+
+type EtcdDisasterRecovery struct {
+	Automated bool `yaml:"automated,omitempty"`
+}
+
+// Supported returns true when the disaster recovery feature provided by etcdadm can be enabled on the specified version of etcd
+func (r EtcdDisasterRecovery) SupportsEtcdVersion(etcdVersion EtcdVersion) bool {
+	return etcdVersion.Is3()
+}
+
+func (r EtcdDisasterRecovery) IsAutomatedForEtcdVersion(etcdVersion EtcdVersion) bool {
+	return etcdVersion.Is3() && r.Automated
+}
+
+type EtcdSnapshot struct {
+	Automated bool `yaml:"automated,omitempty"`
+}
+
+func (s EtcdSnapshot) IsAutomatedForEtcdVersion(etcdVersion EtcdVersion) bool {
+	return etcdVersion.Is3() && s.Automated
+}
+
+func NewDefaultEtcd() Etcd {
+	return Etcd{
+		EC2Instance: EC2Instance{
+			Count:        1,
+			InstanceType: "t2.medium",
+			RootVolume: RootVolume{
+				Size: 30,
+				Type: "gp2",
+				IOPS: 0,
+			},
+			Tenancy: "default",
+		},
+		DataVolume: DataVolume{
+			Size: 30,
+			Type: "gp2",
+			IOPS: 0,
+		},
+	}
 }
 
 func (i Etcd) LogicalName() string {
@@ -67,4 +116,31 @@ func (e Etcd) HostedZoneLogicalName() (string, error) {
 		return "", errors.New("[bug] HostedZoneLogicalName called for an etcd cluster without a managed hosted zone")
 	}
 	return "EtcdHostedZone", nil
+}
+
+func (e Etcd) KMSKeyARN() string {
+	return e.Cluster.KMSKeyARN
+}
+
+func (e Etcd) SystemdUnitName() string {
+	if e.Version().Is3() {
+		return "etcd-member.service"
+	}
+	return "etcd2.service"
+}
+
+// Version returns the version of etcd (e.g. `3.1.5`) to be used for this etcd cluster
+func (e Etcd) Version() EtcdVersion {
+	if e.Cluster.Version != "" {
+		return e.Cluster.Version
+	}
+	return "3.1.5"
+}
+
+func (v EtcdVersion) Is3() bool {
+	return strings.HasPrefix(string(v), "3")
+}
+
+func (v EtcdVersion) String() string {
+	return string(v)
 }
