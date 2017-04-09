@@ -144,9 +144,11 @@ coreos:
         - name: 20-aws-cluster.conf
           content: |
             [Unit]
+            Wants=cfn-etcd-environment.service
+            After=cfn-etcd-environment.service
             {{- if .AssetsEncryptionEnabled}}
-            Wants=decrypt-assets.service cfn-etcd-environment.service
-            After=decrypt-assets.service cfn-etcd-environment.service
+            Wants=decrypt-assets.service
+            After=decrypt-assets.service
             {{- end}}
             {{if .Etcd.DisasterRecovery.Automated -}}
             {{/* can be `Wants` if you like etcd-member to not stop when etcdadm-reconfigure failed */}}
