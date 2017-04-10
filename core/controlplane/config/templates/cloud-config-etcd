@@ -18,7 +18,8 @@ coreos:
         Restart=on-failure
         RemainAfterExit=true
         ExecStartPre=/opt/bin/cfn-etcd-environment
-        ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+        ExecStartPre=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+        ExecStart=/bin/true
         TimeoutStartSec=120
 
         [Install]
