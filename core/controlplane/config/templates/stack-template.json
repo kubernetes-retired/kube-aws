@@ -884,8 +884,11 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
-    {{if $.UseCalico -}}
-    {{/* Required by calico-policy-controller when calico is enabled. See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137 */}}
+    {{/* 443 ingress from controller to controller is required by:
+      - API server endpoint with HA controllers
+      - calico-policy-controller when calico is enabled
+      See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137 
+      and https://github.com/kubernetes-incubator/kube-aws/issues/512 */}}
     "SecurityGroupControllerIngressFromControllerToController": {
       "Properties": {
         "FromPort": 443,
@@ -900,7 +903,6 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    {{end -}}
     "SecurityGroupControllerIngressFromControllerToKubelet": {
       "Properties": {
         "FromPort": 10250,
