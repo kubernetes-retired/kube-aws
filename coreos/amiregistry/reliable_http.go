@@ -22,6 +22,17 @@ func newHttp() reliableHttpImpl {
 	}
 }
 
+func statusCodeIsRetryable(c int) bool {
+	switch c {
+	case 504, 520, 522:
+		return true
+	}
+	return false
+}
+
+// Get sends a HTTP GET request to the url.
+// If a request had been failed and its status code was one in th "retryable" status codes, the request is retried up to `MaxRetryCount` times.
+// The "retryable" status codes are defined in the `statusCodesIsRetryable` func.
 func (i reliableHttpImpl) Get(url string) (resp *http.Response, err error) {
 	var r *http.Response
 	var e error
@@ -31,7 +42,7 @@ func (i reliableHttpImpl) Get(url string) (resp *http.Response, err error) {
 		c++
 		r, e = i.underlyingGet(url)
 
-		if r != nil && r.StatusCode == 504 {
+		if r != nil && statusCodeIsRetryable(r.StatusCode) {
 			log.Printf("GET %s returned %d. retrying %d/%d", url, r.StatusCode, c, MaxRetryCount)
 		} else if e == nil {
 			return r, nil
