@@ -18,7 +18,8 @@ coreos:
         Restart=on-failure
         RemainAfterExit=true
         ExecStartPre=/opt/bin/cfn-etcd-environment
-        ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+        ExecStartPre=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
+        ExecStart=/bin/true
         TimeoutStartSec=120
 
         [Install]
@@ -144,9 +145,11 @@ coreos:
         - name: 20-aws-cluster.conf
           content: |
             [Unit]
+            Wants=cfn-etcd-environment.service
+            After=cfn-etcd-environment.service
             {{- if .AssetsEncryptionEnabled}}
-            Wants=decrypt-assets.service cfn-etcd-environment.service
-            After=decrypt-assets.service cfn-etcd-environment.service
+            Wants=decrypt-assets.service
+            After=decrypt-assets.service
             {{- end}}
             {{if .Etcd.DisasterRecovery.Automated -}}
             {{/* can be `Wants` if you like etcd-member to not stop when etcdadm-reconfigure failed */}}
