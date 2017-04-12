@@ -329,13 +329,13 @@
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataWorkerS3Prefix}}*"
                 },
-                {{ if .ExportKubeResources }}
+                {{ if .KubeResourcesAutosave.Enabled }}
                 {
                   "Effect": "Allow",
                   "Action": [
-                   "s3:PutObject"
+                    "s3:PutObject"
                   ],
-                  "Resource": "arn:aws:s3:::{{ .KubeResourcesS3Path }}/*"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{ .KubeResourcesAutosave.S3Path }}/*"
                 },
                 {{end}}
                 {{if .Kube2IamSupport.Enabled }}

@@ -111,7 +111,6 @@ func ClusterFromFile(configPath string, opts options, awsDebug bool) (Cluster, e
 	if err != nil {
 		return nil, err
 	}
-	cfg.KubeResourcesS3Path = fmt.Sprintf("%s/clusterBackup", strings.TrimPrefix(opts.S3URI, "s3://"))
 	return ClusterFromConfig(cfg, opts, awsDebug)
 }
 
@@ -126,11 +125,9 @@ func ClusterFromConfig(cfg *config.Config, opts options, awsDebug bool) (Cluster
 		SkipWait:              opts.SkipWait,
 	}
 	cp, err := controlplane.NewCluster(cfg.Cluster, cpOpts, awsDebug)
-
 	if err != nil {
 		return nil, err
 	}
-
 	nodePools := []*nodepool.Cluster{}
 	for i, c := range cfg.NodePools {
 		npOpts := nodepool_cfg.StackTemplateOptions{

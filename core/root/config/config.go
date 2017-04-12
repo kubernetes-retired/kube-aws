@@ -134,9 +134,10 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 		validations = append(validations, unknownKeyValidation{np, fmt.Sprintf("worker.nodePools[%d]", i)})
 		validations = append(validations, unknownKeyValidation{np.RootVolume, fmt.Sprintf("worker.nodePools[%d].rootVolume", i)})
 
-		for j, endpoint := range np.APIEndpointConfigs {
-			validations = append(validations, unknownKeyValidation{endpoint, fmt.Sprintf("worker.nodePools[%d].apiEndpoints[%d]", i, j)})
-		}
+	}
+
+	for i, endpoint := range c.APIEndpointConfigs {
+		validations = append(validations, unknownKeyValidation{endpoint, fmt.Sprintf("apiEndpoints[%d]", i)})
 	}
 
 	if err := failFastWhenUnknownKeysFound(validations); err != nil {

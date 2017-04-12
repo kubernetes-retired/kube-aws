@@ -500,6 +500,11 @@ write_files:
           /usr/bin/docker run --rm --net=host -v /srv/kubernetes:/srv/kubernetes {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
       }
 
+      while ! kubectl get ns kube-system; do
+        echo Waiting until kube-system created.
+        sleep 3
+      done
+
       mfdir=/srv/kubernetes/manifests
 
       {{ if .UseCalico }}
@@ -508,7 +513,7 @@ write_files:
       {{ end }}
 
       # Deployments
-      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de{{ if .ExportKubeResources }},cluster-dump{{ end }}}.yaml; do
+      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
           kubectl apply -f "${mfdir}/$manifest"
       done
 
@@ -786,40 +791,40 @@ write_files:
       sed -i -e "s#\$ETCDKEY#$etcd_key#g" /srv/kubernetes/manifests/calico.yaml
 
 {{ end }}
-{{ if .ExportKubeResources }}
-  - path: /srv/kubernetes/manifests/cluster-dump.yaml
+{{ if .KubeResourcesAutosave.Enabled }}
+  - path: /srv/kubernetes/manifests/kube-resources-autosave.yaml
     content: |
       ---
       apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
-        name: cluster-dump
+        name: kube-resources-autosave
         namespace: kube-system
         labels:
-          k8s-app: cluster-dump-policy
+          k8s-app: kube-resources-autosave-policy
       spec:
         replicas: 1
         template:
           metadata:
-            name: cluster-dump
+            name: kube-resources-autosave
             namespace: kube-system
             labels:
-              k8s-app: cluster-dump-policy
+              k8s-app: kube-resources-autosave-policy
           spec:
             containers:
-            - name: cluster-dump-dumper
+            - name: kube-resources-autosave-dumper
               image: {{.HyperkubeImage.RepoWithTag}}
               command: ["/bin/bash", "-c" ]
               args:
                 - |
                     set -x ;
-                    DUMP_DIR_COMPLETE=/cluster-dump/complete ;
+                    DUMP_DIR_COMPLETE=/kube-resources-autosave/complete ;
                     mkdir -p ${DUMP_DIR_COMPLETE} ;
                     while true; do
                       TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
-                      DUMP_DIR=/cluster-dump/tmp/${TIMESTAMP} ;
+                      DUMP_DIR=/kube-resources-autosave/tmp/${TIMESTAMP} ;
                       mkdir -p ${DUMP_DIR} ;
-                      RESOURCES_OUT_NAMESPACE=( namespaces persistentvolumes nodes storageclasses ) ;
+                      RESOURCES_OUT_NAMESPACE=( namespaces persistentvolumes nodes storageclasses clusterrolebindings clusterroles ) ;
                       for r in ${RESOURCES_OUT_NAMESPACE[@]};do
                         echo " Searching for resources: ${r}" ;
                         /kubectl get --export -o=json ${r} | \
@@ -835,7 +840,8 @@ write_files:
                       done ;
                       RESOURCES_IN_NAMESPACE=( componentstatuses configmaps daemonsets deployments endpoints events horizontalpodautoscalers
                       ingresses jobs limitranges networkpolicies  persistentvolumeclaims pods podsecuritypolicies podtemplates replicasets
-                      replicationcontrollers resourcequotas secrets serviceaccounts services statefulsets thirdpartyresources ) ;
+                      replicationcontrollers resourcequotas secrets serviceaccounts services statefulsets thirdpartyresources
+                      poddisruptionbudgets roles rolebindings) ;
                       for ns in $(jq -r '.metadata.name' < ${DUMP_DIR}/namespaces.json);do
                         echo "Searching in namespace: ${ns}" ;
                         mkdir -p ${DUMP_DIR}/${ns} ;
@@ -852,11 +858,7 @@ write_files:
                               .metadata.creationTimestamp,
                               .metadata.generation,
                               .metadata.annotations."pv.kubernetes.io/bind-completed",
-                              .status,
-                              .spec.template.spec.securityContext,
-                              .spec.template.spec.dnsPolicy,
-                              .spec.template.spec.terminationGracePeriodSeconds,
-                              .spec.template.spec.restartPolicy
+                              .status
                             )' > ${DUMP_DIR}/${ns}/${r}.json && touch /probe-token ;
                         done ;
                       done ;
@@ -871,18 +873,18 @@ write_files:
                 periodSeconds: 10
               volumeMounts:
               - name: dump-dir
-                mountPath: /cluster-dump
+                mountPath: /kube-resources-autosave
                 readOnly: false
-            - name: cluster-dump-pusher
-              image: {{.AWSCliImageRepo}}:{{.AWSCliTag}}
+            - name: kube-resources-autosave-pusher
+              image: {{.AWSCliImage.RepoWithTag}}
               command: ["/bin/bash", "-c" ]
               args:
                 - |
                     set -x ;
-                    DUMP_DIR_COMPLETE=/cluster-dump/complete ;
+                    DUMP_DIR_COMPLETE=/kube-resources-autosave/complete ;
                     while true; do
                       for FILE in ${DUMP_DIR_COMPLETE}/* ; do
-                        aws s3 mv ${FILE} s3://{{ .KubeResourcesS3Path }}/$(basename ${FILE}) --recursive && rm -r -f ${FILE} && touch /probe-token ;
+                        aws s3 mv ${FILE} s3://{{ .KubeResourcesAutosave.S3Path }}/$(basename ${FILE}) --recursive && rm -r -f ${FILE} && touch /probe-token ;
                       done ;
                       sleep 1m ;
                     done
@@ -893,7 +895,7 @@ write_files:
                 periodSeconds: 10
               volumeMounts:
               - name: dump-dir
-                mountPath: /cluster-dump
+                mountPath: /kube-resources-autosave
                 readOnly: false
             volumes:
             - name: dump-dir

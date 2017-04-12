@@ -34,6 +34,11 @@ externalDNSName: {{.ExternalDNSName}}
 # Either specify hostedZoneId or hostedZone, but not both
 #hostedZoneId: ""
 
+# The name of one of API endpoints defined in `apiEndpoints` below to be written in kubeconfig and then used by admins
+# to access k8s API from their laptops, CI servers, or etc.
+# Required if there are 2 or more API endpoints defined in `apiEndpoints`
+#adminAPIEndpointName: versionedPublic
+
 # Kubernetes API endpoints with each one has a DNS name and is with/without a managed/unmanaged ELB, Route 53 record set
 # CAUTION: `externalDNSName` must be omitted when there are one or more items under `apiEndpoints`
 #apiEndpoints:
@@ -932,6 +937,11 @@ worker:
 #waitSignal:
 #  enabled: true
 #   maxBatchSize: 1
+
+# Exports all Kubernetes resources (in .json format) to a bucket 's3://S3URI/clusterBackup/*'.
+# The export process executes on start-up and repeats every 24 hours.
+#kubeResourcesAutosave:
+#  enabled: false
 
 # Addon features
 addons:
