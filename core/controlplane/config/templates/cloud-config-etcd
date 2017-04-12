@@ -287,10 +287,8 @@ write_files:
   {{- range $w := .Etcd.CustomFiles}}
   - path: {{$w.Path}}
     permissions: {{$w.PermissionsString}}
-    content: |
-      {{- range $l := $w.ContentArray}}
-      {{$l}}
-      {{- end}}
+    encoding: gzip+base64
+    content: {{$w.GzippedBase64Content}}
   {{- end }}
 {{- end }}
   - path: /opt/bin/cfn-init-etcd-server
