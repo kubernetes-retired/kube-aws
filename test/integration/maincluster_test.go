@@ -418,6 +418,22 @@ worker:
 			},
 		},
 		{
+			context: "WithElasticFileSystemId",
+			configYaml: minimalValidConfigYaml + `
+elasticFileSystemId: efs-12345
+worker:
+  nodePools:
+  - name: pool1
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.NodePools[0].ElasticFileSystemID != "efs-12345" {
+						t.Errorf("The value of worker.nodePools[0].elasticFileSystemId should match the one for the top-leve elasticFileSystemId, but it wan't: worker.nodePools[0].elasticFileSystemId=%s", c.NodePools[0].ElasticFileSystemID)
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdDataVolumeEncrypted",
 			configYaml: minimalValidConfigYaml + `
 etcd:
