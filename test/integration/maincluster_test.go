@@ -418,6 +418,22 @@ worker:
 			},
 		},
 		{
+			context: "WithElasticFileSystemId",
+			configYaml: minimalValidConfigYaml + `
+elasticFileSystemId: efs-12345
+worker:
+  nodePools:
+  - name: pool1
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.NodePools[0].ElasticFileSystemID != "efs-12345" {
+						t.Errorf("The value of worker.nodePools[0].elasticFileSystemId should match the one for the top-leve elasticFileSystemId, but it wan't: worker.nodePools[0].elasticFileSystemId=%s", c.NodePools[0].ElasticFileSystemID)
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdDataVolumeEncrypted",
 			configYaml: minimalValidConfigYaml + `
 etcd:
@@ -1400,6 +1416,8 @@ worker:
   apiEndpointName: versionedPrivate
   # btw apiEndpointName can be defaulted to a private/public managed(hence unstable/possibly versioned but not stable/unversioned)
   # elb/round-robin if and only if there is only one. However we dont do the complex defaulting like that for now.
+
+adminAPIEndpointName: versionedPublic
 
 apiEndpoints:
 - name: unversionedPublic
@@ -3121,6 +3139,8 @@ worker:
   # no api endpoint named like that exists!
   apiEndpointName: unknownEndpoint
 
+adminAPIEndpointName: versionedPublic
+
 apiEndpoints:
 - name: unversionedPublic
   dnsName: api.example.com
@@ -3156,6 +3176,8 @@ worker:
   - name: pool1
     # this one is ng; no api endpoint named this exists!
     apiEndpointName: unknownEndpoint
+
+adminAPIEndpointName: versionedPublic
 
 apiEndpoints:
 - name: unversionedPublic
@@ -3208,6 +3230,8 @@ worker:
     apiEndpointName: unknownEndpoint
   - name: pool1
     # this one is ng; missing apiEndpointName
+
+adminAPIEndpointName: versionedPublic
 
 apiEndpoints:
 - name: unversionedPublic

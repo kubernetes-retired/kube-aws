@@ -112,9 +112,13 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	// * Region
 	// * ContainerRuntime
 	// * KMSKeyARN
+	// * ElasticFileSystemID
 	c.Region = main.Region
 	c.ContainerRuntime = main.ContainerRuntime
 	c.KMSKeyARN = main.KMSKeyARN
+	// TODO Allow providing (1) one or more elasticFileSystemId's to be mounted (2) either cluster-wide or per node pool.
+	// It currently supports only one elasticFileSystemId to be mounted cluster-wide
+	c.ElasticFileSystemID = main.ElasticFileSystemID
 
 	return c
 }

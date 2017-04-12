@@ -116,6 +116,7 @@ func (c *ClusterRef) validateExistingVPCState(ec2Svc ec2Service) error {
 
 func NewCluster(cfg *config.Cluster, opts config.StackTemplateOptions, awsDebug bool) (*Cluster, error) {
 	cluster := NewClusterRef(cfg, awsDebug)
+	cluster.KubeResourcesAutosave.S3Path = fmt.Sprintf("%skube-aws/clusters/%s/backup", strings.TrimPrefix(opts.S3URI, "s3://"), cfg.ClusterName)
 	stackConfig, err := cluster.StackConfig(opts)
 	if err != nil {
 		return nil, err

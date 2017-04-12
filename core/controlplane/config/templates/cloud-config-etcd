@@ -149,7 +149,7 @@ coreos:
             Wants=decrypt-assets.service
             After=decrypt-assets.service
             {{- end}}
-            {{if .Etcd.DisasterRecovery.Automated -}}
+            {{if .Etcd.DisasterRecovery.SupportsEtcdVersion .Etcd.Version -}}
             {{/* can be `Wants` if you like etcd-member to not stop when etcdadm-reconfigure failed */}}
             BindsTo=etcdadm-reconfigure.service etcdadm-update-status.service
             After=etcdadm-reconfigure.service
