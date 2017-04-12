@@ -13,7 +13,7 @@ ETCD_VERSION=${ETCD_VERSION:-}
 
 export KUBECONFIG
 
-USAGE_EXAMPLE="KUBE_AWS_CLUSTER_NAME=kubeawstest1 KUBE_AWS_KEY_NAME=name/of/ec2/key KUBE_AWS_KMS_KEY_ARN=arn:aws:kms:us-west-1:<account id>:key/your-key KUBE_AWS_REGION=us-west-1 KUBE_AWS_AVAILABILITY_ZONE=us-west-1b ./$0 [prepare|configure|start|all]"
+USAGE_EXAMPLE="KUBE_AWS_CLUSTER_NAME=kubeawstest1 KUBE_AWS_KEY_NAME=name/of/ec2/key KUBE_AWS_KMS_KEY_ARN=arn:aws:kms:us-west-1:<account id>:key/your-key KUBE_AWS_REGION=us-west-1 KUBE_AWS_AVAILABILITY_ZONE=us-west-1b ./$0 [init|configure|start|all]"
 
 if [ "${KUBE_AWS_CLUSTER_NAME}" == "" ]; then
   echo KUBE_AWS_CLUSTER_NAME is not set. Run this command like $USAGE_EXAMPLE 1>&2
@@ -69,7 +69,9 @@ main_all() {
   status=$(aws cloudformation describe-stacks --stack-name $(main_stack_name) --output json | jq -rc '.Stacks[0].StackStatus')
   if [ "$status" = "" ]; then
     if [ ! -e "${WORK_DIR}/cluster.yaml" ]; then
-      prepare
+      init
+    fi
+    if ! [ -d "${WORK_DIR}/credentials" -a -d "${WORK_DIR}/userdata" -a -e "${WORK_DIR}/kubeconfig" -a -d "${WORK_DIR}/stack-templates" ]; then
       configure
     fi
     if [ "$(main_status)" = "" ]; then
@@ -81,12 +83,10 @@ main_all() {
   fi
 }
 
-prepare() {
+init() {
   echo Creating or ensuring existence of the kube-aws assets directory ${WORK_DIR}
   mkdir -p ${WORK_DIR}
-}
 
-configure() {
   cd ${WORK_DIR}
 
   ${KUBE_AWS_CMD} init \
@@ -105,6 +105,12 @@ configure() {
   fi
 
   customize_cluster_yaml
+}
+
+configure() {
+  cd ${WORK_DIR}
+
+  rm -rf ./kubeconfig ./credentials ./userdata ./stack-templates ./exported
 
   ${KUBE_AWS_CMD} render
 
