@@ -635,6 +635,7 @@ type Cluster struct {
 	ControllerSettings     `yaml:",inline"`
 	EtcdSettings           `yaml:",inline"`
 	FlannelSettings        `yaml:",inline"`
+	AdminAPIEndpointName   string `yaml:"adminAPIEndpointName,omitempty"`
 	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
 	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
@@ -825,9 +826,9 @@ func (c ControllerSettings) ControllerRollingUpdateMinInstancesInService() int {
 	return *c.AutoScalingGroup.RollingUpdateMinInstancesInService
 }
 
-// Required by kubelet to locate the apiserver
-func (c KubeClusterSettings) APIServerEndpoint() string {
-	return fmt.Sprintf("https://%s", c.ExternalDNSName)
+// AdminAPIEndpointURL is the url of the API endpoint which is written in kubeconfig and used to by admins
+func (c *Config) AdminAPIEndpointURL() string {
+	return fmt.Sprintf("https://%s", c.AdminAPIEndpoint.DNSName)
 }
 
 // Required by kubelet to use the consistent network plugin with the base cluster
@@ -882,6 +883,29 @@ func (c Cluster) Config() (*Config, error) {
 	}
 
 	config.APIEndpoints = apiEndpoints
+
+	apiEndpointNames := []string{}
+	for _, e := range apiEndpoints {
+		apiEndpointNames = append(apiEndpointNames, e.Name)
+	}
+
+	var adminAPIEndpoint derived.APIEndpoint
+	if c.AdminAPIEndpointName != "" {
+		found, err := apiEndpoints.FindByName(c.AdminAPIEndpointName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find an API endpoint named \"%s\": %v", c.AdminAPIEndpointName, err)
+		}
+		adminAPIEndpoint = *found
+	} else {
+		if len(apiEndpoints) > 1 {
+			return nil, fmt.Errorf(
+				"adminAPIEndpointName must not be empty when there's 2 or more api endpoints under the key `apiEndpoints`. Specify one of: %s",
+				strings.Join(apiEndpointNames, ", "),
+			)
+		}
+		adminAPIEndpoint = apiEndpoints.GetDefault()
+	}
+	config.AdminAPIEndpoint = adminAPIEndpoint
 
 	return &config, nil
 }
@@ -1023,7 +1047,8 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 type Config struct {
 	Cluster
 
-	APIEndpoints derived.APIEndpoints
+	AdminAPIEndpoint derived.APIEndpoint
+	APIEndpoints     derived.APIEndpoints
 
 	EtcdNodes []derived.EtcdNode
 

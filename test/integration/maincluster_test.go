@@ -1401,6 +1401,8 @@ worker:
   # btw apiEndpointName can be defaulted to a private/public managed(hence unstable/possibly versioned but not stable/unversioned)
   # elb/round-robin if and only if there is only one. However we dont do the complex defaulting like that for now.
 
+adminAPIEndpointName: versionedPublic
+
 apiEndpoints:
 - name: unversionedPublic
   dnsName: api.example.com
@@ -3121,6 +3123,8 @@ worker:
   # no api endpoint named like that exists!
   apiEndpointName: unknownEndpoint
 
+adminAPIEndpointName: versionedPublic
+
 apiEndpoints:
 - name: unversionedPublic
   dnsName: api.example.com
@@ -3156,6 +3160,8 @@ worker:
   - name: pool1
     # this one is ng; no api endpoint named this exists!
     apiEndpointName: unknownEndpoint
+
+adminAPIEndpointName: versionedPublic
 
 apiEndpoints:
 - name: unversionedPublic
@@ -3208,6 +3214,8 @@ worker:
     apiEndpointName: unknownEndpoint
   - name: pool1
     # this one is ng; missing apiEndpointName
+
+adminAPIEndpointName: versionedPublic
 
 apiEndpoints:
 - name: unversionedPublic
