@@ -500,6 +500,11 @@ write_files:
           /usr/bin/docker run --rm --net=host -v /srv/kubernetes:/srv/kubernetes {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
       }
 
+      while ! kubectl get ns kube-system; do
+        echo Waiting until kube-system created.
+        sleep 3
+      done
+
       mfdir=/srv/kubernetes/manifests
 
       {{ if .UseCalico }}
