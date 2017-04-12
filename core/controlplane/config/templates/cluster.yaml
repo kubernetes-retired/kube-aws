@@ -187,6 +187,14 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #workerCount: 1
 
 worker:
+#
+#  # Settings that apply to all worker node pools
+#
+#  # The name of the API endpoint defined in the top level `apiEndpoints` that the worker node pools will use to access the k8s API
+#  # Required if there are 2 or more API endpoints defined in `apiEndpoints`
+#  # Can be overriden per node pool by specifying `worker.nodePools[].apiEndpointName`
+#  apiEndpointName: versionedPublic
+#
   nodePools:
     - # Name of this node pool. Must be unique among all the node pools in this cluster
       name: nodepool1
@@ -212,6 +220,10 @@ worker:
 #        names: [ "manuallymanagedelb" ]
 #        # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
 #        securityGroupIds: [ "sg-87654321" ]
+#
+#      # The name of the API endpoint defined in the top level `apiEndpoints` that this worker node pool will use to access the k8s API
+#      # If not specified, defaults to `worker.apiEndpointName`
+#      apiEndpointName: versionedPublic
 #
 #      # Configuration for external managed ALBs Target Groups for worker nodes
 #      targetGroup:
@@ -415,13 +427,13 @@ worker:
 #      releaseChannel: alpha
 #      amiId:
 #      kubernetesVersion: 1.6.0-alpha.1
-
+#
 #      # Images are taken from controlplane by default, but you can override values for node pools here. E.g.:
 #      AwsCliImage:
 #        repo: quay.io/coreos/awscli
 #        tag: edge
 #        rktPullDocker: false
-
+#
 #      sshAuthorizedKeys:
 #      # User-provided YAML map available in control-plane's stack-template.json
 #      customSettings:
