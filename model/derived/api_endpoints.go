@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"sort"
+	"strings"
 )
 
 // APIEndpoints is a set of API endpoints associated to a Kubernetes cluster
@@ -78,7 +79,13 @@ func (e APIEndpoints) FindByName(name string) (*APIEndpoint, error) {
 	if exists {
 		return &endpoint, nil
 	}
-	return nil, fmt.Errorf("no API endpoint named \"%s\" defined under the `apiEndpoints[]`", name)
+
+	apiEndpointNames := []string{}
+	for _, endpoint := range e {
+		apiEndpointNames = append(apiEndpointNames, endpoint.Name)
+	}
+
+	return nil, fmt.Errorf("no API endpoint named \"%s\" defined under the `apiEndpoints[]`. The name must be one of: %s", name, strings.Join(apiEndpointNames, ", "))
 }
 
 // ELBRefs returns the names of all the ELBs to which controller nodes should be associated
