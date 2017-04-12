@@ -494,10 +494,8 @@ write_files:
   {{- range $w := .CustomFiles}}
   - path: {{$w.Path}}
     permissions: {{$w.PermissionsString}}
-    content: |
-      {{- range $l := $w.ContentArray}}
-      {{$l}}
-      {{- end}}
+    encoding: gzip+base64
+    content: {{$w.GzippedBase64Content}}
   {{- end }}
 {{- end }}
 {{if .AwsEnvironment.Enabled}}
