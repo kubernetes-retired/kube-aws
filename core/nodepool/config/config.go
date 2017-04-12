@@ -272,6 +272,12 @@ func ClusterFromBytesWithEncryptService(data []byte, main *cfg.Config, encryptSe
 	return cluster, nil
 }
 
+// APIEndpointURL is the url of the API endpoint which is written in cloud-config-worker and used by kubelets in worker nodes
+// to access the apiserver
+func (c ProvidedConfig) APIEndpointURL() string {
+	return fmt.Sprintf("https://%s", c.APIEndpoint.DNSName)
+}
+
 func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 	config := ComputedConfig{ProvidedConfig: c}
 
