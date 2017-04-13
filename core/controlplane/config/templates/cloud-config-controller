@@ -378,6 +378,22 @@ coreos:
 {{end}}
         Type={{.Experimental.EphemeralImageStorage.Filesystem}}
 {{end}}
+{{ if .SharedPersistentVolume }}
+    - name: load-efs-pv.service
+      command: start
+      content: |
+        [Unit]
+        Description=Load efs persistent volume mount
+        Wants=kube-node-taint-and-uncordon.service
+        After=kube-node-taint-and-uncordon.service
+        [Service]
+        Type=simple
+        RemainAfterExit=true
+        RestartSec=10
+        Restart=on-failure
+        ExecStartPre=/opt/bin/set-efs-pv
+        ExecStart=/opt/bin/load-efs-pv
+{{end}}
 
 {{if .SSHAuthorizedKeys}}
 ssh_authorized_keys:
@@ -453,6 +469,36 @@ write_files:
           '
 
       rkt rm --uuid-file=/var/run/coreos/set-aws-environment.uuid || :
+{{end}}
+{{ if .SharedPersistentVolume }}
+  - path: /opt/bin/set-efs-pv
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      rkt run \
+        --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
+        --mount volume=dns,target=/etc/resolv.conf \
+        --volume=awsenv,kind=host,source=/etc/kubernetes,readOnly=false \
+        --mount volume=awsenv,target=/etc/kubernetes \
+        --uuid-file-save=/var/run/coreos/set-efs-pv.uuid \
+        --net=host \
+        --trust-keys-from-https \
+        {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=/bin/bash -- \
+          -ec \
+          'instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+           stack_name=$(
+             aws ec2 describe-tags --region {{.Region}} --filters \
+               "Name=resource-id,Values=$instance_id" \
+               "Name=key,Values=aws:cloudformation:stack-name" \
+               --output json \
+             | jq -r ".Tags[].Value"
+           )
+           cfn-init -v -c "load-efs-pv" --region {{.Region}} --resource {{.Controller.LogicalName}} --stack $stack_name
+          '
+
+      rkt rm --uuid-file=/var/run/coreos/set-efs-pv.uuid || :
 {{end}}
   - path: /opt/bin/cfn-signal
     owner: root:root
@@ -1849,4 +1895,22 @@ write_files:
   - path: /etc/kubernetes/webhooks/authentication.yaml
     encoding: base64
     content: {{ .Experimental.Authentication.Webhook.Config }}
+{{ end }}
+
+{{ if .SharedPersistentVolume }}
+  - path: /opt/bin/load-efs-pv
+    owner: root:root
+    permissions: 0700
+    content: |
+      #!/bin/bash -e
+
+      docker run --rm --net=host \
+        -v /etc/kubernetes:/etc/kubernetes \
+        -v /etc/resolv.conf:/etc/resolv.conf \
+        {{ .HyperkubeImage.RepoWithTag }} /bin/bash \
+          -vxec \
+          'echo "Starting Loading EFS Persistent Volume"
+           /kubectl create -f /etc/kubernetes/efs-pv.yaml
+           echo "Finished Loading EFS Persistent Volume"'
+
 {{ end }}

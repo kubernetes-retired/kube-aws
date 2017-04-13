@@ -72,6 +72,9 @@
           "configSets" : {
               "etcd-client": [ "etcd-client-env" ]{{if .Experimental.AwsEnvironment.Enabled}},
               "aws-environment": [ "aws-environment-env" ]{{end}}
+              {{ if .SharedPersistentVolume }},
+                "load-efs-pv": [ "load-efs-pv-env" ]
+              {{end}}
           },
           {{ if .Experimental.AwsEnvironment.Enabled }}
           "aws-environment-env" : {
@@ -82,6 +85,28 @@
                   "{{$variable}}=", {{$function}} , "\n",
                   {{end}}
                   "' > /etc/aws-environment" ] ] }
+              }
+            }
+          },
+          {{ end }}
+          {{ if .SharedPersistentVolume }}
+          "load-efs-pv-env" : {
+            "files" : {
+              "/etc/kubernetes/efs-pv.yaml": {
+                "content": { "Fn::Join" : [ "", [
+                  "apiVersion: v1\n",
+                  "kind: PersistentVolume\n",
+                  "metadata:\n",
+                  "  name: shared-efs\n",
+                  "spec:\n",
+                  "  accessModes:\n",
+                  "  - ReadWriteMany\n",
+                  "  capacity:\n",
+                  "    storage: 500Gi\n",
+                  "  nfs:\n",
+                  "    path: /\n",
+                  "    server: ", {"Ref": "FileSystemCustom"}, ".efs.{{ $.Region }}.amazonaws.com", "\n"
+                ]]}
               }
             }
           },
@@ -1189,7 +1214,7 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     }
-    {{if $.ElasticFileSystemID}}
+    {{if or $.ElasticFileSystemID .SharedPersistentVolume}}
     ,
     "SecurityGroupMountTarget": {
       "Properties": {
@@ -1224,6 +1249,36 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     }
+    {{ if .SharedPersistentVolume }}
+    ,
+      "FileSystemCustom": {
+        "Type": "AWS::EFS::FileSystem",
+        "Properties": {
+          "PerformanceMode": "maxIO",
+          "FileSystemTags": [
+            {
+              "Key": "Name",
+              "Value": "SharedData"
+            },
+            {
+              "Key": "KubernetesCluster",
+              "Value": "{{.ClusterName}}"
+            }
+          ]
+        }
+      }
+      {{range $index, $subnet := .Subnets}}
+      ,
+      "{{$subnet.LogicalName}}MountTargetCustom": {
+        "Properties" : {
+          "FileSystemId": { "Ref": "FileSystemCustom" },
+          "SubnetId": {{$subnet.Ref}},
+          "SecurityGroups": [ { "Ref": "SecurityGroupMountTarget" } ]
+        },
+        "Type" : "AWS::EFS::MountTarget"
+      }
+      {{end}}
+    {{end}}
     {{end}}
 
     {{range $index, $subnet := .Subnets}}
