@@ -978,6 +978,9 @@ worker:
 # See https://github.com/kubernetes-incubator/kube-aws/issues/208 for more information
 #elasticFileSystemId: fs-47a2c22e
 
+# Create shared persistent volume
+#sharedPersistentVolume: false
+
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
 # containerRuntime: docker
 
