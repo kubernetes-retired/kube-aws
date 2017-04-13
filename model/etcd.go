@@ -6,14 +6,16 @@ import (
 )
 
 type Etcd struct {
-	Cluster          EtcdCluster          `yaml:",inline"`
-	DataVolume       DataVolume           `yaml:"dataVolume,omitempty"`
-	DisasterRecovery EtcdDisasterRecovery `yaml:"disasterRecovery,omitempty"`
-	Snapshot         EtcdSnapshot         `yaml:"snapshot,omitempty"`
-	EC2Instance      `yaml:",inline"`
-	Nodes            []EtcdNode `yaml:"nodes,omitempty"`
-	Subnets          []Subnet   `yaml:"subnets,omitempty"`
-	UnknownKeys      `yaml:",inline"`
+	Cluster            EtcdCluster          `yaml:",inline"`
+	DataVolume         DataVolume           `yaml:"dataVolume,omitempty"`
+	DisasterRecovery   EtcdDisasterRecovery `yaml:"disasterRecovery,omitempty"`
+	Snapshot           EtcdSnapshot         `yaml:"snapshot,omitempty"`
+	EC2Instance        `yaml:",inline"`
+	Nodes              []EtcdNode          `yaml:"nodes,omitempty"`
+	Subnets            []Subnet            `yaml:"subnets,omitempty"`
+	CustomFiles        []CustomFile        `yaml:"customFiles,omitempty"`
+	CustomSystemdUnits []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
+	UnknownKeys        `yaml:",inline"`
 }
 
 type EtcdVersion string
@@ -58,7 +60,6 @@ func NewDefaultEtcd() Etcd {
 		},
 	}
 }
-
 func (i Etcd) LogicalName() string {
 	return "Etcd"
 }

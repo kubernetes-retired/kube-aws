@@ -168,6 +168,24 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # If you like specific private subnets to be used by the internal ELB:
 #    # subnets:
 #    #   - name: ManagedPrivateSubnet0
+#  
+#  # User defined files that will be added to the Controller cluster cloud-init configuration in the "write_files:" section.
+#  customFiles:
+#    - path: "/etc/rkt/auth.d/docker.json"
+#      permissions: 0600
+#      content: |
+#        { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#
+#  # User defined systemd units that will be added to the Controller cluster cloud-init configuration in the "units:" section.
+#  customSystemdUnits:
+#    - name: monitoring.service
+#      command: start
+#      enable: true
+#      content: |
+#        [Unit]
+#        Description=Example Custom Service
+#        [Service]
+#        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
 # CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead
 #controllerCreateTimeout: PT15M
@@ -428,6 +446,24 @@ worker:
 #      customSettings:
 #        key1: [ 1, 2, 3 ]
 
+#      # User defined files that will be added to the NodePool cloud-init configuration in the "write_files:" section.
+#      customFiles:
+#        - path: "/etc/rkt/auth.d/docker.json"
+#          permissions: 0600
+#          content: |
+#            { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#
+#      # User defined systemd units that will be added to the NodePool cluster cloud-init configuration in the "units:" section.
+#      customSystemdUnits:
+#        - name: monitoring.service
+#          command: start
+#          enable: true
+#          content: |
+#            [Unit]
+#            Description=Example Custom Service
+#            [Service]
+#            ExecStart=/bin/rkt run --set-env TAGS=Controller ...
+
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
 
@@ -567,6 +603,24 @@ worker:
 #  # ARN of the KMS key used to encrypt the etcd data volume. The account default key will be used if `etcdDataVolumeEncrypted`
 #  # is enable and `etcd.kmsKeyArn` is omitted.
 #  kmsKeyArn: ""
+#
+#  # User defined files that will be added to the Etcd cluster cloud-init configuration in the "write_files:" section.
+#  customFiles:
+#    - path: "/etc/rkt/auth.d/docker.json"
+#      permissions: 0600
+#      content: |
+#        { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#   
+#  # User defined systemd units that will be added to the Etcd cluster cloud-init configuration in the "units:" section.
+#  customSystemdUnits:
+#    - name: monitoring.service
+#      command: start
+#      enable: true
+#      content: |
+#        [Unit]
+#        Description=Example Custom Service
+#        [Service]
+#        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
 # CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.instanceType instead
 # etcdInstanceType: t2.medium

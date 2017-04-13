@@ -9,6 +9,20 @@ coreos:
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
   units:
+{{- range $u := .Controller.CustomSystemdUnits}}
+    - name: {{$u.Name}}
+      command: {{ $u.Command }}
+      {{- if $u.Enable }}
+      enable: {{ $u.Enable }}
+      {{- end }}
+      {{- if $u.Runtime }}
+      runtime: {{ $u.Runtime }}
+      {{- end }}
+      content: |
+        {{- range $l := $u.ContentArray}}
+        {{ $l }}
+        {{- end }}
+{{- end}}
     - name: cfn-etcd-environment.service
       enable: true
       command: start
@@ -394,6 +408,14 @@ ssh_authorized_keys:
         WantedBy=install-kube-system.service
 {{end}}
 write_files:
+{{- if .Controller.CustomFiles}}
+  {{- range $w := .Controller.CustomFiles}}
+  - path: {{$w.Path}}
+    permissions: {{$w.PermissionsString}}
+    encoding: gzip+base64
+    content: {{$w.GzippedBase64Content}}
+  {{- end }}
+{{- end }}
 {{if .Experimental.DisableSecurityGroupIngress}}
   - path: /etc/kubernetes/additional-configs/cloud.config
     owner: root:root
