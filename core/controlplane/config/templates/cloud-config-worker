@@ -9,6 +9,20 @@ coreos:
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
   units:
+{{- range $u := .CustomSystemdUnits}}
+    - name: {{$u.Name}}
+      command: {{ $u.Command }}
+      {{- if $u.Enable }}
+      enable: {{$u.Enable}}
+      {{- end }}
+      {{- if $u.Runtime }}
+      runtime: {{$u.Runtime}}
+      {{- end }}
+      content: |
+        {{- range $l := $u.ContentArray}}
+        {{ $l }}
+        {{- end }}
+{{- end}}
 {{range $volumeMountSpecIndex, $volumeMountSpec := .VolumeMounts}}
     - name: format-{{$volumeMountSpec.SystemdMountName}}.service
       command: start
@@ -476,6 +490,14 @@ ssh_authorized_keys:
         WantedBy=kubelet.service
 {{end}}
 write_files:
+{{- if .CustomFiles}}
+  {{- range $w := .CustomFiles}}
+  - path: {{$w.Path}}
+    permissions: {{$w.PermissionsString}}
+    encoding: gzip+base64
+    content: {{$w.GzippedBase64Content}}
+  {{- end }}
+{{- end }}
 {{if .AwsEnvironment.Enabled}}
   - path: /opt/bin/set-aws-environment
     owner: root:root
