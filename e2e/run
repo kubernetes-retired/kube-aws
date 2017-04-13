@@ -249,7 +249,7 @@ etcd:
   fi
 
 
-  if [ "${ETCD_DISASTER_RECOVERY_AUTOMATED}" != "" ]; then
+  if [ "${ETCD_SNAPSHOT_AUTOMATED}" != "" ]; then
     echo -e "  snapshot:
     automated: true" >> cluster.yaml
   fi
