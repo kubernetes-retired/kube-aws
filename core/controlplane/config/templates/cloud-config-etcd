@@ -97,10 +97,9 @@ coreos:
         Description=etcd health check
 
         [Service]
-        Type=simple
+        Type=oneshot
         EnvironmentFile=-/etc/etcd-environment
         EnvironmentFile=-/var/run/coreos/etcdadm-environment
-        Restart=no
         ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
         ExecStart=/opt/bin/etcdadm check
         TimeoutStartSec=120
@@ -129,10 +128,9 @@ coreos:
         Description=etcd snapshot
 
         [Service]
-        Type=simple
+        Type=oneshot
         EnvironmentFile=-/etc/etcd-environment
         EnvironmentFile=-/var/run/coreos/etcdadm-environment
-        Restart=no
         ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
         ExecStart=/opt/bin/etcdadm save
         TimeoutStartSec=300
@@ -265,13 +263,12 @@ coreos:
       command: start
       content: |
         [Unit]
-        Wants={{.Etcd.SystemdUnitName}}
+        Requires={{.Etcd.SystemdUnitName}}
         After={{.Etcd.SystemdUnitName}}
 
         [Service]
         Type=oneshot
         EnvironmentFile={{.EtcdNodeEnvFileName}}
-        ExecStartPre=/usr/bin/systemctl is-active {{.Etcd.SystemdUnitName}}
         ExecStart=/opt/bin/cfn-signal
 {{end}}
 
