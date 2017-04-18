@@ -46,32 +46,36 @@ externalDNSName: {{.ExternalDNSName}}
 #  # to be referenced from other parts of cluster.yaml
 #- name: template
 #
-#  # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
-#  # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
-#  # like a Route 53 record set for the endpoint is now your responsibility!
-#  id: existing-elb
+#  # DNS name for this endpoint, added to the kube-apiserver TLS cert
+#  dnsName: dns-name.tld
 #
-#  # Set to false when you want to disable creation of the record set for this api load balancer
-#  # Must be omitted when `id` is specified
-#  createRecordSet: true
+#  loadBalancer:
+#    # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
+#    # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
+#    # like a Route 53 record set for the endpoint is now your responsibility!
+#    id: existing-elb
 #
-#  # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
-#  # Must be omitted when `id` is specified
-#  subnets:
-#  - name: managedPublic1
+#    # Set to false when you want to disable creation of the record set for this api load balancer
+#    # Must be omitted when `id` is specified
+#    createRecordSet: true
 #
-#  # Set to true so that the managed ELB becomes an `internal` one rather than `internet-facing` one
-#  # When set to true while subnets are omitted, one or more private subnets in the top-level `subnets` must exist
-#  # Must be omitted when `id` is specified
-#  private: true
+#    # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
+#    # Must be omitted when `id` is specified
+#    subnets:
+#    - name: managedPublic1
 #
-#  # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
-#  recordSetTTL: 300
+#    # Set to true so that the managed ELB becomes an `internal` one rather than `internet-facing` one
+#    # When set to true while subnets are omitted, one or more private subnets in the top-level `subnets` must exist
+#    # Must be omitted when `id` is specified
+#    private: true
 #
-#  # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
-#  # Must be omitted when `id` is specified
-#  hostedZone:
-#    id: hostedzone-abc
+#    # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+#    recordSetTTL: 300
+#
+#    # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
+#    # Must be omitted when `id` is specified
+#    hostedZone:
+#      id: hostedzone-abc
 #
 #  #
 #  # Common configuration #1: Unversioned, internet-facing API endpoint
@@ -206,6 +210,14 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #workerCount: 1
 
 worker:
+#
+#  # Settings that apply to all worker node pools
+#
+#  # The name of the API endpoint defined in the top level `apiEndpoints` that the worker node pools will use to access the k8s API
+#  # Required if there are 2 or more API endpoints defined in `apiEndpoints`
+#  # Can be overriden per node pool by specifying `worker.nodePools[].apiEndpointName`
+#  apiEndpointName: versionedPublic
+#
   nodePools:
     - # Name of this node pool. Must be unique among all the node pools in this cluster
       name: nodepool1
@@ -231,6 +243,10 @@ worker:
 #        names: [ "manuallymanagedelb" ]
 #        # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
 #        securityGroupIds: [ "sg-87654321" ]
+#
+#      # The name of the API endpoint defined in the top level `apiEndpoints` that this worker node pool will use to access the k8s API
+#      # If not specified, defaults to `worker.apiEndpointName`
+#      apiEndpointName: versionedPublic
 #
 #      # Configuration for external managed ALBs Target Groups for worker nodes
 #      targetGroup:
@@ -434,13 +450,13 @@ worker:
 #      releaseChannel: alpha
 #      amiId:
 #      kubernetesVersion: 1.6.0-alpha.1
-
+#
 #      # Images are taken from controlplane by default, but you can override values for node pools here. E.g.:
 #      AwsCliImage:
 #        repo: quay.io/coreos/awscli
 #        tag: edge
 #        rktPullDocker: false
-
+#
 #      sshAuthorizedKeys:
 #      # User-provided YAML map available in control-plane's stack-template.json
 #      customSettings:
