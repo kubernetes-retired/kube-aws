@@ -16,7 +16,8 @@ func NewDefaultAPIEndpoints(dnsName string, subnets []SubnetReference, hostedZon
 			Name:    DefaultAPIEndpointName,
 			DNSName: dnsName,
 			LoadBalancer: APIEndpointLB{
-				SubnetReferences: subnets,
+				APIAccessAllowedSourceCIDRs: DefaultCIDRRanges(),
+				SubnetReferences:            subnets,
 				HostedZone: HostedZone{
 					Identifier: Identifier{
 						ID: hostedZoneId,
