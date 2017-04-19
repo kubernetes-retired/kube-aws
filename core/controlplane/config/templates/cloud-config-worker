@@ -150,14 +150,16 @@ coreos:
         --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
         --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
+        {{ if eq .ContainerRuntime "rkt" -}}
         --volume rkt,kind=host,source=/opt/bin/host-rkt \
         --mount volume=rkt,target=/usr/bin/rkt \
         --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
         --mount volume=var-lib-rkt,target=/var/lib/rkt \
-        --volume var-lib-cni,kind=host,source=/var/lib/cni \
-        --mount volume=var-lib-cni,target=/var/lib/cni \
         --volume stage,kind=host,source=/tmp \
         --mount volume=stage,target=/tmp \
+        {{ end -}}
+        --volume var-lib-cni,kind=host,source=/var/lib/cni \
+        --mount volume=var-lib-cni,target=/var/lib/cni \
         --volume var-log,kind=host,source=/var/log \
         --mount volume=var-log,target=/var/log{{ if .UseCalico }} \
         --volume cni-bin,kind=host,source=/opt/cni/bin \
