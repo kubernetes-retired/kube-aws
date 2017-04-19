@@ -141,6 +141,11 @@ customize_cluster_yaml() {
     echo -e "workerSecurityGroupIds:\n- $(testinfra_glue_sg)" >> cluster.yaml
   fi
 
+  if [ "${LIMIT_SSH_ACCESS}" != "" ]; then
+    ip=$(curl -s https://api.ipify.org)
+    echo -e "sshAccessAllowedSourceCIDRs:\n- $ip/32" >> cluster.yaml
+  fi
+
   echo -e "
 worker:
   nodePools:

@@ -439,12 +439,13 @@
     {{if $etcdInstance.NetworkInterfaceManaged}}
     "{{$etcdInstance.NetworkInterfaceLogicalName}}": {
       "Properties": {
-          "SubnetId": {{$etcdInstance.SubnetRef}},
-          "GroupSet": [
-            {
-              "Ref": "SecurityGroupEtcd"
-            }
-          ]
+        "SubnetId": {{$etcdInstance.SubnetRef}},
+        "GroupSet": [
+          {{range $sgIndex, $sgRef := $.Etcd.SecurityGroupRefs}}
+          {{if gt $sgIndex 0}},{{end}}
+          {{$sgRef}}
+          {{end}}
+        ]
       },
       "Type": "AWS::EC2::NetworkInterface"
     },
@@ -672,9 +673,10 @@
         "InstanceType": "{{$.Etcd.InstanceType}}",
         {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}
         "SecurityGroups": [
-          {
-            "Ref": "SecurityGroupEtcd"
-          }
+          {{range $sgIndex, $sgRef := $.Etcd.SecurityGroupRefs}}
+          {{if gt $sgIndex 0}},{{end}}
+          {{$sgRef}}
+          {{end}}
         ],
         "PlacementTenancy": "{{$.Etcd.Tenancy}}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
@@ -720,9 +722,10 @@
         "InstanceType": "{{.Controller.InstanceType}}",
         {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
         "SecurityGroups": [
-          {
-            "Ref": "SecurityGroupController"
-          }
+          {{range $sgIndex, $sgRef := $.Controller.SecurityGroupRefs}}
+          {{if gt $sgIndex 0}},{{end}}
+          {{$sgRef}}
+          {{end}}
         ],
         "PlacementTenancy": "{{ .Controller.Tenancy }}",
         "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
@@ -880,12 +883,14 @@
             "IpProtocol": "icmp",
             "ToPort": -1
           },
+          {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
           {
-            "CidrIp": "0.0.0.0/0",
+            "CidrIp": "{{$r}}",
             "FromPort": 22,
             "IpProtocol": "tcp",
             "ToPort": 22
           },
+          {{end -}}
           {
             "SourceSecurityGroupId" : { "Ref" : "SecurityGroupElbAPIServer" },
             "FromPort": 443,
@@ -986,17 +991,19 @@
           }
         ],
         "SecurityGroupIngress": [
+          {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {
+            "CidrIp": "{{$r}}",
+            "FromPort": 22,
+            "IpProtocol": "tcp",
+            "ToPort": 22
+          },
+          {{end -}}
           {
             "CidrIp": "0.0.0.0/0",
             "FromPort": -1,
             "IpProtocol": "icmp",
             "ToPort": -1
-          },
-          {
-            "CidrIp": "0.0.0.0/0",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
           }
         ],
         "Tags": [
@@ -1159,17 +1166,19 @@
           }
         ],
         "SecurityGroupIngress": [
+          {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {
+            "CidrIp": "{{$r}}",
+            "FromPort": 22,
+            "IpProtocol": "tcp",
+            "ToPort": 22
+          },
+          {{end -}}
           {
             "CidrIp": "0.0.0.0/0",
             "FromPort": 3,
             "IpProtocol": "icmp",
             "ToPort": -1
-          },
-          {
-            "CidrIp": "0.0.0.0/0",
-            "FromPort": 22,
-            "IpProtocol": "tcp",
-            "ToPort": 22
           }
         ],
         "Tags": [
