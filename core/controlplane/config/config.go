@@ -1371,7 +1371,8 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		}
 
 		for i, a := range instanceCIDRs {
-			for j, b := range instanceCIDRs[i+1:] {
+			for j := i + 1; j < len(instanceCIDRs); j++ {
+				b := instanceCIDRs[j]
 				if netutil.CidrOverlap(a, b) {
 					return nil, fmt.Errorf("CIDR of subnet %d (%s) overlaps with CIDR of subnet %d (%s)", i, a, j, b)
 				}
