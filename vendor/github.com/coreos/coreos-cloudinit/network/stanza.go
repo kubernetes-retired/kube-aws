@@ -53,6 +53,7 @@ type configMethod interface{}
 type configMethodStatic struct {
 	addresses   []net.IPNet
 	nameservers []net.IP
+	domains     []string
 	routes      []route
 	hwaddress   net.HardwareAddr
 }

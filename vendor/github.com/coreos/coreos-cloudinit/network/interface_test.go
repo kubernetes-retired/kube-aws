@@ -89,13 +89,14 @@ func TestInterfaceGenerators(t *testing.T) {
 		{
 			name:    "testname",
 			netdev:  "[NetDev]\nKind=vlan\nName=testname\n\n[VLAN]\nId=0\n",
-			network: "[Match]\nName=testname\n\n[Network]\nDNS=8.8.8.8\n\n[Address]\nAddress=192.168.1.100/24\n\n[Route]\nDestination=0.0.0.0/0\nGateway=1.2.3.4\n",
+			network: "[Match]\nName=testname\n\n[Network]\nDomains=coreos.com example.com\nDNS=8.8.8.8\n\n[Address]\nAddress=192.168.1.100/24\n\n[Route]\nDestination=0.0.0.0/0\nGateway=1.2.3.4\n",
 			kind:    "vlan",
 			iface: &vlanInterface{logicalInterface: logicalInterface{
 				name: "testname",
 				config: configMethodStatic{
 					addresses:   []net.IPNet{{IP: []byte{192, 168, 1, 100}, Mask: []byte{255, 255, 255, 0}}},
 					nameservers: []net.IP{[]byte{8, 8, 8, 8}},
+					domains:     []string{"coreos.com", "example.com"},
 					routes:      []route{{destination: net.IPNet{IP: []byte{0, 0, 0, 0}, Mask: []byte{0, 0, 0, 0}}, gateway: []byte{1, 2, 3, 4}}},
 				},
 			}},

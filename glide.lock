@@ -1,8 +1,10 @@
-hash: c867da102c81c3ad5b5b7e9016f1b020fe22311da8f3532b65a0a2832f0b0b3c
-updated: 2017-03-12T18:50:39.127225917+01:00
+hash: 61650b1ec198a8e63d341908512a136ee16a45bd82e46f71945f807ccbee2715
+updated: 2017-04-19T16:20:10.504365328+01:00
 imports:
+- name: github.com/aokoli/goutils
+  version: 174f97f737d44ae9a2b687a1a2e2e6cc27c62783
 - name: github.com/aws/aws-sdk-go
-  version: 819b71cf8430e434c1eee7e7e8b0f2b8870be899
+  version: 4bbd6fa3fdede4c68e941248f974b8951c17de89
   subpackages:
   - aws
   - aws/awserr
@@ -29,7 +31,6 @@ imports:
   - private/protocol/rest
   - private/protocol/restxml
   - private/protocol/xml/xmlutil
-  - private/waiter
   - service/cloudformation
   - service/ec2
   - service/elb
@@ -38,7 +39,7 @@ imports:
   - service/s3
   - service/sts
 - name: github.com/coreos/coreos-cloudinit
-  version: 3c68e2e67d2ea077e2b79383c0ad313770c62ca2
+  version: 5be99bf577f2768193c7fb587ef5a8806c1503cf
   subpackages:
   - config
   - config/validate
@@ -49,15 +50,26 @@ imports:
 - name: github.com/coreos/yaml
   version: 6b16a5714269b2f70720a45406b1babd947a17ef
 - name: github.com/go-ini/ini
-  version: 6e4869b434bd001f6983749881c7ead3545887d8
+  version: 2e44421e256d82ebbf3d4d4fcabe8930b905eff3
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmespath/go-jmespath
-  version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+  version: 3433f3ea46d9f8019119e7dd41274e112a2359a9
+- name: github.com/Masterminds/semver
+  version: 59c29afe1a994eacb71c833025ca7acf874bb1da
+- name: github.com/Masterminds/sprig
+  version: 23597e5f6ad0e4d590e71314bfd0251a4a3cf849
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/spf13/cobra
   version: 856b96dcb49d6427babe192998a35190a12c2230
 - name: github.com/spf13/pflag
   version: dabebe21bf790f782ea4c7bbd2efc430de182afd
+- name: golang.org/x/crypto
+  version: 1f22c0103821b9390939b6776727195525381532
+  subpackages:
+  - pbkdf2
+  - scrypt
 - name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
 testImports: []

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"text/template"
+	"github.com/Masterminds/sprig"
 )
 
 func GetBytesBuffer(filename string, data interface{}) (*bytes.Buffer, error) {
@@ -18,7 +19,7 @@ func GetBytesBuffer(filename string, data interface{}) (*bytes.Buffer, error) {
 		"minus": func(a, b int) int { return a - b },
 	}
 
-	tmpl, err := template.New(filename).Funcs(funcMap).Parse(string(raw))
+	tmpl, err := template.New(filename).Funcs(funcMap).Funcs(sprig.HermeticTxtFuncMap()).Parse(string(raw))
 	if err != nil {
 		return nil, err
 	}
