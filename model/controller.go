@@ -7,9 +7,11 @@ type Controller struct {
 	AutoScalingGroup   AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
 	ClusterAutoscaler  ClusterAutoscaler `yaml:"clusterAutoscaler,omitempty"`
 	EC2Instance        `yaml:",inline"`
-	LoadBalancer       ControllerElb `yaml:"loadBalancer,omitempty"`
-	ManagedIamRoleName string        `yaml:"managedIamRoleName,omitempty"`
-	Subnets            []Subnet      `yaml:"subnets,omitempty"`
+	LoadBalancer       ControllerElb       `yaml:"loadBalancer,omitempty"`
+	ManagedIamRoleName string              `yaml:"managedIamRoleName,omitempty"`
+	Subnets            []Subnet            `yaml:"subnets,omitempty"`
+	CustomFiles        []CustomFile        `yaml:"customFiles,omitempty"`
+	CustomSystemdUnits []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
 	UnknownKeys        `yaml:",inline"`
 }
 

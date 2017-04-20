@@ -3,6 +3,20 @@ coreos:
   update:
     reboot-strategy: "off"
   units:
+{{- range $u := .Etcd.CustomSystemdUnits}}
+    - name: {{$u.Name}}
+      command: {{ $u.Command }}
+      {{- if $u.Enable }}
+      enable: {{ $u.Enable }}
+      {{- end }}
+      {{- if $u.Runtime }}
+      runtime: {{ $u.Runtime }}
+      {{- end }}
+      content: |
+        {{- range $l := $u.ContentArray}}
+        {{ $l }}
+        {{- end }}
+{{- end}}
     - name: cfn-etcd-environment.service
       enable: true
       command: start
@@ -266,7 +280,14 @@ ssh_authorized_keys:
 {{end}}
 
 write_files:
-
+{{- if .Etcd.CustomFiles}}
+  {{- range $w := .Etcd.CustomFiles}}
+  - path: {{$w.Path}}
+    permissions: {{$w.PermissionsString}}
+    encoding: gzip+base64
+    content: {{$w.GzippedBase64Content}}
+  {{- end }}
+{{- end }}
   - path: /opt/bin/cfn-init-etcd-server
     owner: root:root
     permissions: 0700

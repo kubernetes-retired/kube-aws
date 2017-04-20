@@ -46,32 +46,36 @@ externalDNSName: {{.ExternalDNSName}}
 #  # to be referenced from other parts of cluster.yaml
 #- name: template
 #
-#  # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
-#  # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
-#  # like a Route 53 record set for the endpoint is now your responsibility!
-#  id: existing-elb
+#  # DNS name for this endpoint, added to the kube-apiserver TLS cert
+#  dnsName: dns-name.tld
 #
-#  # Set to false when you want to disable creation of the record set for this api load balancer
-#  # Must be omitted when `id` is specified
-#  createRecordSet: true
+#  loadBalancer:
+#    # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
+#    # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
+#    # like a Route 53 record set for the endpoint is now your responsibility!
+#    id: existing-elb
 #
-#  # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
-#  # Must be omitted when `id` is specified
-#  subnets:
-#  - name: managedPublic1
+#    # Set to false when you want to disable creation of the record set for this api load balancer
+#    # Must be omitted when `id` is specified
+#    createRecordSet: true
 #
-#  # Set to true so that the managed ELB becomes an `internal` one rather than `internet-facing` one
-#  # When set to true while subnets are omitted, one or more private subnets in the top-level `subnets` must exist
-#  # Must be omitted when `id` is specified
-#  private: true
+#    # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
+#    # Must be omitted when `id` is specified
+#    subnets:
+#    - name: managedPublic1
 #
-#  # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
-#  recordSetTTL: 300
+#    # Set to true so that the managed ELB becomes an `internal` one rather than `internet-facing` one
+#    # When set to true while subnets are omitted, one or more private subnets in the top-level `subnets` must exist
+#    # Must be omitted when `id` is specified
+#    private: true
 #
-#  # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
-#  # Must be omitted when `id` is specified
-#  hostedZone:
-#    id: hostedzone-abc
+#    # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+#    recordSetTTL: 300
+#
+#    # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
+#    # Must be omitted when `id` is specified
+#    hostedZone:
+#      id: hostedzone-abc
 #
 #  #
 #  # Common configuration #1: Unversioned, internet-facing API endpoint
@@ -168,6 +172,24 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # If you like specific private subnets to be used by the internal ELB:
 #    # subnets:
 #    #   - name: ManagedPrivateSubnet0
+#  
+#  # User defined files that will be added to the Controller cluster cloud-init configuration in the "write_files:" section.
+#  customFiles:
+#    - path: "/etc/rkt/auth.d/docker.json"
+#      permissions: 0600
+#      content: |
+#        { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#
+#  # User defined systemd units that will be added to the Controller cluster cloud-init configuration in the "units:" section.
+#  customSystemdUnits:
+#    - name: monitoring.service
+#      command: start
+#      enable: true
+#      content: |
+#        [Unit]
+#        Description=Example Custom Service
+#        [Service]
+#        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
 # CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead
 #controllerCreateTimeout: PT15M
@@ -188,6 +210,14 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #workerCount: 1
 
 worker:
+#
+#  # Settings that apply to all worker node pools
+#
+#  # The name of the API endpoint defined in the top level `apiEndpoints` that the worker node pools will use to access the k8s API
+#  # Required if there are 2 or more API endpoints defined in `apiEndpoints`
+#  # Can be overriden per node pool by specifying `worker.nodePools[].apiEndpointName`
+#  apiEndpointName: versionedPublic
+#
   nodePools:
     - # Name of this node pool. Must be unique among all the node pools in this cluster
       name: nodepool1
@@ -213,6 +243,10 @@ worker:
 #        names: [ "manuallymanagedelb" ]
 #        # IDs of "glue" security groups attached to worker nodes to allow the ELBs to communicate with worker nodes
 #        securityGroupIds: [ "sg-87654321" ]
+#
+#      # The name of the API endpoint defined in the top level `apiEndpoints` that this worker node pool will use to access the k8s API
+#      # If not specified, defaults to `worker.apiEndpointName`
+#      apiEndpointName: versionedPublic
 #
 #      # Configuration for external managed ALBs Target Groups for worker nodes
 #      targetGroup:
@@ -416,17 +450,35 @@ worker:
 #      releaseChannel: alpha
 #      amiId:
 #      kubernetesVersion: 1.6.0-alpha.1
-
+#
 #      # Images are taken from controlplane by default, but you can override values for node pools here. E.g.:
 #      AwsCliImage:
 #        repo: quay.io/coreos/awscli
 #        tag: edge
 #        rktPullDocker: false
-
+#
 #      sshAuthorizedKeys:
 #      # User-provided YAML map available in control-plane's stack-template.json
 #      customSettings:
 #        key1: [ 1, 2, 3 ]
+
+#      # User defined files that will be added to the NodePool cloud-init configuration in the "write_files:" section.
+#      customFiles:
+#        - path: "/etc/rkt/auth.d/docker.json"
+#          permissions: 0600
+#          content: |
+#            { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#
+#      # User defined systemd units that will be added to the NodePool cluster cloud-init configuration in the "units:" section.
+#      customSystemdUnits:
+#        - name: monitoring.service
+#          command: start
+#          enable: true
+#          content: |
+#            [Unit]
+#            Description=Example Custom Service
+#            [Service]
+#            ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
@@ -567,6 +619,24 @@ worker:
 #  # ARN of the KMS key used to encrypt the etcd data volume. The account default key will be used if `etcdDataVolumeEncrypted`
 #  # is enable and `etcd.kmsKeyArn` is omitted.
 #  kmsKeyArn: ""
+#
+#  # User defined files that will be added to the Etcd cluster cloud-init configuration in the "write_files:" section.
+#  customFiles:
+#    - path: "/etc/rkt/auth.d/docker.json"
+#      permissions: 0600
+#      content: |
+#        { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
+#   
+#  # User defined systemd units that will be added to the Etcd cluster cloud-init configuration in the "units:" section.
+#  customSystemdUnits:
+#    - name: monitoring.service
+#      command: start
+#      enable: true
+#      content: |
+#        [Unit]
+#        Description=Example Custom Service
+#        [Service]
+#        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
 # CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.instanceType instead
 # etcdInstanceType: t2.medium
@@ -924,6 +994,9 @@ worker:
 # See https://github.com/kubernetes-incubator/kube-aws/issues/208 for more information
 #elasticFileSystemId: fs-47a2c22e
 
+# Create shared persistent volume
+#sharedPersistentVolume: false
+
 # Determines the container runtime for kubernetes to use. Accepts 'docker' or 'rkt'.
 # containerRuntime: docker
 
@@ -938,8 +1011,8 @@ worker:
 #  enabled: true
 #   maxBatchSize: 1
 
-# Exports all Kubernetes resources (in .json format) to a bucket 's3://S3URI/clusterBackup/*'.
-# The export process executes on start-up and repeats every 24 hours.
+# Autosaves all Kubernetes resources (in .json format) to a bucket 's3:.../<your-cluster-name>/backup/*'.
+# The autosave process executes on start-up and repeats every 24 hours.
 #kubeResourcesAutosave:
 #  enabled: false
 

@@ -36,7 +36,7 @@ save it in S3
 * `etcdadm reconfigure` reconfigures the etcd member on the same node as etcdadm so that it survives:
   * `N/2` or less permanently failed members, by automatically removing a permanently failed member and then re-add it as a brand-new member with empty data according to ["Replace a failed etcd member on CoreOS Container Linux"](https://coreos.com/etcd/docs/latest/etcd-live-cluster-reconfiguration.html#replace-a-failed-etcd-member-on-coreos-container-linux)
   * `(N/2)+1` or more permanently failed members, by automatically initiating a new cluster, from a snapshot if it exists, according to ["etcd disaster recovery on CoreOS Container Linux"](https://coreos.com/etcd/docs/latest/etcd-live-cluster-reconfiguration.html#etcd-disaster-recovery-on-coreos-container-linux)  
-* `etcdadm replace` is used to manually recover from an etcd memer from a permanent failure. It resets the etcd member running on the same node as etcdadm by:
+* `etcdadm replace` is used to manually recover from an etcd member from a permanent failure. It resets the etcd member running on the same node as etcdadm by:
   1. clearing the contents of the etcd data dir 
   2. removing and then re-adding the etcd member by running `etcdctl member remove` and then `etcdctl memer add` 
   
