@@ -899,7 +899,7 @@ write_files:
                       for r in ${RESOURCES_OUT_NAMESPACE[@]};do
                         echo " Searching for resources: ${r}" ;
                         /kubectl get --export -o=json ${r} | \
-                        jq '.items[] |
+                        jq '.items |= ([ .[] |
                             del(.status,
                             .metadata.uid,
                             .metadata.selfLink,
@@ -907,7 +907,7 @@ write_files:
                             .metadata.creationTimestamp,
                             .metadata.generation,
                             .spec.claimRef
-                          )' > ${DUMP_DIR}/${r}.json ;
+                          )])' > ${DUMP_DIR}/${r}.json ;
                       done ;
                       RESOURCES_IN_NAMESPACE=( componentstatuses configmaps daemonsets deployments endpoints events horizontalpodautoscalers
                       ingresses jobs limitranges networkpolicies  persistentvolumeclaims pods podsecuritypolicies podtemplates replicasets
@@ -919,7 +919,7 @@ write_files:
                         for r in ${RESOURCES_IN_NAMESPACE[@]};do
                           echo " Searching for resources: ${r}" ;
                           /kubectl --namespace=${ns} get --export -o=json ${r} | \
-                          jq '.items[] |
+                          jq '.items |= ([ .[] |
                             select(.type!="kubernetes.io/service-account-token") |
                             del(
                               .spec.clusterIP,
@@ -930,7 +930,7 @@ write_files:
                               .metadata.generation,
                               .metadata.annotations."pv.kubernetes.io/bind-completed",
                               .status
-                            )' > ${DUMP_DIR}/${ns}/${r}.json && touch /probe-token ;
+                            )])' > ${DUMP_DIR}/${ns}/${r}.json && touch /probe-token ;
                         done ;
                       done ;
                     mv ${DUMP_DIR} ${DUMP_DIR_COMPLETE}/${TIMESTAMP} ;
