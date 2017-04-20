@@ -180,6 +180,7 @@ coreos:
 
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /srv/kubernetes/manifests  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
         {{if .UseCalico -}}
+        ExecStartPre=/bin/sh -ec "find /etc/kubernetes/cni/net.d/ -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
         ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
         {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
