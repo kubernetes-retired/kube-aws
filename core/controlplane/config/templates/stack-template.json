@@ -105,7 +105,8 @@
                   "    storage: 500Gi\n",
                   "  nfs:\n",
                   "    path: /\n",
-                  "    server: ", {"Ref": "FileSystemCustom"}, ".efs.{{ $.Region }}.amazonaws.com", "\n"
+                  "    server: ", {"Ref": "FileSystemCustom"}, ".efs.{{ $.Region }}.amazonaws.com", "\n",
+                  "  persistentVolumeReclaimPolicy: Recycle\n"
                 ]]}
               }
             }
