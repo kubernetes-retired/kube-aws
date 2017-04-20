@@ -1,5 +1,5 @@
 # Restore
-Restoring a Kubernetes environment (from a previous backup) may be executed through the use of the bash script: [kubernetes-on-aws-restore.sh](/Documentation/scripts/kubernetes-on-aws-backup.sh)    
+Restoring a Kubernetes environment (from a previous backup) may be executed through the use of the bash script: [kubernetes-on-aws-restore.sh](/contrib/cluster-backup/restore.sh)    
 
 The script was designed to be used by the cluster provisioner and assumes that their local machine has:
 - 'kubectl' installed locally
