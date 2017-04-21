@@ -145,11 +145,12 @@ func NewDefaultCluster() *Cluster {
 		// for kube-apiserver
 		ServiceCIDR: "10.3.0.0/24",
 		// for base cloudformation stack
-		TLSCADurationDays:   365 * 10,
-		TLSCertDurationDays: 365,
-		CreateRecordSet:     false,
-		RecordSetTTL:        300,
-		CustomSettings:      make(map[string]interface{}),
+		TLSCADurationDays:           365 * 10,
+		TLSCertDurationDays:         365,
+		CreateRecordSet:             false,
+		RecordSetTTL:                300,
+		SSHAccessAllowedSourceCIDRs: model.DefaultCIDRRanges(),
+		CustomSettings:              make(map[string]interface{}),
 		KubeResourcesAutosave: KubeResourcesAutosave{
 			Enabled: false,
 		},
@@ -647,8 +648,10 @@ type Cluster struct {
 	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
 	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
 	ProvidedEncryptService EncryptService
-	CustomSettings         map[string]interface{} `yaml:"customSettings,omitempty"`
-	KubeResourcesAutosave  `yaml:"kubeResourcesAutosave,omitempty"`
+	// SSHAccessAllowedSourceCIDRs is network ranges of sources you'd like SSH accesses to be allowed from, in CIDR notation
+	SSHAccessAllowedSourceCIDRs model.CIDRRanges       `yaml:"sshAccessAllowedSourceCIDRs,omitempty"`
+	CustomSettings              map[string]interface{} `yaml:"customSettings,omitempty"`
+	KubeResourcesAutosave       `yaml:"kubeResourcesAutosave,omitempty"`
 }
 
 type Experimental struct {

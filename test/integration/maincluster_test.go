@@ -2927,6 +2927,60 @@ etcdDataVolumeEncrypted: true
 				},
 			},
 		},
+		{
+			context: "WithSSHAccessAllowedSourceCIDRsSpecified",
+			configYaml: minimalValidConfigYaml + `
+sshAccessAllowedSourceCIDRs:
+- 1.2.3.255/32
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.SSHAccessAllowedSourceCIDRs)
+					if l != 1 {
+						t.Errorf("unexpected size of sshAccessAllowedSouceCIDRs: %d", l)
+						t.FailNow()
+					}
+					actual := c.SSHAccessAllowedSourceCIDRs[0].String()
+					expected := "1.2.3.255/32"
+					if actual != expected {
+						t.Errorf("unexpected cidr in sshAccessAllowedSourecCIDRs[0]. expected = %s, actual = %s", expected, actual)
+					}
+				},
+			},
+		},
+		{
+			context:    "WithSSHAccessAllowedSourceCIDRsOmitted",
+			configYaml: minimalValidConfigYaml,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.SSHAccessAllowedSourceCIDRs)
+					if l != 1 {
+						t.Errorf("unexpected size of sshAccessAllowedSouceCIDRs: %d", l)
+						t.FailNow()
+					}
+					actual := c.SSHAccessAllowedSourceCIDRs[0].String()
+					expected := "0.0.0.0/0"
+					if actual != expected {
+						t.Errorf("unexpected cidr in sshAccessAllowedSourecCIDRs[0]. expected = %s, actual = %s", expected, actual)
+					}
+				},
+			},
+		},
+		{
+			context: "WithSSHAccessAllowedSourceCIDRsEmptied",
+			configYaml: minimalValidConfigYaml + `
+sshAccessAllowedSourceCIDRs:
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.SSHAccessAllowedSourceCIDRs)
+					if l != 0 {
+						t.Errorf("unexpected size of sshAccessAllowedSouceCIDRs: %d", l)
+						t.FailNow()
+					}
+				},
+			},
+		},
 	}
 
 	for _, validCase := range validCases {
