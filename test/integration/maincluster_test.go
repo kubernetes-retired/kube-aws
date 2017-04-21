@@ -364,12 +364,89 @@ func TestMainClusterConfig(t *testing.T) {
 	minimalValidConfigYaml := mainClusterYaml + `
 availabilityZone: us-west-1c
 `
+	configYamlWithoutExernalDNSName := kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
+availabilityZone: us-west-1c
+`
+
 	validCases := []struct {
 		context       string
 		configYaml    string
 		assertConfig  []ConfigTester
 		assertCluster []ClusterTester
 	}{
+		{
+			context: "WithAPIEndpointLBAPIAccessAllowedSourceCIDRsSpecified",
+			configYaml: configYamlWithoutExernalDNSName + `
+apiEndpoints:
+- name: default
+  dnsName: k8s.example.com
+  loadBalancer:
+    apiAccessAllowedSourceCIDRs:
+    - 1.2.3.255/32
+    hostedZone:
+      id: a1b2c4
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.APIEndpointConfigs[0].LoadBalancer.APIAccessAllowedSourceCIDRs)
+					if l != 1 {
+						t.Errorf("unexpected size of apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs: %d", l)
+						t.FailNow()
+					}
+					actual := c.APIEndpointConfigs[0].LoadBalancer.APIAccessAllowedSourceCIDRs[0].String()
+					expected := "1.2.3.255/32"
+					if actual != expected {
+						t.Errorf("unexpected cidr in apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs[0]. expected = %s, actual = %s", expected, actual)
+					}
+				},
+			},
+		},
+		{
+			context: "WithAPIEndpointLBAPIAccessAllowedSourceCIDRsOmitted",
+			configYaml: configYamlWithoutExernalDNSName + `
+apiEndpoints:
+- name: default
+  dnsName: k8s.example.com
+  loadBalancer:
+    hostedZone:
+      id: a1b2c4
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.APIEndpointConfigs[0].LoadBalancer.APIAccessAllowedSourceCIDRs)
+					if l != 1 {
+						t.Errorf("unexpected size of apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs: %d", l)
+						t.FailNow()
+					}
+					actual := c.APIEndpointConfigs[0].LoadBalancer.APIAccessAllowedSourceCIDRs[0].String()
+					expected := "0.0.0.0/0"
+					if actual != expected {
+						t.Errorf("unexpected cidr in apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs[0]. expected = %s, actual = %s", expected, actual)
+					}
+				},
+			},
+		},
+		{
+			context: "WithAPIEndpointLBAPIAccessAllowedSourceCIDRsEmptied",
+			configYaml: configYamlWithoutExernalDNSName + `
+apiEndpoints:
+- name: default
+  dnsName: k8s.example.com
+  loadBalancer:
+    apiAccessAllowedSourceCIDRs:
+    hostedZone:
+      id: a1b2c4
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					l := len(c.APIEndpointConfigs[0].LoadBalancer.APIAccessAllowedSourceCIDRs)
+					if l != 0 {
+						t.Errorf("unexpected size of apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs: %d", l)
+						t.FailNow()
+					}
+				},
+			},
+		},
 		{
 			// See https://github.com/kubernetes-incubator/kube-aws/issues/365
 			context:    "WithClusterNameContainsHyphens",
