@@ -1428,7 +1428,7 @@
     {{end}}
     {{end}}
 
-    {{if not .InternetGatewayID}}
+    {{if not .VPCID}}
     ,
     "{{.InternetGatewayLogicalName}}": {
       "Properties": {
@@ -1445,9 +1445,6 @@
       },
       "Type": "AWS::EC2::InternetGateway"
     }
-    {{end}}
-
-    {{if not .VPCID}}
     ,
     "{{.VPCLogicalName}}": {
       "Properties": {
