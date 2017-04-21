@@ -1243,6 +1243,8 @@ write_files:
           - --secure-port=443
           {{if .Etcd.Version.Is3}}
           - --storage-backend=etcd3
+          {{else}}
+          - --storage-backend=etcd2
           {{end}}
           - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
           {{ if .AuthTokensConfig.HasTokens }}
