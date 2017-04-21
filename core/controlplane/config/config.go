@@ -1334,14 +1334,20 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 
 		allPrivate := true
 		allPublic := true
+		allExistingRouteTable := true
 
 		for i, subnet := range c.Subnets {
 			if subnet.Validate(); err != nil {
 				return nil, fmt.Errorf("failed to validate subnet: %v", err)
 			}
+
+			allExistingRouteTable = allExistingRouteTable && !subnet.ManageRouteTable()
+			allPrivate = allPrivate && subnet.Private
+			allPublic = allPublic && subnet.Public()
 			if subnet.HasIdentifier() {
 				continue
 			}
+
 			if subnet.AvailabilityZone == "" {
 				return nil, fmt.Errorf("availabilityZone must be set for subnet #%d", i)
 			}
@@ -1362,8 +1368,21 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 				return nil, fmt.Errorf("either subnets[].routeTable.id(%s) or routeTableId(%s) but not both can be specified", subnet.RouteTableID(), c.RouteTableID)
 			}
 
-			allPrivate = allPrivate && subnet.Private
-			allPublic = allPublic && subnet.Public()
+			if subnet.ManageSubnet() && (subnet.Public() && c.MapPublicIPs) && c.VPCID != "" && (subnet.ManageRouteTable() && c.RouteTableID == "") && c.InternetGatewayID == "" {
+				return nil, errors.New("internetGatewayId can't be omitted when there're one or more managed public subnets in an existing VPC")
+			}
+		}
+
+		// All the subnets are explicitly/implicitly(they're public by default) configured to be "public".
+		// They're also configured to reuse existing route table(s).
+		// However, the IGW, which won't be applied to anywhere, is specified
+		if (allPublic && c.MapPublicIPs) && (c.RouteTableID != "" || allExistingRouteTable) && c.InternetGatewayID != "" {
+			return nil, errors.New("internetGatewayId can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway")
+		}
+
+		// All the subnets are explicitly configured to be "private" but the IGW, which won't be applied anywhere, is specified
+		if (allPrivate || !c.MapPublicIPs) && c.InternetGatewayID != "" {
+			return nil, errors.New("internetGatewayId can't be spcified when all the subnets are existing private subnets")
 		}
 
 		if c.RouteTableID != "" && !allPublic && !allPrivate {
