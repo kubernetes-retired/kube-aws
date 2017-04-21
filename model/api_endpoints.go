@@ -6,7 +6,7 @@ import (
 
 type APIEndpoints []APIEndpoint
 
-// DefaultAPIEndpointName returns the default endpoint name used when you've omitted the `name` key in each item of the `apiEndpintsp[]` array
+// DefaultAPIEndpointName is the default endpoint name used when you've omitted `apiEndpoints` but not `externalDNSName`
 const DefaultAPIEndpointName = "Default"
 
 // NewDefaultAPIEndpoints creates the slice of API endpoints containing only the default one which is with arbitrary DNS name and an ELB
