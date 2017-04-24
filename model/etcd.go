@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -128,7 +129,7 @@ func (e Etcd) SecurityGroupRefs() []string {
 	refs := []string{}
 
 	for _, id := range e.SecurityGroupIds {
-		refs = append(refs, id)
+		refs = append(refs, fmt.Sprintf(`"%s"`, id))
 	}
 
 	refs = append(

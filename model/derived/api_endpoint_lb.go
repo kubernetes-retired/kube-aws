@@ -59,7 +59,7 @@ func (b APIEndpointLB) SecurityGroupRefs() []string {
 	refs := []string{}
 
 	for _, id := range b.SecurityGroupIds {
-		refs = append(refs, id)
+		refs = append(refs, fmt.Sprintf(`"%s"`, id))
 	}
 
 	if b.ManageSecurityGroup() {
