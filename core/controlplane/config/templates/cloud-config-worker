@@ -180,7 +180,6 @@ coreos:
         ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
         {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
-        --api-servers={{.APIEndpointURL}} \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
         {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
         --cni-bin-dir=/opt/cni/bin \
@@ -204,7 +203,8 @@ coreos:
         --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
         --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
         {{- end }}
-        --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+        --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+        --require-kubeconfig
         Restart=always
         RestartSec=10
         [Install]
@@ -794,7 +794,7 @@ write_files:
         - name: local
           cluster:
             certificate-authority: /etc/kubernetes/ssl/ca.pem
-            server: https://{{.ExternalDNSName}}:443
+            server: {{.APIEndpointURL}}:443
         users:
         - name: kubelet-bootstrap
           user:
@@ -814,6 +814,7 @@ write_files:
         - name: local
           cluster:
             certificate-authority: /etc/kubernetes/ssl/ca.pem
+            server: {{.APIEndpointURL}}:443
         users:
         - name: kubelet
           user:
