@@ -194,7 +194,8 @@ coreos:
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
-        --register-schedulable=false \
+        {{if .Experimental.NodeLabels.Enabled}}--node-labels {{.Experimental.NodeLabels.String}} \
+        {{end}}--register-schedulable=false \
         --allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
         --cluster_dns={{.DNSServiceIP}} \
