@@ -120,7 +120,7 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled: false,
 			},
 			NodeLabels: controlplane_config.NodeLabels{},
-			Taints:     []controlplane_config.Taint{},
+			Taints:     model.Taints{},
 		}
 
 		actual := c.Experimental
@@ -1142,7 +1142,7 @@ worker:
 								Enabled: true,
 							},
 						},
-						Taints: []controlplane_config.Taint{
+						Taints: model.Taints{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 					}
@@ -1255,7 +1255,7 @@ worker:
 						NodeLabels: controlplane_config.NodeLabels{
 							"kube-aws.coreos.com/role": "worker",
 						},
-						Taints: []controlplane_config.Taint{
+						Taints: model.Taints{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 					}
