@@ -87,7 +87,7 @@ func NewDefaultCluster() *Cluster {
 				Enabled: false,
 			},
 		},
-		Taints: []Taint{},
+		Taints: model.Taints{},
 	}
 
 	return &Cluster{
@@ -671,7 +671,7 @@ type Experimental struct {
 	Plugins                     Plugins                  `yaml:"plugins"`
 	DisableSecurityGroupIngress bool                     `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                   `yaml:"nodeMonitorGracePeriod"`
-	Taints                      []Taint                  `yaml:"taints"`
+	Taints                      model.Taints             `yaml:"taints"`
 	model.UnknownKeys           `yaml:",inline"`
 }
 
@@ -774,16 +774,6 @@ type Plugins struct {
 
 type Rbac struct {
 	Enabled bool `yaml:"enabled"`
-}
-
-type Taint struct {
-	Key    string `yaml:"key"`
-	Value  string `yaml:"value"`
-	Effect string `yaml:"effect"`
-}
-
-func (t Taint) String() string {
-	return fmt.Sprintf("%s=%s:%s", t.Key, t.Value, t.Effect)
 }
 
 type WaitSignal struct {
