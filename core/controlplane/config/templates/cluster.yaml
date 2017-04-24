@@ -185,7 +185,26 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  # ATTENTION: Consider limiting number of characters in clusterName and managedIamRoleName to avoid the resulting IAM
 #  # role name's length from exceeding the AWS limit: 64
 #  # See https://github.com/kubernetes-incubator/kube-aws/issues/347
-#  managedIamRoleName: "yourManagedRole"
+#  # if you omit this block kube-aws would create an IAM Role and a customer managed policy with a random name.
+#  #iam:
+#    # role:
+#       # This will create a named IAM Role managed by kube-aws with the name {AWS::Region}-$managedIamRoleName.
+#       # It will have attached a customer Managed Policy that you can modify afterwards if you need more permissions for your cluster.
+#       # Be careful with the Statements you modify because an update could overwrite your own.
+#       # the Statements included in the ManagedPolicy are the minimun ones required for the Controllers to run.
+#       # name: "yourManagedRole"
+#       # if you set managedPolicies here it will be attached in addition to the created managedPolicy in kube-aws for the cluster.
+#       # CAUTION: if you attach a more restrictive policy in some resources (i.e ec2:* Deny) you can make kube-aws fail.
+#       # managedPolicies:
+#       # -  arn: "arn:aws:iam::aws:policy/AdministratorAccess"
+#       # -  arn: "arn:aws:iam::YOURACCOUNTID:policy/YOURPOLICYNAME"
+
+#       # if you set an InstanceProfile kube-aws will NOT create any IAM Role and will use the configured instanceProfile.
+#       # CAUTION: you must ensure that the IAM Role linked to the listed InstanceProfile has enough permissions to ensure kube-aws to run.
+#       # if you dont know which permissions are required is recommended to create a cluster with a managed role.
+#       # instanceProfile:
+#       #   arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
+
 #  # If omitted, public subnets are created by kube-aws and used for controller nodes
 #  subnets:
 #    # References subnets defined under the top-level `subnets` key by their names
@@ -282,6 +301,25 @@ worker:
 #      # If not specified, defaults to `worker.apiEndpointName`
 #      apiEndpointName: versionedPublic
 #
+#     # if you omit this block kube-aws would create an IAM Role and a customer managed policy with a random name.
+#      #iam:
+#       # role:
+#       # This will create a named IAM Role managed by kube-aws with the name {AWS::Region}-$managedIamRoleName.
+#       # It will have attached a customer Managed Policy that you can modify afterwards if you need more permissions for your cluster.
+#       # Be careful with the Statements you modify because an update could overwrite your own.
+#       # the Statements included in the ManagedPolicy are the minimun ones required for the Controllers to run.
+#       #   name: "yourManagedRole"
+#       # if you set managedPolicies here it will be attached in addition to the created managedPolicy in kube-aws for the cluster.
+#       # CAUTION: if you attach a more restrictive policy in some resources (i.e ec2:* Deny) you can make kube-aws fail.
+#       #   managedPolicies:
+#       #     - arn: "arn:aws:iam::aws:policy/AdministratorAccess"
+#       #     - arn: "arn:aws:iam::YOURACCOUNTID:policy/YOURPOLICYNAME"
+
+#       # if you set an InstanceProfile kube-aws will NOT create any IAM Role and will use the configured instanceProfile.
+#       # CAUTION: you must ensure that the IAM Role linked to the listed InstanceProfile has enough permissions to ensure kube-aws to run.
+#       # if you dont know which permissions are required is recommended to create a cluster with a managed role.
+#       # instanceProfile:
+#       #   arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #      # Configuration for external managed ALBs Target Groups for worker nodes
 #      targetGroup:
 #        enabled: true

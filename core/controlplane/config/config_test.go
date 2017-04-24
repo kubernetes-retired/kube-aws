@@ -457,7 +457,7 @@ subnets:
 		}
 		if !reflect.DeepEqual(c.Subnets, conf.subnets) {
 			t.Errorf(
-				"parsed subnets %s does not match expected subnets %s in config: %s",
+				"parsed subnets %+v does not match expected subnets %+v in config: %s",
 				c.Subnets,
 				conf.subnets,
 				confBody,

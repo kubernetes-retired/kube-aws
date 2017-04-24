@@ -78,11 +78,17 @@
             {{if $spec.SpotPrice}}
             "SpotPrice": "{{$spec.SpotPrice}}",
             {{end}}
+            {{if $.IAMConfig.InstanceProfile.Arn }}
+            "IamInstanceProfile": {
+              "Arn": "{{$.IAMConfig.InstanceProfile.Arn}}" 
+            },
+            {{else}}
             "IamInstanceProfile": {
               "Arn": {
                 "Fn::GetAtt" : ["IAMInstanceProfileWorker", "Arn"]
               }
             },
+            {{end}}
             "BlockDeviceMappings": [
               {
                 "DeviceName": "/dev/xvda",
@@ -233,9 +239,11 @@
           }
           {{- end -}}
         ],
-        "IamInstanceProfile": {
-          "Ref": "IAMInstanceProfileWorker"
-        },
+         {{if .IAMConfig.InstanceProfile.Arn }}
+        "IamInstanceProfile": "{{.IAMConfig.InstanceProfile.Arn}}",
+        {{else}}
+        "IamInstanceProfile": { "Ref": "IAMInstanceProfileWorker" },
+        {{end}}
         "ImageId": "{{.AMI}}",
         "InstanceType": "{{.InstanceType}}",
         {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
@@ -253,23 +261,13 @@
         "UserData": {{template "UserData" $}}
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
+    {{if not .IAMConfig.InstanceProfile.Arn}}
     },
-{{end}}
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "kube-aws Kubernetes node pool {{.ClusterName}} {{.NodePoolName}}",
-  "Parameters" : {
-    "ControlPlaneStackName": {
-      "Type": "String",
-      "Description": "The name of a control-plane stack used to import values into this stack"
-    }
-  },
-  "Resources": {
-    {{if .SpotFleet.Enabled}}
-    {{template "SpotFleet" .}}
     {{else}}
-    {{template "AutoScaling" .}}
+    }
     {{end}}
+{{end}}
+{{define "IAMRole"}}
     "IAMInstanceProfileWorker": {
       "Properties": {
         "Path": "/",
@@ -281,32 +279,14 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
-    "IAMRoleWorker": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
+    "IAMManagedPolicyWorker" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Policy for managing kube-aws k8s Node Pool {{.NodePoolName}} ",
+        "Path" : "/",
+        "PolicyDocument" :   {
+          "Version":"2012-10-17",
           "Statement": [
-            {
-              "Action": [
-                "sts:AssumeRole"
-              ],
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "ec2.{{.Region.PublicDomainName}}"
-                ]
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "Path": "/",
-        {{if .ManagedIamRoleName }}
-        "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::StackName"},"-",{"Ref": "AWS::Region"},"-","{{.ManagedIamRoleName}}"]]},
-        {{end}}
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
                 {
                   "Action": "ec2:Describe*",
                   "Effect": "Allow",
@@ -393,13 +373,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{end}}
                 {{if or .LoadBalancer.Enabled  .TargetGroup.Enabled}}
                 {
                   "Action": "elasticloadbalancing:*",
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-                {{end}}
                 {{end}}
                 {
                   "Action": [
@@ -414,22 +394,69 @@
                   "Resource": "*",
                   "Effect": "Allow"
                 }
+            ]
+        }
+      }
+    },
+    "IAMRoleWorker": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
               ],
-              "Version": "2012-10-17"
-            },
-            "PolicyName": "root"
-          }
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.{{.Region.PublicDomainName}}"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        {{if .IAMConfig.Role.Name }}
+        "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::Region"},"-","{{.IAMConfig.Role.Name}}"]]},
+        {{end}}
+        "ManagedPolicyArns": [ 
+          {{range $policyIndex, $policyArn := .IAMConfig.Role.ManagedPolicies }}
+            "{{$policyArn.Arn}}",
+          {{end}}
+          {"Ref": "IAMManagedPolicyWorker"}
         ]
       },
       "Type": "AWS::IAM::Role"
     }
+{{end}}
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "kube-aws Kubernetes node pool {{.ClusterName}} {{.NodePoolName}}",
+  "Parameters" : {
+    "ControlPlaneStackName": {
+      "Type": "String",
+      "Description": "The name of a control-plane stack used to import values into this stack"
+    }
+  },
+  "Resources": {
+    {{if .SpotFleet.Enabled}}
+    {{template "SpotFleet" .}}
+    {{else}}
+    {{template "AutoScaling" .}}
+    {{end}}
+    {{if not .IAMConfig.InstanceProfile.Arn}}
+    {{template "IAMRole" .}}
+    {{end}}
   },
   "Outputs": {
+    {{if not .IAMConfig.InstanceProfile.Arn }}
     "WorkerIAMRoleArn": {
       "Description": "The ARN of the IAM role for this Node Pool",
       "Value": { "Fn::GetAtt": ["IAMRoleWorker", "Arn"] },
       "Export": { "Name": { "Fn::Sub": "${AWS::StackName}-WorkerIAMRoleArn" } }
     },
+    {{end}}
     "StackName": {
       "Description": "The name of this stack",
       "Value": { "Ref": "AWS::StackName" }
