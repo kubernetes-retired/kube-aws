@@ -275,6 +275,10 @@ func (c *Cluster) ConsumeDeprecatedKeys() {
 		fmt.Println("WARN: controllerInstanceType is deprecated and will be removed in v0.9.7. Please use controller.instanceType instead")
 		c.Controller.InstanceType = *c.DeprecatedControllerInstanceType
 	}
+	if c.Controller.DeprecatedControllerManagedIamRoleName != "" {
+		fmt.Println("WARN: controller.managedIamRoleName is deprecated and will be removed in v0.9.7. Please use controller.iam.managedIamRoleName instead")
+		c.Controller.IAMConfig.Role.Name = c.Controller.DeprecatedControllerManagedIamRoleName
+	}
 	if c.DeprecatedControllerCreateTimeout != nil {
 		fmt.Println("WARN: controllerCreateTimeout is deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead")
 		c.Controller.CreateTimeout = *c.DeprecatedControllerCreateTimeout
@@ -1251,7 +1255,7 @@ func (c Cluster) valid() error {
 		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/kubernetes-incubator/kube-aws/issues/258 for more information`)
 	}
 
-	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.Controller.ManagedIamRoleName, c.Region.String()); e != nil {
+	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.Controller.IAMConfig.Role.Name, c.Region.String()); e != nil {
 		return e
 	}
 

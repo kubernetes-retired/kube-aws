@@ -7,15 +7,17 @@ import (
 	"fmt"
 	"strings"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"errors"
+	"strconv"
+
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/model/derived"
-	"gopkg.in/yaml.v2"
-	"strconv"
 )
 
 type Ref struct {
@@ -170,6 +172,11 @@ func (c *ProvidedConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	if c.DeprecatedRootVolumeIOPS != nil {
 		fmt.Println("WARN: worker.nodePools[].rootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].rootVolume.iops instead")
 		c.RootVolume.IOPS = *c.DeprecatedRootVolumeIOPS
+	}
+
+	if c.WorkerNodePoolConfig.DeprecatedNodePoolManagedIamRoleName != "" {
+		fmt.Println("WARN: worker.nodePools[].managedIamRoleName is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].iam.managedRoleName instead")
+		c.IAMConfig.Role.Name = c.WorkerNodePoolConfig.DeprecatedNodePoolManagedIamRoleName
 	}
 	if c.DeprecatedRootVolumeSize != nil {
 		fmt.Println("WARN: worker.nodePools[].rootVolumeSize is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].rootVolume.size instead")
@@ -360,7 +367,7 @@ func (c ProvidedConfig) valid() error {
 		return fmt.Errorf("awsNodeLabels can't be enabled for node pool because the total number of characters in clusterName(=\"%s\") + node pool's name(=\"%s\") exceeds the limit of %d", c.ClusterName, c.NodePoolName, limit)
 	}
 
-	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.ManagedIamRoleName, c.Region.String()); e != nil {
+	if e := cfnresource.ValidateRoleNameLength(c.ClusterName, c.NestedStackName(), c.WorkerNodePoolConfig.IAMConfig.Role.Name, c.Region.String()); e != nil {
 		return e
 	}
 
