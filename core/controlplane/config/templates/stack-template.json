@@ -374,7 +374,7 @@
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
                   "Condition": {
                     "StringLike": {
-                      "s3:prefix": "{{$.EtcdSnapshotsS3Prefix}}/*"
+                      "s3:prefix": { "Fn::Join" : [ "", [{{$.EtcdSnapshotsS3PrefixRef}}, "/*" ]]}
                     }
                   }
                 },
@@ -384,7 +384,7 @@
                   "Action": [
                     "s3:*"
                   ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Path}}/*"
+                  "Resource": { "Fn::Join" : [ "", ["arn:{{.Region.Partition}}:s3:::", {{$.EtcdSnapshotsS3PathRef}}, "/*" ]]}
                 },
                 {{/* Required for `etcdadm reconfigure` to determine the number of active etcd nodes */}}
                 {
@@ -614,7 +614,7 @@
                     "etcd-member",
                   "'\n",
                   "ETCDADM_CLUSTER_SNAPSHOTS_S3_URI='",
-                    "s3://{{$.EtcdSnapshotsS3Path}}",
+                    { "Fn::Join" : [ "", ["s3://", {{$.EtcdSnapshotsS3PathRef}} ]] },
                   "'\n",
                   "ETCDADM_STATE_FILES_DIR='",
                     "/var/run/coreos/etcdadm",

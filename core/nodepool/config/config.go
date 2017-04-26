@@ -117,9 +117,9 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 
 	stackConfig.StackTemplateOptions = opts
 
-	baseS3URI := strings.TrimSuffix(opts.S3URI, "/")
-	stackConfig.S3URI = fmt.Sprintf("%s/kube-aws/clusters/%s/exported/stacks", baseS3URI, c.ClusterName)
-	stackConfig.KubeResourcesAutosave.S3Path = fmt.Sprintf("%s/kube-aws/clusters/%s/backup", strings.TrimPrefix(baseS3URI, "s3://"), c.ClusterName)
+	s3Folders := model.NewS3Folders(opts.S3URI, c.ClusterName)
+	stackConfig.S3URI = s3Folders.ClusterExportedStacks().URI()
+	stackConfig.KubeResourcesAutosave.S3Path = s3Folders.ClusterBackups().Path()
 
 	if opts.SkipWait {
 		enabled := false
