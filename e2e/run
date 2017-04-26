@@ -235,6 +235,8 @@ controller:
   count: $CONTROLLER_COUNT
 waitSignal:
   enabled: true
+kubeResourcesAutosave:
+  enabled: true
 experimental:
   awsNodeLabels:
     enabled: true

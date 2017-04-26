@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
 	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
 // VERSION set by build script
@@ -116,7 +117,8 @@ func (c *ClusterRef) validateExistingVPCState(ec2Svc ec2Service) error {
 
 func NewCluster(cfg *config.Cluster, opts config.StackTemplateOptions, awsDebug bool) (*Cluster, error) {
 	cluster := NewClusterRef(cfg, awsDebug)
-	cluster.KubeResourcesAutosave.S3Path = fmt.Sprintf("%s/kube-aws/clusters/%s/backup", strings.TrimPrefix(opts.S3URI, "s3://"), cfg.ClusterName)
+	// TODO Do this in a cleaner way e.g. in config.go
+	cluster.KubeResourcesAutosave.S3Path = model.NewS3Folders(opts.S3URI, cluster.ClusterName).ClusterBackups().Path()
 	stackConfig, err := cluster.StackConfig(opts)
 	if err != nil {
 		return nil, err
@@ -137,7 +139,7 @@ func (c *Cluster) Assets() (cfnstack.Assets, error) {
 		return nil, fmt.Errorf("Error while rendering template : %v", err)
 	}
 
-	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI, c.StackConfig.Region).
+	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.ClusterExportedStacksS3URI(), c.StackConfig.Region).
 		Add(c.UserDataControllerFileName(), c.UserDataController).
 		Add(c.UserDataEtcdFileName(), c.UserDataEtcd).
 		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
@@ -199,7 +201,7 @@ func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
 	return cfnstack.NewProvisioner(
 		c.StackName(),
 		c.StackTags,
-		c.S3URI,
+		c.ClusterExportedStacksS3URI(),
 		c.Region,
 		stackPolicyBody,
 		c.session)

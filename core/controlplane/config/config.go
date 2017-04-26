@@ -1036,8 +1036,7 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 
 	stackConfig.StackTemplateOptions = opts
 
-	baseS3URI := strings.TrimSuffix(opts.S3URI, "/")
-	stackConfig.S3URI = fmt.Sprintf("%s/kube-aws/clusters/%s/exported/stacks", baseS3URI, c.ClusterName)
+	stackConfig.S3URI = strings.TrimSuffix(opts.S3URI, "/")
 
 	if opts.SkipWait {
 		enabled := false
