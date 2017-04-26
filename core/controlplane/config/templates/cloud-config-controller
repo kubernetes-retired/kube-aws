@@ -604,7 +604,7 @@ write_files:
 
       {{ if .Experimental.TLSBootstrap.Enabled }}
       kubectl create -f "${mfdir}/cluster-roles/kubelet-bootstrap.yaml" | echo 'Failed to create the cluster role named "kubelet-bootstrap". Skipping'
-      kubectl create -f "${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" |  | echo 'Failed to create the cluster role binding "kubelet-bootstrap". Skipping'
+      kubectl create -f "${mfdir}/cluster-role-bindings/kubelet-bootstrap.yaml" | echo 'Failed to create the cluster role binding "kubelet-bootstrap". Skipping'
       {{ end }}
       {{ end }}
 
