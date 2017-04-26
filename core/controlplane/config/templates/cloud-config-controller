@@ -700,6 +700,8 @@ write_files:
         selector:
           matchLabels:
             k8s-app: calico-node
+        updateStrategy:
+          type: RollingUpdate
         template:
           metadata:
             labels:
