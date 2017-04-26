@@ -1254,6 +1254,7 @@ write_files:
           {{if .Experimental.AuditLog.Enabled}}
           - --audit-log-maxage={{.Experimental.AuditLog.MaxAge}}
           - --audit-log-path={{.Experimental.AuditLog.LogPath}}
+          - --audit-log-maxbackup=1
           {{ end }}
           {{if .Experimental.Plugins.Rbac.Enabled}}
           - --authorization-mode=RBAC
