@@ -5,6 +5,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/coreos/userdatavalidation"
 	"github.com/kubernetes-incubator/kube-aws/filereader/jsontemplate"
 	"github.com/kubernetes-incubator/kube-aws/fingerprint"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"net/url"
 	"strings"
 )
@@ -33,7 +34,7 @@ func (c *StackConfig) UserDataControllerS3Prefix() (string, error) {
 }
 
 func (c *StackConfig) userDataControllerS3Directory() (string, error) {
-	s3uri, err := url.Parse(c.S3URI)
+	s3uri, err := url.Parse(c.ClusterExportedStacksS3URI())
 	if err != nil {
 		return "", fmt.Errorf("Error in userDataControllerS3Directory : %v", err)
 	}
@@ -66,7 +67,7 @@ func (c *StackConfig) UserDataEtcdS3Prefix() (string, error) {
 }
 
 func (c *StackConfig) userDataEtcdS3Directory() (string, error) {
-	s3uri, err := url.Parse(c.S3URI)
+	s3uri, err := url.Parse(c.ClusterExportedStacksS3URI())
 	if err != nil {
 		return "", fmt.Errorf("Error in userDataEtcdS3Directory : %v", err)
 	}
@@ -88,28 +89,42 @@ func (c *StackConfig) UserDataEtcdFileName() string {
 	return "userdata-etcd-" + fingerprint.SHA256(c.UserDataEtcd)
 }
 
-func (c *StackConfig) EtcdSnapshotsS3Path() (string, error) {
-	s3uri, err := url.Parse(c.S3URI)
+func (c *StackConfig) s3Folders() model.S3Folders {
+	return model.NewS3Folders(c.S3URI, c.ClusterName)
+}
+
+func (c *StackConfig) ClusterS3URI() string {
+	return c.s3Folders().Cluster().URI()
+}
+
+func (c *StackConfig) ClusterExportedStacksS3URI() string {
+	return c.s3Folders().ClusterExportedStacks().URI()
+}
+
+// EtcdSnapshotsS3Path is a pair of a S3 bucket and a key of an S3 object containing an etcd cluster snapshot
+func (c *StackConfig) EtcdSnapshotsS3PathRef() (string, error) {
+	s3uri, err := url.Parse(c.ClusterS3URI())
 	if err != nil {
-		return "", fmt.Errorf("Error in EtcdSnapshotsS3Path : %v", err)
+		return "", fmt.Errorf("Error in EtcdSnapshotsS3PathRef : %v", err)
 	}
-	return fmt.Sprintf("%s%s/etcd-snapshots", s3uri.Host, s3uri.Path), nil
+	return fmt.Sprintf(`{ "Fn::Join" : [ "", [ "%s%s/instances/", { "Fn::Select" : [ "2", { "Fn::Split": [ "/", { "Ref": "AWS::StackId" }]} ]}, "/etcd-snapshots" ]]}`, s3uri.Host, s3uri.Path), nil
 }
 
 func (c *StackConfig) EtcdSnapshotsS3Bucket() (string, error) {
-	s3uri, err := url.Parse(c.S3URI)
+	s3uri, err := url.Parse(c.ClusterS3URI())
 	if err != nil {
 		return "", fmt.Errorf("Error in EtcdSnapshotsS3Bucket : %v", err)
 	}
 	return s3uri.Host, nil
 }
 
-func (c *StackConfig) EtcdSnapshotsS3Prefix() (string, error) {
-	s3uri, err := url.Parse(c.S3URI)
+func (c *StackConfig) EtcdSnapshotsS3PrefixRef() (string, error) {
+	s3uri, err := url.Parse(c.ClusterS3URI())
 	if err != nil {
 		return "", fmt.Errorf("Error in EtcdSnapshotsS3Prefix : %v", err)
 	}
-	return strings.TrimLeft(s3uri.Path, "/"), nil
+	s3path := fmt.Sprintf(`{ "Fn::Join" : [ "", [ "%s/instances/", { "Fn::Select" : [ "2", { "Fn::Split": [ "/", { "Ref": "AWS::StackId" }]} ]}, "/etcd-snapshots" ]]}`, s3uri.Path)
+	return strings.TrimLeft(s3path, "/"), nil
 }
 
 func (c *StackConfig) ValidateUserData() error {
