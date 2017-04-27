@@ -191,6 +191,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # References subnets defined under the top-level `subnets` key by their names
 #    - name: ManagedPublicSubnet1
 #    - name: ManagedPublicSubnet2
+#  # CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer instead
 #  loadBalancer:
 #    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
 #    # only public subnets defined under the top-level `subnets` key are used for the ELB
