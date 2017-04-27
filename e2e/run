@@ -105,6 +105,14 @@ init() {
   customize_cluster_yaml
 }
 
+regenerate_credentials() {
+  cd ${WORK_DIR}
+
+  rm -rf ./credentials
+
+  ${KUBE_AWS_CMD} render credentials --generate-ca
+}
+
 configure() {
   cd ${WORK_DIR}
 
