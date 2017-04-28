@@ -455,6 +455,15 @@ worker:
 #      clusterAutoscalerSupport:
 #        enabled: true
 #
+#      # Mount an EFS only to a specific node pool.
+#      # This is a NFS share that will be available across a node pool through a hostPath volume on the "/efs" mountpoint
+#      #
+#      # If you'd like to configure an EFS mounted to every node, use the top-level `elasticFileSystemId` instead
+#      #
+#      # Beware that currently it doesn't work for a node pool in subnets managed by kube-aws.
+#      # In other words, this node pool must be in existing subnets managed by you by specifying subnets[].id to make this work.
+#      elasticFileSystemId: fs-47a2c22e
+#
 #      # This option has not yet been tested with rkt as container runtime
 #      ephemeralImageStorage:
 #        enabled: true
@@ -1022,16 +1031,26 @@ worker:
 # Use Calico for network policy.
 # useCalico: false
 
-# Create MountTargets for a pre-existing Elastic File System (Amazon EFS). Enter the resource id, eg "fs-47a2c22e"
+# Create MountTargets to subnets managed by kube-aws for a pre-existing Elastic File System (Amazon EFS),
+# and then mount to every node.
+#
+# This is for mounting an EFS to every node.
+# If you'd like to mount an EFS only to a specific node pool, set `worker.nodePools[].elasticFileSystemId` instead.
+#
+# Enter the resource id, eg "fs-47a2c22e"
 # This is a NFS share that will be available across the entire cluster through a hostPath volume on the "/efs" mountpoint
 #
 # You can create a new EFS volume using the CLI:
 # $ aws efs create-file-system --creation-token $(uuidgen)
 #
-# Beware that an EFS file system can not be mounted from mutiple subnets from the same availability zone and
-# therefore this feature won't work like you might have expected when you're deploying your cluster to an existing VPC and
-# wanted to mount an existing EFS to the subnet(s) created by kube-aws
-# See https://github.com/kubernetes-incubator/kube-aws/issues/208 for more information
+# Beware that:
+# * an EFS file system can not be mounted from multiple subnets from the same availability zone and
+#   therefore this feature won't work like you might have expected when you're deploying your cluster to an existing VPC and
+#   wanted to mount an existing EFS to the subnet(s) created by kube-aws
+#   See https://github.com/kubernetes-incubator/kube-aws/issues/208 for more information
+# * kube-aws doesn't create MountTargets for existing subnets(=NOT managed by kube-aws). If you'd like to bring your own subnets
+#   to be used by kube-aws, it is now your responsibility to configure the subnets, including creating MountTargets, accordingly
+#   to your requirements
 #elasticFileSystemId: fs-47a2c22e
 
 # Create shared persistent volume
