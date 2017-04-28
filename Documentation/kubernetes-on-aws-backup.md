@@ -49,3 +49,9 @@ Inside each namespace folder are be several .json files of the Kubernetes resour
 ...
 
 ```
+
+## Notes
+
+- The exportation/synchronisation of the backup files to S3 is not guaranteed to succeed every time, because of this there may be few instances of the pusher container reporting the error:```Could not connect to the endpoint URL: "https://......" ```. This is an AWS issue.
+If such an error does occur then the pushing process will be attempted at the next push interval - default: 1 minute later. 
+Please see [#591](https://github.com/kubernetes-incubator/kube-aws/issues/591) for more information
