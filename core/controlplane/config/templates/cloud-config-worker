@@ -818,8 +818,13 @@ write_files:
           "policy": {
             "type": "k8s",
             "k8s_api_root": "{{.APIEndpointURL}}/api/v1/",
+            {{- if .Experimental.TLSBootstrap.Enabled }}
+            "k8s_client_key": "/etc/kubernetes/ssl/kubelet-client.key",
+            "k8s_client_certificate": "/etc/kubernetes/ssl/kubelet-client.crt",
+            {{- else }}
             "k8s_client_key": "/etc/kubernetes/ssl/worker-key.pem",
             "k8s_client_certificate": "/etc/kubernetes/ssl/worker.pem",
+            {{- end }}
             "k8s_certificate_authority": "/etc/kubernetes/ssl/ca.pem"
           }
         }
