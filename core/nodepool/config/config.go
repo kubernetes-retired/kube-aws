@@ -238,6 +238,15 @@ define one or more public subnets in cluster.yaml or explicitly reference privat
 		}
 	}
 
+	anySubnetIsManaged := false
+	for _, s := range c.Subnets {
+		anySubnetIsManaged = anySubnetIsManaged || s.ManageSubnet()
+	}
+
+	if anySubnetIsManaged && main.ElasticFileSystemID == "" && c.ElasticFileSystemID != "" {
+		return fmt.Errorf("elasticFileSystemId cannot be specified for a node pool in managed subnet(s), but was: %s", c.ElasticFileSystemID)
+	}
+
 	c.EtcdNodes = main.EtcdNodes
 	c.KubeResourcesAutosave = main.KubeResourcesAutosave
 
