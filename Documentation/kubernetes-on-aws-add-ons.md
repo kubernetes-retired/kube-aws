@@ -2,6 +2,42 @@
 
 kube-aws has built-in supports for several Kubernetes add-ons known to require additional configurations beforehand.
 
+## cluster-autoscaler
+
+[cluster-autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) is an add-on which automatically
+scales in/out your k8s cluster by removing/adding worker nodes according to resource utilization per node.
+
+To enable cluster-autoscaler, add the below settings to your cluster.yaml:
+
+```yaml
+addons:
+  clusterAutoscaler:
+    enabled: true
+worker:
+  nodePools:
+  - name: scaled
+    autoScalingGroup:
+      minSize: 1
+      maxSize: 10
+    autoscaling:
+      clusterAutoscaler:
+        enabled: true
+  - name: notScaled
+    autoScalingGroup:
+      minSize: 2
+      maxSize: 4
+```
+
+The above example configuration would:
+
+* By `addons.clusterAutoscaler.enabled`:
+  * Provide controller nodes appropriate IAM permissions to call necessary AWS APIs from CA
+  * Create a k8s deployment to run CA on one of controller nodes, so that CA can utilize the IAM permissions
+* By `worker.nodePools[0].autoscaling.clusterAutoscaler.enabled`:
+  * If there are unschedulable, pending pod(s) that is requesting more capacity, CA will add more nodes to the `scaled` node pool, up until the max size `10`
+  * If there are no unschdulable, pending pod(s) that is waiting for more capacity and one or more nodes are in low utlization, CA will remove node(s), down until the min size `1`
+* The second node pool `notScaled` is scaled manually by YOU, because you had not the autoscaling on it(=missing `autoscaling.clusterAutoscaler.enabled`)
+
 ## kube2iam
  
 [kube2iam](https://github.com/jtblin/kube2iam) is an add-on which provides IAM credentials for target IAM roles to pods running inside a Kubernetes cluster based on annotations.

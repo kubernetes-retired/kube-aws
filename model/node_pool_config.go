@@ -6,9 +6,9 @@ import (
 )
 
 type NodePoolConfig struct {
-	AutoScalingGroup                     AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
-	ClusterAutoscaler                    ClusterAutoscaler `yaml:"clusterAutoscaler"`
-	SpotFleet                            SpotFleet         `yaml:"spotFleet,omitempty"`
+	Autoscaling                          Autoscaling      `yaml:"autoscaling,omitempty"`
+	AutoScalingGroup                     AutoScalingGroup `yaml:"autoScalingGroup,omitempty"`
+	SpotFleet                            SpotFleet        `yaml:"spotFleet,omitempty"`
 	EC2Instance                          `yaml:",inline"`
 	IAMConfig                            IAMConfig `yaml:"iam,omitempty"`
 	DeprecatedNodePoolManagedIamRoleName string    `yaml:"managedIamRoleName,omitempty"`
@@ -25,13 +25,12 @@ type NodePoolConfig struct {
 }
 
 type ClusterAutoscaler struct {
-	MinSize     int `yaml:"minSize"`
-	MaxSize     int `yaml:"maxSize"`
+	Enabled     bool `yaml:"enabled,omitempty"`
 	UnknownKeys `yaml:",inline"`
 }
 
-func (a ClusterAutoscaler) Enabled() bool {
-	return a.MinSize > 0
+func (a ClusterAutoscaler) AutoDiscoveryTagKey() string {
+	return "k8s.io/cluster-autoscaler/enabled"
 }
 
 func NewDefaultNodePoolConfig() NodePoolConfig {

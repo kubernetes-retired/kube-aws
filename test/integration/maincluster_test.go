@@ -99,7 +99,7 @@ func TestMainClusterConfig(t *testing.T) {
 			AwsNodeLabels: controlplane_config.AwsNodeLabels{
 				Enabled: false,
 			},
-			ClusterAutoscalerSupport: controlplane_config.ClusterAutoscalerSupport{
+			ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 				Enabled: false,
 			},
 			TLSBootstrap: controlplane_config.TLSBootstrap{
@@ -130,7 +130,7 @@ func TestMainClusterConfig(t *testing.T) {
 			NodeDrainer: controlplane_config.NodeDrainer{
 				Enabled: false,
 			},
-			NodeLabels: controlplane_config.NodeLabels{},
+			NodeLabels: model.NodeLabels{},
 			Taints:     model.Taints{},
 		}
 
@@ -385,6 +385,72 @@ availabilityZone: us-west-1c
 		assertConfig  []ConfigTester
 		assertCluster []ClusterTester
 	}{
+		{
+			context: "WithAddons",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  rescheduler:
+    enabled: true
+  clusterAutoscaler:
+    enabled: true
+worker:
+  nodePools:
+  - name: pool1
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+				func(c *config.Config, t *testing.T) {
+					expected := model.Addons{
+						Rescheduler: model.Rescheduler{
+							Enabled: true,
+						},
+						ClusterAutoscaler: model.ClusterAutoscalerSupport{
+							Enabled: true,
+						},
+					}
+
+					actual := c.Addons
+
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf("addons didn't match : expected=%+v actual=%+v", expected, actual)
+					}
+				},
+			},
+			assertCluster: []ClusterTester{
+				hasDefaultCluster,
+			},
+		},
+		{
+			context: "WithAutoscalingByClusterAutoscaler",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  clusterAutoscaler:
+    enabled: true
+worker:
+  nodePools:
+  - name: pool1
+    autoscaling:
+      clusterAutoscaler:
+        enabled: true
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+				func(c *config.Config, t *testing.T) {
+					p := c.NodePools[0]
+
+					expected := true
+					actual := p.Autoscaling.ClusterAutoscaler.Enabled
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf("autoscaling.clusterAutoscaler.enabled didn't match : expected=%v actual=%v", expected, actual)
+					}
+				},
+			},
+			assertCluster: []ClusterTester{
+				hasDefaultCluster,
+			},
+		},
 		{
 			context: "WithAPIEndpointLBAPIAccessAllowedSourceCIDRsSpecified",
 			configYaml: configYamlWithoutExernalDNSName + `
@@ -1078,8 +1144,6 @@ experimental:
       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
   awsNodeLabels:
     enabled: true
-  clusterAutoscalerSupport:
-    enabled: true
   tlsBootstrap:
     enabled: true
   ephemeralImageStorage:
@@ -1170,8 +1234,8 @@ worker:
 						AwsNodeLabels: controlplane_config.AwsNodeLabels{
 							Enabled: true,
 						},
-						ClusterAutoscalerSupport: controlplane_config.ClusterAutoscalerSupport{
-							Enabled: true,
+						ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
+							Enabled: false,
 						},
 						TLSBootstrap: controlplane_config.TLSBootstrap{
 							Enabled: true,
@@ -1214,7 +1278,7 @@ worker:
 						NodeDrainer: controlplane_config.NodeDrainer{
 							Enabled: true,
 						},
-						NodeLabels: controlplane_config.NodeLabels{
+						NodeLabels: model.NodeLabels{
 							"kube-aws.coreos.com/role": "worker",
 						},
 						Plugins: controlplane_config.Plugins{
@@ -1305,7 +1369,7 @@ worker:
 						AwsNodeLabels: controlplane_config.AwsNodeLabels{
 							Enabled: true,
 						},
-						ClusterAutoscalerSupport: controlplane_config.ClusterAutoscalerSupport{
+						ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 							Enabled: true,
 						},
 						TLSBootstrap: controlplane_config.TLSBootstrap{
@@ -1332,7 +1396,7 @@ worker:
 						NodeDrainer: controlplane_config.NodeDrainer{
 							Enabled: true,
 						},
-						NodeLabels: controlplane_config.NodeLabels{
+						NodeLabels: model.NodeLabels{
 							"kube-aws.coreos.com/role": "worker",
 						},
 						Taints: model.Taints{
@@ -3486,12 +3550,41 @@ worker:
 		expectedErrorMessage string
 	}{
 		{
+			context: "WithAutoscalingEnabledButClusterAutoscalerIsDefault",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    autoscaling:
+      clusterAutoscaler:
+        enabled: true
+`,
+			expectedErrorMessage: "Autoscaling with cluster-autoscaler can't be enabled for node pools because " +
+				"you didn't enabled the cluster-autoscaler addon. Enable it by turning on `addons.clusterAutoscaler.enabled`",
+		},
+		{
+			context: "WithAutoscalingEnabledButClusterAutoscalerIsNot",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  clusterAutoscaler:
+    enabled: false
+worker:
+  nodePools:
+  - name: pool1
+    autoscaling:
+      clusterAutoscaler:
+        enabled: true
+`,
+			expectedErrorMessage: "Autoscaling with cluster-autoscaler can't be enabled for node pools because " +
+				"you didn't enabled the cluster-autoscaler addon. Enable it by turning on `addons.clusterAutoscaler.enabled`",
+		},
+		{
 			context: "WithClusterAutoscalerEnabledForControlPlane",
 			configYaml: minimalValidConfigYaml + `
 controller:
-  clusterAutoscaler:
-    minSize: 1
-    maxSize: 10
+  autoscaling:
+    clusterAutoscaler:
+      enabled: true
 `,
 			expectedErrorMessage: "cluster-autoscaler can't be enabled for a control plane because " +
 				"allowing so for a group of controller nodes spreading over 2 or more availability zones " +
@@ -4100,10 +4193,11 @@ worker:
 worker:
   nodePools:
   - name: pool1
-    clusterAutoscaler:
-      baz: 1
+    autoscaling:
+      clusterAutoscaler:
+        baz: 1
 `,
-			expectedErrorMessage: "unknown keys found in worker.nodePools[0].clusterAutoscaler: baz",
+			expectedErrorMessage: "unknown keys found in worker.nodePools[0].autoscaling.clusterAutoscaler: baz",
 		},
 		{
 			context: "WithUnknownKeyInAddons",
@@ -4121,6 +4215,15 @@ addons:
     foo: yeah
 `,
 			expectedErrorMessage: "unknown keys found in addons.rescheduler: foo",
+		},
+		{
+			context: "WithUnknownKeyInClusterAutoscalerAddon",
+			configYaml: minimalValidConfigYaml + `
+addons:
+  clusterAutoscaler:
+    foo: yeah
+`,
+			expectedErrorMessage: "unknown keys found in addons.clusterAutoscaler: foo",
 		},
 		{
 			context: "WithTooLongControllerIAMRoleName",
