@@ -203,12 +203,13 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
-                {{if .Experimental.ClusterAutoscalerSupport.Enabled}}
+                {{if .Addons.ClusterAutoscaler.Enabled}}
                 {
                 "Effect": "Allow",
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
                     "autoscaling:DescribeAutoScalingInstances",
+                    "autoscaling:DescribeTags",
                     "autoscaling:SetDesiredCapacity",
                     "autoscaling:TerminateInstanceInAutoScalingGroup"
                   ],

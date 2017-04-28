@@ -78,7 +78,7 @@ main_all() {
       up
     fi
     if [ "$KUBE_AWS_UPDATE" != "" ]; then
-      update
+      scale_out
     fi
   fi
 }
@@ -104,6 +104,13 @@ init() {
 
   customize_cluster_yaml
 }
+
+regenerate_stack() {
+  cd ${WORK_DIR}
+
+  ${KUBE_AWS_CMD} render stack
+}
+
 
 regenerate_credentials() {
   cd ${WORK_DIR}
@@ -156,11 +163,15 @@ customize_cluster_yaml() {
 worker:
   nodePools:
   - name: asg1
+    autoscaling:
+      # this pool is an autoscaling-target of CA
+      clusterAutoscaler:
+        enabled: true
+    # give this pool permissions to run CA
+    clusterAutoscalerSupport:
+      enabled: true
   - name: asg2
     autoScalingGroup:
-      minSize: 0
-      maxSize: 2
-    clusterAutoscaler:
       minSize: 0
       maxSize: 2
   - name: asg3
@@ -201,6 +212,8 @@ worker:
   - name: fleet1
     spotFleet:
       targetCapacity: 1
+    clusterAutoscalerSupport:
+      enabled: true
   - name: fleet2
     spotFleet:
       targetCapacity: 2
@@ -210,9 +223,11 @@ worker:
       enabled: true
       environment:
         CFNSTACK: '{\"Ref\":\"AWS::StackId\"}'
-    clusterAutoscaler:
-      minSize: 1
-      maxSize: 3
+    autoscaling:
+      clusterAutoscaler:
+        enabled: true
+    clusterAutoscalerSupport:
+      enabled: true
     nodeDrainer:
       enabled: true
     nodeLabels:
@@ -249,6 +264,9 @@ experimental:
   awsNodeLabels:
     enabled: true
   auditLog:
+    enabled: true
+addons:
+  clusterAutoscaler:
     enabled: true
 # etcd configuration
 etcd:
@@ -337,7 +355,12 @@ main_destroy() {
 update() {
   cd ${WORK_DIR}
 
-  ${KUBE_AWS_CMD} update --s3-uri ${KUBE_AWS_S3_URI} || true
+  ${KUBE_AWS_CMD} update --s3-uri ${KUBE_AWS_S3_URI} --pretty-print || true
+  aws cloudformation wait stack-update-complete --stack-name ${KUBE_AWS_CLUSTER_NAME}
+}
+
+scale_out() {
+  cd ${WORK_DIR}
 
   SED_CMD="sed -e 's/count: 1/count: 2/' -e 's/controllerCount: 2/controllerCount: 3/'"
   diff --unified cluster.yaml <(cat cluster.yaml | sh -c "${SED_CMD}") || true
@@ -522,6 +545,10 @@ all_destroy() {
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
     testinfra_destroy
   fi
+}
+
+kubesys() {
+  kubectl --namespace kube-system "$@"
 }
 
 if [ "$1" == "" ]; then
