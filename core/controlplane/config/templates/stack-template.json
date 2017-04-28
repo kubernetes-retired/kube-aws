@@ -786,7 +786,7 @@
         "HealthCheck" : {
           "HealthyThreshold" : "3",
           "Interval" : "10",
-          "Target" : "TCP:443",
+          "Target" : "SSL:443",
           "Timeout" : "8",
           "UnhealthyThreshold" : "3"
         },
