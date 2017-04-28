@@ -522,6 +522,32 @@ worker:
 			},
 		},
 		{
+			context: "WithElasticFileSystemIdInSpecificNodePool",
+			configYaml: mainClusterYaml + `
+subnets:
+- name: existing1
+  id: subnet-12345
+  availabilityZone: us-west-1a
+worker:
+  nodePools:
+  - name: pool1
+    subnets:
+    - name: existing1
+    elasticFileSystemId: efs-12345
+  - name: pool2
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.NodePools[0].ElasticFileSystemID != "efs-12345" {
+						t.Errorf("Unexpected worker.nodePools[0].elasticFileSystemId: %s", c.NodePools[0].ElasticFileSystemID)
+					}
+					if c.NodePools[1].ElasticFileSystemID != "" {
+						t.Errorf("Unexpected worker.nodePools[1].elasticFileSystemId: %s", c.NodePools[1].ElasticFileSystemID)
+					}
+				},
+			},
+		},
+		{
 			context: "WithEtcdDataVolumeEncrypted",
 			configYaml: minimalValidConfigYaml + `
 etcd:
@@ -3309,6 +3335,23 @@ controller:
 			context:              "WithClusterNameContainsDots",
 			configYaml:           kubeAwsSettings.withClusterName("my.cluster").minimumValidClusterYaml(),
 			expectedErrorMessage: "clusterName(=my.cluster) is malformed. It must consist only of alphanumeric characters, colons, or hyphens",
+		},
+		{
+			context: "WithElasticFileSystemIdInSpecificNodePoolWithManagedSubnets",
+			configYaml: mainClusterYaml + `
+subnets:
+- name: managed1
+  availabilityZone: us-west-1a
+  instanceCIDR: 10.0.1.0/24
+worker:
+  nodePools:
+  - name: pool1
+    subnets:
+    - name: managed1
+    elasticFileSystemId: efs-12345
+  - name: pool2
+`,
+			expectedErrorMessage: "invalid node pool at index 0: elasticFileSystemId cannot be specified for a node pool in managed subnet(s), but was: efs-12345",
 		},
 		{
 			context: "WithEtcdAutomatedDisasterRecoveryRequiresAutomatedSnapshot",
