@@ -13,7 +13,7 @@ import (
 var (
 	cmdCalculator = &cobra.Command{
 		Use:          "calculator",
-		Short:        "Discovery the monthly cost of your cluster",
+		Short:        "Discover the monthly cost of your cluster",
 		Long:         ``,
 		RunE:         runCmdCalculator,
 		SilenceUsage: true,
