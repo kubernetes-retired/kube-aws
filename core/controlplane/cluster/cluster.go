@@ -155,7 +155,6 @@ func (c *Cluster) TemplateURL() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get template URL: %v", err)
 	}
-
 	return asset.URL(), nil
 }
 
