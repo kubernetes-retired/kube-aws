@@ -277,7 +277,7 @@ func TestMainClusterConfig(t *testing.T) {
 			}
 			for i, n := range c.NATGateways() {
 				if n.ManageNATGateway() {
-					t.Errorf("NGW #%d is expected to be unamanged by kube-aws but was not: %+v", i, n)
+					t.Errorf("NGW #%d is expected to be unmanaged by kube-aws but was not: %+v", i, n)
 				}
 				if n.ManageEIP() {
 					t.Errorf("EIP for NGW #%d is expected to be unmanaged by kube-aws but was not: %+v", i, n)
@@ -1350,14 +1350,18 @@ worker:
 			context: "WithKube2IamSupport",
 			configYaml: minimalValidConfigYaml + `
 controller:
-  managedIamRoleName: myrole1
+  iam:
+    role:
+      name: myrole1
 experimental:
   kube2IamSupport:
     enabled: true
 worker:
   nodePools:
   - name: pool1
-    managedIamRoleName: myrole2
+    iam:
+      role:
+        name: myrole2
     kube2IamSupport:
       enabled: true
 `,
@@ -1368,8 +1372,8 @@ worker:
 					expectedControllerRoleName := "myrole1"
 					expectedWorkerRoleName := "myrole2"
 
-					if expectedControllerRoleName != c.Controller.ManagedIamRoleName {
-						t.Errorf("controller's managedIamRoleName didn't match : expected=%v actual=%v", expectedControllerRoleName, c.Controller.ManagedIamRoleName)
+					if expectedControllerRoleName != c.Controller.IAMConfig.Role.Name {
+						t.Errorf("controller's iam.role.name didn't match : expected=%v actual=%v", expectedControllerRoleName, c.Controller.IAMConfig.Role.Name)
 					}
 
 					if !c.Experimental.Kube2IamSupport.Enabled {
@@ -1377,8 +1381,8 @@ worker:
 					}
 
 					p := c.NodePools[0]
-					if expectedWorkerRoleName != p.ManagedIamRoleName {
-						t.Errorf("worker node pool's managedIamRoleName didn't match : expected=%v actual=%v", expectedWorkerRoleName, p.ManagedIamRoleName)
+					if expectedWorkerRoleName != p.IAMConfig.Role.Name {
+						t.Errorf("worker node pool's iam.role.name didn't match : expected=%v actual=%v", expectedWorkerRoleName, p.IAMConfig.Role.Name)
 					}
 
 					if !p.Kube2IamSupport.Enabled {
@@ -1462,13 +1466,13 @@ worker:
 						t.Errorf("waitSignal should be enabled for node pool at index %d but was not", 0)
 					}
 					if c.NodePools[0].WaitSignal.MaxBatchSize() != 1 {
-						t.Errorf("waitSignal.maxBatchSize should be 1 for node pool at index %d but was %d", 0, c.NodePools[0].WaitSignal.MaxBatchSize)
+						t.Errorf("waitSignal.maxBatchSize should be 1 for node pool at index %d but was %d", 0, c.NodePools[0].WaitSignal.MaxBatchSize())
 					}
 					if !c.NodePools[1].WaitSignal.Enabled() {
 						t.Errorf("waitSignal should be enabled for node pool at index %d but was not", 1)
 					}
 					if c.NodePools[1].WaitSignal.MaxBatchSize() != 2 {
-						t.Errorf("waitSignal.maxBatchSize should be 2 for node pool at index %d but was %d", 1, c.NodePools[1].WaitSignal.MaxBatchSize)
+						t.Errorf("waitSignal.maxBatchSize should be 2 for node pool at index %d but was %d", 1, c.NodePools[1].WaitSignal.MaxBatchSize())
 					}
 				},
 			},
@@ -2871,14 +2875,91 @@ routeTableId: rtb-1a2b3c4d
 worker:
   nodePools:
   - name: pool1
-    managedIamRoleName: "myManagedRole"
+    iam:
+      role:
+        name: "myManagedRole"
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
 				hasDefaultExperimentalFeatures,
 				func(c *config.Config, t *testing.T) {
-					if c.NodePools[0].ManagedIamRoleName != "myManagedRole" {
-						t.Errorf("managedIamRoleName: expected=myManagedRole actual=%s", c.NodePools[0].ManagedIamRoleName)
+					if c.NodePools[0].IAMConfig.Role.Name != "myManagedRole" {
+						t.Errorf("iam.role.name: expected=myManagedRole actual=%s", c.NodePools[0].IAMConfig.Role.Name)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerManagedPolicies",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    iam:
+      role:
+        managedPolicies: 
+         - arn: "arn:aws:iam::aws:policy/AdministratorAccess"
+         - arn: "arn:aws:iam::000000000000:policy/myManagedPolicy"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					if len(c.NodePools[0].IAMConfig.Role.ManagedPolicies) < 2 {
+						t.Errorf("iam.role.managedPolicies: incorrect number of policies expected=2 actual=%s", len(c.NodePools[0].IAMConfig.Role.ManagedPolicies))
+					}
+					if c.NodePools[0].IAMConfig.Role.ManagedPolicies[0].Arn != "arn:aws:iam::aws:policy/AdministratorAccess" {
+						t.Errorf("iam.role.managedPolicies: expected=arn:aws:iam::aws:policy/AdministratorAccess actual=%s", c.NodePools[0].IAMConfig.Role.ManagedPolicies[0].Arn)
+					}
+					if c.NodePools[0].IAMConfig.Role.ManagedPolicies[1].Arn != "arn:aws:iam::000000000000:policy/myManagedPolicy" {
+						t.Errorf("iam.role.managedPolicies: expected=arn:aws:iam::000000000000:policy/myManagedPolicy actual=%s", c.NodePools[0].IAMConfig.Role.ManagedPolicies[1].Arn)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerExistingInstanceProfile",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    iam:
+      instanceProfile:
+        arn: "arn:aws:iam::000000000000:instance-profile/myInstanceProfile"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					if c.NodePools[0].IAMConfig.InstanceProfile.Arn != "arn:aws:iam::000000000000:instance-profile/myInstanceProfile" {
+						t.Errorf("existingInstanceProfile: expected=arn:aws:iam::000000000000:instance-profile/myInstanceProfile actual=%s", c.NodePools[0].IAMConfig.InstanceProfile.Arn)
+					}
+				},
+			},
+		},
+		{
+			context: "WithWorkerAndControllerExistingInstanceProfile",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  iam:
+    instanceProfile:
+      arn: "arn:aws:iam::000000000000:instance-profile/myControllerInstanceProfile"
+worker:
+  nodePools:
+  - name: pool1
+    iam:
+      instanceProfile:
+        arn: "arn:aws:iam::000000000000:instance-profile/myInstanceProfile"
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					if c.Controller.IAMConfig.InstanceProfile.Arn != "arn:aws:iam::000000000000:instance-profile/myControllerInstanceProfile" {
+						t.Errorf("existingInstanceProfile: expected=arn:aws:iam::000000000000:instance-profile/myControllerInstanceProfile actual=%s", c.Controller.IAMConfig.InstanceProfile.Arn)
+					}
+					if c.NodePools[0].IAMConfig.InstanceProfile.Arn != "arn:aws:iam::000000000000:instance-profile/myInstanceProfile" {
+						t.Errorf("existingInstanceProfile: expected=arn:aws:iam::000000000000:instance-profile/myInstanceProfile actual=%s", c.NodePools[0].IAMConfig.InstanceProfile.Arn)
 					}
 				},
 			},
@@ -3402,6 +3483,7 @@ worker:
 `,
 			expectedErrorMessage: "Effect must be NoSchedule or PreferNoSchedule, but was UnknownEffect",
 		},
+
 		{
 			context: "WithAwsNodeLabelEnabledForTooLongClusterNameAndPoolName",
 			configYaml: minimalValidConfigYaml + `
@@ -3958,7 +4040,9 @@ addons:
 			context: "WithTooLongControllerIAMRoleName",
 			configYaml: kubeAwsSettings.withClusterName("kubeaws-it-main").withRegion("ap-northeast-1").minimumValidClusterYaml() + `
 controller:
-  managedIamRoleName: foobarba
+  iam:
+    role:
+      name: foobarba
 `,
 			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Controlplane-PRK1CVQNY7XZ-ap-northeast-1-foobarba) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Controlplane) + managed iam role name(=foobarba) should be less than or equal to 34",
 		},
@@ -3968,9 +4052,36 @@ controller:
 worker:
   nodePools:
   - name: pool1
-    managedIamRoleName: foobarbazbaraaa
+    iam:
+      role:
+        name: foobarbazbaraaa
 `,
 			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Pool1-PRK1CVQNY7XZ-ap-northeast-1-foobarbazbaraaa) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Pool1) + managed iam role name(=foobarbazbaraaa) should be less than or equal to 34",
+		},
+		{
+			context: "WithInvalidInstanceProfileArn",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    iam:
+      instanceProfile:
+        arn: "badArn"
+`,
+			expectedErrorMessage: "invalid instance profile, your instance profile must match (=arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME), provided (badArn)",
+		},
+		{
+			context: "WithInvalidManagedPolicyArn",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    iam:
+      role:
+        managedPolicies:
+          - arn: "badArn"
+`,
+			expectedErrorMessage: "invalid managed policy arn, your managed policy must match this (=arn:aws:iam::(YOURACCOUNTID|aws):policy/POLICYNAME), provided this (badArn)",
 		},
 	}
 
@@ -3985,7 +4096,7 @@ worker:
 
 			errorMsg := fmt.Sprintf("%v", err)
 			if !strings.Contains(errorMsg, invalidCase.expectedErrorMessage) {
-				t.Errorf(`expected "%s" to be contained in the errror message : %s`, invalidCase.expectedErrorMessage, errorMsg)
+				t.Errorf(`expected "%s" to be contained in the error message : %s`, invalidCase.expectedErrorMessage, errorMsg)
 			}
 		})
 	}

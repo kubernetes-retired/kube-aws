@@ -130,6 +130,7 @@
       },
       "DependsOn": ["{{$.Etcd.LogicalName}}{{minus $.Etcd.Count 1}}"]
     },
+    {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
     "IAMInstanceProfileController": {
       "Properties": {
         "Path": "/",
@@ -141,6 +142,7 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
+    {{end}}
     "IAMInstanceProfileEtcd": {
       "Properties": {
         "Path": "/",
@@ -152,32 +154,15 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
-    "IAMRoleController": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
+    {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
+    "IAMManagedPolicyController" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Policy for managing kube-aws k8s controllers",
+        "Path" : "/",
+        "PolicyDocument" :   {
+          "Version":"2012-10-17",
           "Statement": [
-            {
-              "Action": [
-                "sts:AssumeRole"
-              ],
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "ec2.{{.Region.PublicDomainName}}"
-                ]
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "Path": "/",
-        {{if .Controller.ManagedIamRoleName }}
-        "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::StackName"},"-",{"Ref": "AWS::Region"},"-","{{.Controller.ManagedIamRoleName}}"]]},
-        {{end}}
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
                 {
                   "Action": "ec2:*",
                   "Effect": "Allow",
@@ -188,13 +173,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-		{
+		            {
                   "Effect": "Allow",
-		  "Action": [
-			"s3:GetObject"
-		  ],
-		  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
-		},
+                  "Action": [
+                  "s3:GetObject"
+                  ],
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
+		            },
                 {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -257,15 +242,42 @@
                   "Resource": "*",
                   "Effect": "Allow"
                 }
+          ]
+        }
+      }
+    },
+    "IAMRoleController": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
               ],
-              "Version": "2012-10-17"
-            },
-            "PolicyName": "root"
-          }
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.{{.Region.PublicDomainName}}"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        {{if .Controller.IAMConfig.Role.Name }}
+        "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::Region"},"-","{{.Controller.IAMConfig.Role.Name}}"]]},
+        {{end}}
+        "ManagedPolicyArns": [ 
+          {{range $policyIndex, $policyArn := .Controller.IAMConfig.Role.ManagedPolicies }}
+            "{{$policyArn.Arn}}",
+          {{end}}
+          {"Ref": "IAMManagedPolicyController"}
         ]
       },
       "Type": "AWS::IAM::Role"
     },
+    {{end}}
     "IAMRoleEtcd": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -716,9 +728,13 @@
             }
           }
         ],
+        {{if .Controller.IAMConfig.InstanceProfile.Arn }}
+        "IamInstanceProfile": "{{.Controller.IAMConfig.InstanceProfile.Arn}}",
+        {{else}}
         "IamInstanceProfile": {
           "Ref": "IAMInstanceProfileController"
         },
+        {{end}}
         "ImageId": "{{.AMI}}",
         "InstanceType": "{{.Controller.InstanceType}}",
         {{if .KeyName}}"KeyName": "{{.KeyName}}",{{end}}
@@ -1516,6 +1532,13 @@
     },
     {{end}}
     {{end}}
+    {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
+    "ControllerIAMRoleArn": {
+      "Description": "The ARN of the IAM role for Controllers",
+      "Value": { "Fn::GetAtt": ["IAMRoleController", "Arn"] },
+      "Export": { "Name": { "Fn::Sub": "${AWS::StackName}-ControllerIAMRoleArn" } }
+    },
+    {{end}}
     "WorkerSecurityGroup" : {
       "Description" : "The security group assigned to worker nodes",
       "Value" :  { "Ref" : "SecurityGroupWorker" },
@@ -1524,11 +1547,6 @@
     "StackName": {
       "Description": "The name of this stack which is used by node pool stacks to import outputs from this stack",
       "Value": { "Ref": "AWS::StackName" }
-    },
-    "ControllerIAMRoleArn": {
-      "Description": "The ARN of the IAM role for this Node Pool",
-      "Value": { "Fn::GetAtt": ["IAMRoleController", "Arn"] },
-      "Export": { "Name": { "Fn::Sub": "${AWS::StackName}-ControllerIAMRoleArn" } }
     }
   }
 }

@@ -2,12 +2,13 @@ package config
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/kubernetes-incubator/kube-aws/coreos/userdatavalidation"
 	"github.com/kubernetes-incubator/kube-aws/filereader/jsontemplate"
 	"github.com/kubernetes-incubator/kube-aws/fingerprint"
 	"github.com/kubernetes-incubator/kube-aws/model"
-	"net/url"
-	"strings"
 )
 
 type StackConfig struct {

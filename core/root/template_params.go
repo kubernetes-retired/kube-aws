@@ -2,6 +2,7 @@ package root
 
 import (
 	"fmt"
+
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
 	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
 )
@@ -24,6 +25,7 @@ type NestedStack interface {
 	Name() string
 	Tags() map[string]string
 	TemplateURL() (string, error)
+	NeedToExportIAMroles() bool
 }
 
 type controlPlane struct {
@@ -36,6 +38,10 @@ func (p controlPlane) Name() string {
 
 func (p controlPlane) Tags() map[string]string {
 	return p.controlPlane.StackTags
+}
+
+func (p controlPlane) NeedToExportIAMroles() bool {
+	return p.controlPlane.Controller.IAMConfig.InstanceProfile.Arn == ""
 }
 
 func (p controlPlane) TemplateURL() (string, error) {
@@ -68,6 +74,10 @@ func (p nodePool) TemplateURL() (string, error) {
 	}
 
 	return u, nil
+}
+
+func (p nodePool) NeedToExportIAMroles() bool {
+	return p.nodePool.IAMConfig.InstanceProfile.Arn == ""
 }
 
 func (c TemplateParams) ControlPlane() NestedStack {
