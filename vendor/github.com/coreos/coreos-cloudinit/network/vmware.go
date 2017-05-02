@@ -38,6 +38,17 @@ func ProcessVMwareNetconf(config map[string]string) ([]InterfaceGenerator, error
 	}
 	log.Printf("Parsed %d nameservers", len(nameservers))
 
+	log.Println("Parsing search domains")
+	var domains []string
+	for i := 0; ; i++ {
+		if domain, ok := config[fmt.Sprintf("dns.domain.%d", i)]; ok {
+			domains = append(domains, domain)
+		} else {
+			break
+		}
+	}
+	log.Printf("Parsed %d search domains", len(domains))
+
 	var interfaces []InterfaceGenerator
 	for i := 0; ; i++ {
 		var addresses []net.IPNet
@@ -86,6 +97,7 @@ func ProcessVMwareNetconf(config map[string]string) ([]InterfaceGenerator, error
 				hwaddress:   iface.hwaddr,
 				addresses:   addresses,
 				nameservers: nameservers,
+				domains:     domains,
 				routes:      routes,
 			}
 		} else if dhcp {

@@ -21,3 +21,5 @@ import:
   - semver
 - package: github.com/spf13/cobra
 - package: gopkg.in/yaml.v2
+- package: github.com/Masterminds/sprig
+  version: ^2.10.0
