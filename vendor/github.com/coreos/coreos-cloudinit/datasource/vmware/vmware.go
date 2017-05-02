@@ -58,6 +58,12 @@ func (v vmware) FetchMetadata() (metadata datasource.Metadata, err error) {
 		}
 	}
 
+	for i := 0; ; i++ {
+		if domain := saveConfig("dns.domain.%d", i); domain == "" {
+			break
+		}
+	}
+
 	found := true
 	for i := 0; found; i++ {
 		found = false
