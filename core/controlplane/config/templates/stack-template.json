@@ -127,7 +127,7 @@
           }
         }
       },
-      "DependsOn": ["{{$.Etcd.LogicalName}}{{minus $.Etcd.Count 1}}"]
+      "DependsOn": ["{{$.Etcd.LogicalName}}{{sub $.Etcd.Count 1}}"]
     },
     "IAMInstanceProfileController": {
       "Properties": {
@@ -631,7 +631,7 @@
       },
       "DependsOn": [
         {{if $etcdInstance.DependencyExists}}{{$etcdInstance.DependencyRef}},{{end}}
-        {{if $etcdIndex}}"{{$.Etcd.LogicalName}}{{minus $etcdIndex 1}}",{{end}}
+        {{if $etcdIndex}}"{{$.Etcd.LogicalName}}{{sub $etcdIndex 1}}",{{end}}
         {{if $etcdInstance.EIPManaged}}
         "{{$etcdInstance.EIPLogicalName}}",
         {{end}}
