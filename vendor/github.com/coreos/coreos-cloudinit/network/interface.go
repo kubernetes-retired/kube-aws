@@ -71,6 +71,9 @@ func (i *logicalInterface) Network() string {
 
 	switch conf := i.config.(type) {
 	case configMethodStatic:
+		if len(conf.domains) > 0 {
+			config += fmt.Sprintf("Domains=%s\n", strings.Join(conf.domains, " "))
+		}
 		for _, nameserver := range conf.nameservers {
 			config += fmt.Sprintf("DNS=%s\n", nameserver)
 		}

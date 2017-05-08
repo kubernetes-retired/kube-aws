@@ -21,11 +21,12 @@ property names are prefixed with `guestinfo.` in the VMX, e.g., `guestinfo.hostn
 | `interface.<n>.route.<l>.gateway`     | `IP address`                    |
 | `interface.<n>.route.<l>.destination` | `CIDR IP address`               |
 | `dns.server.<x>`                      | `IP address`                    |
+| `dns.domain.<y>`                      | `DNS search domain`             |
 | `coreos.config.data`                  | `string`                        |
 | `coreos.config.data.encoding`         | `{"", "base64", "gzip+base64"}` |
 | `coreos.config.url`                   | `URL`                           |
 
-Note: "n", "m", "l", and "x" are 0-indexed, incrementing integers. The
+Note: "n", "m", "l", "x" and "y" are 0-indexed, incrementing integers. The
 identifier for an `interface` does not correspond to anything outside of this
 configuration; it serves only to distinguish between multiple `interface`s.
 
