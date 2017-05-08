@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/spf13/pflag"
 )
 
 // test to ensure hidden commands run as intended
@@ -116,7 +119,7 @@ func TestStripFlags(t *testing.T) {
 	}
 }
 
-func Test_DisableFlagParsing(t *testing.T) {
+func TestDisableFlagParsing(t *testing.T) {
 	as := []string{"-v", "-race", "-file", "foo.go"}
 	targs := []string{}
 	cmdPrint := &Command{
@@ -146,8 +149,7 @@ func TestInitHelpFlagMergesFlags(t *testing.T) {
 	cmd.initHelpFlag()
 	actual := cmd.Flags().Lookup("help").Usage
 	if actual != usage {
-		t.Fatalf("Expected the help flag from the base command with usage '%s', " +
-		         "but got the default with usage '%s'", usage, actual)
+		t.Fatalf("Expected the help flag from the base command with usage '%s', but got the default with usage '%s'", usage, actual)
 	}
 }
 
@@ -192,8 +194,15 @@ func TestEnableCommandSortingIsDisabled(t *testing.T) {
 	EnableCommandSorting = true
 }
 
-func TestFlagErrorFunc(t *testing.T) {
+func TestSetOutput(t *testing.T) {
+	cmd := &Command{}
+	cmd.SetOutput(nil)
+	if out := cmd.OutOrStdout(); out != os.Stdout {
+		t.Fatalf("expected setting output to nil to revert back to stdout, got %v", out)
+	}
+}
 
+func TestFlagErrorFunc(t *testing.T) {
 	cmd := &Command{
 		Use: "print",
 		RunE: func(cmd *Command, args []string) error {
@@ -213,5 +222,65 @@ func TestFlagErrorFunc(t *testing.T) {
 	expected := fmt.Sprintf(expectedFmt, "unknown flag: --bogus-flag")
 	if err.Error() != expected {
 		t.Errorf("expected %v, got %v", expected, err.Error())
+	}
+}
+
+// TestSortedFlags checks,
+// if cmd.LocalFlags() is unsorted when cmd.Flags().SortFlags set to false.
+//
+// Source: https://github.com/spf13/cobra/issues/404
+func TestSortedFlags(t *testing.T) {
+	cmd := &Command{}
+	cmd.Flags().SortFlags = false
+	names := []string{"C", "B", "A", "D"}
+	for _, name := range names {
+		cmd.Flags().Bool(name, false, "")
+	}
+
+	i := 0
+	cmd.LocalFlags().VisitAll(func(f *pflag.Flag) {
+		if i == len(names) {
+			return
+		}
+		if isStringInStringSlice(f.Name, names) {
+			if names[i] != f.Name {
+				t.Errorf("Incorrect order. Expected %v, got %v", names[i], f.Name)
+			}
+			i++
+		}
+	})
+}
+
+// contains checks, if s is in ss.
+func isStringInStringSlice(s string, ss []string) bool {
+	for _, v := range ss {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// TestHelpFlagInHelp checks,
+// if '--help' flag is shown in help for child (executing `parent help child`),
+// that has no other flags.
+//
+// Source: https://github.com/spf13/cobra/issues/302
+func TestHelpFlagInHelp(t *testing.T) {
+	output := new(bytes.Buffer)
+	parent := &Command{Use: "parent", Long: "long", Run: func(*Command, []string) { return }}
+	parent.SetOutput(output)
+
+	child := &Command{Use: "child", Long: "long", Run: func(*Command, []string) { return }}
+	parent.AddCommand(child)
+
+	parent.SetArgs([]string{"help", "child"})
+	err := parent.Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(output.String(), "[flags]") {
+		t.Fatalf("\nExpecting to contain: %v\nGot: %v", "[flags]", output.String())
 	}
 }

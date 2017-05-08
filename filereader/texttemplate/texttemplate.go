@@ -2,8 +2,7 @@ package texttemplate
 
 import (
 	"bytes"
-	"crypto/sha1"
-	"fmt"
+	"github.com/Masterminds/sprig"
 	"io/ioutil"
 	"text/template"
 )
@@ -13,12 +12,8 @@ func GetBytesBuffer(filename string, data interface{}) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	funcMap := template.FuncMap{
-		"sha1":  func(v string) string { return fmt.Sprintf("%x", sha1.Sum([]byte(v))) },
-		"minus": func(a, b int) int { return a - b },
-	}
 
-	tmpl, err := template.New(filename).Funcs(funcMap).Parse(string(raw))
+	tmpl, err := template.New(filename).Funcs(sprig.HermeticTxtFuncMap()).Parse(string(raw))
 	if err != nil {
 		return nil, err
 	}

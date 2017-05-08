@@ -152,6 +152,8 @@ List of fleet configuration parameters:
 - **etcd_key_prefix**: etcd prefix path to be used for fleet keys
 - **etcd_request_timeout**: Amount of time in seconds to allow a single etcd request before considering it failed
 - **etcd_servers**: Comma separated list of etcd endpoints
+- **etcd_username**: Username for Basic Authentication to etcd endpoints
+- **etcd_password**: Password for Basic Authentication to etcd endpoints
 - **metadata**: Comma separated key/value pairs that are published with the local to the fleet registry
 - **public_ip**: IP accessible by other nodes for inter-host communication
 - **verbosity**: Enable debug logging by setting this to an integer value greater than zero
@@ -188,6 +190,8 @@ List of flannel configuration parameters:
 - **etcd_certfile**: Path to certificate file used for TLS communication with etcd
 - **etcd_keyfile**: Path to private key file used for TLS communication with etcd
 - **etcd_prefix**: etcd prefix path to be used for flannel keys
+- **etcd_username**: Username for Basic Authentication to etcd endpoints
+- **etcd_password**: Password for Basic Authentication to etcd endpoints
 - **ip_masq**: Install IP masquerade rules for traffic outside of flannel subnet
 - **subnet_file**: Path to flannel subnet file to write out
 - **interface**: Interface (name or IP) that should be used for inter-host communication
@@ -226,6 +230,8 @@ List of locksmith configuration parameters:
 - **group**: Name of the reboot group in which this instance belongs
 - **window_start**: Start time of the reboot window
 - **window_length**: Duration of the reboot window
+- **etcd_username**: Username for Basic Authentication to etcd endpoints
+- **etcd_password**: Password for Basic Authentication to etcd endpoints
 
 For the complete list of locksmith configuration parameters, see the [locksmith documentation][locksmith-readme].
 
@@ -235,8 +241,8 @@ For the complete list of locksmith configuration parameters, see the [locksmith 
 
 The `coreos.update.*` parameters manipulate settings related to how CoreOS instances are updated.
 
-These fields will be written out to and replace `/etc/coreos/update.conf`. If only one of the parameters is given it will only overwrite the given field. 
-The `reboot-strategy` parameter also affects the behaviour of [locksmith](https://github.com/coreos/locksmith). 
+These fields will be written out to and replace `/etc/coreos/update.conf`. If only one of the parameters is given it will only overwrite the given field.
+The `reboot-strategy` parameter also affects the behaviour of [locksmith](https://github.com/coreos/locksmith).
 
 - **reboot-strategy**: One of "reboot", "etcd-lock", "best-effort" or "off" for controlling when reboots are issued after an update is performed.
   - _reboot_: Reboot immediately after an update is applied.
@@ -415,7 +421,7 @@ python -c "import crypt, getpass, pwd; print crypt.crypt('password', '\$6\$SALT\
 perl -e 'print crypt("password","\$6\$SALT\$") . "\n"'
 ```
 
-Using a higher number of rounds will help create more secure passwords, but given enough time, password hashes can be reversed.  On most RPM based distributions there is a tool called mkpasswd available in the `expect` package, but this does not handle "rounds" nor advanced hashing algorithms. 
+Using a higher number of rounds will help create more secure passwords, but given enough time, password hashes can be reversed.  On most RPM based distributions there is a tool called mkpasswd available in the `expect` package, but this does not handle "rounds" nor advanced hashing algorithms.
 
 ### write_files
 

@@ -98,6 +98,8 @@ func TestProcessVMwareNetconf(t *testing.T) {
 			config: map[string]string{
 				"dns.server.0":                    "1.2.3.4",
 				"dns.server.1":                    "5.6.7.8",
+				"dns.domain.0":                    "coreos.com",
+				"dns.domain.1":                    "example.com",
 				"interface.0.mac":                 "00:11:22:33:44:55",
 				"interface.0.ip.0.address":        "10.0.0.100/24",
 				"interface.0.ip.1.address":        "10.0.0.101/24",
@@ -124,6 +126,7 @@ func TestProcessVMwareNetconf(t *testing.T) {
 							gateway:     net.ParseIP("10.0.0.1")},
 						},
 						nameservers: []net.IP{net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8")},
+						domains:     []string{"coreos.com", "example.com"},
 					},
 				}},
 				&physicalInterface{logicalInterface{
@@ -135,6 +138,7 @@ func TestProcessVMwareNetconf(t *testing.T) {
 							gateway:     net.ParseIP("10.0.1.1")},
 						},
 						nameservers: []net.IP{net.ParseIP("1.2.3.4"), net.ParseIP("5.6.7.8")},
+						domains:     []string{"coreos.com", "example.com"},
 					},
 				}},
 				&physicalInterface{logicalInterface{
