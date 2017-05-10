@@ -912,7 +912,7 @@ write_files:
                       ingresses jobs limitranges networkpolicies  persistentvolumeclaims pods podsecuritypolicies podtemplates replicasets
                       replicationcontrollers resourcequotas secrets serviceaccounts services statefulsets thirdpartyresources
                       poddisruptionbudgets roles rolebindings) ;
-                      for ns in $(jq -r '.metadata.name' < ${DUMP_DIR}/namespaces.json);do
+                      for ns in $(jq -r '.items[].metadata.name' < ${DUMP_DIR}/namespaces.json);do
                         echo "Searching in namespace: ${ns}" ;
                         mkdir -p ${DUMP_DIR}/${ns} ;
                         for r in ${RESOURCES_IN_NAMESPACE[@]};do
