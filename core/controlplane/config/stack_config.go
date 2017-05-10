@@ -124,8 +124,8 @@ func (c *StackConfig) EtcdSnapshotsS3PrefixRef() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error in EtcdSnapshotsS3Prefix : %v", err)
 	}
-	s3path := fmt.Sprintf(`{ "Fn::Join" : [ "", [ "%s/instances/", { "Fn::Select" : [ "2", { "Fn::Split": [ "/", { "Ref": "AWS::StackId" }]} ]}, "/etcd-snapshots" ]]}`, s3uri.Path)
-	return strings.TrimLeft(s3path, "/"), nil
+	s3path := fmt.Sprintf(`{ "Fn::Join" : [ "", [ "%s/instances/", { "Fn::Select" : [ "2", { "Fn::Split": [ "/", { "Ref": "AWS::StackId" }]} ]}, "/etcd-snapshots" ]]}`, strings.TrimLeft(s3uri.Path, "/"))
+	return s3path, nil
 }
 
 func (c *StackConfig) ValidateUserData() error {
