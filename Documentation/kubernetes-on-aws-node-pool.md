@@ -53,7 +53,7 @@ worker:
       - name: managedPublicSubnetIn1c
 ```
 
-Launch the secondary node pool by running `kube-aws update``:
+Launch the secondary node pool by running `kube-aws update`:
 
 ```
 $ kube-aws update \
