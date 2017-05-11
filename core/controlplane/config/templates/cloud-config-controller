@@ -610,8 +610,8 @@ write_files:
 
       {{ if .Experimental.Dex.Enabled }}
       if kubectl get cm dex -n kube-system;
-        then echo "Configmap for dex already exists and could have been customized. Skipping."; 
-      else 
+        then echo "Configmap for dex already exists and could have been customized. Skipping.";
+      else
         mfdir=/srv/kubernetes/manifests
         kubectl apply -f "${mfdir}/dex-cm.yaml"
         kubectl apply -f "${mfdir}/dex-deployment.yaml";
@@ -1524,7 +1524,6 @@ write_files:
                   - /cluster-proportional-autoscaler
                   - --namespace=kube-system
                   - --configmap=kube-dns-autoscaler
-                  - --mode=linear
                   - --target=Deployment/kube-dns
                   - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":2}}
                   - --logtostderr=true
