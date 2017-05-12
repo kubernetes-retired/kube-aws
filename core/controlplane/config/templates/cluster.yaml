@@ -225,7 +225,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # If you like specific private subnets to be used by the internal ELB:
 #    # subnets:
 #    #   - name: ManagedPrivateSubnet0
-#  
+#
 #  # User defined files that will be added to the Controller cluster cloud-init configuration in the "write_files:" section.
 #  customFiles:
 #    - path: "/etc/rkt/auth.d/docker.json"
@@ -348,7 +348,7 @@ worker:
 #        # Follow the aws convention of '/dev/xvd*' where '*' is a single letter from 'f' to 'z'
 #        device: "/dev/xvdf"
 #        path: "/ebs"
-#   
+#
 #      # Specifies how often kubelet posts node status to master. Note: be cautious when changing the constant, it must work with nodeMonitorGracePeriod in nodecontroller.
 #      # nodeStatusUpdateFrequency: "10s"
 #
@@ -715,7 +715,7 @@ worker:
 #      permissions: 0600
 #      content: |
 #        { "rktKind": "dockerAuth", "rktVersion": "v1", ... }
-#   
+#
 #  # User defined systemd units that will be added to the Etcd cluster cloud-init configuration in the "units:" section.
 #  customSystemdUnits:
 #    - name: monitoring.service
@@ -965,7 +965,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.6.2_coreos.0
+# kubernetesVersion: v1.6.3_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -981,37 +981,37 @@ worker:
 # Calico Node image repository to use.
 #calicoNodeImage:
 #  repo: quay.io/calico/node
-#  tag: v1.0.2
+#  tag: v1.2.0
 #  rktPullDocker: false
 
 # Calico CNI image repository to use.
 #calicoCniImage:
 #  repo: quay.io/calico/cni
-#  tag: v1.5.6
+#  tag: v1.8.3
 #  rktPullDocker: false
 
 # Calico Policy Controller image repository to use.
 #calicoPolicyControllerImage:
 #  repo: quay.io/calico/kube-policy-controller
-#  tag: v0.5.2
+#  tag: v0.6.0
 #  rktPullDocker: false
 
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-proportional-autoscaler-amd64
-#  tag: 1.0.0
+#  tag: 1.1.1
 #  rktPullDocker: false
 
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.9
+#  tag: 1.14.1
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
-#  repo: gcr.io/google_containers/kube-dnsmasq-amd64
-#  tag: 1.4
+#  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
+#  tag: 1.14.1
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1022,8 +1022,8 @@ worker:
 
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
-#  gcr.io/google_containers/dnsmasq-metrics-amd64
-#  tag: 1.0
+#  gcr.io/google_containers/k8s-dns-sidecar-amd64
+#  tag: 1.14.1
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1041,7 +1041,7 @@ worker:
 # Addon Resizer image repository to use.
 #addonResizerImage:
 #  repo: gcr.io/google_containers/addon-resizer
-#  tag: 1.6
+#  tag: 1.7
 #  rktPullDocker: false
 
 # Kube Dashboard image repository to use.
@@ -1053,7 +1053,7 @@ worker:
 # Calico Controller image repository to use.
 #calicoCtlImage:
 #  repo: calico/ctl
-#  tag: v1.0.0
+#  tag: v1.2.0
 #  rktPullDocker: false
 
 # Pause image repository to use.This works only if you are deploying your cluster in "cn-north-1" region.
@@ -1065,7 +1065,7 @@ worker:
 # Flannel image repository to use.This allow pulling flannel image from a docker repo.
 #flannelImage:
 #  repo: quay.io/coreos/flannel
-#  tag: v0.6.2
+#  tag: v0.7.1
 #  rktPullDocker: false
 
 # Use Calico for network policy.
@@ -1222,12 +1222,12 @@ addons:
 #       enabled: true
 #
 #   # When set to true this configures the k8s aws provider so that it doesn't modify every node's security group to include an additional ingress rule per an ELB created for a k8s service whose type is "LoadBalancer"
-#   # It requires that the user has setup a rule that allows inbound traffic on kubelet ports 
+#   # It requires that the user has setup a rule that allows inbound traffic on kubelet ports
 #   # from the local VPC subnet so that load balancers can access it.  Ref: https://github.com/kubernetes/kubernetes/issues/26670
 #   disableSecurityGroupIngress: false
-#   
+#
 #   # Command line flag passed to the controller-manager. (default 40s)
-#   # This is the amount of time which we allow running Node to be unresponsive before marking it unhealthy. 
+#   # This is the amount of time which we allow running Node to be unresponsive before marking it unhealthy.
 #   # Must be N times more than kubelet's nodeStatusUpdateFrequency (default 10s).
 #   nodeMonitorGracePeriod: "40s"
 
