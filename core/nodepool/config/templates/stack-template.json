@@ -146,9 +146,9 @@
         "MinSize": "{{.MinCount}}",
         "Tags": [
           {
-            "Key": "KubernetesCluster",
+            "Key": "kubernetes.io/cluster/{{ .ClusterName }}",
             "PropagateAtLaunch": "true",
-            "Value": "{{.ClusterName}}"
+            "Value": "true"
           },
           {
             "Key": "kube-aws:node-pool:name",
