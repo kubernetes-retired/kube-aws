@@ -7,8 +7,8 @@
       "Properties" : {
         "Tags" : [
           {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
+            "Key": "kubernetes.io/cluster/{{$.ClusterName}}",
+            "Value": "true"
           }{{range $k, $v := $.ControlPlane.Tags}},
           {
             "Key":"{{$k}}",
@@ -26,8 +26,8 @@
         },
         "Tags" : [
           {
-            "Key": "KubernetesCluster",
-            "Value": "{{$.ClusterName}}"
+            "Key": "kubernetes.io/cluster/{{$.ClusterName}}",
+            "Value": "true"
           }{{range $k, $v := $p.Tags}},
           {
             "Key":"{{$k}}",
