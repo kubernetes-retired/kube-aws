@@ -26,7 +26,7 @@ For example, if you're deploying a cluster to an existing VPC:
 * An internet gateway or a NAT gateway needs to be added to VPC before cluster can be created
   * Or [all the nodes will fail to launch because they can't pull docker images or ACIs required to run essential processes like fleet, hyperkube, etcd, awscli, cfn-signal, cfn-init.](https://github.com/kubernetes-incubator/kube-aws/issues/120)
 * Existing route tables must have a route to Internet in some form. For example, a default route to an internet gateway or to a NAT gateway via `0.0.0.0/0` would be needed or your cluster won't come up. See [a relevant issue about it](https://github.com/kubernetes-incubator/kube-aws/issues/121#issuecomment-266255407).
-* Existing route tables to be reused by kube-aws must be tagged with the key `KubernetesCluster` and your cluster's name for the value.
+* Existing route tables and/or subnets to be reused by kube-aws must be tagged with the key `kubernetes.io/cluster/$CLUSTER_NAME` and "shared" as a value.
   * Or [Kubernetes will fail to create ELBs correspond to Kubernetes services with `type=LoadBalancer`](https://github.com/kubernetes-incubator/kube-aws/issues/135)
 * ["DNS Hostnames" must be turned on before cluster can be created](https://github.com/kubernetes-incubator/kube-aws/issues/119)
   * Or etcd nodes are unable to communicate each other thus the cluster doesn't work at all
