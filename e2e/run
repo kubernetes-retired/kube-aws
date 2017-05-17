@@ -33,7 +33,7 @@ fi
 export AWS_DEFAULT_REGION=${KUBE_AWS_REGION}
 
 if [ "${KUBE_AWS_AVAILABILITY_ZONE}" == "" ]; then
-  echo KUBE_AWS_REGION is not set. Run this command like $USAGE_EXAMPLE 1>&2
+  echo KUBE_AWS_AVAILABILITY_ZONE is not set. Run this command like $USAGE_EXAMPLE 1>&2
   exit 1
 fi
 
