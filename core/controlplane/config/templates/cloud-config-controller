@@ -582,7 +582,7 @@ write_files:
       done
 
       # Replicationcontrollers
-      kubectl apply -f "${mfdir}/kube-dashboard-rc.yaml"
+      kubectl apply -f "${mfdir}/kube-dashboard-de.yaml"
 
       # Services
       for manifest in {kube-dns,heapster,kube-dashboard}-svc.yaml;do
@@ -1798,10 +1798,10 @@ write_files:
           selector:
             k8s-app: heapster
 
-  - path: /srv/kubernetes/manifests/kube-dashboard-rc.yaml
+  - path: /srv/kubernetes/manifests/kube-dashboard-de.yaml
     content: |
-        apiVersion: v1
-        kind: ReplicationController
+        apiVersion: extensions/v1beta1
+        kind: Deployment
         metadata:
           name: kubernetes-dashboard
           namespace: kube-system
@@ -1812,7 +1812,8 @@ write_files:
         spec:
           replicas: 1
           selector:
-            k8s-app: kubernetes-dashboard
+            matchLabels:
+              k8s-app: kubernetes-dashboard
           template:
             metadata:
               labels:
