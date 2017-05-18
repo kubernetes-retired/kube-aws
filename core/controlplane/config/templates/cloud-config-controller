@@ -201,8 +201,8 @@ coreos:
         {{end}}--register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
-        --cluster_dns={{.DNSServiceIP}} \
-        --cluster_domain=cluster.local \
+        --cluster-dns={{.DNSServiceIP}} \
+        --cluster-domain=cluster.local \
         --cloud-provider=aws
         Restart=always
         RestartSec=10
