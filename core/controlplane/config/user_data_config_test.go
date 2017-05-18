@@ -68,26 +68,26 @@ func TestCloudConfigTemplating(t *testing.T) {
 		GenerateCA: true,
 	}
 
-	var compactAssets *CompactTLSAssets
+	var compactAssets *CompactAssets
 
 	cachedEncryptor := CachedEncryptor{
 		bytesEncryptionService: bytesEncryptionService{kmsKeyARN: cfg.KMSKeyARN, kmsSvc: &dummyEncryptService{}},
 	}
 
 	helper.WithTempDir(func(dir string) {
-		_, err = cluster.NewTLSAssetsOnDisk(dir, opts, caKey, caCert)
+		_, err = cluster.NewAssetsOnDisk(dir, opts, caKey, caCert)
 		if err != nil {
 			t.Fatalf("Error generating default assets: %v", err)
 		}
 
-		encryptedAssets, err := ReadOrEncryptTLSAssets(dir, cachedEncryptor)
+		encryptedAssets, err := ReadOrEncryptAssets(dir, true, cachedEncryptor)
 		if err != nil {
-			t.Fatalf("failed to compress TLS assets: %v", err)
+			t.Fatalf("failed to compress assets: %v", err)
 		}
 
 		compactAssets, err = encryptedAssets.Compact()
 		if err != nil {
-			t.Fatalf("failed to compress TLS assets: %v", err)
+			t.Fatalf("failed to compress assets: %v", err)
 		}
 	})
 
@@ -96,33 +96,7 @@ func TestCloudConfigTemplating(t *testing.T) {
 		t.FailNow()
 	}
 
-	cfg.TLSConfig = compactAssets
-
-	var compactAuthTokens *CompactAuthTokens
-
-	// Auth tokens
-	helper.WithTempDir(func(dir string) {
-		if _, err := CreateRawAuthTokens(false, dir); err != nil {
-			t.Fatalf("failed to create auth token file: %v", err)
-		}
-
-		encryptedAuthTokens, err := ReadOrEncryptAuthTokens(dir, cachedEncryptor)
-		if err != nil {
-			t.Fatalf("failed to compress auth token file: %v", err)
-		}
-
-		compactAuthTokens, err = encryptedAuthTokens.Compact()
-		if err != nil {
-			t.Fatalf("failed to compress auth token file: %v", err)
-		}
-	})
-
-	if compactAuthTokens == nil {
-		t.Fatal("compactAuthTokens is unexpectedly nil")
-		t.FailNow()
-	}
-
-	cfg.AuthTokensConfig = compactAuthTokens
+	cfg.AssetsConfig = compactAssets
 
 	for _, cloudTemplate := range []struct {
 		Name     string

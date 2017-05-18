@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 const CacheFileExtension = "enc"
@@ -32,8 +33,8 @@ func (e CachedEncryptor) EncryptedBytes(raw []byte) ([]byte, error) {
 	return e.bytesEncryptionService.Encrypt(raw)
 }
 
-func (e CachedEncryptor) EncryptedCredentialFromPath(filePath string) (*EncryptedCredentialOnDisk, error) {
-	raw, err := RawCredentialFileFromPath(filePath)
+func (e CachedEncryptor) EncryptedCredentialFromPath(filePath string, defaultValue *string) (*EncryptedCredentialOnDisk, error) {
+	raw, err := RawCredentialFileFromPath(filePath, defaultValue)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +74,18 @@ func EncryptedCredentialCacheFromRawCredential(raw *RawCredentialOnDisk, bytesEn
 	return &cache, nil
 }
 
-func RawCredentialFileFromPath(filePath string) (*RawCredentialOnDisk, error) {
+func RawCredentialFileFromPath(filePath string, defaultValue *string) (*RawCredentialOnDisk, error) {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) && defaultValue != nil {
+		if err := ioutil.WriteFile(filePath, []byte(*defaultValue), 0644); err != nil {
+			return nil, err
+		}
+	}
+
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
+
 	return &RawCredentialOnDisk{
 		filePath: filePath,
 		content:  content,
@@ -117,10 +125,11 @@ func EncryptedCredentialCacheFromPath(filePath string) (*EncryptedCredentialOnDi
 	fingerprint, fingerprintErr := loadFingerprint(fingerprintPath)
 	if fingerprintErr != nil {
 		fmt.Printf("WARNING: \"%s\" does not exist. Did you explicitly removed it or upgrading from old kube-aws? Anyway, kube-aws is generating one for you from \"%s\" to automatically detect updates to it and recreate \"%s\" if necessary\n", fingerprintPath, filePath, cachePath)
-		raw, rawErr := RawCredentialFileFromPath(filePath)
+		raw, rawErr := RawCredentialFileFromPath(filePath, nil)
 		if rawErr != nil {
 			return nil, rawErr
 		}
+
 		fingerprint = raw.Fingerprint()
 	}
 	return &EncryptedCredentialOnDisk{
