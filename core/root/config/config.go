@@ -107,10 +107,15 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 			return nil, fmt.Errorf("invalid node pool at index %d: %v", i, err)
 		}
 
+		if np.Autoscaling.ClusterAutoscaler.Enabled && !cpConfig.Addons.ClusterAutoscaler.Enabled {
+			return nil, errors.New("Autoscaling with cluster-autoscaler can't be enabled for node pools because " +
+				"you didn't enabled the cluster-autoscaler addon. Enable it by turning on `addons.clusterAutoscaler.enabled`")
+		}
+
 		if err := failFastWhenUnknownKeysFound([]unknownKeyValidation{
 			{np, fmt.Sprintf("worker.nodePools[%d]", i)},
 			{np.AutoScalingGroup, fmt.Sprintf("worker.nodePools[%d].autoScalingGroup", i)},
-			{np.ClusterAutoscaler, fmt.Sprintf("worker.nodePools[%d].clusterAutoscaler", i)},
+			{np.Autoscaling.ClusterAutoscaler, fmt.Sprintf("worker.nodePools[%d].autoscaling.clusterAutoscaler", i)},
 			{np.SpotFleet, fmt.Sprintf("worker.nodePools[%d].spotFleet", i)},
 		}); err != nil {
 			return nil, err
@@ -127,11 +132,12 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 		{c.Etcd.DataVolume, "etcd.dataVolume"},
 		{c.Controller, "controller"},
 		{c.Controller.AutoScalingGroup, "controller.autoScalingGroup"},
-		{c.Controller.ClusterAutoscaler, "controller.clusterAutoscaler"},
+		{c.Controller.Autoscaling.ClusterAutoscaler, "controller.autoscaling.clusterAutoscaler"},
 		{c.Controller.RootVolume, "controller.rootVolume"},
 		{c.Experimental, "experimental"},
 		{c.Addons, "addons"},
 		{c.Addons.Rescheduler, "addons.rescheduler"},
+		{c.Addons.ClusterAutoscaler, "addons.clusterAutoscaler"},
 	}
 
 	for i, np := range c.Worker.NodePools {

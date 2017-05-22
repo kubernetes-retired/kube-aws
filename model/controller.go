@@ -7,8 +7,8 @@ import (
 
 // TODO Merge this with NodePoolConfig
 type Controller struct {
-	AutoScalingGroup                       AutoScalingGroup  `yaml:"autoScalingGroup,omitempty"`
-	ClusterAutoscaler                      ClusterAutoscaler `yaml:"clusterAutoscaler,omitempty"`
+	AutoScalingGroup                       AutoScalingGroup `yaml:"autoScalingGroup,omitempty"`
+	Autoscaling                            Autoscaling      `yaml:"autoscaling,omitempty"`
 	EC2Instance                            `yaml:",inline"`
 	LoadBalancer                           ControllerElb       `yaml:"loadBalancer,omitempty"`
 	IAMConfig                              IAMConfig           `yaml:"iam,omitempty"`
@@ -62,7 +62,7 @@ func (c Controller) Validate() error {
 		return err
 	}
 
-	if c.ClusterAutoscaler.Enabled() {
+	if c.Autoscaling.ClusterAutoscaler.Enabled {
 		return errors.New("cluster-autoscaler can't be enabled for a control plane because " +
 			"allowing so for a group of controller nodes spreading over 2 or more availability zones " +
 			"results in unreliability while scaling nodes out.")

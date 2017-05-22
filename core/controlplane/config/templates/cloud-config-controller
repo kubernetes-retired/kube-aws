@@ -197,7 +197,7 @@ coreos:
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
-        --node-labels node-role.kubernetes.io/master{{if .Experimental.NodeLabels.Enabled}},{{.Experimental.NodeLabels.String}} \
+        --node-labels node-role.kubernetes.io/master{{if .NodeLabels.Enabled}},{{.NodeLabels.String}} \
         {{end}} \
         --register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
@@ -578,7 +578,7 @@ write_files:
       kubectl apply -f "${mfdir}/kube-dns-sa.yaml"
 
       # Deployments
-      for manifest in {kube-dns-de,kube-dns-autoscaler-de,heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
+      for manifest in {kube-dns-de,kube-dns-autoscaler-de,cluster-autoscaler-de,heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
           kubectl apply -f "${mfdir}/$manifest"
       done
 
@@ -1530,7 +1530,7 @@ write_files:
                 operator: "Exists"
               containers:
               - name: autoscaler
-                image: {{ .ClusterAutoscalerImage.RepoWithTag }}
+                image: {{ .ClusterProportionalAutoscalerImage.RepoWithTag }}
                 resources:
                     requests:
                         cpu: "20m"
@@ -1794,6 +1794,64 @@ write_files:
                     - --container=heapster
                     - --poll-period=300000
                     - --estimator=exponential
+
+  {{if .Addons.ClusterAutoscaler.Enabled}}
+  - path: /srv/kubernetes/manifests/cluster-autoscaler-de.yaml
+    content: |
+        apiVersion: extensions/v1beta1
+        kind: Deployment
+        metadata:
+          name: cluster-autoscaler
+          namespace: kube-system
+          labels:
+            app: cluster-autoscaler
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: cluster-autoscaler
+          template:
+            metadata:
+              labels:
+                app: cluster-autoscaler
+            spec:
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: "kube-aws.coreos.com/cluster-autoscaler-supported"
+                        operator: "In"
+                        values:
+                        - "true"
+              tolerations:
+              - key: "node.alpha.kubernetes.io/role"
+                operator: "Equal"
+                value: "master"
+                effect: "NoSchedule"
+              containers:
+                - image: {{ .ClusterAutoscalerImage.RepoWithTag }}
+                  name: cluster-autoscaler
+                  resources:
+                    limits:
+                      cpu: 100m
+                      memory: 300Mi
+                    requests:
+                      cpu: 100m
+                      memory: 300Mi
+                  command:
+                    - ./cluster-autoscaler
+                    - --v=4
+                    - --stderrthreshold=info
+                    - --cloud-provider=aws
+                    - --skip-nodes-with-local-storage=false
+                    - --expander=least-waste
+                    - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled
+                  env:
+                    - name: AWS_REGION
+                      value: {{.Region}}
+                  imagePullPolicy: "Always"
+  {{end}}
 
   - path: /srv/kubernetes/manifests/heapster-svc.yaml
     content: |

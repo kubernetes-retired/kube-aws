@@ -481,13 +481,14 @@ worker:
 #      # Optional settings for both ASG-based and SpotFleet-based node pools
 #      #
 #
-#      # Tag the cloudformation stack with the key `kube-aws:cluster-autoscaler:scale-specs` with the value containing
-#      # source of truth for cluster-autoscaler to update their autoscaling target and its min/max size.
-#      # Currently, enabling this configuration doesn't automatically deploy cluster-autoscaler itself.
-#      # Please read [the original issue](https://github.com/kubernetes-incubator/kube-aws/issues/148) carefully for more information.
-#      clusterAutoscaler:
-#        minSize: 1
-#        maxSize: 3
+#      # Autoscaling by adding/removing nodes according to resource usage
+#      autoscaling:
+#        # Make this node pool an autoscaling-target of k8s cluster-autoscaler
+#        #
+#        # Beware that making this an autoscaing-target doesn't automatically deploy cluster-autoscaler itself -
+#        # turn on `addons.clusterAutoscaler.enabled` to deploy it on controller nodes.
+#        clusterAutoscaler:
+#          enabled: true
 #
 #      # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #      awsEnvironment:
@@ -500,7 +501,8 @@ worker:
 #      awsNodeLabels:
 #        enabled: true
 #
-#      # Will provision worker nodes with IAM permissions to run cluster-autoscaler
+#      # Will provision worker nodes with IAM permissions to run cluster-autoscaler and add node labels so that
+#      # cluster-autoscaler pods are scheduled to nodes in this node pool
 #      clusterAutoscalerSupport:
 #        enabled: true
 #
@@ -1128,6 +1130,13 @@ worker:
 
 # Addon features
 addons:
+  # Will provision controller nodes with IAM permissions to run cluster-autoscaler and
+  # create a cluster-autoscaler deployment in the cluster
+  # CA runs only on controller nodes by default. Turn on `worker.nodePools[].clusterAutoscalerSupport.enabled` to
+  # add nodes from a node pool to be where CA runs
+  clusterAutoscaler:
+    enabled: false
+
   # When enabled, Kubernetes rescheduler is deployed to the cluster controller(s)
   # This feature is experimental currently so may not be production ready
   rescheduler:
@@ -1159,9 +1168,6 @@ addons:
 #   # Add predefined set of labels to the controller nodes
 #   # The set includes names of launch configurations and autoscaling groups
 #   awsNodeLabels:
-#     enabled: true
-#   # Will provision controller nodes with IAM permissions to run cluster-autoscaler
-#   clusterAutoscalerSupport:
 #     enabled: true
 #   # If enabled, instructs the controller manager to automatically issue TLS certificates to worker nodes via
 #   # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to

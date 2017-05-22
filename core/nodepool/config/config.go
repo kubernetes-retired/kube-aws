@@ -10,7 +10,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"errors"
-	"strconv"
 
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
@@ -310,8 +309,8 @@ func (c ProvidedConfig) ValidateInputs() error {
 		return err
 	}
 
-	if len(c.Subnets) > 1 && c.ClusterAutoscaler.Enabled() {
-		return errors.New("cluster-autoscaler support can't be enabled for a node pool with 2 or more subnets because allowing so" +
+	if len(c.Subnets) > 1 && c.Autoscaling.ClusterAutoscaler.Enabled {
+		return errors.New("cluster-autoscaler can't be enabled for a node pool with 2 or more subnets because allowing so" +
 			"results in unreliability while scaling nodes out. ")
 	}
 
@@ -398,6 +397,14 @@ type WorkerDeploymentSettings struct {
 	DeploymentSettings
 }
 
+func (c WorkerDeploymentSettings) NodeLabels() model.NodeLabels {
+	labels := c.Experimental.NodeLabels
+	if c.ClusterAutoscalerSupport.Enabled {
+		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
+	}
+	return labels
+}
+
 func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
 	refs := []string{}
 
@@ -425,12 +432,6 @@ func (c WorkerDeploymentSettings) StackTags() map[string]string {
 
 	for k, v := range c.DeploymentSettings.StackTags {
 		tags[k] = v
-	}
-
-	if c.NodePoolConfig.ClusterAutoscaler.Enabled() {
-		tags["kube-aws:cluster-autoscaler:logical-name"] = c.NodePoolConfig.LogicalName()
-		tags["kube-aws:cluster-autoscaler:min-size"] = strconv.Itoa(c.NodePoolConfig.ClusterAutoscaler.MinSize)
-		tags["kube-aws:cluster-autoscaler:max-size"] = strconv.Itoa(c.NodePoolConfig.ClusterAutoscaler.MaxSize)
 	}
 
 	return tags
