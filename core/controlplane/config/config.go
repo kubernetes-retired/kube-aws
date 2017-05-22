@@ -428,6 +428,9 @@ func (c *Cluster) SetDefaults() {
 			c.Etcd.Subnets = c.PublicSubnets()
 		}
 	}
+
+	_, serviceNet, _ := net.ParseCIDR(c.ServiceCIDR)
+	c.APIServerServiceIP = netutil.IncrementIP(serviceNet.IP).String()
 }
 
 func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptService) (*Cluster, error) {
@@ -662,6 +665,7 @@ type Cluster struct {
 	FlannelSettings        `yaml:",inline"`
 	AdminAPIEndpointName   string `yaml:"adminAPIEndpointName,omitempty"`
 	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
+	APIServerServiceIP     string `yaml:"-"`
 	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
 	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
@@ -1164,6 +1168,8 @@ func (c Cluster) valid() error {
 	if !serviceNet.Contains(kubernetesServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain kubernetesServiceIP (%s)", c.ServiceCIDR, kubernetesServiceIPAddr)
 	}
+
+	c.APIServerServiceIP = kubernetesServiceIPAddr.String()
 
 	if !serviceNet.Contains(dnsServiceIPAddr) {
 		return fmt.Errorf("serviceCIDR (%s) does not contain dnsServiceIP (%s)", c.ServiceCIDR, c.DNSServiceIP)

@@ -1690,6 +1690,12 @@ write_files:
                 resources:
                   requests:
                     memory: 20Mi
+              - name: healthz
+                image: {{ .ExecHealthzImage.RepoWithTag }}
+                resources:
+                  limits:
+                    memory: 50Mi
+                  requests:
                     cpu: 10m
               dnsPolicy: Default
               serviceAccountName: kube-dns
