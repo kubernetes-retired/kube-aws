@@ -21,6 +21,7 @@ type NodePoolConfig struct {
 	NodeStatusUpdateFrequency            string              `yaml:"nodeStatusUpdateFrequency"`
 	CustomFiles                          []CustomFile        `yaml:"customFiles,omitempty"`
 	CustomSystemdUnits                   []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
+	Gpu                                  Gpu                 `yaml:"gpu"`
 }
 
 type ClusterAutoscaler struct {
@@ -48,6 +49,7 @@ func NewDefaultNodePoolConfig() NodePoolConfig {
 			Tenancy: "default",
 		},
 		SecurityGroupIds: []string{},
+		Gpu:              newDefaultGpu(),
 	}
 }
 
@@ -108,6 +110,10 @@ func (c NodePoolConfig) Valid() error {
 		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
 	}
 	if err := c.IAMConfig.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.Gpu.Valid(c.InstanceType); err != nil {
 		return err
 	}
 

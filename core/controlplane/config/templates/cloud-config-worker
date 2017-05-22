@@ -141,8 +141,13 @@ coreos:
         [Unit]
         Wants=flanneld.service cfn-etcd-environment.service
         After=cfn-etcd-environment.service
+        {{- if .Gpu.Nvidia.IsEnabledOn .InstanceType }}
+        Requires=nvidia-start.service
+        After=nvidia-start.service
+        {{- end }}
         [Service]
         EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/etc/default/kubelet
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
         Environment=KUBELET_IMAGE_URL={{.HyperkubeImage.RktRepoWithoutTag}}
         Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
@@ -204,7 +209,11 @@ coreos:
         --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem \
         {{- end }}
         --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
-        --require-kubeconfig
+        {{- if .Gpu.Nvidia.IsEnabledOn .InstanceType }}
+        --feature-gates="Accelerators=true" \
+        {{- end }}
+        --require-kubeconfig \
+        $KUBELET_OPTS
         Restart=always
         RestartSec=10
         [Install]
@@ -443,6 +452,37 @@ coreos:
         Type={{.Experimental.EphemeralImageStorage.Filesystem}}
 {{end}}
 
+{{if .Gpu.Nvidia.IsEnabledOn .InstanceType}}
+    - name: nvidia-start.service
+      enable: false
+      content: |
+        [Unit]
+        Description=Load NVIDIA module
+        After=local-fs.target
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStartPre=/opt/nvidia-build/util/retry.sh 0 /opt/nvidia-build/build-and-install.sh
+        TimeoutStartSec=900
+        ExecStart=/opt/nvidia/current/bin/nvidia-start.sh
+
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: nvidia-persistenced.service
+      enable: false
+      content: |
+        [Unit]
+        Description=NVIDIA Persistence Daemon
+        Wants=local-fs.target
+
+        [Service]
+        Type=forking
+        ExecStart=/opt/nvidia/current/bin/nvidia-persistenced --user nvidia-persistenced --no-persistence-mode --verbose
+        ExecStopPost=/bin/rm -rf /var/run/nvidia-persistenced
+{{end}}
+
 {{if .SSHAuthorizedKeys}}
 ssh_authorized_keys:
   {{range $sshkey := .SSHAuthorizedKeys}}
@@ -470,6 +510,15 @@ ssh_authorized_keys:
         [Install]
         WantedBy=kubelet.service
 {{end}}
+
+{{if .Gpu.Nvidia.IsEnabledOn .InstanceType}}
+users:
+  - name: nvidia-persistenced
+    gecos: NVIDIA Persistence Daemon
+    homedir: /
+    shell: /sbin/nologin
+{{end}}
+
 write_files:
 {{- if .CustomFiles}}
   {{- range $w := .CustomFiles}}
@@ -544,6 +593,12 @@ write_files:
           '
 
       rkt rm --uuid-file=/var/run/coreos/cfn-etcd-environment.uuid || :
+
+  - path: /etc/default/kubelet
+    permissions: 0755
+    owner: root:root
+    content: |
+      KUBELET_OPTS=""
 
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
@@ -844,4 +899,404 @@ write_files:
   - path: /etc/kubernetes/auth/kubelet-tls-bootstrap-token.tmp{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.AssetsConfig.TLSBootstrapToken}}
+{{ end }}
+
+{{ if .Gpu.Nvidia.IsEnabledOn .InstanceType }}
+  - path: /opt/nvidia-build/README
+    owner: root:root
+    permissions: 0644
+    content: |
+      Most of scripts in this directory are borrowed from https://github.com/Clarifai/coreos-nvidia/
+      Especially from https://github.com/Clarifai/coreos-nvidia/pull/4
+
+  - path: /opt/nvidia-build/LICENSE
+    owner: root:root
+    permissions: 0644
+    content: |
+      Please see https://github.com/Clarifai/coreos-nvidia/
+
+  - path: /opt/nvidia-build/build-and-install.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #! /bin/bash
+      set -e
+      function is_gpu_enabled(){
+        local instance_type=$1
+        [[ -n $instance_type ]] && ([[ $instance_type == p2* ]] || [[ $instance_type ==  g2* ]])
+      }
+
+      INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
+
+      if is_gpu_enabled $INSTANCE_TYPE; then
+        MOD_INSTALLED=$(lsmod | grep nvidia | wc -l)
+        if [[ $MOD_INSTALLED -ne 5 ]]; then
+          (lsmod | grep nvidia_uvm) && rmmod -f nvidia_uvm
+          (lsmod | grep nvidia_drm) && rmmod -f nvidia_drm
+          (lsmod | grep nvidia_modeset) && rmmod -f nvidia_modeset
+          (lsmod | grep nvidia) && rmmod -f nvidia
+
+          cd /opt/nvidia-build/
+          bash -x build.sh {{.Gpu.Nvidia.Version}}
+          bash -x nvidia-install.sh {{.Gpu.Nvidia.Version}}
+        else
+          echo "Nvidia drivers seems to be installed already. Skipped."
+        fi
+      else
+        echo "GPU is NOT supported in $INSTANCE_TYPE. Nvidia drivers won't build nor install."
+      fi
+
+  - path: /opt/nvidia-build/71-nvidia.rules
+    owner: root:root
+    permissions: 0644
+    content: |
+      # Tag the device as master-of-seat so that logind is happy
+      # (see LP: #1365336)
+      SUBSYSTEM=="pci", ATTRS{vendor}=="0x10de", DRIVERS=="nvidia", TAG+="seat", TAG+="master-of-seat"
+
+      # Start and stop nvidia-persistenced on power on and power off
+      # respectively
+      ACTION=="add" DEVPATH=="/bus/acpi/drivers/NVIDIA ACPI Video Driver" SUBSYSTEM=="drivers" RUN+="/bin/systemctl start --no-block nvidia-persistenced.service"
+      ACTION=="remove" DEVPATH=="/bus/acpi/drivers/NVIDIA ACPI Video Driver" SUBSYSTEM=="drivers" RUN+="/bin/systemctl stop --no-block nvidia-persistenced"
+
+      # Start and stop nvidia-persistenced when loading and unloading
+      # the driver
+      ACTION=="add" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/bin/systemctl start --no-block nvidia-persistenced.service"
+      ACTION=="remove" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/bin/systemctl stop --no-block nvidia-persistenced"
+
+      # Load and unload nvidia-modeset module
+      ACTION=="add" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/nvidia-insmod.sh nvidia-modeset.ko"
+      ACTION=="remove" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/usr/sbin/rmmod -r nvidia-modeset"
+
+      # Load and unload nvidia-drm module
+      ACTION=="add" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/nvidia-insmod.sh nvidia-drm.ko"
+      ACTION=="remove" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/usr/sbin/rmmod nvidia-drm"
+
+      # Load and unload nvidia-uvm module
+      ACTION=="add" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/nvidia-insmod.sh nvidia-uvm.ko"
+      ACTION=="remove" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/usr/sbin/rmmod -r nvidia-uvm"
+
+      # This will create the device nvidia device nodes
+      ACTION=="add" DEVPATH=="/module/nvidia" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/nvidia-smi"
+
+      # Create the device node for the nvidia-uvm module
+      ACTION=="add" DEVPATH=="/module/nvidia_uvm" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/create-uvm-dev-node.sh"
+
+  - path: /opt/nvidia-build/_container_build.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/sh
+
+      # Default: use binary packages instead of building everything from source
+      EMERGE_SOURCE_FLAGS=gK
+      while :; do
+        case $1 in
+          --emerge-sources)
+            EMERGE_SOURCE_FLAGS=
+            ;;
+          *)
+            break
+        esac
+        shift
+      done
+
+
+      VERSION=$1
+      echo Building ${VERSION}
+
+      function finish {
+        cat /nvidia_installers/NVIDIA-Linux-x86_64-${VERSION}/nvidia-installer.log
+      }
+
+      set -e
+      trap finish exit
+
+      emerge-gitclone
+      . /usr/share/coreos/release
+      git -C /var/lib/portage/coreos-overlay checkout build-${COREOS_RELEASE_VERSION%%.*}
+      emerge -${EMERGE_SOURCE_FLAGS}q --jobs 4 --load-average 4 coreos-sources
+
+      cd /usr/src/linux
+      cp /lib/modules/*-coreos*/build/.config .config
+
+      make olddefconfig
+      make modules_prepare
+
+      cd /nvidia_installers/NVIDIA-Linux-x86_64-${VERSION}
+      ./nvidia-installer -s -n --kernel-source-path=/usr/src/linux \
+        --no-check-for-alternate-installs --no-opengl-files \
+        --kernel-install-path=${PWD} --log-file-name=${PWD}/nvidia-installer.log
+
+  - path: /opt/nvidia-build/_export.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/sh
+
+      set -e
+
+      ARTIFACT_DIR=$1
+      VERSION=$2
+      COMBINED_VERSION=$3
+
+      TOOLS="nvidia-debugdump nvidia-cuda-mps-control nvidia-xconfig nvidia-modprobe nvidia-smi nvidia-cuda-mps-server
+      nvidia-persistenced nvidia-settings"
+
+      # Create archives with no paths
+      tar -C ${ARTIFACT_DIR} -cvj $(basename -a ${ARTIFACT_DIR}/*.so.*) > libraries-${VERSION}.tar.bz2
+      tar -C ${ARTIFACT_DIR} -cvj ${TOOLS} > tools-${VERSION}.tar.bz2
+      tar -C ${ARTIFACT_DIR}/kernel -cvj $(basename -a ${ARTIFACT_DIR}/kernel/*.ko) > modules-${COMBINED_VERSION}.tar.bz2
+
+  - path: /opt/nvidia-build/build.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      #
+      # Build NVIDIA drivers for a given CoreOS version
+      #
+
+      KEEP_CONTAINER=false
+      EMERGE_SOURCES=""
+      while :; do
+        case $1 in
+          --keep)
+            KEEP_CONTAINER=true
+            ;;
+          --emerge-sources)
+            EMERGE_SOURCES=$1
+            ;;
+          -?*)
+            echo Unknown flag $1
+            exit 1
+            ;;
+          *)
+            break
+        esac
+        shift
+      done
+
+      echo "Keeping container around after build: ${KEEP_CONTAINER}"
+      echo "Additional flags: ${EMERGE_SOURCES}"
+
+      # If we are on CoreOS by default build for the current CoreOS version
+      if [[ -f /etc/lsb-release && -f /etc/coreos/update.conf ]]; then
+          source /etc/lsb-release
+          source /etc/coreos/update.conf
+
+          COREOS_TRACK_DEFAULT=$GROUP
+          COREOS_VERSION_DEFAULT=$DISTRIB_RELEASE
+      fi
+
+      DRIVER_VERSION=${1:-{{.Gpu.Nvidia.Version}}}
+      COREOS_TRACK=${2:-$COREOS_TRACK_DEFAULT}
+      COREOS_VERSION=${3:-$COREOS_VERSION_DEFAULT}
+
+      DRIVER_ARCHIVE=NVIDIA-Linux-x86_64-${DRIVER_VERSION}
+      DRIVER_ARCHIVE_PATH=${PWD}/nvidia_installers/${DRIVER_ARCHIVE}.run
+      DEV_CONTAINER=coreos_developer_container.bin.${COREOS_VERSION}
+      WORK_DIR=pkg/run_files/${COREOS_VERSION}
+      ORIGINAL_DIR=${PWD}
+
+      function onerr {
+        echo Caught error
+        finish
+      }
+
+      function onexit {
+        finish
+      }
+
+      function finish {
+        if [ "${KEEP_CONTAINER}" != "true" ]
+        then
+          cd ${ORIGINAL_DIR}
+          echo Cleaning up
+          sudo rm -Rf ${DEV_CONTAINER} ${WORK_DIR}/${DRIVER_ARCHIVE} tmp
+        fi
+        exit
+      }
+
+      set -e
+      trap onerr ERR
+      trap onexit exit
+
+      if [ ! -f ${DEV_CONTAINER} ]
+      then
+        echo Downloading CoreOS ${COREOS_TRACK} developer image ${COREOS_VERSION}
+        SITE=${COREOS_TRACK}.release.core-os.net/amd64-usr
+        curl -s -L https://${SITE}/${COREOS_VERSION}/coreos_developer_container.bin.bz2 \
+          -z ${DEV_CONTAINER}.bz2 \
+          -o ${DEV_CONTAINER}.bz2
+        echo Decompressing
+        bunzip2 -k ${DEV_CONTAINER}.bz2
+      fi
+
+      if [ ! -f ${DRIVER_ARCHIVE_PATH} ]
+      then
+        echo Downloading NVIDIA Linux drivers version ${DRIVER_VERSION}
+        mkdir -p nvidia_installers
+        SITE=us.download.nvidia.com/XFree86/Linux-x86_64
+        curl -s -L http://${SITE}/${DRIVER_VERSION}/${DRIVER_ARCHIVE}.run \
+          -z ${DRIVER_ARCHIVE_PATH} \
+          -o ${DRIVER_ARCHIVE_PATH}
+      fi
+
+      rm -Rf ${PWD}/tmp
+      mkdir -p ${PWD}/tmp ${WORK_DIR}
+      cp -ul ${DRIVER_ARCHIVE_PATH} ${WORK_DIR}
+
+      cd ${WORK_DIR}
+      chmod +x ${DRIVER_ARCHIVE}.run
+      sudo rm -Rf ./${DRIVER_ARCHIVE}
+      ./${DRIVER_ARCHIVE}.run -x -s
+      cd ${ORIGINAL_DIR}
+
+      systemd-nspawn -i ${DEV_CONTAINER} \
+        --bind=${PWD}/_container_build.sh:/build.sh \
+        --bind=${PWD}/${WORK_DIR}:/nvidia_installers \
+        /bin/bash -x /build.sh ${EMERGE_SOURCES} ${DRIVER_VERSION} || echo "nspawn fails as expected.  Because kernel modules can't install in the container"
+
+      sudo chown -R ${UID}:${GROUPS[0]} ${PWD}/${WORK_DIR}
+
+      bash -x _export.sh ${WORK_DIR}/*-${DRIVER_VERSION} \
+        ${DRIVER_VERSION} ${COREOS_VERSION}-${DRIVER_VERSION}
+
+  - path: /opt/nvidia-build/create-uvm-dev-node.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/sh
+      # This script is borrowed from https://github.com/Clarifai/coreos-nvidia/pull/4
+      # Get the major device number for nvidia-uvm and create the node
+      echo "Set up NVIDIA UVM"
+      major=`grep nvidia-uvm /proc/devices | awk '{print $1}'`
+      if [ -n "$major" ]; then
+          mknod -m 666 /dev/nvidia-uvm c $major 0
+      fi
+
+  - path: /opt/nvidia-build/nvidia-insmod.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/sh
+      # This script is borrowed from https://github.com/Clarifai/coreos-nvidia/pull/4
+      /usr/sbin/insmod /opt/nvidia/current/lib/modules/$(uname -r)/video/$1
+
+  - path: /opt/nvidia-build/nvidia-start.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/sh
+      # This script is borrowed from https://github.com/Clarifai/coreos-nvidia/pull/4
+
+      /opt/nvidia/current/bin/nvidia-insmod.sh nvidia.ko
+
+      # Start the first devices
+      /usr/bin/mknod -m 666 /dev/nvidiactl c 195 255 2>/dev/null
+      NVDEVS=`lspci | grep -i NVIDIA`
+      N3D=`echo "$NVDEVS" | grep "3D controller" | wc -l`
+      NVGA=`echo "$NVDEVS" | grep "VGA compatible controller" | wc -l`
+      N=`expr $N3D + $NVGA - 1`
+      for i in `seq 0 $N`; do
+        mknod -m 666 /dev/nvidia$i c 195 $i
+      done
+
+      /opt/nvidia/current/bin/set-gpu-name-to-kubelet-opts.sh
+
+  - path: /opt/nvidia-build/set-gpu-name-to-kubelet-opts.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      # Register GPU model name to node label
+      # Currently, we assume all GPU devices in a node are homogeneous (the same model).
+      [ -e /etc/default/kubelet ] || echo "KUBELET_OPTS=\"\"" > /etc/default/kubelet
+      source /etc/default/kubelet
+      if [ ! "$KUBELET_OPTS" == *nvidia-gpu-name* ]; then
+        NVIDIA_GPU_NAME=$(/opt/nvidia/current/bin/nvidia-smi --query-gpu=gpu_name --format=csv,noheader --id=0 | sed -E 's/ +/_/g')
+        KUBELET_OPTS="--node-labels='alpha.kubernetes.io/nvidia-gpu-name=$NVIDIA_GPU_NAME' $KUBELET_OPTS"
+        KUBELET_OPTS="--node-labels='kube-aws.coreos.com/gpu=nvidia' $KUBELET_OPTS"
+        KUBELET_OPTS="--node-labels='kube-aws.coreos.com/nvidia-gpu-version={{.Gpu.Nvidia.Version}}' $KUBELET_OPTS"
+        echo "KUBELET_OPTS=\"$KUBELET_OPTS\"" > /etc/default/kubelet
+      fi
+
+  - path: /opt/nvidia-build/nvidia-install.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      # This script is borrowed from https://github.com/Clarifai/coreos-nvidia/pull/4
+
+      if [[ $(uname -r) != *"-coreos"* ]]; then
+          echo "OS is not CoreOS"
+          exit 1
+      fi
+
+      # If we are on CoreOS by default use the current CoreOS version
+      if [[ -f /etc/lsb-release && -f /etc/coreos/update.conf ]]; then
+          source /etc/lsb-release
+          source /etc/coreos/update.conf
+
+          COREOS_TRACK_DEFAULT=$GROUP
+          COREOS_VERSION_DEFAULT=$DISTRIB_RELEASE
+          if [[ $DISTRIB_ID != *"CoreOS"* ]]; then
+              echo "Distribution is not CoreOS"
+              exit 1
+          fi
+      fi
+
+      DRIVER_VERSION=${1:-{{.Gpu.Nvidia.Version}}}
+      COREOS_TRACK=${2:-$COREOS_TRACK_DEFAULT}
+      COREOS_VERSION=${3:-$COREOS_VERSION_DEFAULT}
+
+      # this is where the modules go
+      release=$(uname -r)
+
+      mkdir -p /opt/nvidia/$DRIVER_VERSION/lib64 2>/dev/null
+      mkdir -p /opt/nvidia/$DRIVER_VERSION/bin 2>/dev/null
+      ln -sfT lib64 /opt/nvidia/$DRIVER_VERSION/lib 2>/dev/null
+      mkdir -p /opt/nvidia/$DRIVER_VERSION/lib64/modules/$release/video/
+
+      tar xvf libraries-$DRIVER_VERSION.tar.bz2 -C /opt/nvidia/$DRIVER_VERSION/lib64/
+      tar xvf modules-$COREOS_VERSION-$DRIVER_VERSION.tar.bz2 -C /opt/nvidia/$DRIVER_VERSION/lib64/modules/$release/video/
+      tar xvf tools-$DRIVER_VERSION.tar.bz2 -C /opt/nvidia/$DRIVER_VERSION/bin/
+
+      install -m 755 create-uvm-dev-node.sh /opt/nvidia/$DRIVER_VERSION/bin/
+      install -m 755 nvidia-start.sh /opt/nvidia/$DRIVER_VERSION/bin/
+      install -m 755 nvidia-insmod.sh /opt/nvidia/$DRIVER_VERSION/bin/
+      install -m 755 set-gpu-name-to-kubelet-opts.sh /opt/nvidia/$DRIVER_VERSION/bin/
+      ln -sfT $DRIVER_VERSION /opt/nvidia/current 2>/dev/null
+
+      cp -f 71-nvidia.rules /etc/udev/rules.d/
+      udevadm control --reload-rules
+
+      mkdir -p /etc/ld.so.conf.d/ 2>/dev/null
+      echo "/opt/nvidia/current/lib64" > /etc/ld.so.conf.d/nvidia.conf
+      ldconfig
+
+  - path: /opt/nvidia-build/util/retry.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #! /bin/bash
+      max_attempts="$1"; shift
+      cmd="$@"
+      attempt_num=1
+      attempt_interval_sec=3
+
+      until $cmd
+      do
+          if (( attempt_num == max_attempts ))
+          then
+              echo "Attempt $attempt_num failed and there are no more attempts left!"
+              return 1
+          else
+              echo "Attempt $attempt_num failed! Trying again in $attempt_interval_sec seconds..."
+              ((attempt_num++))
+              sleep $attempt_interval_sec;
+          fi
+      done
+
 {{ end }}

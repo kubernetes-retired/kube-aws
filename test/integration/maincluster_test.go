@@ -3338,6 +3338,76 @@ sshAccessAllowedSourceCIDRs:
 				},
 			},
 		},
+		{
+			context: "WithWorkerWithoutGPUSettings",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					enabled := c.NodePools[0].Gpu.Nvidia.Enabled
+					if enabled {
+						t.Errorf("unexpected enabled of gpu.nvidia: %v.  its default value should be false", enabled)
+						t.FailNow()
+					}
+				},
+			},
+		},
+		{
+			context: "WithGPUEnabledWorker",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    instanceType: p2.xlarge
+    gpu:
+      nvidia:
+        enabled: true
+        version: "123.45"
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					enabled := c.NodePools[0].Gpu.Nvidia.Enabled
+					version := c.NodePools[0].Gpu.Nvidia.Version
+					if !enabled {
+						t.Errorf("unexpected enabled value of gpu.nvidia: %v.", enabled)
+						t.FailNow()
+					}
+					if version != "123.45" {
+						t.Errorf("unexpected version value of gpu.nvidia: %v.", version)
+						t.FailNow()
+					}
+				},
+			},
+		},
+		{
+			context: "WithGPUDisabledWorker",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    gpu:
+      nvidia:
+        enabled: false
+        version: "123.45"
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					enabled := c.NodePools[0].Gpu.Nvidia.Enabled
+					version := c.NodePools[0].Gpu.Nvidia.Version
+					if enabled {
+						t.Errorf("unexpected enabled value of gpu.nvidia: %v.", enabled)
+						t.FailNow()
+					}
+					if version != "123.45" {
+						t.Errorf("unexpected version value of gpu.nvidia: %v.", version)
+						t.FailNow()
+					}
+				},
+			},
+		},
 	}
 
 	for _, validCase := range validCases {
@@ -4098,6 +4168,34 @@ worker:
           - arn: "badArn"
 `,
 			expectedErrorMessage: "invalid managed policy arn, your managed policy must match this (=arn:aws:iam::(YOURACCOUNTID|aws):policy/POLICYNAME), provided this (badArn)",
+		},
+		{
+			context: "WithGPUEnabledWorkerButEmptyVersion",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    instanceType: p2.xlarge
+    gpu:
+      nvidia:
+        enabled: true
+        version: ""
+`,
+			expectedErrorMessage: `gpu.nvidia.version must not be empty when gpu.nvidia is enabled.`,
+		},
+		{
+			context: "WithGPUDisabledWorkerButIntallationSupportEnabled",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    instanceType: t2.medium
+    gpu:
+      nvidia:
+        enabled: true
+        version: ""
+`,
+			expectedErrorMessage: `instance type t2.medium doesn't support GPU. You can enable Nvidia driver intallation support only when use [p2 g2] instance family.`,
 		},
 	}
 
