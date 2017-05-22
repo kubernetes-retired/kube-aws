@@ -147,12 +147,12 @@ func (e Etcd) SystemdUnitName() string {
 	return "etcd2.service"
 }
 
-// Version returns the version of etcd (e.g. `3.1.5`) to be used for this etcd cluster
+// Version returns the version of etcd (e.g. `3.1.6`) to be used for this etcd cluster
 func (e Etcd) Version() EtcdVersion {
 	if e.Cluster.Version != "" {
 		return e.Cluster.Version
 	}
-	return "3.1.5"
+	return "3.1.6"
 }
 
 func (v EtcdVersion) Is3() bool {
