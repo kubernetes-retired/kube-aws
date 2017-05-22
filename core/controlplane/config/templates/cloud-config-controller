@@ -578,7 +578,7 @@ write_files:
       kubectl apply -f "${mfdir}/kube-dns-sa.yaml"
 
       # Deployments
-      for manifest in {kube-dns-de,kube-dns-autoscaler-de,cluster-autoscaler-de,heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
+      for manifest in {kube-dns-de,kube-dns-autoscaler-de,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler-de,{{ end }}heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
           kubectl apply -f "${mfdir}/$manifest"
       done
 
