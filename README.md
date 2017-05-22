@@ -8,7 +8,7 @@
 **Note**: The `master` branch may be in an *unstable or even broken state* during development. Please use [releases](https://github.com/kubernetes-incubator/kube-aws/releases) instead of the `master` branch in order to get stable binaries.
 
 `kube-aws` is a command-line tool to create/update/destroy Kubernetes clusters on AWS.
-
+ 
 View the latest manual for the `kube-aws` tool on [GitHub](/Documentation/kubernetes-on-aws.md).
 
 ## Features
