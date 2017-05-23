@@ -1,10 +1,7 @@
 package cluster
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -183,12 +180,6 @@ func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
 	stackPolicyBody := `{
   "Statement" : [
     {
-      "Effect" : "Deny",
-      "Action" : "Update:*",
-      "Principal" : "*",
-      "Resource" : "LogicalResourceId/InstanceEtcd*"
-    },
-    {
        "Effect" : "Allow",
        "Principal" : "*",
        "Action" : "Update:*",
@@ -251,75 +242,6 @@ func (c *Cluster) Create() error {
 	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 }
 
-/*
-Makes sure that etcd resource definitions are not upgrades by cloudformation stack update.
-Fetches resource defintions from existing stack and splices them into the updated resource defintions.
-
-TODO(chom): etcd controller + dynamic cluster management will obviate need for this function
-*/
-type cfStackResources struct {
-	Resources map[string]map[string]interface{} `json:"Resources"`
-	Mappings  map[string]interface{}            `json:"Mappings"`
-}
-
-func (c *ClusterRef) lockEtcdResources(cfSvc *cloudformation.CloudFormation, stackBody string) (string, error) {
-
-	//Unmarshal incoming stack resource defintions
-	var newStack cfStackResources
-
-	if err := json.Unmarshal([]byte(stackBody), &newStack); err != nil {
-		return "", fmt.Errorf("error unmarshaling new stack json: %v", err)
-	}
-
-	instanceEtcdExpr := regexp.MustCompile("^InstanceEtcd[0-9]+$")
-	//Remove all etcdInstance resource defintions from incoming stack
-	for name, _ := range newStack.Resources {
-		if instanceEtcdExpr.Match([]byte(name)) {
-			delete(newStack.Resources, name)
-		}
-	}
-
-	//Fetch and unmarshal existing stack resource defintions
-	res, err := cfSvc.GetTemplate(&cloudformation.GetTemplateInput{
-		StackName: aws.String(c.StackName()),
-	})
-	if err != nil {
-		return "", fmt.Errorf("error getting stack template: %v", err)
-	}
-	var existingStack cfStackResources
-	if err := json.Unmarshal([]byte(*res.TemplateBody), &existingStack); err != nil {
-		return "", fmt.Errorf("error unmarshaling existing stack json: %v", err)
-	}
-
-	//splice in existing resource defintions for etcd into new stack
-	for name, definition := range existingStack.Resources {
-		if instanceEtcdExpr.Match([]byte(name)) {
-			newStack.Resources[name] = definition
-		}
-	}
-	newStack.Mappings["EtcdInstanceParams"] = existingStack.Mappings["EtcdInstanceParams"]
-
-	var outgoingStack map[string]interface{}
-	if err := json.Unmarshal([]byte(stackBody), &outgoingStack); err != nil {
-		return "", fmt.Errorf("error unmarshaling outgoing stack json: %v", err)
-	}
-	outgoingStack["Resources"] = newStack.Resources
-	outgoingStack["Mappings"] = newStack.Mappings
-
-	// ship off new stack to cloudformation api for an update
-	out, err := json.Marshal(&outgoingStack)
-	if err != nil {
-		return "", fmt.Errorf("error marshaling stack json: %v", err)
-	}
-
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, out); err != nil {
-		return "", fmt.Errorf("error compacting stack json: %v", err)
-	}
-
-	return buf.String(), nil
-}
-
 func (c *Cluster) String() string {
 	return fmt.Sprintf("{Config:%+v}", *c.CompressedStackConfig.Config)
 }
@@ -335,17 +257,12 @@ func (c *Cluster) Update() (string, error) {
 		return "", fmt.Errorf("Error while rendering template : %v", err)
 	}
 
-	var stackBody string
-	if stackBody, err = c.lockEtcdResources(cfSvc, stackTemplate); err != nil {
-		return "", err
-	}
-
 	cloudConfigs := map[string]string{
 		"userdata-controller": c.UserDataController,
 		"userdata-worker":     c.UserDataWorker,
 		"userdata-etcd":       c.UserDataEtcd,
 	}
-	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackBody, cloudConfigs)
+	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 
 	return updateOutput, err
 }
