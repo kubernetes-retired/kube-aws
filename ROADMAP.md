@@ -55,6 +55,22 @@ Please file an issue to make suggestions on this roadmap!
       * Dynamic reconfiguration of cluster-autoscaler
       * Automatic discovery of target node pools for cluster-autoscaler
     * Requires much work on CA side
+
+## v0.9.8
+
+  * Experimental support for kube-aws plugins
+  * Tiller installed by default
+    * For use from the plugin support
+
+## v0.9.9
+
+  * RBAC enabled by default
+  * [Optional] Several kube-aws core features as plugins
+
+## v0.9.10
+
+  * kubeadm support to simplify k8s components configuration
+    * while reducing the amount of code required in kube-aws
   
 ## v0.9.x
 
