@@ -171,13 +171,6 @@ func NewDefaultCluster() *Cluster {
 	}
 }
 
-func newDefaultClusterWithDeps(encSvc EncryptService) *Cluster {
-	cluster := NewDefaultCluster()
-	cluster.HyperkubeImage.Tag = cluster.K8sVer
-	cluster.ProvidedEncryptService = encSvc
-	return cluster
-}
-
 func ClusterFromFile(filename string) (*Cluster, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
