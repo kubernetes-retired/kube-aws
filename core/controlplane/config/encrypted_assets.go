@@ -611,7 +611,3 @@ func (a *CompactAssets) HasAuthTokens() bool {
 func (a *CompactAssets) HasTLSBootstrapToken() bool {
 	return len(a.TLSBootstrapToken) > 0
 }
-
-func (a *CompactAssets) HasAnyAuthTokens() bool {
-	return a.HasAuthTokens() || a.HasTLSBootstrapToken()
-}
