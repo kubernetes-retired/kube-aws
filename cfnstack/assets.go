@@ -135,14 +135,6 @@ func (l AssetLocation) URL() string {
 	return fmt.Sprintf("%s/%s/%s", l.Region.S3Endpoint(), l.Bucket, l.Key)
 }
 
-func newAssetLocationProvider(stackName string, s3URI string, region model.Region) AssetLocationProvider {
-	return AssetLocationProvider{
-		s3URI:     s3URI,
-		region:    region,
-		stackName: stackName,
-	}
-}
-
 func (p AssetLocationProvider) locationFor(filename string) (*AssetLocation, error) {
 	s3URI := p.s3URI
 
