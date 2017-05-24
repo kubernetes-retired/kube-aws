@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+func newDefaultClusterWithDeps(encSvc EncryptService) *Cluster {
+	cluster := NewDefaultCluster()
+	cluster.HyperkubeImage.Tag = cluster.K8sVer
+	cluster.ProvidedEncryptService = encSvc
+	return cluster
+}
+
 func TestRenderStackTemplate(t *testing.T) {
 	cluster := newDefaultClusterWithDeps(&dummyEncryptService{})
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
@@ -244,8 +243,6 @@ availabilityZone: us-west-1a
 	nodePoolConfigBody := `
 name: pool1
 `
-	expectedTags := []*cloudformation.Tag{}
-
 	main, err := controlplane.ConfigFromBytes([]byte(mainConfigBody))
 	if err != nil {
 		t.Errorf("failed to get valid cluster config: %v", err)
@@ -254,18 +251,6 @@ name: pool1
 	clusterConfig, err := config.ClusterFromBytesWithEncryptService([]byte(nodePoolConfigBody), main, helper.DummyEncryptService{})
 	if err != nil {
 		t.Errorf("could not get valid cluster config: %v", err)
-	}
-
-	cfSvc := &helper.DummyCloudformationService{
-		ExpectedTags: expectedTags,
-	}
-
-	s3Svc := &helper.DummyS3ObjectPutterService{
-		ExpectedBody:          "{}",
-		ExpectedBucket:        "test-bucket",
-		ExpectedContentType:   "application/json",
-		ExpectedKey:           "foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/pool1/stack.json",
-		ExpectedContentLength: 2,
 	}
 
 	helper.WithDummyCredentials(func(dummyAssetsDir string) {
@@ -280,12 +265,6 @@ name: pool1
 		if err != nil {
 			t.Errorf("%v", err)
 			t.FailNow()
-		}
-
-		_, err = cluster.stackProvisioner().CreateStack(cfSvc, s3Svc, "{}", map[string]string{})
-
-		if err != nil {
-			t.Errorf("error creating cluster: %v", err)
 		}
 
 		path, err := cluster.UserDataWorkerS3Prefix()

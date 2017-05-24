@@ -6,9 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
 	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
 	"text/tabwriter"
@@ -125,38 +123,6 @@ func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
 
 func (c *Cluster) session() *session.Session {
 	return c.ClusterRef.session
-}
-
-func (c *Cluster) Create() error {
-	cfSvc := cloudformation.New(c.session())
-	s3Svc := s3.New(c.session())
-	stackTemplate, err := c.RenderStackTemplateAsString()
-	if err != nil {
-		return err
-	}
-
-	cloudConfigs := map[string]string{
-		"userdata-worker": c.UserDataWorker,
-	}
-
-	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
-}
-
-func (c *Cluster) Update() (string, error) {
-	cfSvc := cloudformation.New(c.session())
-	s3Svc := s3.New(c.session())
-	stackTemplate, err := c.RenderStackTemplateAsString()
-	if err != nil {
-		return "", err
-	}
-
-	cloudConfigs := map[string]string{
-		"userdata-worker": c.UserDataWorker,
-	}
-
-	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
-
-	return updateOutput, err
 }
 
 // ValidateStack validates the CloudFormation stack for this worker node pool already uploaded to S3
