@@ -991,7 +991,7 @@ write_files:
           -ec \
           'echo decrypting assets
            shopt -s nullglob
-           for encKey in /etc/kubernetes/{ssl,{{if .AssetsConfig.HasAnyAuthTokens}}auth{{end}}}/*.enc; do
+           for encKey in /etc/kubernetes/{ssl,{{ if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken) }}auth{{end}}}/*.enc; do
              echo decrypting $encKey
              f=$(mktemp $encKey.XXXXXXXX)
              /usr/bin/aws \
@@ -1003,7 +1003,7 @@ write_files:
              mv -f $f ${encKey%.enc}
            done;
 
-           {{- if .AssetsConfig.HasAnyAuthTokens }}
+           {{- if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken) }}
            authDir=/etc/kubernetes/auth
            echo generating $authDir/tokens.csv
            echo > $authDir/tokens.csv
@@ -1259,7 +1259,7 @@ write_files:
           - --storage-backend=etcd2
           {{end}}
           - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
-          {{ if .AssetsConfig.HasAnyAuthTokens }}
+          {{if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken)}}
           - --token-auth-file=/etc/kubernetes/auth/tokens.csv
           {{ end }}
           {{if .Experimental.AuditLog.Enabled}}
@@ -1319,7 +1319,7 @@ write_files:
           - mountPath: /etc/ssl/certs
             name: ssl-certs-host
             readOnly: true
-          {{if .AssetsConfig.HasAnyAuthTokens}}
+          {{if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken)}}
           - mountPath: /etc/kubernetes/auth
             name: auth-kubernetes
             readOnly: true
@@ -1341,7 +1341,7 @@ write_files:
         - hostPath:
             path: /usr/share/ca-certificates
           name: ssl-certs-host
-        {{if .AssetsConfig.HasAnyAuthTokens}}
+        {{if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken)}}
         - hostPath:
             path: /etc/kubernetes/auth
           name: auth-kubernetes
