@@ -32,7 +32,7 @@ func NewProvisioner(name string, stackTags map[string]string, s3URI string, regi
 	}
 }
 
-func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset Asset) error {
+func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset model.Asset) error {
 	bucket := asset.Bucket
 	key := asset.Key
 	content := asset.Content

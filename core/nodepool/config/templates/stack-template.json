@@ -1,22 +1,3 @@
-{{define "UserData"}}
-{ "Fn::Base64": { "Fn::Join" : ["\n", [
-  "#!/bin/bash -xe",
-  {"Fn::Join":["",[ "echo '{{.StackNameEnvVarName}}=", { "Ref": "AWS::StackName" }, "' >> {{.StackNameEnvFileName}}" ]]},
-  " . /etc/environment",
-  "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
-  "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
-  "USERDATA_FILE={{.UserDataWorkerFileName}}",
-  "while ! /usr/bin/rkt run \\",
-  "   --net=host \\",
-  "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
-  "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
-  "   --trust-keys-from-https \\",
-  "   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .UserDataWorkerS3URI }} /var/run/coreos/$USERDATA_FILE; do",
-  "sleep 1",
-  "done",
-  "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
-]]}}
-{{end}}
 {{define "Metadata"}}
 {
   "AWS::CloudFormation::Init" : {
@@ -120,7 +101,7 @@
               {{end}}
             ],
             "SubnetId": {{$workerSubnet.Ref}},
-            "UserData": {{template "UserData" $}}
+            "UserData": {{ $.UserDataWorker.Parts.instance.Base64 true | checkSizeLessThan 16384 | quote }}
           }
           {{end}}
           {{end}}
@@ -280,7 +261,7 @@
         {{else}}
         "PlacementTenancy": "{{.Tenancy}}",
         {{end}}
-        "UserData": {{template "UserData" $}}
+        "UserData": {{ .UserDataWorker.Parts.instance.Base64 true | checkSizeLessThan 16384 | quote }}
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     {{if not .IAMConfig.InstanceProfile.Arn}}
@@ -324,13 +305,15 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{- if $.UserDataWorker.Parts.s3 }}
                 {
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataWorkerS3Prefix}}*"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{ $.UserDataWorker.Parts.s3.Asset.S3Prefix }}*"
                 },
+                {{- end }}
                 {{ if .KubeResourcesAutosave.Enabled }}
                 {
                   "Effect": "Allow",

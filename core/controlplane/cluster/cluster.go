@@ -42,7 +42,8 @@ type ClusterRef struct {
 
 type Cluster struct {
 	*ClusterRef
-	*config.CompressedStackConfig
+	*config.StackConfig
+	assets cfnstack.Assets
 }
 
 type ec2Service interface {
@@ -118,60 +119,66 @@ func NewCluster(cfg *config.Cluster, opts config.StackTemplateOptions, awsDebug 
 	if err != nil {
 		return nil, err
 	}
-	compressed, err := stackConfig.Compress()
-	if err != nil {
-		return nil, err
+
+	c := &Cluster{
+		ClusterRef:  cluster,
+		StackConfig: stackConfig,
 	}
-	return &Cluster{
-		ClusterRef:            cluster,
-		CompressedStackConfig: compressed,
-	}, nil
+
+	c.assets, err = c.buildAssets()
+	return c, err
 }
 
-func (c *Cluster) Assets() (cfnstack.Assets, error) {
-	stackTemplate, err := c.RenderTemplateAsString()
-	if err != nil {
-		return nil, fmt.Errorf("Error while rendering template : %v", err)
+func (c *Cluster) Assets() cfnstack.Assets {
+	return c.assets
+}
+
+func (c *Cluster) buildAssets() (cfnstack.Assets, error) {
+	var err error
+	assets := cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.ClusterExportedStacksS3URI(), c.StackConfig.Region)
+
+	if c.StackConfig.UserDataController, err = model.NewUserData(c.StackTemplateOptions.ControllerTmplFile, c.StackConfig.Config); err != nil {
+		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
 	}
 
-	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.ClusterExportedStacksS3URI(), c.StackConfig.Region).
-		Add(c.UserDataControllerFileName(), c.UserDataController).
-		Add(c.UserDataEtcdFileName(), c.UserDataEtcd).
-		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
-		Build(), nil
+	if c.StackConfig.UserDataEtcd, err = model.NewUserData(c.StackTemplateOptions.EtcdTmplFile, c.StackConfig.Config); err != nil {
+		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
+	}
+
+	if err = assets.AddUserDataPart(c.UserDataController, model.USERDATA_S3, "userdata-controller"); err != nil {
+		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
+	}
+
+	if err = assets.AddUserDataPart(c.UserDataEtcd, model.USERDATA_S3, "userdata-etcd"); err != nil {
+		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
+	}
+
+	stackTemplate, err := c.RenderStackTemplateAsString()
+	if err != nil {
+		return nil, fmt.Errorf("Error while rendering template: %v", err)
+	}
+
+	assets.Add(STACK_TEMPLATE_FILENAME, stackTemplate)
+
+	return assets.Build(), nil
 }
 
 func (c *Cluster) TemplateURL() (string, error) {
-	assets, err := c.Assets()
-	if err != nil {
-		return "", err
-	}
+	assets := c.Assets()
 	asset, err := assets.FindAssetByStackAndFileName(c.StackName(), STACK_TEMPLATE_FILENAME)
 	if err != nil {
 		return "", fmt.Errorf("failed to get template URL: %v", err)
 	}
-	return asset.URL(), nil
+	return asset.URL()
 }
 
 // ValidateStack validates the CloudFormation stack for this control plane already uploaded to S3
 func (c *Cluster) ValidateStack() (string, error) {
-	if err := c.ValidateUserData(); err != nil {
-		return "", fmt.Errorf("failed to validate userdata : %v", err)
-	}
-
 	templateURL, err := c.TemplateURL()
 	if err != nil {
 		return "", fmt.Errorf("failed to get template url : %v", err)
 	}
 	return c.stackProvisioner().ValidateStackAtURL(templateURL)
-}
-
-func (c *Cluster) RenderTemplateAsString() (string, error) {
-	data, err := c.RenderStackTemplateAsString()
-	if err != nil {
-		return "", fmt.Errorf("Error while rendering stack template : %v", err)
-	}
-	return data, nil
 }
 
 func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
@@ -219,7 +226,7 @@ func (c *Cluster) Validate() error {
 }
 
 func (c *Cluster) String() string {
-	return fmt.Sprintf("{Config:%+v}", *c.CompressedStackConfig.Config)
+	return fmt.Sprintf("{Config:%+v}", *c.StackConfig.Config)
 }
 
 func (c *ClusterRef) Destroy() error {

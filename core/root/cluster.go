@@ -102,7 +102,6 @@ type Cluster interface {
 	Update() (string, error)
 	ValidateStack() (string, error)
 	ValidateTemplates() error
-	ValidateUserData() error
 	ControlPlane() *controlplane.Cluster
 }
 
@@ -216,9 +215,7 @@ func (c clusterImpl) prepareTemplateWithAssets() (string, error) {
 		return "", fmt.Errorf("failed to prepare template with assets: %v", err)
 	}
 
-	url := asset.URL()
-
-	return url, nil
+	return asset.URL()
 }
 
 func (c clusterImpl) Assets() (cfnstack.Assets, error) {
@@ -231,19 +228,15 @@ func (c clusterImpl) Assets() (cfnstack.Assets, error) {
 		c.controlPlane.ClusterName,
 	)
 
-	assets := cfnstack.NewAssetsBuilder(c.stackName(), s3URI, c.controlPlane.Region).Add(REMOTE_STACK_TEMPLATE_FILENAME, stackTemplate).Build()
+	assetsBuilder := cfnstack.NewAssetsBuilder(c.stackName(), s3URI, c.controlPlane.Region)
+	assetsBuilder.Add(REMOTE_STACK_TEMPLATE_FILENAME, stackTemplate)
+	assets := assetsBuilder.Build()
 
-	cpAssets, err := c.controlPlane.Assets()
-	if err != nil {
-		return nil, err
-	}
+	cpAssets := c.controlPlane.Assets()
 	assets = assets.Merge(cpAssets)
 
 	for _, np := range c.nodePools {
-		a, err := np.Assets()
-		if err != nil {
-			return nil, err
-		}
+		a := np.Assets()
 		assets = assets.Merge(a)
 	}
 
@@ -304,18 +297,6 @@ func (c clusterImpl) Update() (string, error) {
 	}
 
 	return c.stackProvisioner().UpdateStackAtURLAndWait(cfSvc, templateUrl)
-}
-
-func (c clusterImpl) ValidateUserData() error {
-	if err := c.controlPlane.ValidateUserData(); err != nil {
-		return fmt.Errorf("failed to validate control plane: %v", err)
-	}
-	for i, p := range c.nodePools {
-		if err := p.ValidateUserData(); err != nil {
-			return fmt.Errorf("failed to validate node pool #%d: %v", i, err)
-		}
-	}
-	return nil
 }
 
 func (c clusterImpl) ValidateTemplates() error {

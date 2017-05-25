@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
 	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"text/tabwriter"
 )
 
@@ -21,7 +22,8 @@ type ClusterRef struct {
 
 type Cluster struct {
 	*ClusterRef
-	*config.CompressedStackConfig
+	*config.StackConfig
+	assets cfnstack.Assets
 }
 
 type Info struct {
@@ -63,47 +65,50 @@ func NewClusterRef(cfg *config.ProvidedConfig, awsDebug bool) *ClusterRef {
 }
 
 func NewCluster(provided *config.ProvidedConfig, opts config.StackTemplateOptions, awsDebug bool) (*Cluster, error) {
-	computed, err := provided.Config()
-	if err != nil {
-		return nil, err
-	}
-	stackConfig, err := computed.StackConfig(opts)
-	if err != nil {
-		return nil, err
-	}
-	compressed, err := stackConfig.Compress()
+	stackConfig, err := provided.StackConfig(opts)
 	if err != nil {
 		return nil, err
 	}
 	ref := NewClusterRef(provided, awsDebug)
-	return &Cluster{
-		CompressedStackConfig: compressed,
-		ClusterRef:            ref,
-	}, nil
+	c := &Cluster{
+		StackConfig: stackConfig,
+		ClusterRef:  ref,
+	}
+	c.assets, err = c.buildAssets()
+	return c, err
 }
 
-func (c *Cluster) Assets() (cfnstack.Assets, error) {
+func (c *Cluster) Assets() cfnstack.Assets {
+	return c.assets
+}
+
+func (c *Cluster) buildAssets() (cfnstack.Assets, error) {
+	var err error
+	assets := cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI, c.StackConfig.Region)
+	if c.UserDataWorker, err = model.NewUserData(c.StackTemplateOptions.WorkerTmplFile, c.ComputedConfig); err != nil {
+		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
+	}
+
+	if err = assets.AddUserDataPart(c.UserDataWorker, model.USERDATA_S3, "userdata-worker"); err != nil {
+		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
+	}
+
 	stackTemplate, err := c.RenderStackTemplateAsString()
 	if err != nil {
 		return nil, fmt.Errorf("Error while rendering template : %v", err)
 	}
+	assets.Add(STACK_TEMPLATE_FILENAME, stackTemplate)
 
-	return cfnstack.NewAssetsBuilder(c.StackName(), c.StackConfig.S3URI, c.StackConfig.Region).
-		Add(c.UserDataWorkerFileName(), c.UserDataWorker).
-		Add(STACK_TEMPLATE_FILENAME, stackTemplate).
-		Build(), nil
+	return assets.Build(), nil
 }
 
 func (c *Cluster) TemplateURL() (string, error) {
-	assets, err := c.Assets()
-	if err != nil {
-		return "", fmt.Errorf("failed to get template url: %v", err)
-	}
+	assets := c.Assets()
 	asset, err := assets.FindAssetByStackAndFileName(c.StackName(), STACK_TEMPLATE_FILENAME)
 	if err != nil {
 		return "", fmt.Errorf("failed to get template url: %v", err)
 	}
-	return asset.URL(), nil
+	return asset.URL()
 }
 
 func (c *Cluster) stackProvisioner() *cfnstack.Provisioner {
@@ -127,10 +132,6 @@ func (c *Cluster) session() *session.Session {
 
 // ValidateStack validates the CloudFormation stack for this worker node pool already uploaded to S3
 func (c *Cluster) ValidateStack() (string, error) {
-	if err := c.ValidateUserData(); err != nil {
-		return "", fmt.Errorf("failed to validate userdata : %v", err)
-	}
-
 	ec2Svc := ec2.New(c.session())
 	if err := c.validateWorkerRootVolume(ec2Svc); err != nil {
 		return "", err

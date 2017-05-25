@@ -1,6 +1,19 @@
+CALICO_BUILD?=calico/go-build
+PACKAGE_NAME?=kubernetes-incubator/kube-aws
+LOCAL_USER_ID?=$(shell id -u $$USER)
+
 .PHONY: build
 build:
 	./build
+
+vendor: glide.yaml
+	rm -f glide.lock
+	docker run --rm \
+	    -v $(CURDIR):/go/src/github.com/$(PACKAGE_NAME):rw \
+	    -e LOCAL_USER_ID=$(LOCAL_USER_ID) \
+            -w /go/src/github.com/$(PACKAGE_NAME) \
+	    $(CALICO_BUILD) glide install -strip-vendor
+	
 
 .PHONY: format
 format:
