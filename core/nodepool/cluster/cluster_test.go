@@ -1,16 +1,20 @@
 package cluster
 
 import (
-	"errors"
-	"fmt"
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/stretchr/testify/assert"
+
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/test/helper"
+
+	"errors"
+	"fmt"
+	"strings"
+	"testing"
 )
 
 type dummyEC2CreateVolumeService struct {
@@ -244,13 +248,13 @@ availabilityZone: us-west-1a
 name: pool1
 `
 	main, err := controlplane.ConfigFromBytes([]byte(mainConfigBody))
-	if err != nil {
-		t.Errorf("failed to get valid cluster config: %v", err)
+	if !assert.NoError(t, err, "failed to get valid cluster config") {
+		return
 	}
 
 	clusterConfig, err := config.ClusterFromBytesWithEncryptService([]byte(nodePoolConfigBody), main, helper.DummyEncryptService{})
-	if err != nil {
-		t.Errorf("could not get valid cluster config: %v", err)
+	if !assert.NoError(t, err, "could not get valid cluster config") {
+		return
 	}
 
 	helper.WithDummyCredentials(func(dummyAssetsDir string) {
@@ -262,18 +266,28 @@ name: pool1
 		}
 
 		cluster, err := NewCluster(clusterConfig, stackTemplateOptions, false)
-		if err != nil {
-			t.Errorf("%v", err)
-			t.FailNow()
+		if !assert.NoError(t, err) {
+			return
 		}
 
-		path, err := cluster.UserDataWorkerS3Prefix()
-		if err != nil {
-			t.Errorf("failed to get worker user data path in s3: %v", err)
+		assets := cluster.Assets()
+		if !assert.NoError(t, err) {
+			return
 		}
 
-		if path != "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/pool1/userdata-worker" {
-			t.Errorf("UserDataControllerS3Prefix returned an unexpected value: %s", path)
+		userdataFilename := ""
+		var asset model.Asset
+		var id model.AssetID
+		for id, asset = range assets.AsMap() {
+			if strings.HasPrefix(id.Filename, "userdata-worker-") {
+				userdataFilename = id.Filename
+				break
+			}
 		}
+		assert.NotZero(t, userdataFilename, "Unable to find userdata-worker asset")
+
+		path, err := asset.S3Prefix()
+		assert.NoError(t, err)
+		assert.Equal(t, "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/pool1/userdata-worker", path, "UserDataWorker.S3Prefix returned an unexpected value")
 	})
 }

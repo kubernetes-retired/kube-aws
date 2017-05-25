@@ -1,18 +1,23 @@
 package cluster
 
 import (
-	"errors"
-	"fmt"
-	"testing"
+	"github.com/kubernetes-incubator/kube-aws/cfnstack"
+	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
+	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/test/helper"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/kubernetes-incubator/kube-aws/cfnstack"
-	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
-	"github.com/kubernetes-incubator/kube-aws/test/helper"
+	"github.com/stretchr/testify/assert"
+
+	"errors"
+	"fmt"
+	"strings"
+	"testing"
+
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -473,19 +478,29 @@ stackTags:
 			}
 
 			cluster, err := NewCluster(clusterConfig, stackTemplateOptions, false)
-			if err != nil {
-				t.Errorf("%v", err)
-				t.FailNow()
+			if !assert.NoError(t, err) {
+				return
 			}
 
-			path, err := cluster.UserDataControllerS3Prefix()
-			if err != nil {
-				t.Errorf("failed to get controller user data path in s3: %v", err)
+			assets := cluster.Assets()
+			if !assert.NoError(t, err) {
+				return
 			}
 
-			if path != "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/control-plane/userdata-controller" {
-				t.Errorf("UserDataControllerS3Prefix returned an unexpected value: %s", path)
+			userdataFilename := ""
+			var asset model.Asset
+			var id model.AssetID
+			for id, asset = range assets.AsMap() {
+				if strings.HasPrefix(id.Filename, "userdata-controller-") {
+					userdataFilename = id.Filename
+					break
+				}
 			}
+			assert.NotZero(t, userdataFilename, "Unable to find userdata-controller asset")
+
+			path, err := asset.S3Prefix()
+			assert.NoError(t, err)
+			assert.Equal(t, "test-bucket/foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/control-plane/userdata-controller", path, "UserDataController.S3Prefix returned an unexpected value")
 		})
 	}
 }
@@ -708,4 +723,40 @@ controllerRootVolumeIOPS: 2000
 			t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
 		}
 	}
+}
+
+func newDefaultClusterWithDeps(opts config.StackTemplateOptions) (*Cluster, error) {
+	cluster := config.NewDefaultCluster()
+	cluster.HyperkubeImage.Tag = cluster.K8sVer
+	cluster.ProvidedEncryptService = helper.DummyEncryptService{}
+
+	cluster.Region = model.RegionForName("us-west-1")
+	cluster.Subnets = []model.Subnet{
+		model.NewPublicSubnet("us-west-1a", "10.0.1.0/24"),
+		model.NewPublicSubnet("us-west-1b", "10.0.2.0/24"),
+	}
+	cluster.ExternalDNSName = "foo.example.com"
+	cluster.KeyName = "mykey"
+	cluster.KMSKeyARN = "mykmskey"
+	if err := cluster.Load(); err != nil {
+		return &Cluster{}, err
+	}
+	return NewCluster(cluster, opts, false)
+}
+
+func TestRenderStackTemplate(t *testing.T) {
+	helper.WithDummyCredentials(func(dir string) {
+		var stackTemplateOptions = config.StackTemplateOptions{
+			AssetsDir:             dir,
+			ControllerTmplFile:    "../config/templates/cloud-config-controller",
+			EtcdTmplFile:          "../config/templates/cloud-config-etcd",
+			StackTemplateTmplFile: "../config/templates/stack-template.json",
+			S3URI: "s3://test-bucket/foo/bar",
+		}
+		cluster, err := newDefaultClusterWithDeps(stackTemplateOptions)
+		if assert.NoError(t, err, "Unable to initialize Cluster") {
+			_, err = cluster.StackConfig.RenderStackTemplateAsString()
+			assert.NoError(t, err, "Unable to render stack template")
+		}
+	})
 }
