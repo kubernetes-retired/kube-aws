@@ -211,6 +211,10 @@ func (c *Cluster) Validate() error {
 		return err
 	}
 
+	if err := c.validateDNSConfig(route53.New(c.session)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
