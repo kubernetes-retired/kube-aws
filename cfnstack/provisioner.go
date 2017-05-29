@@ -32,33 +32,6 @@ func NewProvisioner(name string, stackTags map[string]string, s3URI string, regi
 	}
 }
 
-func (c *Provisioner) uploadFile(s3Svc S3ObjectPutterService, content string, filename string) (string, error) {
-	locProvider := newAssetLocationProvider(c.stackName, c.s3URI, c.region)
-	loc, err := locProvider.locationFor(filename)
-	if err != nil {
-		return "", err
-	}
-	bucket := loc.Bucket
-	key := loc.Key
-
-	contentLength := int64(len(content))
-	body := strings.NewReader(content)
-
-	_, err = s3Svc.PutObject(&s3.PutObjectInput{
-		Bucket:        aws.String(bucket),
-		Key:           aws.String(key),
-		Body:          body,
-		ContentLength: aws.Int64(contentLength),
-		ContentType:   aws.String("application/json"),
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	return loc.URL(), nil
-}
-
 func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset Asset) error {
 	bucket := asset.Bucket
 	key := asset.Key
@@ -77,21 +50,6 @@ func (c *Provisioner) uploadAsset(s3Svc S3ObjectPutterService, asset Asset) erro
 	return err
 }
 
-func (c *Provisioner) uploadStackAssets(s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (*string, error) {
-	templateURL, err := c.uploadFile(s3Svc, stackTemplate, "stack.json")
-	if err != nil {
-		return nil, fmt.Errorf("Template upload failed: %v", err)
-	}
-
-	for filename, content := range cloudConfigs {
-		if _, err := c.uploadFile(s3Svc, content, filename); err != nil {
-			return nil, fmt.Errorf("File upload failed: %v", err)
-		}
-	}
-
-	return &templateURL, nil
-}
-
 func (c *Provisioner) UploadAssets(s3Svc S3ObjectPutterService, assets Assets) error {
 	for _, a := range assets.AsMap() {
 		err := c.uploadAsset(s3Svc, a)
@@ -102,22 +60,6 @@ func (c *Provisioner) UploadAssets(s3Svc S3ObjectPutterService, assets Assets) e
 	return nil
 }
 
-func (c *Provisioner) CreateStack(cfSvc CreationService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (*cloudformation.CreateStackOutput, error) {
-	templateURL, uploadErr := c.uploadStackAssets(s3Svc, stackTemplate, cloudConfigs)
-
-	if uploadErr != nil {
-		return nil, fmt.Errorf("template upload failed: %v", uploadErr)
-	} else if templateURL != nil {
-		resp, err := c.createStackFromTemplateURL(cfSvc, *templateURL)
-		if err != nil {
-			return nil, fmt.Errorf("stack creation failed: %v", err)
-		}
-
-		return resp, nil
-	} else {
-		return nil, fmt.Errorf("[bug] kube-aws skipped template upload")
-	}
-}
 func (c *Provisioner) EstimateTemplateCost(cfSvc CRUDService, body string, parameters []*cloudformation.Parameter) (*cloudformation.EstimateTemplateCostOutput, error) {
 
 	input := cloudformation.EstimateTemplateCostInput{
@@ -130,14 +72,6 @@ func (c *Provisioner) EstimateTemplateCost(cfSvc CRUDService, body string, param
 
 func (c *Provisioner) CreateStackAtURLAndWait(cfSvc CRUDService, templateURL string) error {
 	resp, err := c.createStackFromTemplateURL(cfSvc, templateURL)
-	if err != nil {
-		return err
-	}
-	return c.waitUntilStackGetsCreated(cfSvc, resp)
-}
-
-func (c *Provisioner) CreateStackAndWait(cfSvc CRUDService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) error {
-	resp, err := c.CreateStack(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 	if err != nil {
 		return err
 	}
@@ -223,33 +157,8 @@ func (c *Provisioner) updateStackWithTemplateURL(cfSvc UpdateService, templateUR
 	return cfSvc.UpdateStack(input)
 }
 
-func (c *Provisioner) UpdateStack(cfSvc UpdateService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (*cloudformation.UpdateStackOutput, error) {
-	templateURL, uploadErr := c.uploadStackAssets(s3Svc, stackTemplate, cloudConfigs)
-
-	if uploadErr != nil {
-		return nil, fmt.Errorf("template upload failed: %v", uploadErr)
-	} else if templateURL != nil {
-		resp, err := c.updateStackWithTemplateURL(cfSvc, *templateURL)
-		if err != nil {
-			return nil, fmt.Errorf("stack update failed: %v", err)
-		}
-
-		return resp, nil
-	} else {
-		return nil, fmt.Errorf("[bug] kube-aws skipped template upload")
-	}
-}
-
 func (c *Provisioner) UpdateStackAtURLAndWait(cfSvc CRUDService, templateURL string) (string, error) {
 	updateOutput, err := c.updateStackWithTemplateURL(cfSvc, templateURL)
-	if err != nil {
-		return "", fmt.Errorf("error updating cloudformation stack: %v", err)
-	}
-	return c.waitUntilStackGetsUpdated(cfSvc, updateOutput)
-}
-
-func (c *Provisioner) UpdateStackAndWait(cfSvc CRUDService, s3Svc S3ObjectPutterService, stackTemplate string, cloudConfigs map[string]string) (string, error) {
-	updateOutput, err := c.UpdateStack(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 	if err != nil {
 		return "", fmt.Errorf("error updating cloudformation stack: %v", err)
 	}
