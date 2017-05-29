@@ -15,7 +15,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/coreos/go-semver/semver"
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
@@ -833,22 +832,6 @@ func (c KubeClusterSettings) K8sNetworkPlugin() string {
 func (c Cluster) Config() (*Config, error) {
 	config := Config{Cluster: c}
 
-	// Check if we are running CoreOS 1151.0.0 or greater when using rkt as
-	// runtime. Proceed regardless if running alpha. TODO(pb) delete when rkt
-	// works well with stable.
-	if config.ContainerRuntime == "rkt" && config.ReleaseChannel != "alpha" {
-		minVersion := semver.Version{Major: 1151}
-
-		ok, err := releaseVersionIsGreaterThan(minVersion, config.ReleaseChannel)
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, fmt.Errorf("The container runtime is 'rkt' but the latest CoreOS version for the %s channel is less then the minimum version %s. Please select the 'alpha' release channel to use the rkt runtime.", config.ReleaseChannel, minVersion)
-		}
-	}
-
 	if c.AmiId == "" {
 		var err error
 		if config.AMI, err = amiregistry.GetAMI(config.Region.String(), config.ReleaseChannel); err != nil {
@@ -907,32 +890,6 @@ func (c Cluster) Config() (*Config, error) {
 func (c *Cluster) EtcdCluster() derived.EtcdCluster {
 	etcdNetwork := derived.NewNetwork(c.Etcd.Subnets, c.NATGateways())
 	return derived.NewEtcdCluster(c.Etcd.Cluster, c.Region, etcdNetwork, c.Etcd.Count)
-}
-
-// releaseVersionIsGreaterThan will return true if the supplied version is greater then
-// or equal to the current CoreOS release indicated by the given release
-// channel.
-func releaseVersionIsGreaterThan(minVersion semver.Version, release string) (bool, error) {
-	metaData, err := amiregistry.GetAMIData(release)
-	if err != nil {
-		return false, fmt.Errorf("Unable to retrieve current release channel version: %v", err)
-	}
-
-	version, ok := metaData["release_info"]["version"]
-	if !ok {
-		return false, fmt.Errorf("Error parsing image metadata for version")
-	}
-
-	current, err := semver.NewVersion(version)
-	if err != nil {
-		return false, fmt.Errorf("Error parsing semver from image version %v", err)
-	}
-
-	if current.LessThan(minVersion) {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 type StackTemplateOptions struct {
