@@ -7,11 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/route53"
 
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
 	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/model"
@@ -213,58 +211,15 @@ func (c *Cluster) Validate() error {
 		return err
 	}
 
+	if err := c.validateDNSConfig(route53.New(c.session)); err != nil {
+		return err
+	}
+
 	return nil
-}
-
-func (c *Cluster) Create() error {
-	r53Svc := route53.New(c.session)
-	if err := c.validateDNSConfig(r53Svc); err != nil {
-		return err
-	}
-
-	if err := c.Validate(); err != nil {
-		return err
-	}
-
-	cfSvc := cloudformation.New(c.session)
-	s3Svc := s3.New(c.session)
-
-	stackTemplate, err := c.RenderTemplateAsString()
-	if err != nil {
-		return fmt.Errorf("Error while rendering template : %v", err)
-	}
-
-	cloudConfigs := map[string]string{
-		"userdata-controller": c.UserDataController,
-		"userdata-worker":     c.UserDataWorker,
-	}
-
-	return c.stackProvisioner().CreateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
 }
 
 func (c *Cluster) String() string {
 	return fmt.Sprintf("{Config:%+v}", *c.CompressedStackConfig.Config)
-}
-
-func (c *Cluster) Update() (string, error) {
-	cfSvc := cloudformation.New(c.session)
-	s3Svc := s3.New(c.session)
-
-	var err error
-
-	var stackTemplate string
-	if stackTemplate, err = c.RenderTemplateAsString(); err != nil {
-		return "", fmt.Errorf("Error while rendering template : %v", err)
-	}
-
-	cloudConfigs := map[string]string{
-		"userdata-controller": c.UserDataController,
-		"userdata-worker":     c.UserDataWorker,
-		"userdata-etcd":       c.UserDataEtcd,
-	}
-	updateOutput, err := c.stackProvisioner().UpdateStackAndWait(cfSvc, s3Svc, stackTemplate, cloudConfigs)
-
-	return updateOutput, err
 }
 
 func (c *ClusterRef) Destroy() error {
