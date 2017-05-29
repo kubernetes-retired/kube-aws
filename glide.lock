@@ -1,10 +1,10 @@
-hash: 61650b1ec198a8e63d341908512a136ee16a45bd82e46f71945f807ccbee2715
-updated: 2017-05-02T16:49:23.488146022+01:00
+hash: 4efd35a0f77ce2feec79e62072e344e8d412ff50c7b944dc6d0148be360ec131
+updated: 2017-05-29T17:17:13.7944913Z
 imports:
 - name: github.com/aokoli/goutils
   version: e57d01ace047c1a43e6a49ecf3ecc50ed2be81d1
 - name: github.com/aws/aws-sdk-go
-  version: 0dbc446aca87aebb6e0a24509b59bafc0e3ec0ae
+  version: e0cdae7a65ba3a5e66a0af747a7b3967ddac099c
   subpackages:
   - aws
   - aws/awserr
@@ -43,14 +43,14 @@ imports:
   subpackages:
   - config
   - config/validate
-- name: github.com/coreos/go-semver
-  version: 8ab6407b697782a06568d4b7f1db25550ec2e4c6
-  subpackages:
-  - semver
 - name: github.com/coreos/yaml
   version: 6b16a5714269b2f70720a45406b1babd947a17ef
 - name: github.com/go-ini/ini
-  version: e7fea39b01aea8d5671f6858f0532f56e8bff3a5
+  version: afbc45e87f3ba324c532d12c71918ef52e0fb194
+- name: github.com/huandu/xstrings
+  version: 3959339b333561bf62a38b424fd41517c2c90f40
+- name: github.com/imdario/mergo
+  version: 3e95a51e0639b4cf372f2ccf74c86749d747fbdc
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jmespath/go-jmespath
@@ -58,18 +58,30 @@ imports:
 - name: github.com/Masterminds/semver
   version: 59c29afe1a994eacb71c833025ca7acf874bb1da
 - name: github.com/Masterminds/sprig
-  version: 23597e5f6ad0e4d590e71314bfd0251a4a3cf849
+  version: 9526be0327b26ad31aa70296a7b10704883976d5
 - name: github.com/satori/go.uuid
   version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/spf13/cobra
-  version: 8f0203be891287870100e4af46262cdf4a4261d1
+  version: e606913c4ee45fec232e67e70105fb6c866b95d9
 - name: github.com/spf13/pflag
-  version: c990990ab4981d84da820b7b00c85139ca150b5f
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: github.com/stretchr/testify
+  version: 46b3c8225b20f01377eeefe3e6b7b147bb742eff
+  subpackages:
+  - assert
 - name: golang.org/x/crypto
-  version: 8e03fc1ab6a36bdb9e7dee75a213c30f0249d0c1
+  version: 7e9105388ebff089b3f99f0ef676ea55a6da3a7e
   subpackages:
   - pbkdf2
   - scrypt
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
-testImports: []
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
