@@ -249,37 +249,6 @@ coreos:
         RequiredBy=rkt-api.service
 {{ end }}
 
-{{ if .NodeDrainer.Enabled }}
-    - name: kube-node-drainer.service
-      enable: true
-      command: start
-      runtime: true
-      content: |
-        [Unit]
-        Description=drain this k8s node to make running pods time to gracefully shut down before stopping kubelet
-        After=multi-user.target
-
-        [Service]
-        Type=oneshot
-        RemainAfterExit=true
-        ExecStart=/bin/true
-        TimeoutStopSec=60s
-        ExecStop=/bin/sh -c '/usr/bin/rkt run \
-        --volume=kube,kind=host,source=/etc/kubernetes,readOnly=true \
-        --mount=volume=kube,target=/etc/kubernetes \
-        --net=host \
-        {{.HyperkubeImage.RepoWithTag}} \
-          --exec=/kubectl -- \
-          --server={{.APIEndpointURL}}:443 \
-          --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
-          drain $(hostname) \
-          --ignore-daemonsets \
-          --force'
-
-        [Install]
-        WantedBy=multi-user.target
-{{ end }}
-
 {{if .UseCalico }}
     # https://github.com/coreos/docs/blob/5d7b1cccb8286185275b07db1495828be9fdb0ea/os/other-settings.md#tuning-sysctl-parameters
     - name: systemd-modules-load.service

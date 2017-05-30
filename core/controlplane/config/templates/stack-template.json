@@ -1,6 +1,16 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "kube-aws Kubernetes cluster {{.ClusterName}}",
+  "Parameters": {
+    "NotificationTargetARN": {
+      "Type": "String",
+      "Description": "ASG LifecycleHook notification target ARN"
+    },
+    "NotificationRoleARN": {
+      "Type": "String",
+      "Description": "Role to be used by ASG LifecycleHook to publish notification"
+    }
+  },
   "Resources": {
     "{{.Controller.LogicalName}}": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
@@ -228,6 +238,26 @@
                   "Action" : "kms:Decrypt",
                   "Effect" : "Allow",
                   "Resource" : "{{.KMSKeyARN}}"
+                },
+                {{end}}
+                {{if .Experimental.NodeDrainer.Enabled }}
+                {
+                  "Action": [
+                    "autoscaling:DescribeAutoScalingInstances",
+                    "autoscaling:DescribeLifecycleHooks"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "autoscaling:CompleteLifecycleAction"
+                  ],
+                  "Effect": "Allow",
+                  "Condition": {
+                    "Null": { "autoscaling:ResourceTag/kubernetes.io/cluster/{{.ClusterName}}": "false" }
+                  },
+                  "Resource": "*"
                 },
                 {{end}}
                 {
@@ -713,6 +743,21 @@
         ]]}}
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
+    },
+    {{end}}
+    {{if .Experimental.NodeDrainer.Enabled }}
+    "{{.Controller.LogicalName}}NodeDrainerLH" : {
+      "Properties" : {
+        "AutoScalingGroupName" : {
+          "Ref": "{{.Controller.LogicalName}}"
+        },
+        "DefaultResult" : "CONTINUE",
+        "HeartbeatTimeout" : "{{.Experimental.NodeDrainer.DrainTimeoutInSeconds}}",
+        "LifecycleTransition" : "autoscaling:EC2_INSTANCE_TERMINATING",
+        "NotificationTargetARN" : { "Ref": "NotificationTargetARN" },
+        "RoleARN" : { "Ref": "NotificationRoleARN" }
+      },
+      "Type" : "AWS::AutoScaling::LifecycleHook"
     },
     {{end}}
     "{{.Controller.LogicalName}}LC": {

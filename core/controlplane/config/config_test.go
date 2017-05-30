@@ -712,23 +712,14 @@ func TestNodeDrainerConfig(t *testing.T) {
 
 	validConfigs := []struct {
 		conf        string
-		nodeDrainer NodeDrainer
+		nodeDrainer model.NodeDrainer
 	}{
 		{
 			conf: `
 `,
-			nodeDrainer: NodeDrainer{
-				Enabled: false,
-			},
-		},
-		{
-			conf: `
-experimental:
-  nodeDrainer:
-    enabled: false
-`,
-			nodeDrainer: NodeDrainer{
-				Enabled: false,
+			nodeDrainer: model.NodeDrainer{
+				Enabled:      false,
+				DrainTimeout: 5,
 			},
 		},
 		{
@@ -737,8 +728,21 @@ experimental:
   nodeDrainer:
     enabled: true
 `,
-			nodeDrainer: NodeDrainer{
-				Enabled: true,
+			nodeDrainer: model.NodeDrainer{
+				Enabled:      true,
+				DrainTimeout: 5,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeDrainer:
+    enabled: true
+    drainTimeout: 3
+`,
+			nodeDrainer: model.NodeDrainer{
+				Enabled:      true,
+				DrainTimeout: 3,
 			},
 		},
 	}
