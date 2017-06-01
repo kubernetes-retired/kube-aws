@@ -715,12 +715,12 @@ write_files:
               scheduler.alpha.kubernetes.io/critical-pod: ''
           spec:
             tolerations:
-            - key: "node.alpha.kubernetes.io/role"
-              operator: "Equal"
-              value: "master"
-              effect: "NoSchedule"
-            - key: "CriticalAddonsOnly"
-              operator: "Exists"
+            - operator: Exists
+              effect: NoSchedule
+            - operator: Exists
+              effect: NoExecute
+            - operator: Exists
+              key: CriticalAddonsOnly
             hostNetwork: true
             containers:
               - name: calico-node
