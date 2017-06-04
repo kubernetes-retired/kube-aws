@@ -580,6 +580,7 @@ write_files:
 
       # Serviceaccounts
       kubectl apply -f "${mfdir}/kube-dns-sa.yaml"
+      kubectl apply -f "${mfdir}/heapster-sa.yaml"
 
       # Deployments
       for manifest in {kube-dns-de,kube-dns-autoscaler-de,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler-de,{{ end }}heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
@@ -603,7 +604,7 @@ write_files:
 
       kubectl apply -f "${mfdir}/cluster-roles/node-extensions.yaml"
 
-      for manifest in {kube-admin,system-worker,node,node-proxier,node-extensions}; do
+      for manifest in {kube-admin,system-worker,node,node-proxier,node-extensions,heapster}; do
           kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
       done
 
