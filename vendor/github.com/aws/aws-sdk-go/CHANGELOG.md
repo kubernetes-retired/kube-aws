@@ -713,7 +713,7 @@ SDK Bug Fixes
 * `aws/request`: Add PriorRequestNotComplete to throttle retry codes (#1002)
   * Fixes: Not retrying when PriorRequestNotComplete #1001
 
-Release v1.6.3 (2016-12-14)
+Release v1.6.4 (2016-12-14)
 ===
 
 Service Client Updates
