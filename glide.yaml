@@ -15,10 +15,6 @@ import:
   version: ^1.12.0
   subpackages:
   - config/validate
-- package: github.com/coreos/go-semver
-  version: ^0.2.0
-  subpackages:
-  - semver
 - package: github.com/spf13/cobra
 - package: gopkg.in/yaml.v2
 - package: github.com/Masterminds/sprig

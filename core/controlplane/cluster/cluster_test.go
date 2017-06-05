@@ -463,18 +463,6 @@ stackTags:
 			continue
 		}
 
-		cfSvc := &helper.DummyCloudformationService{
-			ExpectedTags: testCase.expectedTags,
-		}
-
-		s3Svc := &helper.DummyS3ObjectPutterService{
-			ExpectedBody:          "{}",
-			ExpectedBucket:        "test-bucket",
-			ExpectedContentType:   "application/json",
-			ExpectedKey:           "foo/bar/kube-aws/clusters/test-cluster-name/exported/stacks/control-plane/stack.json",
-			ExpectedContentLength: 2,
-		}
-
 		helper.WithDummyCredentials(func(dummyAssetsDir string) {
 			var stackTemplateOptions = config.StackTemplateOptions{
 				AssetsDir:             dummyAssetsDir,
@@ -488,12 +476,6 @@ stackTags:
 			if err != nil {
 				t.Errorf("%v", err)
 				t.FailNow()
-			}
-
-			_, err = cluster.stackProvisioner().CreateStack(cfSvc, s3Svc, "{}", map[string]string{})
-
-			if err != nil {
-				t.Errorf("error creating cluster: %v\nfor test case %+v", err, testCase)
 			}
 
 			path, err := cluster.UserDataControllerS3Prefix()
