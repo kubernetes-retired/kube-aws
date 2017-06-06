@@ -72,6 +72,7 @@
           {{if or (gt $subnetIndex 0) (gt $specIndex 0) }},{{end}}
           {
             "ImageId": "{{$.AMI}}",
+            "Monitoring": { "Enabled": "true" },
             "InstanceType": "{{$spec.InstanceType}}",
             {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}
             "WeightedCapacity": {{$spec.WeightedCapacity}},
