@@ -412,7 +412,15 @@
                 {
                   "Effect": "Allow",
                   "Action": [
-                    "s3:List*"
+                    "s3:ListBucket"
+                  ],
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:List*",
+                    "s3:GetObject*"
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
                   "Condition": {
