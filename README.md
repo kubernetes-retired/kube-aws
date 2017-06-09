@@ -156,6 +156,8 @@ The following links can be useful for development:
 
 - [AWS CloudFormation resource types](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 
+Please feel free to reach out to the kube-aws community on: [#kube-aws in the kubernetes slack](https://kubernetes.slack.com/messages/C5GP8LPEC/)
+
 ## Kubernetes Incubator
 
 This is a [Kubernetes Incubator project](https://github.com/kubernetes/community/blob/master/incubator.md). The project was established 2017-03-15. The incubator team for the project is:
