@@ -121,7 +121,7 @@ func NewDefaultCluster() *Cluster {
 			CalicoPolicyControllerImage:        model.Image{Repo: "quay.io/calico/kube-policy-controller", Tag: "v0.6.0", RktPullDocker: false},
 			CalicoCtlImage:                     model.Image{Repo: "quay.io/calico/ctl", Tag: "v1.2.1", RktPullDocker: false},
 			ClusterAutoscalerImage:             model.Image{Repo: "quay.io/kube-aws/cluster-autoscaler", Tag: "8b7d410fc5b9dbc9b7c707994259770f15613676", RktPullDocker: false},
-			ClusterProportionalAutoscalerImage: model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.1.1", RktPullDocker: false},
+			ClusterProportionalAutoscalerImage: model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.1.2", RktPullDocker: false},
 			KubeDnsImage:                       model.Image{Repo: "gcr.io/google_containers/k8s-dns-kube-dns-amd64", Tag: "1.14.2", RktPullDocker: false},
 			KubeDnsMasqImage:                   model.Image{Repo: "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64", Tag: "1.14.2", RktPullDocker: false},
 			KubeReschedulerImage:               model.Image{Repo: "gcr.io/google-containers/rescheduler", Tag: "v0.3.0", RktPullDocker: false},
