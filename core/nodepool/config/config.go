@@ -52,6 +52,7 @@ type DeploymentSettings struct {
 type MainClusterSettings struct {
 	EtcdNodes             []derived.EtcdNode
 	KubeResourcesAutosave cfg.KubeResourcesAutosave
+	CloudWatchLogging     cfg.CloudWatchLogging
 }
 
 type StackTemplateOptions struct {
@@ -235,6 +236,7 @@ define one or more public subnets in cluster.yaml or explicitly reference privat
 
 	c.EtcdNodes = main.EtcdNodes
 	c.KubeResourcesAutosave = main.KubeResourcesAutosave
+	c.CloudWatchLogging = main.CloudWatchLogging
 
 	var apiEndpoint derived.APIEndpoint
 	if c.APIEndpointName != "" {

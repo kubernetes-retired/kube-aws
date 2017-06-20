@@ -38,7 +38,21 @@ coreos:
 
         [Install]
         RequiredBy=format-etcd2-volume.service
+{{if .CloudWatchLogging.Enabled}}
+    - name: journald-cloudwatch-logs.service
+      command: start
+      content: |
+        [Unit]
+        Description=Docker run journald-cloudwatch-logs to send journald logs to CloudWatch
+        Wants=docker.service
+        After=docker.service
 
+        [Service]
+        ExecStart=/usr/bin/docker run --rm -v /var/systemd/cloudwatch:/var/systemd/cloudwatch -v /var/log/journal:/var/log/journal:ro -v /etc/machine-id:/etc/machine-id:ro \
+          {{.CloudWatchLogging.ImageWithTag}} /var/systemd/cloudwatch/journald-cloudwatch-logs.conf
+        Restart=on-failure
+        RestartSec=60s
+{{end}}
     {{if .Etcd.DisasterRecovery.SupportsEtcdVersion .Etcd.Version -}}
     - name: etcdadm-reconfigure.service
       enable: true
@@ -677,3 +691,11 @@ write_files:
     content: {{.AssetsConfig.EtcdClientKey}}
 
 {{ end }}
+{{if .CloudWatchLogging.Enabled}}
+  - path: /var/systemd/cloudwatch/journald-cloudwatch-logs.conf
+    owner: root:root
+    permissions: 0755
+    content: |
+      log_group = "{{.ClusterName}}"
+      state_file = "/var/systemd/cloudwatch/state"
+{{end}}
