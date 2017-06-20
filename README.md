@@ -47,6 +47,7 @@ Check out our getting started tutorial on launching your first Kubernetes cluste
   * [Backup and restore for etcd](/Documentation/kubernetes-on-aws-backup-and-restore-for-etcd.md)
   * [Backup Kubernetes resources](/Documentation/kubernetes-on-aws-backup.md)
   * [Restore Kubernetes resources](/contrib/cluster-backup/README.md)
+  * [Journald logging to AWS CloudWatch](/Documentation/kubernetes-on-aws-journald-cloudwatch-logs.md)
 
 ## Examples
 

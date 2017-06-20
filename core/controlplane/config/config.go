@@ -104,16 +104,21 @@ func NewDefaultCluster() *Cluster {
 
 	return &Cluster{
 		DeploymentSettings: DeploymentSettings{
-			ClusterName:                        "kubernetes",
-			VPCCIDR:                            "10.0.0.0/16",
-			ReleaseChannel:                     "stable",
-			K8sVer:                             k8sVer,
-			ContainerRuntime:                   "docker",
-			Subnets:                            []model.Subnet{},
-			EIPAllocationIDs:                   []string{},
-			MapPublicIPs:                       true,
-			Experimental:                       experimental,
-			ManageCertificates:                 true,
+			ClusterName:        "kubernetes",
+			VPCCIDR:            "10.0.0.0/16",
+			ReleaseChannel:     "stable",
+			K8sVer:             k8sVer,
+			ContainerRuntime:   "docker",
+			Subnets:            []model.Subnet{},
+			EIPAllocationIDs:   []string{},
+			MapPublicIPs:       true,
+			Experimental:       experimental,
+			ManageCertificates: true,
+			CloudWatchLogging: CloudWatchLogging{
+				Enabled:         false,
+				ImageWithTag:    "jollinshead/journald-cloudwatch-logs:0.1",
+				RetentionInDays: 7,
+			},
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                        model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
 			CalicoNodeImage:                    model.Image{Repo: "quay.io/calico/node", Tag: "v1.2.1", RktPullDocker: false},
@@ -489,6 +494,7 @@ type DeploymentSettings struct {
 	Experimental           Experimental      `yaml:"experimental"`
 	ManageCertificates     bool              `yaml:"manageCertificates,omitempty"`
 	WaitSignal             WaitSignal        `yaml:"waitSignal"`
+	CloudWatchLogging      `yaml:"cloudWatchLogging,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
@@ -745,6 +751,12 @@ type Kube2IamSupport struct {
 type KubeResourcesAutosave struct {
 	Enabled bool `yaml:"enabled"`
 	S3Path  string
+}
+
+type CloudWatchLogging struct {
+	Enabled         bool   `yaml:"enabled"`
+	ImageWithTag    string `yaml:"imageWithTag"`
+	RetentionInDays int    `yaml:"retentionInDays"`
 }
 
 type LoadBalancer struct {
