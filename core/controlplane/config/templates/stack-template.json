@@ -12,14 +12,6 @@
     }
   },
   "Resources": {
-    {{if .CloudWatchLogging.Enabled}}
-    "CloudWatchLogGroup": {
-      "Type" : "AWS::Logs::LogGroup",
-      "Properties" : {
-        "LogGroupName" : "{{.ClusterName}}",
-        "RetentionInDays" : {{.CloudWatchLogging.RetentionInDays}}
-      }
-    },{{ end }}
     "{{.Controller.LogicalName}}": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
@@ -191,26 +183,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}",
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}:log-stream:*"
-                  ]
-                },{{ end }}
-                {
+		            {
                   "Effect": "Allow",
                   "Action": [
                   "s3:GetObject"
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
-                },
+		            },
                 {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -433,28 +412,7 @@
                 {
                   "Effect": "Allow",
                   "Action": [
-                    "s3:ListBucket"
-                  ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}"
-                },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}",
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}:log-stream:*"
-                  ]
-                },{{ end }}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:List*",
-                    "s3:GetObject*"
+                    "s3:List*"
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
                   "Condition": {

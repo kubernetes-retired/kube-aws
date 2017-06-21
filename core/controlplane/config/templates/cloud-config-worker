@@ -134,21 +134,6 @@ coreos:
             Environment="FLANNEL_IMAGE={{.FlannelImage.RktRepo}}"
             Environment="RKT_RUN_ARGS={{.FlannelImage.Options}} --uuid-file-save=/var/lib/coreos/flannel-wrapper2.uuid"
 {{end}}
-{{if .CloudWatchLogging.Enabled}}
-    - name: journald-cloudwatch-logs.service
-      command: start
-      content: |
-        [Unit]
-        Description=Docker run journald-cloudwatch-logs to send journald logs to CloudWatch
-        Wants=docker.service
-        After=docker.service
-
-        [Service]
-        ExecStart=/usr/bin/docker run --rm -v /var/systemd/cloudwatch:/var/systemd/cloudwatch -v /var/log/journal:/var/log/journal:ro -v /etc/machine-id:/etc/machine-id:ro \
-          {{.CloudWatchLogging.ImageWithTag}} /var/systemd/cloudwatch/journald-cloudwatch-logs.conf
-        Restart=on-failure
-        RestartSec=60s
-{{end}}
     - name: kubelet.service
       command: start
       runtime: true
@@ -1284,11 +1269,3 @@ write_files:
       done
 
 {{ end }}
-{{if .CloudWatchLogging.Enabled}}
-  - path: /var/systemd/cloudwatch/journald-cloudwatch-logs.conf
-    owner: root:root
-    permissions: 0755
-    content: |
-      log_group = "{{.ClusterName}}"
-      state_file = "/var/systemd/cloudwatch/state"
-{{end}}
