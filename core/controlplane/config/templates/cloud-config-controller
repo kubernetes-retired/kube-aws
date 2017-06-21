@@ -1164,6 +1164,11 @@ write_files:
             - replicasets
             verbs:
             - get
+          - apiGroups: ["batch"]
+            resources:
+            - jobs
+            verbs:
+            - get
           - apiGroups: [""]
             resources:
             - replicationcontrollers
