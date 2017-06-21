@@ -38,14 +38,6 @@ coreos:
         ExecStartPre=/opt/bin/cfn-etcd-environment
         ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
 
-{{if .UseCalico }}
-    # https://github.com/coreos/docs/blob/5d7b1cccb8286185275b07db1495828be9fdb0ea/os/other-settings.md#tuning-sysctl-parameters
-    - name: systemd-modules-load.service
-      command: restart
-    - name: systemd-sysctl.service
-      command: restart
-{{ end }}
-
 {{if .Experimental.AwsEnvironment.Enabled}}
     - name: set-aws-environment.service
       enable: true
@@ -2157,14 +2149,6 @@ write_files:
           }
         }
       }
-
-  # http://docs.projectcalico.org/v2.0/usage/configuration/
-  - path: /etc/modules-load.d/nf.conf
-    content: |
-      nf_conntrack
-  - path: /etc/sysctl.d/nf.conf
-    content: |
-      net.netfilter.nf_conntrack_max=1000000
 
 {{ end }}
 
