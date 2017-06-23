@@ -1124,13 +1124,6 @@ worker:
 #kubeResourcesAutosave:
 #  enabled: false
 
-# When enabled, all nodes will report journald logs to AWS CloudWatch.
-# It is disabled by default.
-#cloudWatchLogging:
-# enabled: false
-# imageWithTag: jollinshead/journald-cloudwatch-logs:0.1
-# retentionInDays: 7
-
 # Addon features
 addons:
   # Will provision controller nodes with IAM permissions to run cluster-autoscaler and

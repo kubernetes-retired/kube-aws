@@ -10,13 +10,6 @@
       "Type": "String",
       "Description": "Role to be used by ASG LifecycleHook to publish notification"
     }
-    {{if .CloudWatchLogging.Enabled}}
-    ,
-    "CloudWatchLogGroupARN": {
-      "Type": "String",
-      "Description": "CloudWatch LogGroup to send journald logs to"
-    }
-    {{end}}
   },
   "Resources": {
     "{{.Controller.LogicalName}}": {
@@ -190,26 +183,13 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    { "Ref": "NotificationRoleARN" },
-                    { "Fn::Join" : [ "", [{ "Ref": "NotificationRoleARN" }, ":log-stream:*"]] }
-                  ]
-                },{{ end }}
-                {
+		            {
                   "Effect": "Allow",
                   "Action": [
                   "s3:GetObject"
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
-                },
+		            },
                 {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -319,7 +299,7 @@
         {{if .Controller.IAMConfig.Role.Name }}
         "RoleName":  {"Fn::Join": ["",[{"Ref": "AWS::Region"},"-","{{.Controller.IAMConfig.Role.Name}}"]]},
         {{end}}
-        "ManagedPolicyArns": [
+        "ManagedPolicyArns": [ 
           {{range $policyIndex, $policyArn := .Controller.IAMConfig.Role.ManagedPolicies }}
             "{{$policyArn.Arn}}",
           {{end}}
@@ -436,19 +416,6 @@
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}"
                 },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    { "Ref": "NotificationRoleARN" },
-                    { "Fn::Join" : [ "", [{ "Ref": "NotificationRoleARN" }, ":log-stream:*"]] }
-                  ]
-                },{{ end }}
                 {
                   "Effect": "Allow",
                   "Action": [
@@ -1042,7 +1009,7 @@
     {{/* 443 ingress from controller to controller is required by:
       - API server endpoint with HA controllers
       - calico-policy-controller when calico is enabled
-      See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137
+      See https://github.com/kubernetes-incubator/kube-aws/issues/494#issuecomment-291687137 
       and https://github.com/kubernetes-incubator/kube-aws/issues/512 */}}
     "SecurityGroupControllerIngressFromControllerToController": {
       "Properties": {

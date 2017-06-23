@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
-	config "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
 )
 
@@ -14,10 +13,6 @@ type TemplateParams struct {
 
 func (p TemplateParams) ClusterName() string {
 	return p.cluster.controlPlane.ClusterName
-}
-
-func (p TemplateParams) CloudWatchLogging() config.CloudWatchLogging {
-	return p.cluster.controlPlane.CloudWatchLogging
 }
 
 func newTemplateParams(c clusterImpl) TemplateParams {
@@ -59,10 +54,6 @@ func (p controlPlane) TemplateURL() (string, error) {
 	return u, nil
 }
 
-func (p controlPlane) CloudWatchLogging() config.CloudWatchLogging {
-	return p.controlPlane.CloudWatchLogging
-}
-
 type nodePool struct {
 	nodePool *nodepool.Cluster
 }
@@ -83,10 +74,6 @@ func (p nodePool) TemplateURL() (string, error) {
 	}
 
 	return u, nil
-}
-
-func (p nodePool) CloudWatchLogging() config.CloudWatchLogging {
-	return p.nodePool.CloudWatchLogging
 }
 
 func (p nodePool) NeedToExportIAMroles() bool {
