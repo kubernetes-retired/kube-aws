@@ -330,19 +330,6 @@
                   ],
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataWorkerS3Prefix}}*"
                 },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}",
-                    "arn:aws:logs:*:*:log-group:{{.ClusterName}}:log-stream:*"
-                  ]
-                },{{ end }}
                 {{ if .KubeResourcesAutosave.Enabled }}
                 {
                   "Effect": "Allow",

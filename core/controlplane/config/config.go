@@ -168,11 +168,6 @@ func NewDefaultCluster() *Cluster {
 		KubeResourcesAutosave: KubeResourcesAutosave{
 			Enabled: false,
 		},
-		CloudWatchLogging: CloudWatchLogging{
-			Enabled:         false,
-			ImageWithTag:    "jollinshead/journald-cloudwatch-logs:0.1",
-			RetentionInDays: 7,
-		},
 	}
 }
 
@@ -674,7 +669,6 @@ type Cluster struct {
 	SSHAccessAllowedSourceCIDRs model.CIDRRanges       `yaml:"sshAccessAllowedSourceCIDRs,omitempty"`
 	CustomSettings              map[string]interface{} `yaml:"customSettings,omitempty"`
 	KubeResourcesAutosave       `yaml:"kubeResourcesAutosave,omitempty"`
-	CloudWatchLogging           `yaml:"cloudWatchLogging,omitempty"`
 }
 
 type Experimental struct {
@@ -751,12 +745,6 @@ type Kube2IamSupport struct {
 type KubeResourcesAutosave struct {
 	Enabled bool `yaml:"enabled"`
 	S3Path  string
-}
-
-type CloudWatchLogging struct {
-	Enabled         bool   `yaml:"enabled"`
-	ImageWithTag    string `yaml:"imageWithTag"`
-	RetentionInDays int    `yaml:"retentionInDays"`
 }
 
 type LoadBalancer struct {
