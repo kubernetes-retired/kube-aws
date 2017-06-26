@@ -19,3 +19,7 @@ import:
 - package: gopkg.in/yaml.v2
 - package: github.com/Masterminds/sprig
   version: ^2.10.0
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+
