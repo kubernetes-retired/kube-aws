@@ -17,7 +17,6 @@ import (
 
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
-	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/model/derived"
@@ -933,15 +932,7 @@ func (c Cluster) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 		fmt.Println(`WARNING: enabling cluster-level TLS bootstrapping without RBAC is not recommended. See https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/ for more information`)
 	}
 
-	if stackConfig.UserDataController, err = userdatatemplate.GetString(opts.ControllerTmplFile, stackConfig.Config); err != nil {
-		return nil, fmt.Errorf("failed to render controller cloud config: %v", err)
-	}
-	if stackConfig.UserDataEtcd, err = userdatatemplate.GetString(opts.EtcdTmplFile, stackConfig.Config); err != nil {
-		return nil, fmt.Errorf("failed to render etcd cloud config: %v", err)
-	}
-
 	stackConfig.StackTemplateOptions = opts
-
 	stackConfig.S3URI = strings.TrimSuffix(opts.S3URI, "/")
 
 	if opts.SkipWait {
