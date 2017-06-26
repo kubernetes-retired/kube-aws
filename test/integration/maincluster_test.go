@@ -1201,6 +1201,8 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
+cloudWatchLogging:
+  enabled: true
 worker:
   nodePools:
   - name: pool1
