@@ -1077,6 +1077,12 @@ worker:
 #  tag: v0.7.1
 #  rktPullDocker: false
 
+# JournaldCloudWatchLogsImage image repository to use. This sends journald logs to CloudWatch.
+#journaldCloudWatchLogsImage:
+#  repo: "jollinshead/journald-cloudwatch-logs"
+#  tag: "0.1"
+#  rktPullDocker: true
+
 # Use Calico for network policy.
 # useCalico: false
 
@@ -1123,6 +1129,12 @@ worker:
 # The autosave process executes on start-up and repeats every 24 hours.
 #kubeResourcesAutosave:
 #  enabled: false
+
+# When enabled, all nodes will forward journald logs to AWS CloudWatch.
+# It is disabled by default.
+#cloudWatchLogging:
+# enabled: false
+# retentionInDays: 7
 
 # Addon features
 addons:

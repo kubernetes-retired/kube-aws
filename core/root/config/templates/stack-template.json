@@ -35,12 +35,24 @@
       },
       "Type": "AWS::IAM::Role"
     },
+      {{if .CloudWatchLogging.Enabled}}
+      "CloudWatchLogGroup": {
+      "Type" : "AWS::Logs::LogGroup",
+      "Properties" : {
+        "LogGroupName" : "{{.ClusterName}}",
+        "RetentionInDays" : {{.CloudWatchLogging.RetentionInDays}}
+      }
+    },{{ end }}
     "{{.ControlPlane.Name}}": {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
         "Parameters": {
           "NotificationTargetARN": { "Fn::GetAtt": [ "ASGNotificationTarget", "Arn" ] },
           "NotificationRoleARN": { "Fn::GetAtt": [ "ASGNotificationRole", "Arn" ] }
+          {{if .CloudWatchLogging.Enabled}}
+          ,
+          "CloudWatchLogGroupARN": { "Fn::GetAtt": [ "CloudWatchLogGroup", "Arn" ] }
+          {{ end }}
         },
         "Tags" : [
           {
@@ -62,6 +74,10 @@
           "ControlPlaneStackName": {"Fn::GetAtt" : [ "{{$.ControlPlane.Name}}" , "Outputs.StackName" ]},
           "NotificationTargetARN": { "Fn::GetAtt": [ "ASGNotificationTarget", "Arn" ] },
           "NotificationRoleARN": { "Fn::GetAtt": [ "ASGNotificationRole", "Arn" ] }
+          {{if .CloudWatchLogging.Enabled}}
+          ,
+          "CloudWatchLogGroupARN": { "Fn::GetAtt": [ "CloudWatchLogGroup", "Arn" ] }
+          {{ end }}
         },
         "Tags" : [
           {

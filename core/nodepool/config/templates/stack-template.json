@@ -314,6 +314,20 @@
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{ $.UserDataWorker.Parts.s3.Asset.S3Prefix }}*"
                 },
                 {{- end }}
+                {{if .CloudWatchLogging.Enabled}}
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams"
+                  ],
+                  "Resource": [
+                    { "Ref": "CloudWatchLogGroupARN" },
+                    { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
+                  ]
+                },
+                {{ end }}
                 {{ if .KubeResourcesAutosave.Enabled }}
                 {
                   "Effect": "Allow",
@@ -481,6 +495,13 @@
       "Type": "String",
       "Description": "Role to be used by ASG LifecycleHook to publish notification"
     }
+    {{if .CloudWatchLogging.Enabled}}
+    ,
+    "CloudWatchLogGroupARN": {
+      "Type": "String",
+      "Description": "CloudWatch LogGroup to send journald logs to"
+    }
+    {{ end }}
   },
   "Resources": {
     {{if .SpotFleet.Enabled}}
