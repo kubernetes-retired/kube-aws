@@ -521,6 +521,8 @@ worker:
 #
 #      # When enabled it will grant sts:assumeRole permission to the IAM roles for worker nodes.
 #      # This is intended to be used in combination with managedIamRoleName. See #297 for more information.
+#      # After the cluster is up, you have to manually deploy kube2iam DaemonSet and configure permissions in case RBAC is enabled.
+#      # Please check "contrib/kube2iam" directory for configuration examples.
 #      kube2IamSupport:
 #        enabled: true
 #
