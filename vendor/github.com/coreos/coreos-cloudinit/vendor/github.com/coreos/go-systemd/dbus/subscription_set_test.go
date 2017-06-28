@@ -63,5 +63,3 @@ func TestSubscriptionSetUnit(t *testing.T) {
 success:
 	return
 }
-
-

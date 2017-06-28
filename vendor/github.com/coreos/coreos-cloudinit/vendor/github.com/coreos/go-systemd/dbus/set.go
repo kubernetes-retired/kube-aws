@@ -17,10 +17,10 @@ func (s *set) Contains(value string) (exists bool) {
 	return
 }
 
-func (s *set) Length() (int) {
+func (s *set) Length() int {
 	return len(s.data)
 }
 
-func newSet() (*set) {
-	return &set{make(map[string] bool)}
+func newSet() *set {
+	return &set{make(map[string]bool)}
 }

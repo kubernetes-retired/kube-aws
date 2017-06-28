@@ -60,7 +60,7 @@ var (
 
 	// Explicitly write DEFAULT section header
 	DefaultHeader = false
-	
+
 	// Indicate whether to put a line between sections
 	PrettySection = true
 )
