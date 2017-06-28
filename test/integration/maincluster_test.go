@@ -309,10 +309,10 @@ func TestMainClusterConfig(t *testing.T) {
 			cluster := kubeAwsSettings.clusterName
 			stack := kubeAwsSettings.clusterName
 			file := "stack.json"
-			expected := cfnstack.Asset{
+			expected := model.Asset{
 				Content: "",
-				AssetLocation: cfnstack.AssetLocation{
-					ID:     cfnstack.NewAssetID(stack, file),
+				AssetLocation: model.AssetLocation{
+					ID:     model.NewAssetID(stack, file),
 					Bucket: s3Bucket,
 					Key:    s3Dir + "/kube-aws/clusters/" + cluster + "/exported/stacks/" + stack + "/" + file,
 					Path:   stack + "/stack.json",
@@ -342,10 +342,10 @@ func TestMainClusterConfig(t *testing.T) {
 			cluster := kubeAwsSettings.clusterName
 			stack := "control-plane"
 			file := "stack.json"
-			expected := cfnstack.Asset{
+			expected := model.Asset{
 				Content: string(controlplane_config.StackTemplateTemplate),
-				AssetLocation: cfnstack.AssetLocation{
-					ID:     cfnstack.NewAssetID(stack, file),
+				AssetLocation: model.AssetLocation{
+					ID:     model.NewAssetID(stack, file),
 					Bucket: s3Bucket,
 					Key:    s3Dir + "/kube-aws/clusters/" + cluster + "/exported/stacks/" + stack + "/" + file,
 					Path:   stack + "/stack.json",
@@ -1201,6 +1201,8 @@ experimental:
     - key: reservation
       value: spot
       effect: NoSchedule
+cloudWatchLogging:
+  enabled: true
 worker:
   nodePools:
   - name: pool1
@@ -3514,12 +3516,6 @@ worker:
 				t.Run("AssertCluster", func(t *testing.T) {
 					for _, assertion := range validCase.assertCluster {
 						assertion(cluster, t)
-					}
-				})
-
-				t.Run("ValidateUserData", func(t *testing.T) {
-					if err := cluster.ValidateUserData(); err != nil {
-						t.Errorf("failed to validate user data: %v", err)
 					}
 				})
 

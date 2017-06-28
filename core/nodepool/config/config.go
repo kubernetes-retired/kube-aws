@@ -14,7 +14,6 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
-	"github.com/kubernetes-incubator/kube-aws/filereader/userdatatemplate"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/model/derived"
 )
@@ -91,10 +90,6 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 	} else {
 		rawAssets, _ := cfg.ReadOrCreateUnencryptedCompactAssets(opts.AssetsDir, c.ManageCertificates)
 		stackConfig.ComputedConfig.AssetsConfig = rawAssets
-	}
-
-	if stackConfig.UserDataWorker, err = userdatatemplate.GetString(opts.WorkerTmplFile, stackConfig.ComputedConfig); err != nil {
-		return nil, fmt.Errorf("failed to render worker cloud config: %v", err)
 	}
 
 	stackConfig.StackTemplateOptions = opts

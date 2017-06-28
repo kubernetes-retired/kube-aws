@@ -1,3 +1,36 @@
+{{ define "instance" -}}
+{{- $S3URI := self.Parts.s3.Asset.S3URL -}}
+#!/bin/bash -xe
+ . /etc/environment
+export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6
+REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
+USERDATA_FILE=userdata-worker
+
+run() {
+  bin="$1"; shift
+  while ! /usr/bin/rkt run \
+    --net=host \
+    --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf \
+    --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \
+    --volume=envfile,kind=host,source={{.StackNameEnvFileName}},readOnly=false --mount volume=envfile,target={{.StackNameEnvFileName}}  \
+    --trust-keys-from-https \
+    {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=$bin -- "$@"; do
+      sleep 1
+  done
+}
+run aws s3 --region $REGION  cp {{ $S3URI }} /var/run/coreos/$USERDATA_FILE
+
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+
+run /bin/sh -c 'echo {{.StackNameEnvVarName}}=$(aws ec2 describe-tags --region "'$REGION'" --filters \
+  "Name=resource-id,Values='$INSTANCE_ID'" \
+  "Name=key,Values=aws:cloudformation:stack-name" \
+  --output json \
+| jq -r ".Tags[].Value") >> {{.StackNameEnvFileName}}'
+
+exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE
+{{ end }}
+{{ define "s3" -}}
 #cloud-config
 coreos:
   update:
@@ -69,7 +102,7 @@ coreos:
                   --mount volume=journal,target=/var/log/journal \
                   --volume machine-id,kind=host,source=/etc/machine-id,readOnly=true \
                   --mount volume=machine-id,target=/etc/machine-id \
-                  docker://{{.CloudWatchLogging.ImageWithTag}} -- {{.ClusterName}}
+                  {{ .JournaldCloudWatchLogsImage.RktRepo }} -- {{.ClusterName}}
         Restart=always
         RestartSec=60s
 
@@ -275,14 +308,6 @@ coreos:
         ExecStart=/usr/bin/rkt fetch /usr/lib/rkt/stage1-images/stage1-coreos.aci /usr/lib/rkt/stage1-images/stage1-fly.aci  --insecure-options=image
         [Install]
         RequiredBy=rkt-api.service
-{{ end }}
-
-{{if .UseCalico }}
-    # https://github.com/coreos/docs/blob/5d7b1cccb8286185275b07db1495828be9fdb0ea/os/other-settings.md#tuning-sysctl-parameters
-    - name: systemd-modules-load.service
-      command: restart
-    - name: systemd-sysctl.service
-      command: restart
 {{ end }}
 
 {{if .AwsEnvironment.Enabled}}
@@ -881,15 +906,6 @@ write_files:
           }
         }
       }
-
-  # http://docs.projectcalico.org/v2.0/usage/configuration/
-  - path: /etc/modules-load.d/nf.conf
-    content: |
-      nf_conntrack
-  - path: /etc/sysctl.d/nf.conf
-    content: |
-      net.netfilter.nf_conntrack_max=1000000
-
 {{ end }}
 
 {{ if and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken }}
@@ -1296,4 +1312,5 @@ write_files:
           fi
       done
 
+{{ end }}
 {{ end }}

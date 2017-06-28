@@ -1,3 +1,21 @@
+{{ define "instance" -}}
+{{- $S3URI := self.Parts.s3.Asset.S3URL -}}
+#!/bin/bash -xe
+ . /etc/environment
+export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6
+REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
+USERDATA_FILE=userdata-controller
+while ! /usr/bin/rkt run \
+   --net=host \
+   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \
+   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \
+   --trust-keys-from-https \
+   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{$S3URI}} /var/run/coreos/$USERDATA_FILE; do
+  sleep 1
+done
+exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE
+{{ end }}
+{{ define "s3" -}}
 #cloud-config
 coreos:
   update:
@@ -44,7 +62,7 @@ coreos:
                   --mount volume=journal,target=/var/log/journal \
                   --volume machine-id,kind=host,source=/etc/machine-id,readOnly=true \
                   --mount volume=machine-id,target=/etc/machine-id \
-                  docker://{{.CloudWatchLogging.ImageWithTag}} -- {{.ClusterName}}
+                  {{ .JournaldCloudWatchLogsImage.RktRepo }} -- {{.ClusterName}}
         Restart=always
         RestartSec=60s
 
@@ -65,14 +83,6 @@ coreos:
         RemainAfterExit=true
         ExecStartPre=/opt/bin/cfn-etcd-environment
         ExecStart=/usr/bin/mv -f /var/run/coreos/etcd-environment /etc/etcd-environment
-
-{{if .UseCalico }}
-    # https://github.com/coreos/docs/blob/5d7b1cccb8286185275b07db1495828be9fdb0ea/os/other-settings.md#tuning-sysctl-parameters
-    - name: systemd-modules-load.service
-      command: restart
-    - name: systemd-sysctl.service
-      command: restart
-{{ end }}
 
 {{if .Experimental.AwsEnvironment.Enabled}}
     - name: set-aws-environment.service
@@ -1192,6 +1202,11 @@ write_files:
             - replicasets
             verbs:
             - get
+          - apiGroups: ["batch"]
+            resources:
+            - jobs
+            verbs:
+            - get
           - apiGroups: [""]
             resources:
             - replicationcontrollers
@@ -2192,14 +2207,6 @@ write_files:
         }
       }
 
-  # http://docs.projectcalico.org/v2.0/usage/configuration/
-  - path: /etc/modules-load.d/nf.conf
-    content: |
-      nf_conntrack
-  - path: /etc/sysctl.d/nf.conf
-    content: |
-      net.netfilter.nf_conntrack_max=1000000
-
 {{ end }}
 
 {{if .Experimental.Authentication.Webhook.Enabled}}
@@ -2335,3 +2342,5 @@ write_files:
             userID: "{{ $staticPassword.UserId }}"
          {{ end -}}
   {{ end }}
+
+{{ end }}

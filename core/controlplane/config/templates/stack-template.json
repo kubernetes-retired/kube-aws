@@ -190,6 +190,15 @@
                   "Effect": "Allow",
                   "Resource": "*"
                 },
+                {{ if .UserDataController.Parts.s3 }}
+		            {
+                  "Effect": "Allow",
+                  "Action": [
+                  "s3:GetObject"
+                  ],
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{ .UserDataController.Parts.s3.Asset.S3Prefix }}*"
+		            },
+                {{ end }}
                 {{if .CloudWatchLogging.Enabled}}
                 {
                   "Effect": "Allow",
@@ -203,13 +212,6 @@
                     { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
                   ]
                 },{{ end }}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                  "s3:GetObject"
-                  ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataControllerS3Prefix}}*"
-                },
                 {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
@@ -421,13 +423,15 @@
                   "Resource": "*"
                 },
                 {{end -}}
+                {{- if $.UserDataEtcd.Parts.s3 }}
                 {
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.UserDataEtcdS3Prefix}}*"
+                  "Resource": "arn:{{.Region.Partition}}:s3:::{{ $.UserDataEtcd.Parts.s3.Asset.S3Prefix }}*"
                 },
+                {{- end }}
                 {{/* Required for `etcdadm reconfigure` to check existence of an etcd snapshot in S3 */}}
                 {
                   "Effect": "Allow",
@@ -764,24 +768,7 @@
           {{end}}
         ],
         "PlacementTenancy": "{{$.Etcd.Tenancy}}",
-        "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
-          "#!/bin/bash -xe",
-          {"Fn::Join":["",[ "echo '{{$.StackNameEnvVarName}}=", { "Ref": "AWS::StackName" }, "' >> {{$.EtcdNodeEnvFileName}}" ]]},
-          "echo '{{$.EtcdIndexEnvVarName}}={{$etcdIndex}}' >> {{$.EtcdNodeEnvFileName}}",
-          " . /etc/environment",
-          "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
-          "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
-          "USERDATA_FILE={{$.UserDataEtcdFileName}}",
-          "while ! /usr/bin/rkt run \\",
-          "   --net=host \\",
-          "   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
-          "   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
-          "   --trust-keys-from-https \\",
-          "   {{$.AWSCliImage.Options}}{{$.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ $.UserDataEtcdS3URI }} /var/run/coreos/$USERDATA_FILE; do",
-          "sleep 1",
-          "done",
-          "exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
-        ]]}}
+        "UserData": {{ $.UserDataEtcd.Parts.instance.Base64 true (dict "etcdIndex" $etcdIndex) | checkSizeLessThan 16384 | quote }}
       },
       "Type": "AWS::AutoScaling::LaunchConfiguration"
     },
@@ -832,22 +819,7 @@
           {{end}}
         ],
         "PlacementTenancy": "{{ .Controller.Tenancy }}",
-        "UserData": { "Fn::Base64": { "Fn::Join" : ["\n", [
-		"#!/bin/bash -xe",
-		" . /etc/environment",
-                "export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6",
-	        "REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')",
-		"USERDATA_FILE={{.UserDataControllerFileName}}",
-		"while ! /usr/bin/rkt run \\",
-		"   --net=host \\",
-		"   --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true --mount volume=dns,target=/etc/resolv.conf  \\",
-		"   --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false --mount volume=awsenv,target=/var/run/coreos \\",
-   		"   --trust-keys-from-https \\",
-		"   {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=aws -- s3 --region $REGION  cp {{ .UserDataControllerS3URI }} /var/run/coreos/$USERDATA_FILE; do",
-                "sleep 1",
-                "done",
-		"exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE"
-			]]}}
+        "UserData": {{ $.UserDataController.Parts.instance.Base64 true | checkSizeLessThan 16384 | quote }}
       },
   {{ if .Experimental.AwsEnvironment.Enabled }}
       "Metadata" : {
