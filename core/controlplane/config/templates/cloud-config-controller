@@ -1987,6 +1987,8 @@ write_files:
             metadata:
               labels:
                 app: cluster-autoscaler
+              annotations:
+                scheduler.alpha.kubernetes.io/critical-pod: ''
             spec:
               affinity:
                 nodeAffinity:
