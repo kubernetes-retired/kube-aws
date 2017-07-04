@@ -1200,6 +1200,8 @@ experimental:
       enabled: true
 cloudWatchLogging:
   enabled: true
+amazonSsmAgent:
+  enabled: true
 worker:
   nodePools:
   - name: pool1
