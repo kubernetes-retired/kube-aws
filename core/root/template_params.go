@@ -16,6 +16,10 @@ func (p TemplateParams) ClusterName() string {
 	return p.cluster.controlPlane.ClusterName
 }
 
+func (p TemplateParams) KubeAwsVersion() string {
+	return controlplane.VERSION
+}
+
 func (p TemplateParams) CloudWatchLogging() config.CloudWatchLogging {
 	return p.cluster.controlPlane.CloudWatchLogging
 }

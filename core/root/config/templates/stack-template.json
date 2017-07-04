@@ -97,6 +97,11 @@
     }{{end}}
   },
   "Outputs": {
+    "KubeAwsVersion": {
+      "Description": "The version number of kube-aws which was used to create this cluster",
+      "Value": "{{$.KubeAwsVersion}}",
+      "Export": { "Name": { "Fn::Sub": "${AWS::StackName}-KubeAwsVersion" } }
+    },
     {{ if $.ControlPlane.NeedToExportIAMroles }}
     "ControllerIAMRoleArn": {
       "Description": "The IAM Role ARN for controller nodes",
