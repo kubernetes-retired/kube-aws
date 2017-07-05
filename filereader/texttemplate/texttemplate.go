@@ -2,6 +2,7 @@ package texttemplate
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/Masterminds/sprig"
 	"io/ioutil"
@@ -21,9 +22,27 @@ func Parse(filename string, funcs template.FuncMap) (*template.Template, error) 
 			}
 			return content, nil
 		},
+		"toJSON": func(v interface{}) (string, error) {
+			data, err := json.Marshal(v)
+			return string(data), err
+		},
+		"execTemplate": func(name string, ctx interface{}) (string, error) {
+			panic("[bug] Stub 'execTemplate' was not replaced")
+		},
 	}
 
-	return template.New(filename).Funcs(sprig.HermeticTxtFuncMap()).Funcs(funcs).Funcs(funcs2).Parse(string(raw))
+	t, err := template.New(filename).Funcs(sprig.HermeticTxtFuncMap()).Funcs(funcs).Funcs(funcs2).Parse(string(raw))
+	if err == nil {
+		t = t.Funcs(template.FuncMap{
+			"execTemplate": func(name string, ctx interface{}) (string, error) {
+				b := bytes.Buffer{}
+				err := t.ExecuteTemplate(&b, name, ctx)
+				return b.String(), err
+			},
+		})
+	}
+	return t, err
+
 }
 
 func GetBytesBuffer(filename string, data interface{}) (*bytes.Buffer, error) {

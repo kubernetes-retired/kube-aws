@@ -1,6 +1,5 @@
-{{ define "instance" -}}
+{{ define "instance-script" -}}
 {{- $S3URI := self.Parts.s3.Asset.S3URL -}}
-#!/bin/bash -xe
  . /etc/environment
 export COREOS_PRIVATE_IPV4 COREOS_PRIVATE_IPV6 COREOS_PUBLIC_IPV4 COREOS_PUBLIC_IPV6
 REGION=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | jq -r '.region')
@@ -22,14 +21,17 @@ run aws s3 --region $REGION  cp {{ $S3URI }} /var/run/coreos/$USERDATA_FILE
 
 INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
 
-run /bin/sh -c 'echo {{.StackNameEnvVarName}}=$(aws ec2 describe-tags --region "'$REGION'" --filters \
-  "Name=resource-id,Values='$INSTANCE_ID'" \
-  "Name=key,Values=aws:cloudformation:stack-name" \
-  --output json \
-| jq -r ".Tags[].Value") >> {{.StackNameEnvFileName}}'
-
 exec /usr/bin/coreos-cloudinit --from-file /var/run/coreos/$USERDATA_FILE
 {{ end }}
+
+{{ define "instance" -}}
+{ "Fn::Base64": { "Fn::Join" : ["", [
+  "#!/bin/bash -xe\n",
+  {"Fn::Join":["",[ "echo '{{.StackNameEnvVarName}}=", { "Ref": "AWS::StackName" }, "' >> {{.StackNameEnvFileName}}\n" ]]},
+  {{ (execTemplate "instance-script" .) | toJSON  }}
+]]}}
+{{ end }}
+
 {{ define "s3" -}}
 #cloud-config
 coreos:
