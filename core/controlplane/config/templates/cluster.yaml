@@ -1192,7 +1192,8 @@ addons:
 #   # This is intended to be used in combination with .controller.managedIamRoleName. See #297 for more information.
 #   kube2IamSupport:
 #     enabled: true
-#   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group
+#   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group, or when
+#   # the instance receives a termination notice (in case of spot instances)
 #   nodeDrainer:
 #     enabled: true
 #     # Maximum time to wait, in minutes, for the node to be completely drained. Must be an integer between 1 and 60.

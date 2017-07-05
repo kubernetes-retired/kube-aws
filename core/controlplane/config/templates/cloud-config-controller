@@ -610,7 +610,7 @@ write_files:
       {{ end }}
 
       {{ if .Experimental.NodeDrainer.Enabled }}
-      kubectl apply -f "${mfdir}/kube-node-drainer-asg-ds.yaml"
+      kubectl apply -f "${mfdir}/kube-node-drainer-ds.yaml"
       {{ end }}
 
       # Configmaps
@@ -1065,7 +1065,7 @@ write_files:
 {{ end }}
 
 {{if .Experimental.NodeDrainer.Enabled}}
-  - path: /srv/kubernetes/manifests/kube-node-drainer-asg-ds.yaml
+  - path: /srv/kubernetes/manifests/kube-node-drainer-ds.yaml
     content: |
         kind: DaemonSet
         apiVersion: extensions/v1beta1
@@ -1126,26 +1126,59 @@ write_files:
                     REGION=$(metadata dynamic/instance-identity/document | jq -r .region)
                     [ -n "${REGION}" ]
 
-                    while sleep 30; do
-                      STATE=$(asg describe-auto-scaling-instances --region "${REGION}" --instance-ids "${INSTANCE_ID}" | jq -r '.AutoScalingInstances[].LifecycleState')
-                      if [ ! "${STATE}" = Terminating:Wait ]; then
-                        continue
+                    # Not customizable (for now)
+                    SPOT_POLL_INTERVAL=5
+                    SG_POLL_INTERVAL=30
+
+                    # Used to control when to execute each termination check
+                    secs=0
+
+                    # Used to identify which was the source that requested the instance termination ('spot' or 'asg', for now)
+                    termination_source=''
+
+                    # Instance termination detection loop
+                    while sleep ${SPOT_POLL_INTERVAL}; do
+                      secs=$((secs + SPOT_POLL_INTERVAL))
+
+                      # Spot instance termination check
+                      http_status=$(curl -o /dev/null -w '%{http_code}' -sL http://169.254.169.254/latest/meta-data/spot/termination-time)
+                      if [ "${http_status}" -eq 200 ]; then
+                        termination_source=spot
+                        break
                       fi
-                      echo Node is in Terminating:Wait state, draining it
+
+                      if [ $((secs % SG_POLL_INTERVAL)) -eq 0 ]; then
+                        # Reset counter to avoid overflow
+                        secs=0
+
+                        # AutoScalingGroup lifecycle check
+                        state=$(asg describe-auto-scaling-instances --region "${REGION}" --instance-ids "${INSTANCE_ID}" | jq -r '.AutoScalingInstances[].LifecycleState')
+                        if [ "${state}" = Terminating:Wait ]; then
+                          termination_source=asg
+                          break
+                        fi
+                      fi
+                    done
+
+                    # Node draining loop
+                    while true; do
+                      echo Node is terminating, draining it...
 
                       if ! kubectl drain --ignore-daemonsets=true --delete-local-data=true --force=true --timeout=60s "${NODE_NAME}"; then
                         echo Not all pods on this host can be evicted, will try again
                         continue
                       fi
 
-                      echo All evictable pods are gone, notifying AutoScalingGroup that instance ${INSTANCE_ID} can be shutdown
-                      ASG_NAME=$(asg describe-auto-scaling-instances --instance-ids "${INSTANCE_ID}" | jq -r '.AutoScalingInstances[].AutoScalingGroupName')
-                      HOOK_NAME=$(asg describe-lifecycle-hooks --auto-scaling-group-name "${ASG_NAME}" | jq -r '.LifecycleHooks[].LifecycleHookName' | grep -i nodedrainer)
+                      if [ "${termination_source}" == asg ]; then
+                        echo All evictable pods are gone, notifying AutoScalingGroup that instance ${INSTANCE_ID} can be shutdown
+                        ASG_NAME=$(asg describe-auto-scaling-instances --instance-ids "${INSTANCE_ID}" | jq -r '.AutoScalingInstances[].AutoScalingGroupName')
+                        HOOK_NAME=$(asg describe-lifecycle-hooks --auto-scaling-group-name "${ASG_NAME}" | jq -r '.LifecycleHooks[].LifecycleHookName' | grep -i nodedrainer)
 
-                      echo Sending notification to ASG_NAME=${ASG_NAME} HOOK_NAME=${HOOK_NAME}
-                      asg complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id "${INSTANCE_ID}" --lifecycle-hook-name "${HOOK_NAME}" --auto-scaling-group-name "${ASG_NAME}"
+                        echo Sending notification to ASG_NAME=${ASG_NAME} HOOK_NAME=${HOOK_NAME}
+                        asg complete-lifecycle-action --lifecycle-action-result CONTINUE --instance-id "${INSTANCE_ID}" --lifecycle-hook-name "${HOOK_NAME}" --auto-scaling-group-name "${ASG_NAME}"
+                      fi
 
-                      # sleep 5 mins + 1 mins, expecting that instance will be shut down in this time
+                      # Expect instance will be shut down in 5 minutes
                       sleep 300
                     done
                   volumeMounts:
