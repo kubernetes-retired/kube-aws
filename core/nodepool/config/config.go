@@ -178,8 +178,6 @@ func (c *ProvidedConfig) Load(main *cfg.Config) error {
 	c.KubeClusterSettings = main.KubeClusterSettings
 	c.Experimental.TLSBootstrap = main.DeploymentSettings.Experimental.TLSBootstrap
 	c.Experimental.NodeDrainer = main.DeploymentSettings.Experimental.NodeDrainer
-	c.DeploymentSettings.CloudWatchLogging = main.DeploymentSettings.CloudWatchLogging
-	c.DeploymentSettings.JournaldCloudWatchLogsImage = main.DeploymentSettings.JournaldCloudWatchLogsImage
 
 	// Validate whole the inputs including inherited ones
 	if err := c.valid(); err != nil {
