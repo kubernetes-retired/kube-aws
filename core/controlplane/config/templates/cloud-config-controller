@@ -2031,6 +2031,8 @@ write_files:
                 operator: "Equal"
                 value: "master"
                 effect: "NoSchedule"
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
               containers:
                 - image: {{ .ClusterAutoscalerImage.RepoWithTag }}
                   name: cluster-autoscaler
