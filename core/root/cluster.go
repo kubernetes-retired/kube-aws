@@ -1,10 +1,12 @@
 package root
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
@@ -14,10 +16,12 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/core/root/config"
 	"github.com/kubernetes-incubator/kube-aws/core/root/defaults"
 	"github.com/kubernetes-incubator/kube-aws/filereader/jsontemplate"
+	model "github.com/kubernetes-incubator/kube-aws/model"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -182,6 +186,13 @@ func (c clusterImpl) Create() error {
 		return err
 	}
 
+	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.LocalStreaming.Enabled {
+		// Return Journald logs in a separate GoRoutine
+		quit := make(chan bool)
+		defer func() { quit <- true }()
+		go streamJournaldLogs(c, quit)
+	}
+
 	return c.stackProvisioner().CreateStackAtURLAndWait(cfSvc, stackTemplateURL)
 }
 
@@ -296,6 +307,13 @@ func (c clusterImpl) Update() (string, error) {
 		return "", err
 	}
 
+	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.LocalStreaming.Enabled {
+		// Return Journald logs in a separate GoRoutine
+		quit := make(chan bool)
+		defer func() { quit <- true }()
+		go streamJournaldLogs(c, quit)
+	}
+
 	return c.stackProvisioner().UpdateStackAtURLAndWait(cfSvc, templateUrl)
 }
 
@@ -347,4 +365,43 @@ func (c clusterImpl) ValidateStack() (string, error) {
 	}
 
 	return strings.Join(reports, "\n"), nil
+}
+
+func streamJournaldLogs(c clusterImpl, quit chan bool) error {
+	fmt.Printf("Printing filtered Journald logs for log group '%s'...\nNOTE: Due to high initial entropy, failures may occur during the early stages of booting.\n", c.controlPlane.ClusterName)
+	cwlSvc := cloudwatchlogs.New(c.session)
+	startTime := time.Now().Unix() * 1E3
+	fleInput := cloudwatchlogs.FilterLogEventsInput{
+		LogGroupName:  &c.controlPlane.ClusterName,
+		FilterPattern: &c.controlPlane.CloudWatchLogging.LocalStreaming.Filter,
+		StartTime:     &startTime}
+	messages := make(map[string]int64)
+
+	for {
+		select {
+		case <-quit:
+			return nil
+		default:
+			out, err := cwlSvc.FilterLogEvents(&fleInput)
+			if err != nil {
+				continue
+			}
+			if len(out.Events) > 1 {
+				startTime = *out.Events[len(out.Events)-1].Timestamp
+				for _, event := range out.Events {
+					if *event.Timestamp > messages[*event.Message]+c.controlPlane.CloudWatchLogging.LocalStreaming.Interval() {
+						messages[*event.Message] = *event.Timestamp
+						res := model.SystemdMessageResponse{}
+						json.Unmarshal([]byte(*event.Message), &res)
+						fmt.Printf("%s: \"%s\"\n", res.Hostname, res.Message)
+					}
+				}
+			}
+			fleInput = cloudwatchlogs.FilterLogEventsInput{
+				LogGroupName:  &c.controlPlane.ClusterName,
+				FilterPattern: &c.controlPlane.CloudWatchLogging.LocalStreaming.Filter,
+				NextToken:     out.NextToken,
+				StartTime:     &startTime}
+		}
+	}
 }

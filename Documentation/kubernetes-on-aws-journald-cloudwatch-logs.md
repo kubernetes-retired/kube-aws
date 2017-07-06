@@ -14,6 +14,7 @@ cloudWatchLogging:
  retentionInDays: 7
 ```
 
+
 The docker image is also configurable:
 
 ```
@@ -22,3 +23,34 @@ journaldCloudWatchLogsImage:
   tag: "0.1"
   rktPullDocker: true
 ```
+
+## kube-aws up/update feedback
+
+During kube-aws up/update, filtered Journald logs can be printed to stdout.
+This feature is configurable in cluster.yaml under the *cloudWatchLogging* section, and requires *cloudWatchLogging* to be enabled.
+( Default values: )
+
+```
+cloudWatchLogging:
+ enabled: false
+ imageWithTag: jollinshead/journald-cloudwatch-logs:0.1
+ retentionInDays: 7
+ localStreaming:
+  enabled: true,
+  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
+  interval: 60
+```
+
+NOTE: Due to high initial entropy, *.service* failures may occur during the early stages of booting.
+In this context Entropy refers to the disorder of *.service*s (starting, failing, restarting).
+
+### Parameters
+
+#### Filter
+By default the filter is configured for *.service* failures and messages flagged as 'critical'.
+See [the official AWS documentation](http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html) for more information.
+
+#### Interval
+Since some messages are produced frequently, to avoid excessive spam, an 'interval' parameter is provided.
+This 'interval' value determines the time between printing two identical messages to stdout.
+
