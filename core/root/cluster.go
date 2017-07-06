@@ -375,7 +375,7 @@ func printJournaldLogs(c clusterImpl, quit chan bool) error {
 		LogGroupName:  &c.controlPlane.ClusterName,
 		FilterPattern: &c.controlPlane.CloudWatchLogging.RealtimeFeedback.Filter,
 		StartTime:     &startTime}
-	messages := make(map[string]model.SystemdMessageTimestamp)
+	messages := make(map[string]int64)
 
 	for {
 		select {
@@ -390,15 +390,12 @@ func printJournaldLogs(c clusterImpl, quit chan bool) error {
 			if len(out.Events) > 1 {
 				startTime = *out.Events[len(out.Events)-1].Timestamp
 				for _, event := range out.Events {
-					t := messages[*event.Message]
-					t.Current = *event.Timestamp
-					if t.Current > t.Previous+c.controlPlane.CloudWatchLogging.RealtimeFeedback.Interval() {
-						t.Previous = *event.Timestamp
+					if *event.Timestamp > messages[*event.Message]+c.controlPlane.CloudWatchLogging.RealtimeFeedback.Interval() {
+						messages[*event.Message] = *event.Timestamp
 						res := model.SystemdMessageResponse{}
 						json.Unmarshal([]byte(*event.Message), &res)
 						fmt.Printf("%s: \"%s\"\n", res.Hostname, res.Message)
 					}
-					messages[*event.Message] = t
 				}
 			}
 			fleInput = cloudwatchlogs.FilterLogEventsInput{

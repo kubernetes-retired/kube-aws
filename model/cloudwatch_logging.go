@@ -10,8 +10,3 @@ type SystemdMessageResponse struct {
 	Priority    string `json:"priority"`
 	Message     string `json:"message"`
 }
-
-type SystemdMessageTimestamp struct {
-	Previous int64
-	Current  int64
-}
