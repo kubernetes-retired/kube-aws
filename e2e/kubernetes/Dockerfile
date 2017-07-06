@@ -1,4 +1,4 @@
-FROM golang:1.7.1
+FROM golang:1.8.3
 
 ARG KUBERNETES_VERSION=${KUBERNETES_VERSION:-v1.7.0+coreos.0}
 
