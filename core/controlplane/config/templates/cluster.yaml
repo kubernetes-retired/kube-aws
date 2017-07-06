@@ -1007,6 +1007,12 @@ worker:
 
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
+#  repo: gcr.io/google_containers/cluster-autoscaler
+#  tag: v0.6.0
+#  rktPullDocker: false
+
+# Cluster Proportional Autoscaler image repository to use.
+#clusterProportionalAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-proportional-autoscaler-amd64
 #  tag: 1.1.1
 #  rktPullDocker: false
