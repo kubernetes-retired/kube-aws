@@ -974,7 +974,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.6.3_coreos.0
+# kubernetesVersion: v1.7.0_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -1014,13 +1014,13 @@ worker:
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.1
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.1
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1032,7 +1032,7 @@ worker:
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.1
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1044,19 +1044,19 @@ worker:
 # Heapster image repository to use.
 #heapsterImage:
 #  repo: gcr.io/google_containers/heapster
-#  tag: v1.3.0
+#  tag: v1.4.0
 #  rktPullDocker: false
 
 # Addon Resizer image repository to use.
 #addonResizerImage:
 #  repo: gcr.io/google_containers/addon-resizer
-#  tag: 1.7
+#  tag: 2.0
 #  rktPullDocker: false
 
 # Kube Dashboard image repository to use.
 #kubeDashboardImage:
 #  repo: gcr.io/google_containers/kubernetes-dashboard-amd64
-#  tag: v1.6.0
+#  tag: v1.6.1
 #  rktPullDocker: false
 
 # Calico Controller image repository to use.
