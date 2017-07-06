@@ -650,8 +650,8 @@ worker:
 #    - sg-1234abcd
 #    - sg-5678efab
 #
-#  # The version of etcd to be used. Set to e.g. "3.1.3" to use etcd3
-#  version: 2
+#  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
+#  version: 3.2.1
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
