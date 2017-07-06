@@ -754,6 +754,13 @@ type CloudWatchLogging struct {
 	RetentionInDays int  `yaml:"retentionInDays"`
 }
 
+func (c *CloudWatchLogging) MergeIfEmpty(other CloudWatchLogging) {
+	if c.Enabled == false && c.RetentionInDays == 0 {
+		c.Enabled = other.Enabled
+		c.RetentionInDays = other.RetentionInDays
+	}
+}
+
 type LoadBalancer struct {
 	Enabled          bool     `yaml:"enabled"`
 	Names            []string `yaml:"names"`
