@@ -620,6 +620,9 @@ write_files:
       kubectl apply -f "${mfdir}/kube-dns-sa.yaml"
       kubectl apply -f "${mfdir}/heapster-sa.yaml"
 
+      # Install tiller by default
+      kubectl apply -f "${mfdir}/tiller.yaml"
+
       # Deployments
       for manifest in {kube-dns-de,kube-dns-autoscaler-de,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler-de,{{ end }}heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
           kubectl apply -f "${mfdir}/$manifest"
@@ -2138,6 +2141,86 @@ write_files:
           ports:
           - port: 80
             targetPort: 9090
+
+  - path: /srv/kubernetes/manifests/tiller.yaml
+    content: |
+        apiVersion: extensions/v1beta1
+        kind: Deployment
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: helm
+            name: tiller
+          name: tiller-deploy
+          namespace: kube-system
+        spec:
+          strategy: {}
+          template:
+            metadata:
+              creationTimestamp: null
+              labels:
+                app: helm
+                name: tiller
+              # Addition to the default tiller deployment for prioritizing tiller over other non-critical pods with rescheduler
+              annotations:
+                scheduler.alpha.kubernetes.io/critical-pod: ''
+            spec:
+              tolerations:
+              # Additions to the default tiller deployment for allowing to schedule tiller onto controller nodes
+              # so that helm can be used to install pods running only on controller nodes
+              - key: "node.alpha.kubernetes.io/role"
+                operator: "Equal"
+                value: "master"
+                effect: "NoSchedule"
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
+              containers:
+              - env:
+                - name: TILLER_NAMESPACE
+                  value: kube-system
+                image: gcr.io/kubernetes-helm/tiller:v2.5.0
+                imagePullPolicy: IfNotPresent
+                livenessProbe:
+                  httpGet:
+                    path: /liveness
+                    port: 44135
+                  initialDelaySeconds: 1
+                  timeoutSeconds: 1
+                name: tiller
+                ports:
+                - containerPort: 44134
+                  name: tiller
+                readinessProbe:
+                  httpGet:
+                    path: /readiness
+                    port: 44135
+                  initialDelaySeconds: 1
+                  timeoutSeconds: 1
+                resources: {}
+              nodeSelector:
+                beta.kubernetes.io/os: linux
+        status: {}
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: helm
+            name: tiller
+          name: tiller-deploy
+          namespace: kube-system
+        spec:
+          ports:
+          - name: tiller
+            port: 44134
+            targetPort: tiller
+          selector:
+            app: helm
+            name: tiller
+          type: ClusterIP
+        status:
+          loadBalancer: {}
 
 {{ if .AssetsConfig.HasTLSBootstrapToken }}
   - path: /etc/kubernetes/auth/kubelet-tls-bootstrap-token.tmp{{if .AssetsEncryptionEnabled}}.enc{{end}}
