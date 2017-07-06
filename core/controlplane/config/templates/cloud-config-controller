@@ -2050,7 +2050,7 @@ write_files:
                     - --cloud-provider=aws
                     - --skip-nodes-with-local-storage=false
                     - --expander=least-waste
-                    - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled
+                    - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,kubernetes.io/cluster/{{.ClusterName}}
                   env:
                     - name: AWS_REGION
                       value: {{.Region}}
