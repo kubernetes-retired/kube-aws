@@ -11,6 +11,14 @@ This feature is disabled by default and configurable in cluster.yaml:
 ```
 cloudWatchLogging:
  enabled: false
- imageWithTag: jollinshead/journald-cloudwatch-logs:0.1
  retentionInDays: 7
+```
+
+The docker image is also configurable:
+
+```
+journaldCloudWatchLogsImage:
+  repo: "jollinshead/journald-cloudwatch-logs"
+  tag: "0.1"
+  rktPullDocker: true
 ```

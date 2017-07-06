@@ -98,6 +98,7 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	c.CalicoCniImage.MergeIfEmpty(main.CalicoCniImage)
 	c.PauseImage.MergeIfEmpty(main.PauseImage)
 	c.FlannelImage.MergeIfEmpty(main.FlannelImage)
+	c.JournaldCloudWatchLogsImage.MergeIfEmpty(main.JournaldCloudWatchLogsImage)
 
 	// Inherit main TLS bootstrap config
 	c.Experimental.TLSBootstrap = main.Experimental.TLSBootstrap
@@ -123,6 +124,9 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	if c.ElasticFileSystemID == "" {
 		c.ElasticFileSystemID = main.ElasticFileSystemID
 	}
+
+	// Inherit main CloudWatchLogging config
+	c.CloudWatchLogging.MergeIfEmpty(main.CloudWatchLogging)
 
 	return c
 }
