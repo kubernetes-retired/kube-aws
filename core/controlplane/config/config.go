@@ -80,7 +80,6 @@ func NewDefaultCluster() *Cluster {
 			Enabled:      false,
 			DrainTimeout: 5,
 		},
-		NodeLabels: model.NodeLabels{},
 		Plugins: Plugins{
 			Rbac: Rbac{
 				Enabled: false,
@@ -688,7 +687,6 @@ type Experimental struct {
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
-	NodeLabels                  model.NodeLabels               `yaml:"nodeLabels"`
 	Plugins                     Plugins                        `yaml:"plugins"`
 	Dex                         model.Dex                      `yaml:"dex"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
@@ -1042,7 +1040,7 @@ func (c Cluster) NestedStackName() string {
 }
 
 func (c Cluster) NodeLabels() model.NodeLabels {
-	labels := c.Experimental.NodeLabels
+	labels := c.NodeSettings.NodeLabels
 	if c.Addons.ClusterAutoscaler.Enabled {
 		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
 	}

@@ -17,6 +17,7 @@ type Controller struct {
 	Subnets                                []Subnet            `yaml:"subnets,omitempty"`
 	CustomFiles                            []CustomFile        `yaml:"customFiles,omitempty"`
 	CustomSystemdUnits                     []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
+	NodeSettings                           `yaml:",inline"`
 	UnknownKeys                            `yaml:",inline"`
 }
 
@@ -34,6 +35,9 @@ func NewDefaultController() Controller {
 				Size: 30,
 			},
 			Tenancy: "default",
+		},
+		NodeSettings: NodeSettings{
+			NodeLabels: NodeLabels{},
 		},
 	}
 }
