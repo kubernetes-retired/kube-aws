@@ -143,25 +143,6 @@ func (c *ProvidedConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	}
 	*c = ProvidedConfig(work)
 
-	// TODO Remove deprecated keys in v0.9.7
-	if c.DeprecatedRootVolumeIOPS != nil {
-		fmt.Println("WARN: worker.nodePools[].rootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].rootVolume.iops instead")
-		c.RootVolume.IOPS = *c.DeprecatedRootVolumeIOPS
-	}
-
-	if c.WorkerNodePoolConfig.DeprecatedNodePoolManagedIamRoleName != "" {
-		fmt.Println("WARN: worker.nodePools[].managedIamRoleName is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].iam.managedRoleName instead")
-		c.IAMConfig.Role.Name = c.WorkerNodePoolConfig.DeprecatedNodePoolManagedIamRoleName
-	}
-	if c.DeprecatedRootVolumeSize != nil {
-		fmt.Println("WARN: worker.nodePools[].rootVolumeSize is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].rootVolume.size instead")
-		c.RootVolume.Size = *c.DeprecatedRootVolumeSize
-	}
-	if c.DeprecatedRootVolumeType != nil {
-		fmt.Println("WARN: worker.nodePools[].rootVolumeType is deprecated and will be removed in v0.9.7. Please use worker.nodePools[].rootVolume.type instead")
-		c.RootVolume.Type = *c.DeprecatedRootVolumeType
-	}
-
 	return nil
 }
 

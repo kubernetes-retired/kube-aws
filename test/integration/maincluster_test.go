@@ -3211,167 +3211,6 @@ controller:
 			},
 		},
 		{
-			context: "WithControllerNodesWithLegacyKeys",
-			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
-controllerCount: 2
-controllerCreateTimeout: PT10M
-controllerInstanceType: t2.large
-controllerRootVolumeSize: 101
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 102
-controllerTenancy: dedicated
-`,
-			assertConfig: []ConfigTester{
-				hasDefaultExperimentalFeatures,
-				func(c *config.Config, t *testing.T) {
-					expected := model.EC2Instance{
-						Count:         2,
-						InstanceType:  "t2.large",
-						CreateTimeout: "PT10M",
-						RootVolume: model.RootVolume{
-							Size: 101,
-							Type: "io1",
-							IOPS: 102,
-						},
-						Tenancy: "dedicated",
-					}
-
-					actual := c.Controller.EC2Instance
-					if !reflect.DeepEqual(expected, actual) {
-						t.Errorf(
-							"Controller didn't match: expected=%v actual=%v",
-							expected,
-							actual,
-						)
-					}
-
-					if c.ControllerInstanceType() != "t2.large" {
-						t.Errorf("unexpected controller instance type: expected=t2.large, actual=%s", c.ControllerInstanceType())
-					}
-					if c.ControllerCreateTimeout() != "PT10M" {
-						t.Errorf("unexpected controller create timeout: expected=PT10M, actual=%s", c.ControllerCreateTimeout())
-					}
-					if c.ControllerCount() != 2 {
-						t.Errorf("unexpected controller count: expected=2, actual=%d", c.ControllerCount())
-					}
-					if c.ControllerRootVolumeSize() != 101 {
-						t.Errorf("unexpected controller root volume size: expected=101, actual=%d", c.ControllerRootVolumeSize())
-					}
-					if c.ControllerRootVolumeType() != "io1" {
-						t.Errorf("unexpected controller root volume type: expected=io1, actual=%s", c.ControllerRootVolumeType())
-					}
-					if c.ControllerRootVolumeIOPS() != 102 {
-						t.Errorf("unexpected controller root volume iops: expected=102, actual=%d", c.ControllerRootVolumeIOPS())
-					}
-					if c.ControllerTenancy() != "dedicated" {
-						t.Errorf("unexpected controller tenancy: expected=dedicated, actual=%s", c.ControllerTenancy())
-					}
-				},
-			},
-		},
-		{
-			context: "WithEtcdNodesWithLegacyKeys",
-			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
-etcdCount: 2
-etcdTenancy: dedicated
-etcdInstanceType: t2.large
-etcdRootVolumeSize: 101
-etcdRootVolumeType: io1
-etcdRootVolumeIOPS: 102
-etcdDataVolumeSize: 103
-etcdDataVolumeType: io1
-etcdDataVolumeIOPS: 104
-etcdDataVolumeEncrypted: true
-`,
-			assertConfig: []ConfigTester{
-				hasDefaultExperimentalFeatures,
-				func(c *config.Config, t *testing.T) {
-					//intp := func(v int) *int {
-					//	return &v
-					//}
-					//boolp := func(v bool) *bool {
-					//	return &v
-					//}
-					//strp := func(v string) *string {
-					//	return &v
-					//}
-					subnet1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
-					subnet1.Name = "Subnet0"
-					subnets := []model.Subnet{
-						subnet1,
-					}
-					expected := model.Etcd{
-						EC2Instance: model.EC2Instance{
-							Count:        2,
-							InstanceType: "t2.large",
-							RootVolume: model.RootVolume{
-								Size: 101,
-								Type: "io1",
-								IOPS: 102,
-							},
-							Tenancy: "dedicated",
-						},
-						DataVolume: model.DataVolume{
-							Size:      103,
-							Type:      "io1",
-							IOPS:      104,
-							Ephemeral: false,
-							Encrypted: true,
-						},
-						Subnets: subnets,
-					}
-
-					actual := c.EtcdSettings.Etcd
-					if !reflect.DeepEqual(expected, actual) {
-						t.Errorf(
-							"EtcdSettings didn't match: expected=%v actual=%v",
-							expected,
-							actual,
-						)
-					}
-					if c.EtcdInstanceType() != "t2.large" {
-						t.Errorf("unexpected etcd instance type: expected=t2.large, actual=%s", c.EtcdInstanceType())
-					}
-					//if c.EtcdCreateTimeout() != "PT10M" {
-					//	t.Errorf("unexpected etcd create timeout: expected=PT10M, actual=%s", c.EtcdCreateTimeout())
-					//}
-					if c.EtcdCount() != 2 {
-						t.Errorf("unexpected etcd count: expected=2, actual=%d", c.EtcdCount())
-					}
-					if c.EtcdRootVolumeSize() != 101 {
-						t.Errorf("unexpected etcd root volume size: expected=101, actual=%d", c.EtcdRootVolumeSize())
-					}
-					if c.EtcdRootVolumeType() != "io1" {
-						t.Errorf("unexpected etcd root volume type: expected=io1, actual=%s", c.EtcdRootVolumeType())
-					}
-					if c.EtcdRootVolumeIOPS() != 102 {
-						t.Errorf("unexpected etcd root volume iops: expected=102, actual=%d", c.EtcdRootVolumeIOPS())
-					}
-					if c.EtcdDataVolumeSize() != 103 {
-						t.Errorf("unexpected etcd data volume size: expected=103, actual=%d", c.EtcdDataVolumeSize())
-					}
-					if c.EtcdDataVolumeType() != "io1" {
-						t.Errorf("unexpected etcd data volume type: expected=io1, actual=%s", c.EtcdDataVolumeType())
-					}
-					if c.EtcdDataVolumeIOPS() != 104 {
-						t.Errorf("unexpected etcd data volume iops: expected=104, actual=%d", c.EtcdDataVolumeIOPS())
-					}
-					if !c.EtcdDataVolumeEncrypted() {
-						t.Errorf("unexpected etcd data volume encrypted: expected=true, actual=%v", c.EtcdDataVolumeEncrypted())
-					}
-					if c.EtcdTenancy() != "dedicated" {
-						t.Errorf("unexpected etcd tenancy: expected=dedicated, actual=%s", c.EtcdTenancy())
-					}
-				},
-			},
-		},
-		{
 			context: "WithSSHAccessAllowedSourceCIDRsSpecified",
 			configYaml: minimalValidConfigYaml + `
 sshAccessAllowedSourceCIDRs:
@@ -3700,7 +3539,41 @@ worker:
 `,
 			expectedErrorMessage: "invalid taint effect: UnknownEffect",
 		},
-
+		{
+			context: "WithLegacyControllerSettingKeys",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+internetGatewayId: igw-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+controllerCount: 2
+controllerCreateTimeout: PT10M
+controllerInstanceType: t2.large
+controllerRootVolumeSize: 101
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 102
+controllerTenancy: dedicated
+`,
+			expectedErrorMessage: "unknown keys found: controllerCount, controllerCreateTimeout, controllerInstanceType, controllerRootVolumeIOPS, controllerRootVolumeSize, controllerRootVolumeType, controllerTenancy",
+		},
+		{
+			context: "WithLegacyEtcdSettingKeys",
+			configYaml: minimalValidConfigYaml + `
+vpcId: vpc-1a2b3c4d
+internetGatewayId: igw-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+etcdCount: 2
+etcdTenancy: dedicated
+etcdInstanceType: t2.large
+etcdRootVolumeSize: 101
+etcdRootVolumeType: io1
+etcdRootVolumeIOPS: 102
+etcdDataVolumeSize: 103
+etcdDataVolumeType: io1
+etcdDataVolumeIOPS: 104
+etcdDataVolumeEncrypted: true
+`,
+			expectedErrorMessage: "unknown keys found: etcdCount, etcdDataVolumeEncrypted, etcdDataVolumeIOPS, etcdDataVolumeSize, etcdDataVolumeType, etcdInstanceType, etcdRootVolumeIOPS, etcdRootVolumeSize, etcdRootVolumeType, etcdTenancy",
+		},
 		{
 			context: "WithAwsNodeLabelEnabledForTooLongClusterNameAndPoolName",
 			configYaml: minimalValidConfigYaml + `
