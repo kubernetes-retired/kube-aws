@@ -392,7 +392,7 @@ type WorkerDeploymentSettings struct {
 }
 
 func (c WorkerDeploymentSettings) NodeLabels() model.NodeLabels {
-	labels := c.Experimental.NodeLabels
+	labels := c.NodeSettings.NodeLabels
 	if c.ClusterAutoscalerSupport.Enabled {
 		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
 	}

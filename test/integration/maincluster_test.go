@@ -131,8 +131,7 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled:      false,
 				DrainTimeout: 5,
 			},
-			NodeLabels: model.NodeLabels{},
-			Taints:     model.Taints{},
+			Taints: model.Taints{},
 		}
 
 		actual := c.Experimental
@@ -1192,8 +1191,6 @@ experimental:
   nodeDrainer:
     enabled: true
     drainTimeout: 3
-  nodeLabels:
-    kube-aws.coreos.com/role: worker
   plugins:
     rbac:
       enabled: true
@@ -1282,9 +1279,6 @@ worker:
 						NodeDrainer: model.NodeDrainer{
 							Enabled:      true,
 							DrainTimeout: 3,
-						},
-						NodeLabels: model.NodeLabels{
-							"kube-aws.coreos.com/role": "worker",
 						},
 						Plugins: controlplane_config.Plugins{
 							Rbac: controlplane_config.Rbac{
@@ -1404,9 +1398,6 @@ worker:
 							Enabled:      false,
 							DrainTimeout: 0,
 						},
-						NodeLabels: model.NodeLabels{
-							"kube-aws.coreos.com/role": "worker",
-						},
 						Taints: model.Taints{
 							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
@@ -1414,6 +1405,15 @@ worker:
 					p := c.NodePools[0]
 					if reflect.DeepEqual(expected, p.Experimental) {
 						t.Errorf("experimental settings for node pool didn't match : expected=%v actual=%v", expected, p.Experimental)
+					}
+
+					expectedNodeLabels := model.NodeLabels{
+						"kube-aws.coreos.com/role": "worker",
+					}
+
+					actualNodeLabels := c.NodePools[0].NodeLabels
+					if !reflect.DeepEqual(expectedNodeLabels, actualNodeLabels) {
+						t.Errorf("worker node labels didn't match: expected=%v, actual=%v", expectedNodeLabels, actualNodeLabels)
 					}
 				},
 			},
@@ -3191,6 +3191,24 @@ etcd:
 					}
 					if c.Controller.Tenancy != "dedicated" {
 						t.Errorf("Controller.Tenancy didn't match: expected=dedicated actual=%s", c.Controller.Tenancy)
+					}
+				},
+			},
+		},
+		{
+			context: "WithControllerNodeLabels",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  nodeLabels:
+    kube-aws.coreos.com/role: controller
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					expected := model.NodeLabels{"kube-aws.coreos.com/role": "controller"}
+					actual := c.NodeLabels()
+					if !reflect.DeepEqual(expected, actual) {
+						t.Errorf("unexpected controller node labels: expected=%v, actual=%v", expected, actual)
 					}
 				},
 			},

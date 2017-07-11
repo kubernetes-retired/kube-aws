@@ -256,6 +256,8 @@ worker:
 # controller configuration
 controller:
   count: $CONTROLLER_COUNT
+  nodeLabels:
+    kube-aws.coreos.com/role: controller
 waitSignal:
   enabled: true
 kubeResourcesAutosave:

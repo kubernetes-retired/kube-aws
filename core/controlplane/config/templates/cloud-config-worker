@@ -255,7 +255,7 @@ coreos:
         --container-runtime={{.ContainerRuntime}} \
         --rkt-path=/usr/bin/rkt \
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
-        {{if .Experimental.NodeLabels.Enabled}}--node-labels {{.NodeLabels.String}} \
+        {{if .NodeLabels.Enabled}}--node-labels {{.NodeLabels.String}} \
         {{end}}--register-node=true \
         {{if .Experimental.Taints}}--register-with-taints={{.Experimental.Taints.String}}\
         {{end}}--allow-privileged=true \
