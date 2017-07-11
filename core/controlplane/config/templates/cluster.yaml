@@ -226,6 +226,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # subnets:
 #    #   - name: ManagedPrivateSubnet0
 #
+#   # Kubernetes node labels to be added to controller nodes
+#   nodeLabels:
+#     kube-aws.coreos.com/role: controller
+#
 #  # User defined files that will be added to the Controller cluster cloud-init configuration in the "write_files:" section.
 #  customFiles:
 #    - path: "/etc/rkt/auth.d/docker.json"
@@ -1241,9 +1245,6 @@ addons:
 #       username: "admin"
 #       userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
 #
-#   # Kubernetes node labels to be added to controller nodes
-#   nodeLabels:
-#     kube-aws.coreos.com/role: controller
 #   # Kubernetes node taints to be added to controller nodes
 #   taints:
 #     - key: dedicated
