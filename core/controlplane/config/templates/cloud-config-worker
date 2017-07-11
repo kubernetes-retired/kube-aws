@@ -257,7 +257,7 @@ coreos:
         --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
         {{if .NodeLabels.Enabled}}--node-labels {{.NodeLabels.String}} \
         {{end}}--register-node=true \
-        {{if .Experimental.Taints}}--register-with-taints={{.Experimental.Taints.String}}\
+        {{if .Taints}}--register-with-taints={{.Taints.String}}\
         {{end}}--allow-privileged=true \
         {{if .NodeStatusUpdateFrequency}}--node-status-update-frequency={{.NodeStatusUpdateFrequency}} \
         {{end}}--pod-manifest-path=/etc/kubernetes/manifests \
