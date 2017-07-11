@@ -131,7 +131,6 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled:      false,
 				DrainTimeout: 5,
 			},
-			Taints: model.Taints{},
 		}
 
 		actual := c.Experimental
@@ -1194,10 +1193,6 @@ experimental:
   plugins:
     rbac:
       enabled: true
-  taints:
-    - key: reservation
-      value: spot
-      effect: NoSchedule
 cloudWatchLogging:
   enabled: true
 worker:
@@ -1284,9 +1279,6 @@ worker:
 							Rbac: controlplane_config.Rbac{
 								Enabled: true,
 							},
-						},
-						Taints: model.Taints{
-							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 					}
 
@@ -1398,9 +1390,6 @@ worker:
 							Enabled:      false,
 							DrainTimeout: 0,
 						},
-						Taints: model.Taints{
-							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
-						},
 					}
 					p := c.NodePools[0]
 					if reflect.DeepEqual(expected, p.Experimental) {
@@ -1410,11 +1399,19 @@ worker:
 					expectedNodeLabels := model.NodeLabels{
 						"kube-aws.coreos.com/role": "worker",
 					}
-
 					actualNodeLabels := c.NodePools[0].NodeLabels
 					if !reflect.DeepEqual(expectedNodeLabels, actualNodeLabels) {
 						t.Errorf("worker node labels didn't match: expected=%v, actual=%v", expectedNodeLabels, actualNodeLabels)
 					}
+
+					expectedTaints := model.Taints{
+						{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
+					}
+					actualTaints := c.NodePools[0].Taints
+					if !reflect.DeepEqual(expectedTaints, actualTaints) {
+						t.Errorf("worker node taints didn't match: expected=%v, actual=%v", expectedTaints, actualTaints)
+					}
+
 				},
 			},
 		},
@@ -3615,6 +3612,17 @@ controller:
 			context:              "WithClusterNameContainsDots",
 			configYaml:           kubeAwsSettings.withClusterName("my.cluster").minimumValidClusterYaml(),
 			expectedErrorMessage: "clusterName(=my.cluster) is malformed. It must consist only of alphanumeric characters, colons, or hyphens",
+		},
+		{
+			context: "WithControllerTaint",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  taints:
+  - key: foo
+    value: bar
+    effect: NoSchedule
+`,
+			expectedErrorMessage: "`controller.taints` must not be specified because tainting controller nodes breaks the cluster",
 		},
 		{
 			context: "WithElasticFileSystemIdInSpecificNodePoolWithManagedSubnets",

@@ -38,6 +38,7 @@ func NewDefaultController() Controller {
 		},
 		NodeSettings: NodeSettings{
 			NodeLabels: NodeLabels{},
+			Taints:     Taints{},
 		},
 	}
 }
@@ -79,6 +80,9 @@ func (c Controller) Validate() error {
 	}
 	if err := c.IAMConfig.Validate(); err != nil {
 		return err
+	}
+	if len(c.Taints) > 0 {
+		return errors.New("`controller.taints` must not be specified because tainting controller nodes breaks the cluster")
 	}
 	return nil
 }
