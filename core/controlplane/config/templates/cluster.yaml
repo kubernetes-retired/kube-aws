@@ -3,9 +3,6 @@
 # name must not conflict with an existing cluster.
 clusterName: {{.ClusterName}}
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].dnsName instead
-#externalDNSName:
-
 # CoreOS release channel to use. Currently supported options: alpha, beta, stable
 # See coreos.com/releases for more information
 #releaseChannel: stable
@@ -13,15 +10,6 @@ clusterName: {{.ClusterName}}
 # The AMI ID of CoreOS.
 # If omitted, the latest AMI for the releaseChannel is used.
 #amiId: ""
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.createRecordSet instead
-#createRecordSet:
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.recordSetTTL instead
-#recordSetTTL:
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.hostedZone.id instead
-#hostedZoneId:
 
 # The ID of hosted zone to add the externalDNSName to.
 # Either specify hostedZoneId or hostedZone, but not both
@@ -143,9 +131,6 @@ availabilityZone: {{.AvailabilityZone}}
 # ARN of the KMS key used to encrypt TLS assets.
 kmsKeyArn: "{{.KMSKeyARN}}"
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.count instead
-#controllerCount: 1
-
 #controller:
 #  # Number of controller nodes to create, for more control use `controller.autoScalingGroup` and do not use this setting
 #  count: 1
@@ -162,7 +147,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    size: 30
 #    # Disk type for controller node (one of standard, io1, or gp2)
 #    type: gp2
-#    # Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controllerRootVolumeType is not io1
+#    # Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controller.rootVolume.type is not io1
 #    iops: 0
 #
 #  # Existing security groups attached to controller nodes which are typically used to
@@ -210,21 +195,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # References subnets defined under the top-level `subnets` key by their names
 #    - name: ManagedPublicSubnet1
 #    - name: ManagedPublicSubnet2
-#  # CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer instead
-#  loadBalancer:
-#    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
-#    # only public subnets defined under the top-level `subnets` key are used for the ELB
-#    private: false
-#    # If you like specific public subnets to be used by the internet-facing ELB:
-#    #subnets:
-#    #  - name: ManagedPublicSubnet0
-#
-#    # When explicitly set to true, the ELB for the k8s API endpoint becomes `Schema=internal` rather than default `Schema=internet-facing` one and
-#    # only private subnets defined under the top-level `subnets` key are used for the ELB
-#    private: true
-#    # If you like specific private subnets to be used by the internal ELB:
-#    # subnets:
-#    #   - name: ManagedPrivateSubnet0
 #
 #   # Kubernetes node labels to be added to controller nodes
 #   nodeLabels:
@@ -247,21 +217,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #        Description=Example Custom Service
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead
-#controllerCreateTimeout: PT15M
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.instanceType instead
-#controllerInstanceType: t2.medium
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.size instead
-#controllerRootVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.type instead
-#controllerRootVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.iops instead
-#controllerRootVolumeIOPS: 0
 
 # Default number of worker nodes per node pool to create, for more control use `worker.nodePools[].count` and/or `worker.autoScalingGroup` and do not use this setting
 #workerCount: 1
@@ -372,17 +327,8 @@ worker:
 #        size: 30
 #        # Disk type for worker node (one of standard, io1, or gp2)
 #        type: gp2
-#        # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
+#        # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if worker.rootVolume.type is not io1
 #        iops: 0
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.size instead
-#      rootVolumeSize: 30
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.type instead
-#      rootVolumeType: gp2
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.iops instead
-#      rootVolumeIOPS: 0
 #
 #      # Maximum time to wait for worker creation
 #      createTimeout: PT15M
@@ -468,15 +414,6 @@ worker:
 #            # Must be within the range between 100 and 2000
 #            # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #            iops:
-#
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.type instead
-#          #rootVolumeType:
-#
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.size instead
-#          #rootVolumeSize:
-#
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.iops instead
-#          #rootVolumeIOPS:
 #
 #        - weightedCapacity: 2
 #          instanceType: c4.xlarge
@@ -601,9 +538,6 @@ worker:
 ## WARNING: Any changes to etcd parameters after the cluster is first created will not be applied
 ## during a cluster upgrade, due to concerns over data loss.
 ## This situation is being rectified with work towards automated management of etcd clusters
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.count instead
-# etcdCount: 1
 
 #etcd:
 #  # Number of etcd nodes
@@ -739,36 +673,6 @@ worker:
 #        Description=Example Custom Service
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.instanceType instead
-# etcdInstanceType: t2.medium
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.size instead
-# etcdRootVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.type instead
-# etcdRootVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.iops instead
-# etcdRootVolumeIOPS: 0
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.ephemeral instead
-# etcdDataVolumeEphemeral: false
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.size instead
-# etcdDataVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.type instead
-# etcdDataVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.iops instead
-# etcdDataVolumeIOPS: 0
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.encrypted instead
-# etcdDataVolumeEncrypted: false
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.tenancy instead
-# etcdTenancy: default
 
 ## Networking config
 

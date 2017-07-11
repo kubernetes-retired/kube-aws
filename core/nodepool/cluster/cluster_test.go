@@ -153,39 +153,6 @@ availabilityZone: dummy-az-0
 				VolumeType: aws.String("standard"),
 			},
 			clusterYaml: `
-rootVolumeType: standard
-`,
-		},
-		{
-			expectedRootVolume: &ec2.CreateVolumeInput{
-				Iops:       aws.Int64(0),
-				Size:       aws.Int64(50),
-				VolumeType: aws.String("gp2"),
-			},
-			clusterYaml: `
-rootVolumeType: gp2
-rootVolumeSize: 50
-`,
-		},
-		{
-			expectedRootVolume: &ec2.CreateVolumeInput{
-				Iops:       aws.Int64(2000),
-				Size:       aws.Int64(100),
-				VolumeType: aws.String("io1"),
-			},
-			clusterYaml: `
-rootVolumeType: io1
-rootVolumeSize: 100
-rootVolumeIOPS: 2000
-`,
-		},
-		{
-			expectedRootVolume: &ec2.CreateVolumeInput{
-				Iops:       aws.Int64(0),
-				Size:       aws.Int64(30),
-				VolumeType: aws.String("standard"),
-			},
-			clusterYaml: `
 rootVolume:
   type: standard
 `,

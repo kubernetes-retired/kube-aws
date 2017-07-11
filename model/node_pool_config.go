@@ -6,23 +6,21 @@ import (
 )
 
 type NodePoolConfig struct {
-	Autoscaling                          Autoscaling      `yaml:"autoscaling,omitempty"`
-	AutoScalingGroup                     AutoScalingGroup `yaml:"autoScalingGroup,omitempty"`
-	SpotFleet                            SpotFleet        `yaml:"spotFleet,omitempty"`
-	EC2Instance                          `yaml:",inline"`
-	IAMConfig                            IAMConfig `yaml:"iam,omitempty"`
-	DeprecatedNodePoolManagedIamRoleName string    `yaml:"managedIamRoleName,omitempty"`
-	DeprecatedRootVolume                 `yaml:",inline"`
-	SpotPrice                            string                 `yaml:"spotPrice,omitempty"`
-	SecurityGroupIds                     []string               `yaml:"securityGroupIds,omitempty"`
-	CustomSettings                       map[string]interface{} `yaml:"customSettings,omitempty"`
-	VolumeMounts                         []VolumeMount          `yaml:"volumeMounts,omitempty"`
-	UnknownKeys                          `yaml:",inline"`
-	NodeSettings                         `yaml:",inline"`
-	NodeStatusUpdateFrequency            string              `yaml:"nodeStatusUpdateFrequency"`
-	CustomFiles                          []CustomFile        `yaml:"customFiles,omitempty"`
-	CustomSystemdUnits                   []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
-	Gpu                                  Gpu                 `yaml:"gpu"`
+	Autoscaling               Autoscaling      `yaml:"autoscaling,omitempty"`
+	AutoScalingGroup          AutoScalingGroup `yaml:"autoScalingGroup,omitempty"`
+	SpotFleet                 SpotFleet        `yaml:"spotFleet,omitempty"`
+	EC2Instance               `yaml:",inline"`
+	IAMConfig                 IAMConfig              `yaml:"iam,omitempty"`
+	SpotPrice                 string                 `yaml:"spotPrice,omitempty"`
+	SecurityGroupIds          []string               `yaml:"securityGroupIds,omitempty"`
+	CustomSettings            map[string]interface{} `yaml:"customSettings,omitempty"`
+	VolumeMounts              []VolumeMount          `yaml:"volumeMounts,omitempty"`
+	UnknownKeys               `yaml:",inline"`
+	NodeSettings              `yaml:",inline"`
+	NodeStatusUpdateFrequency string              `yaml:"nodeStatusUpdateFrequency"`
+	CustomFiles               []CustomFile        `yaml:"customFiles,omitempty"`
+	CustomSystemdUnits        []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
+	Gpu                       Gpu                 `yaml:"gpu"`
 }
 
 type ClusterAutoscaler struct {
@@ -103,7 +101,7 @@ func (c NodePoolConfig) Valid() error {
 		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/kubernetes-incubator/kube-aws/issues/258 for more information`)
 	}
 
-	if c.IAMConfig.InstanceProfile.Arn != "" && (c.IAMConfig.Role.Name != "" || c.DeprecatedNodePoolManagedIamRoleName != "") {
+	if c.IAMConfig.InstanceProfile.Arn != "" && c.IAMConfig.Role.Name != "" {
 		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
 	}
 	if c.IAMConfig.InstanceProfile.Arn != "" && len(c.IAMConfig.Role.ManagedPolicies) > 0 {
