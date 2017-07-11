@@ -85,8 +85,6 @@ func NewDefaultCluster() *Cluster {
 				Enabled: false,
 			},
 		},
-
-		Taints: model.Taints{},
 		Dex: model.Dex{
 			Enabled:         false,
 			Url:             "https://dex.example.com",
@@ -691,7 +689,6 @@ type Experimental struct {
 	Dex                         model.Dex                      `yaml:"dex"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                         `yaml:"nodeMonitorGracePeriod"`
-	Taints                      model.Taints                   `yaml:"taints"`
 	model.UnknownKeys           `yaml:",inline"`
 }
 
@@ -1479,10 +1476,6 @@ func (e EtcdSettings) Valid() error {
 }
 
 func (c Experimental) Valid() error {
-	if err := c.Taints.Valid(); err != nil {
-		return err
-	}
-
 	if err := c.NodeDrainer.Valid(); err != nil {
 		return err
 	}

@@ -332,6 +332,10 @@ func (c ProvidedConfig) valid() error {
 		return err
 	}
 
+	if err := c.NodeSettings.Validate(); err != nil {
+		return err
+	}
+
 	clusterNamePlaceholder := "<my-cluster-name>"
 	nestedStackNamePlaceHolder := "<my-nested-stack-name>"
 	replacer := strings.NewReplacer(clusterNamePlaceholder, "", nestedStackNamePlaceHolder, "")
