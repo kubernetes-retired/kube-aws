@@ -13,16 +13,17 @@ type IAMConfig struct {
 }
 
 type IAMRole struct {
+	ARN             `yaml:",inline"`
 	Name            string             `yaml:"name,omitempty"`
 	ManagedPolicies []IAMManagedPolicy `yaml:"managedPolicies,omitempty"`
 }
 
 type IAMManagedPolicy struct {
-	Arn string `yaml:"arn,omitempty"`
+	ARN `yaml:",inline"`
 }
 
 type IAMInstanceProfile struct {
-	Arn string `yaml:"arn,omitempty"`
+	ARN `yaml:",inline"`
 }
 
 func (c IAMConfig) Validate() error {
