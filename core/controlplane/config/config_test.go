@@ -525,63 +525,42 @@ controller:
 			volumeType: "io1",
 			iops:       2000,
 		},
-		// TODO Remove test cases for deprecated keys in v0.9.7
-		{
-			conf: `
-controllerRootVolumeType: gp2
-`,
-			volumeType: "gp2",
-			iops:       0,
-		},
-		{
-			conf: `
-controllerRootVolumeType: standard
-`,
-			volumeType: "standard",
-			iops:       0,
-		},
-		{
-			conf: `
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 100
-`,
-			volumeType: "io1",
-			iops:       100,
-		},
-		{
-			conf: `
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 2000
-`,
-			volumeType: "io1",
-			iops:       2000,
-		},
 	}
 
 	invalidConfigs := []string{
 		`
 # There's no volume type 'default'
-controllerRootVolumeType: default
+controller:
+  rootVolume:
+    type: default
 `,
 		`
 # IOPS must be zero for volume types != 'io1'
-controllerRootVolumeType: standard
-controllerRootVolumeIOPS: 100
+controller:
+  rootVolume:
+    type: standard
+    iops: 100
 `,
 		`
 # IOPS must be zero for volume types != 'io1'
-controllerRootVolumeType: gp2
-controllerRootVolumeIOPS: 2000
+controller:
+  rootVolume:
+    type: gp2
+    iops: 2000
 `,
 		`
 # IOPS smaller than the minimum (100)
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 99
+controller:
+  rootVolume:
+    type: io1
+    iops: 99
 `,
 		`
 # IOPS greater than the maximum (2000)
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 2001
+controller:
+  rootVolume:
+    type: io1
+    iops: 2001
 `,
 	}
 

@@ -228,8 +228,6 @@ func (c *Cluster) Load() error {
 
 	c.HostedZoneID = withHostedZoneIDPrefix(c.HostedZoneID)
 
-	c.ConsumeDeprecatedKeys()
-
 	if err := c.valid(); err != nil {
 		return fmt.Errorf("invalid cluster: %v", err)
 	}
@@ -259,90 +257,6 @@ func (c *Cluster) Load() error {
 	}
 
 	return nil
-}
-
-func (c *Cluster) ConsumeDeprecatedKeys() {
-	// TODO Remove deprecated keys in v0.9.7
-	if c.DeprecatedControllerCount != nil {
-		fmt.Println("WARN: controllerCount is deprecated and will be removed in v0.9.7. Please use controller.count instead")
-		c.Controller.Count = *c.DeprecatedControllerCount
-	}
-	if c.DeprecatedControllerTenancy != nil {
-		fmt.Println("WARN: controllerTenancy is deprecated and will be removed in v0.9.7. Please use controller.tenancy instead")
-		c.Controller.Tenancy = *c.DeprecatedControllerTenancy
-	}
-	if c.DeprecatedControllerInstanceType != nil {
-		fmt.Println("WARN: controllerInstanceType is deprecated and will be removed in v0.9.7. Please use controller.instanceType instead")
-		c.Controller.InstanceType = *c.DeprecatedControllerInstanceType
-	}
-	if c.Controller.DeprecatedControllerManagedIamRoleName != "" {
-		fmt.Println("WARN: controller.managedIamRoleName is deprecated and will be removed in v0.9.7. Please use controller.iam.managedIamRoleName instead")
-		c.Controller.IAMConfig.Role.Name = c.Controller.DeprecatedControllerManagedIamRoleName
-	}
-	if c.DeprecatedControllerCreateTimeout != nil {
-		fmt.Println("WARN: controllerCreateTimeout is deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead")
-		c.Controller.CreateTimeout = *c.DeprecatedControllerCreateTimeout
-	}
-	if c.DeprecatedControllerRootVolumeIOPS != nil {
-		fmt.Println("WARN: controllerRootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use controller.rootVolume.iops instead")
-		c.Controller.RootVolume.IOPS = *c.DeprecatedControllerRootVolumeIOPS
-	}
-	if c.DeprecatedControllerRootVolumeSize != nil {
-		fmt.Println("WARN: controllerRootVolumeSize is deprecated and will be removed in v0.9.7. Please use controller.rootVolume.size instead")
-		c.Controller.RootVolume.Size = *c.DeprecatedControllerRootVolumeSize
-	}
-	if c.DeprecatedControllerRootVolumeType != nil {
-		fmt.Println("WARN: controllerRootVolumeType is deprecated and will be removed in v0.9.7. Please use controller.rootVolume.type instead")
-		c.Controller.RootVolume.Type = *c.DeprecatedControllerRootVolumeType
-	}
-
-	if c.DeprecatedEtcdCount != nil {
-		fmt.Println("WARN: etcdCount is deprecated and will be removed in v0.9.7. Please use etcd.count instead")
-		c.Etcd.Count = *c.DeprecatedEtcdCount
-	}
-	if c.DeprecatedEtcdTenancy != nil {
-		fmt.Println("WARN: etcdTenancy is deprecated and will be removed in v0.9.7. Please use etcd.tenancy instead")
-		c.Etcd.Tenancy = *c.DeprecatedEtcdTenancy
-	}
-	if c.DeprecatedEtcdInstanceType != nil {
-		fmt.Println("WARN: etcdInstanceType is deprecated and will be removed in v0.9.7. Please use etcd.instanceType instead")
-		c.Etcd.InstanceType = *c.DeprecatedEtcdInstanceType
-	}
-	//if c.DeprecatedEtcdCreateTimeout != nil {
-	//	c.Etcd.CreateTimeout = *c.DeprecatedEtcdCreateTimeout
-	//}
-	if c.DeprecatedEtcdRootVolumeIOPS != nil {
-		fmt.Println("WARN: etcdRootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.iops instead")
-		c.Etcd.RootVolume.IOPS = *c.DeprecatedEtcdRootVolumeIOPS
-	}
-	if c.DeprecatedEtcdRootVolumeSize != nil {
-		fmt.Println("WARN: etcdRootVolumeSize is deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.size instead")
-		c.Etcd.RootVolume.Size = *c.DeprecatedEtcdRootVolumeSize
-	}
-	if c.DeprecatedEtcdRootVolumeType != nil {
-		fmt.Println("WARN: etcdRootVolumeType is deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.type instead")
-		c.Etcd.RootVolume.Type = *c.DeprecatedEtcdRootVolumeType
-	}
-	if c.DeprecatedEtcdDataVolumeIOPS != nil {
-		fmt.Println("WARN: etcdDataVolumeIOPS is deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.iops instead")
-		c.Etcd.DataVolume.IOPS = *c.DeprecatedEtcdDataVolumeIOPS
-	}
-	if c.DeprecatedEtcdDataVolumeSize != nil {
-		fmt.Println("WARN: etcdDataVolumeSize is deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.size instead")
-		c.Etcd.DataVolume.Size = *c.DeprecatedEtcdDataVolumeSize
-	}
-	if c.DeprecatedEtcdDataVolumeType != nil {
-		fmt.Println("WARN: etcdDataVolumeType is deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.type instead")
-		c.Etcd.DataVolume.Type = *c.DeprecatedEtcdDataVolumeType
-	}
-	if c.DeprecatedEtcdDataVolumeEphemeral != nil {
-		fmt.Println("WARN: etcdDataVolumeEphemeral is deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.ephemeral instead")
-		c.Etcd.DataVolume.Ephemeral = *c.DeprecatedEtcdDataVolumeEphemeral
-	}
-	if c.DeprecatedEtcdDataVolumeEncrypted != nil {
-		fmt.Println("WARN: etcdDataVolumeEncrypted is deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.encrypted instead")
-		c.Etcd.DataVolume.Encrypted = *c.DeprecatedEtcdDataVolumeEncrypted
-	}
 }
 
 func (c *Cluster) SetDefaults() {
@@ -533,120 +447,12 @@ type DefaultWorkerSettings struct {
 
 // Part of configuration which is specific to controller nodes
 type ControllerSettings struct {
-	model.Controller                   `yaml:"controller,omitempty"`
-	DeprecatedControllerCount          *int    `yaml:"controllerCount,omitempty"`
-	DeprecatedControllerCreateTimeout  *string `yaml:"controllerCreateTimeout,omitempty"`
-	DeprecatedControllerInstanceType   *string `yaml:"controllerInstanceType,omitempty"`
-	DeprecatedControllerRootVolumeType *string `yaml:"controllerRootVolumeType,omitempty"`
-	DeprecatedControllerRootVolumeIOPS *int    `yaml:"controllerRootVolumeIOPS,omitempty"`
-	DeprecatedControllerRootVolumeSize *int    `yaml:"controllerRootVolumeSize,omitempty"`
-	DeprecatedControllerTenancy        *string `yaml:"controllerTenancy,omitempty"`
-}
-
-func (c ControllerSettings) ControllerCount() int {
-	fmt.Println("WARN: ControllerCount is deprecated and will be removed in v0.9.7. Please use Controller.Count instead")
-	return c.Controller.Count
-}
-
-func (c ControllerSettings) ControllerCreateTimeout() string {
-	fmt.Println("WARN: ControllerCreateTimeout is deprecated and will be removed in v0.9.7. Please use Controller.CreateTimeout instead")
-	return c.Controller.CreateTimeout
-}
-
-func (c ControllerSettings) ControllerInstanceType() string {
-	fmt.Println("WARN: ControllerInstanceType is deprecated and will be removed in v0.9.7. Please use Controller.InstanceType instead")
-	return c.Controller.InstanceType
-}
-
-func (c ControllerSettings) ControllerRootVolumeType() string {
-	fmt.Println("WARN: ControllerRootVolumeType is deprecated and will be removed in v0.9.7. Please use Controller.RootVolume.Type instead")
-	return c.Controller.RootVolume.Type
-}
-
-func (c ControllerSettings) ControllerRootVolumeIOPS() int {
-	fmt.Println("WARN: ControllerRootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use Controller.RootVolume.IOPS instead")
-	return c.Controller.RootVolume.IOPS
-}
-
-func (c ControllerSettings) ControllerRootVolumeSize() int {
-	fmt.Println("WARN: ControllerRootVolumeSize is deprecated and will be removed in v0.9.7. Please use Controller.RootVolume.Size instead")
-	return c.Controller.RootVolume.Size
-}
-
-func (c ControllerSettings) ControllerTenancy() string {
-	fmt.Println("WARN: ControllerTenancy is deprecated and will be removed in v0.9.7. Please use Controller.Tenancy instead")
-	return c.Controller.Tenancy
+	model.Controller `yaml:"controller,omitempty"`
 }
 
 // Part of configuration which is specific to etcd nodes
 type EtcdSettings struct {
-	model.Etcd                        `yaml:"etcd,omitempty"`
-	DeprecatedEtcdCount               *int    `yaml:"etcdCount"`
-	DeprecatedEtcdInstanceType        *string `yaml:"etcdInstanceType,omitempty"`
-	DeprecatedEtcdRootVolumeSize      *int    `yaml:"etcdRootVolumeSize,omitempty"`
-	DeprecatedEtcdRootVolumeType      *string `yaml:"etcdRootVolumeType,omitempty"`
-	DeprecatedEtcdRootVolumeIOPS      *int    `yaml:"etcdRootVolumeIOPS,omitempty"`
-	DeprecatedEtcdDataVolumeSize      *int    `yaml:"etcdDataVolumeSize,omitempty"`
-	DeprecatedEtcdDataVolumeType      *string `yaml:"etcdDataVolumeType,omitempty"`
-	DeprecatedEtcdDataVolumeIOPS      *int    `yaml:"etcdDataVolumeIOPS,omitempty"`
-	DeprecatedEtcdDataVolumeEphemeral *bool   `yaml:"etcdDataVolumeEphemeral,omitempty"`
-	DeprecatedEtcdDataVolumeEncrypted *bool   `yaml:"etcdDataVolumeEncrypted,omitempty"`
-	DeprecatedEtcdTenancy             *string `yaml:"etcdTenancy,omitempty"`
-}
-
-func (e EtcdSettings) EtcdCount() int {
-	fmt.Println("WARN: EtcdCount is deprecated and will be removed in v0.9.7. Please use Etcd.Count instead")
-	return e.Etcd.Count
-}
-
-func (e EtcdSettings) EtcdInstanceType() string {
-	fmt.Println("WARN: EtcdInstanceType is deprecated and will be removed in v0.9.7. Please use Etcd.InstanceType instead")
-	return e.Etcd.InstanceType
-}
-
-func (e EtcdSettings) EtcdRootVolumeSize() int {
-	fmt.Println("WARN: EtcdRootVolumeSize is deprecated and will be removed in v0.9.7. Please use Etcd.RootVolume.Size instead")
-	return e.Etcd.RootVolume.Size
-}
-
-func (e EtcdSettings) EtcdRootVolumeType() string {
-	fmt.Println("WARN: EtcdRootVolumeType is deprecated and will be removed in v0.9.7. Please use Etcd.RootVolume.Type instead")
-	return e.Etcd.RootVolume.Type
-}
-
-func (e EtcdSettings) EtcdRootVolumeIOPS() int {
-	fmt.Println("WARN: EtcdRootVolumeIOPS is deprecated and will be removed in v0.9.7. Please use Etcd.RootVolume.IOPS instead")
-	return e.Etcd.RootVolume.IOPS
-}
-
-func (e EtcdSettings) EtcdDataVolumeSize() int {
-	fmt.Println("WARN: EtcdDataVolumeSize is deprecated and will be removed in v0.9.7. Please use Etcd.DataVolume.Size instead")
-	return e.Etcd.DataVolume.Size
-}
-
-func (e EtcdSettings) EtcdDataVolumeType() string {
-	fmt.Println("WARN: EtcdDataVolumeType is deprecated and will be removed in v0.9.7. Please use Etcd.DataVolume.Type instead")
-	return e.Etcd.DataVolume.Type
-}
-
-func (e EtcdSettings) EtcdDataVolumeIOPS() int {
-	fmt.Println("WARN: EtcdDataVolumeIOPS is deprecated and will be removed in v0.9.7. Please use Etcd.DataVolume.IOPS instead")
-	return e.Etcd.DataVolume.IOPS
-}
-
-func (e EtcdSettings) EtcdDataVolumeEphemeral() bool {
-	fmt.Println("WARN: EtcdDataVolumeEphemeral is deprecated and will be removed in v0.9.7. Please use Etcd.DataVolume.Ephemeral instead")
-	return e.Etcd.DataVolume.Ephemeral
-}
-
-func (e EtcdSettings) EtcdDataVolumeEncrypted() bool {
-	fmt.Println("WARN: EtcdDataVolumeEncrypted is deprecated and will be removed in v0.9.7. Please use Etcd.DataVolume.Encrypted instead")
-	return e.Etcd.DataVolume.Encrypted
-}
-
-func (e EtcdSettings) EtcdTenancy() string {
-	fmt.Println("WARN: EtcdTenancy is deprecated and will be removed in v0.9.7. Please use Etcd.Tenancy instead")
-	return e.Etcd.Tenancy
+	model.Etcd `yaml:"etcd,omitempty"`
 }
 
 // Part of configuration which is specific to flanneld
