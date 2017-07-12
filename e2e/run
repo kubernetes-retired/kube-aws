@@ -149,8 +149,8 @@ customize_cluster_yaml() {
   echo Writing to $(pwd)/cluster.yaml
 
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
-    echo "vpcId: $(testinfra_vpc)" >> cluster.yaml
-    echo "routeTableId: $(testinfra_public_routetable)" >> cluster.yaml
+    echo -e "vpc:\n  id: $(testinfra_vpc)" >> cluster.yaml
+    echo -e "routeTableId: $(testinfra_public_routetable)" >> cluster.yaml
     echo -e "workerSecurityGroupIds:\n- $(testinfra_glue_sg)" >> cluster.yaml
   fi
 
