@@ -6,7 +6,8 @@
     "ASGNotificationTarget": {
       "Type": "AWS::SQS::Queue"
     },
-    "ASGNotificationRole": {
+    {{if .ControlPlane.AutoscalingNotification.RoleManaged}}
+    "{{.ControlPlane.AutoscalingNotification.RoleLogicalName}}": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [ {
@@ -35,6 +36,7 @@
       },
       "Type": "AWS::IAM::Role"
     },
+    {{end}}
       {{if .CloudWatchLogging.Enabled}}
       "CloudWatchLogGroup": {
       "Type" : "AWS::Logs::LogGroup",
@@ -48,7 +50,7 @@
       "Properties" : {
         "Parameters": {
           "NotificationTargetARN": { "Fn::GetAtt": [ "ASGNotificationTarget", "Arn" ] },
-          "NotificationRoleARN": { "Fn::GetAtt": [ "ASGNotificationRole", "Arn" ] }
+          "NotificationRoleARN": {{.ControlPlane.AutoscalingNotification.RoleArn}}
           {{if .CloudWatchLogging.Enabled}}
           ,
           "CloudWatchLogGroupARN": { "Fn::GetAtt": [ "CloudWatchLogGroup", "Arn" ] }
@@ -73,7 +75,7 @@
         "Parameters": {
           "ControlPlaneStackName": {"Fn::GetAtt" : [ "{{$.ControlPlane.Name}}" , "Outputs.StackName" ]},
           "NotificationTargetARN": { "Fn::GetAtt": [ "ASGNotificationTarget", "Arn" ] },
-          "NotificationRoleARN": { "Fn::GetAtt": [ "ASGNotificationRole", "Arn" ] }
+          "NotificationRoleARN": {{$.ControlPlane.AutoscalingNotification.RoleArn}}
           {{if .CloudWatchLogging.Enabled}}
           ,
           "CloudWatchLogGroupARN": { "Fn::GetAtt": [ "CloudWatchLogGroup", "Arn" ] }
