@@ -54,24 +54,32 @@ type ec2Service interface {
 }
 
 func (c *ClusterRef) validateExistingVPCState(ec2Svc ec2Service) error {
-	if c.VPCID == "" {
+	if !c.VPC.HasIdentifier() {
 		//The VPC will be created. No existing state to validate
 		return nil
 	}
 
+	// TODO kube-aws should de-reference the vpc id from the stack output and continue validating with it
+	if c.VPC.IDFromStackOutput != "" {
+		fmt.Printf("kube-aws doesn't support validating the vpc referenced by the stack output `%s`. Skipped validation of exsiting vpc state. The cluster creation may fail afterwards if the VPC isn't configured properly.", c.VPC.IDFromStackOutput)
+		return nil
+	}
+
+	vpcId := c.VPC.ID
+
 	describeVpcsInput := ec2.DescribeVpcsInput{
-		VpcIds: []*string{aws.String(c.VPCID)},
+		VpcIds: []*string{aws.String(vpcId)},
 	}
 	vpcOutput, err := ec2Svc.DescribeVpcs(&describeVpcsInput)
 	if err != nil {
 		return fmt.Errorf("error describing existing vpc: %v", err)
 	}
 	if len(vpcOutput.Vpcs) == 0 {
-		return fmt.Errorf("could not find vpc %s in region %s", c.VPCID, c.Region)
+		return fmt.Errorf("could not find vpc %s in region %s", vpcId, c.Region)
 	}
 	if len(vpcOutput.Vpcs) > 1 {
 		//Theoretically this should never happen. If it does, we probably want to know.
-		return fmt.Errorf("found more than one vpc with id %s. this is NOT NORMAL", c.VPCID)
+		return fmt.Errorf("found more than one vpc with id %s. this is NOT NORMAL", vpcId)
 	}
 
 	existingVPC := vpcOutput.Vpcs[0]

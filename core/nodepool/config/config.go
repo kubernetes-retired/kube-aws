@@ -349,12 +349,16 @@ func (c ProvidedConfig) StackNameEnvVarName() string {
 	return "KUBE_AWS_STACK_NAME"
 }
 
-func (c ProvidedConfig) VPCRef() string {
-	//This means this VPC already exists, and we can reference it directly by ID
-	if c.VPCID != "" {
-		return fmt.Sprintf("%q", c.VPCID)
+func (c ProvidedConfig) VPCRef() (string, error) {
+	igw := c.InternetGateway
+	// When HasIdentifier returns true, it means the VPC already exists, and we can reference it directly by ID
+	if !c.VPC.HasIdentifier() {
+		// Otherwise import the VPC ID from the control-plane stack
+		igw.IDFromStackOutput = `{"Fn::Sub" : "${ControlPlaneStackName}-VPC"}`
 	}
-	return `{"Fn::ImportValue" : {"Fn::Sub" : "${ControlPlaneStackName}-VPC"}}`
+	return igw.RefOrError(func() (string, error) {
+		return "", fmt.Errorf("[BUG] Tried to reference VPC by its logical name")
+	})
 }
 
 func (c ProvidedConfig) SecurityGroupRefs() []string {

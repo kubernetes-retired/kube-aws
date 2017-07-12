@@ -676,11 +676,25 @@ worker:
 
 ## Networking config
 
-# ID of existing VPC to create subnet in. Leave blank to create a new VPC
+# CAUTION: Deprecated and will be removed in v0.9.9. Please use vpc.id instead
 # vpcId:
 
-# ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+#vpc:
+#  # ID of existing VPC to create subnet in. Leave blank to create a new VPC
+#  id:
+#  # Exported output's name from another stack
+#  # Only specify either id or idFromStackOutput but not both
+#  #idFromStackOutput: myinfra-Vpc
+
+# CAUTION: Deprecated and will be removed in v0.9.9. Please use internetGateway.id instead
 # internetGatewayId:
+
+#internetGateway:
+#  # ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+#  id:
+#  # Exported output's name from another stack
+#  # Only specify either id or idFromStackOutput but not both
+#  #idFromStackOutput: myinfra-igw
 
 # Advanced: ID of existing route table in existing VPC to attach subnet to.
 # Leave blank to use the VPC's main route table.
