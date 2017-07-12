@@ -1484,7 +1484,7 @@
     {{end}}
     {{end}}
 
-    {{if not .VPCID}}
+    {{if .VPCManaged}}
     ,
     "{{.InternetGatewayLogicalName}}": {
       "Properties": {
@@ -1528,7 +1528,7 @@
   },
 
   "Outputs": {
-    {{if not .VPCID}}
+    {{if .VPCManaged}}
     "VPC" : {
       "Description" : "The VPC managed by this stack",
       "Value" :  { "Ref" : "{{.VPCLogicalName}}" },

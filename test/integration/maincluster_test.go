@@ -1622,8 +1622,10 @@ worker:
 		{
 			context: "WithMultiAPIEndpoints",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: privateSubnet1
@@ -1810,7 +1812,8 @@ apiEndpoints:
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecated",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
@@ -1881,14 +1884,16 @@ subnets:
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecated",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be public
 mapPublicIPs: true
-# internetGatewayId should be omitted as we assume that the route table specified by routeTableId already contain a route to one
-#internetGatewayId:
+# internetGateway.id should be omitted as we assume that the route table specified by routeTableId already contain a route to one
+#internetGateway:
+#  id:
 subnets:
 - availabilityZone: us-west-1a
   instanceCIDR: "10.0.1.0/24"
@@ -1954,8 +1959,10 @@ subnets:
 		{
 			context: "WithNetworkTopologyExplicitSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2064,8 +2071,10 @@ worker:
 		{
 			context: "WithNetworkTopologyImplicitSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2142,8 +2151,10 @@ subnets:
 		{
 			context: "WithNetworkTopologyControllerPrivateLB",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2244,8 +2255,10 @@ worker:
 		{
 			context: "WithNetworkTopologyControllerPublicLB",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2346,7 +2359,8 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingVaryingSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2439,7 +2453,8 @@ worker:
 		{
 			context: "WithNetworkTopologyAllExistingPrivateSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2471,7 +2486,8 @@ worker:
 		{
 			context: "WithNetworkTopologyAllExistingPublicSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -2501,8 +2517,10 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingNATGateways",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2600,8 +2618,10 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingNATGatewayEIPs",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2690,10 +2710,12 @@ worker:
 		{
 			context: "WithNetworkTopologyVaryingPublicSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 #required only for the managed subnet "public1"
 # "public2" is assumed to have an existing route table and an igw already associated to it
-internetGatewayId: igw-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -2899,19 +2921,54 @@ worker:
 		{
 			context: "WithVpcIdSpecified",
 			configYaml: minimalValidConfigYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					vpcId := "vpc-1a2b3c4d"
+					if c.VPC.ID != vpcId {
+						t.Errorf("vpc id didn't match: expected=%v actual=%v", vpcId, c.VPC.ID)
+					}
+					igwId := "igw-1a2b3c4d"
+					if c.InternetGateway.ID != igwId {
+						t.Errorf("internet gateway id didn't match: expected=%v actual=%v", igwId, c.InternetGateway.ID)
+					}
+				},
+			},
+		},
+		{
+			context: "WithLegacyVpcAndIGWIdSpecified",
+			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
 internetGatewayId: igw-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
 				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					vpcId := "vpc-1a2b3c4d"
+					if c.VPC.ID != vpcId {
+						t.Errorf("vpc id didn't match: expected=%v actual=%v", vpcId, c.VPC.ID)
+					}
+					igwId := "igw-1a2b3c4d"
+					if c.InternetGateway.ID != igwId {
+						t.Errorf("internet gateway id didn't match: expected=%v actual=%v", igwId, c.InternetGateway.ID)
+					}
+				},
 			},
 		},
 		{
 			context: "WithVpcIdAndRouteTableIdSpecified",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
@@ -3542,8 +3599,10 @@ worker:
 		{
 			context: "WithLegacyControllerSettingKeys",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 controllerCount: 2
 controllerCreateTimeout: PT10M
@@ -3558,8 +3617,10 @@ controllerTenancy: dedicated
 		{
 			context: "WithLegacyEtcdSettingKeys",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 etcdCount: 2
 etcdTenancy: dedicated
@@ -3605,8 +3666,10 @@ experimental:
 		{
 			context: "WithMultiAPIEndpointsInvalidLB",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3632,8 +3695,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsInvalidWorkerAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3667,8 +3732,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsInvalidWorkerNodePoolAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3706,8 +3773,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsMissingDNSName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3723,8 +3792,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsMissingGlobalAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3762,8 +3833,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedBySubnetsMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3788,8 +3861,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedByExplicitPublicMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3813,8 +3888,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedByExplicitPrivateMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3841,8 +3918,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsExplicitRecordSetMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3866,8 +3945,10 @@ apiEndpoints:
 		{
 			context: "WithNetworkTopologyAllExistingPrivateSubnetsRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -3885,13 +3966,15 @@ worker:
     subnets:
     - name: private1
 `,
-			expectedErrorMessage: `internetGatewayId can't be spcified when all the subnets are existing private subnets`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the subnets are existing private subnets`,
 		},
 		{
 			context: "WithNetworkTopologyAllExistingPublicSubnetsRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -3908,13 +3991,15 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
 		},
 		{
 			context: "WithNetworkTopologyAllManagedPublicSubnetsWithExistingRouteTableRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -3933,14 +4018,16 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
 		},
 		{
 			context: "WithNetworkTopologyAllManagedPublicSubnetsMissingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 #misses this
-#internetGatewayId: igw-1a2b3c4d
+#internetGateway:
+#  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -3957,7 +4044,7 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be omitted when there're one or more managed public subnets in an existing VPC`,
+			expectedErrorMessage: `internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC`,
 		},
 		{
 			context: "WithNonZeroWorkerCount",
@@ -3969,8 +4056,10 @@ workerCount: 1
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
 vpcCIDR: "10.1.0.0/16"
 `,
@@ -3978,7 +4067,7 @@ vpcCIDR: "10.1.0.0/16"
 		{
 			context: "WithRouteTableIdSpecified",
 			configYaml: minimalValidConfigYaml + `
-# vpcId must be specified if routeTableId is specified
+# vpc.id must be specified if routeTableId is specified
 routeTableId: rtb-1a2b3c4d
 `,
 		},
