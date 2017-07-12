@@ -167,7 +167,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  # to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
 #  # This is also intended to be used in combination with .experimental.kube2IamSupport. See #297 for more information.
 #  #
-#  # ATTENTION: Consider limiting number of characters in clusterName and managedIamRoleName to avoid the resulting IAM
+#  # ATTENTION: Consider limiting number of characters in clusterName and iam.role.name to avoid the resulting IAM
 #  # role name's length from exceeding the AWS limit: 64
 #  # See https://github.com/kubernetes-incubator/kube-aws/issues/347
 #  # if you omit this block kube-aws would create an IAM Role and a customer managed policy with a random name.
@@ -587,6 +587,20 @@ worker:
 #  securityGroupIds:
 #    - sg-1234abcd
 #    - sg-5678efab
+#
+#  # If you omit this block kube-aws would create an IAM Role and a managed policy for etcd nodes with a random name.
+#  iam:
+#    role:
+#      # If you set managedPolicies here they will be attached to the role in addition to the managed policy.
+#      # CAUTION: if you attach a more restrictive policy in some resources (i.e ec2:* Deny) you can make kube-aws fail.
+#      managedPolicies:
+#      - arn: "arn:aws:iam::aws:policy/AdministratorAccess"
+#      - arn: "arn:aws:iam::YOURACCOUNTID:policy/YOURPOLICYNAME"
+#    # If you set an InstanceProfile kube-aws will NOT create any IAM Role and will use the existing instance profile.
+#    # CAUTION: you must ensure that the IAM role linked to the existing instance profile has enough permissions to ensure etcd nodes to run.
+#    # If you dont know which permissions are required, it is recommended to go ahead with a managed instance profile.
+#    instanceProfile:
+#      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
 #  version: 3.2.1
