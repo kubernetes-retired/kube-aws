@@ -35,10 +35,7 @@ func NewDefaultController() Controller {
 			},
 			Tenancy: "default",
 		},
-		NodeSettings: NodeSettings{
-			NodeLabels: NodeLabels{},
-			Taints:     Taints{},
-		},
+		NodeSettings: newNodeSettings(),
 	}
 }
 
