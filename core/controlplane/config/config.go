@@ -1306,6 +1306,10 @@ func (e EtcdSettings) Valid() error {
 		return errors.New("`etcd.kmsKeyArn` can only be specified when `etcdDataVolumeEncrypted` is enabled")
 	}
 
+	if err := e.IAMConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid etcd settings: %v", err)
+	}
+
 	if e.Etcd.Version().Is3() {
 		if e.Etcd.DisasterRecovery.Automated && !e.Etcd.Snapshot.Automated {
 			return errors.New("`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated")

@@ -71,12 +71,6 @@ func (c Controller) Validate() error {
 			"allowing so for a group of controller nodes spreading over 2 or more availability zones " +
 			"results in unreliability while scaling nodes out.")
 	}
-	if c.IAMConfig.InstanceProfile.Arn != "" && c.IAMConfig.Role.Name != "" {
-		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
-	}
-	if c.IAMConfig.InstanceProfile.Arn != "" && len(c.IAMConfig.Role.ManagedPolicies) > 0 {
-		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
-	}
 	if err := c.IAMConfig.Validate(); err != nil {
 		return err
 	}

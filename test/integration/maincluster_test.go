@@ -4248,7 +4248,28 @@ worker:
 			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Pool1-PRK1CVQNY7XZ-ap-northeast-1-foobarbazbaraaa) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Pool1) + managed iam role name(=foobarbazbaraaa) should be less than or equal to 34",
 		},
 		{
-			context: "WithInvalidInstanceProfileArn",
+			context: "WithInvalidEtcdInstanceProfileArn",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  iam:
+    instanceProfile:
+      arn: "badArn"
+`,
+			expectedErrorMessage: "invalid etcd settings: invalid instance profile, your instance profile must match (=arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME), provided (badArn)",
+		},
+		{
+			context: "WithInvalidEtcdManagedPolicyArn",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  iam:
+    role:
+      managedPolicies:
+      - arn: "badArn"
+`,
+			expectedErrorMessage: "invalid etcd settings: invalid managed policy arn, your managed policy must match this (=arn:aws:iam::(YOURACCOUNTID|aws):policy/POLICYNAME), provided this (badArn)",
+		},
+		{
+			context: "WithInvalidWorkerInstanceProfileArn",
 			configYaml: minimalValidConfigYaml + `
 worker:
   nodePools:
@@ -4260,7 +4281,7 @@ worker:
 			expectedErrorMessage: "invalid instance profile, your instance profile must match (=arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME), provided (badArn)",
 		},
 		{
-			context: "WithInvalidManagedPolicyArn",
+			context: "WithInvalidWorkerManagedPolicyArn",
 			configYaml: minimalValidConfigYaml + `
 worker:
   nodePools:

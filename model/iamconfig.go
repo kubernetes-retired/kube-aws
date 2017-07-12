@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -25,6 +26,12 @@ type IAMInstanceProfile struct {
 }
 
 func (c IAMConfig) Validate() error {
+	if c.InstanceProfile.Arn != "" && c.Role.Name != "" {
+		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
+	}
+	if c.InstanceProfile.Arn != "" && len(c.Role.ManagedPolicies) > 0 {
+		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
+	}
 
 	managedPolicyRegexp := regexp.MustCompile(`arn:aws:iam::((\d{12})|aws):policy/([a-zA-Z0-9-=,\\.@_]{1,128})`)
 	instanceProfileRegexp := regexp.MustCompile(`arn:aws:iam::(\d{12}):instance-profile/([a-zA-Z0-9-=,\\.@_]{1,128})`)
