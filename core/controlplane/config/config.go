@@ -113,6 +113,11 @@ func NewDefaultCluster() *Cluster {
 			CloudWatchLogging: CloudWatchLogging{
 				Enabled:         false,
 				RetentionInDays: 7,
+				LocalStreaming: LocalStreaming{
+					Enabled:  true,
+					Filter:   `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
+					interval: 60,
+				},
 			},
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                        model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
@@ -747,6 +752,18 @@ type KubeResourcesAutosave struct {
 type CloudWatchLogging struct {
 	Enabled         bool `yaml:"enabled"`
 	RetentionInDays int  `yaml:"retentionInDays"`
+	LocalStreaming  `yaml:"localStreaming"`
+}
+
+type LocalStreaming struct {
+	Enabled  bool   `yaml:"enabled"`
+	Filter   string `yaml:"filter"`
+	interval int    `yaml:"interval"`
+}
+
+func (c *LocalStreaming) Interval() int64 {
+	// Convert from seconds to milliseconds (and return as int64 type)
+	return int64(c.interval * 1000)
 }
 
 func (c *CloudWatchLogging) MergeIfEmpty(other CloudWatchLogging) {

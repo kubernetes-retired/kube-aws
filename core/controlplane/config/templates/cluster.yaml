@@ -1145,6 +1145,12 @@ worker:
 #cloudWatchLogging:
 # enabled: false
 # retentionInDays: 7
+# # When enabled, feedback from Journald logs (with an applied filter) will be outputted during kube-aws 'apply | up'.
+# # It is enabled by default - provided cloudWatchLogging is enabled.
+# localStreaming:
+#  enabled: true,
+#  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
+#  interval: 60
 
 # Addon features
 addons:
