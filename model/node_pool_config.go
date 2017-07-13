@@ -46,6 +46,7 @@ func NewDefaultNodePoolConfig() NodePoolConfig {
 			},
 			Tenancy: "default",
 		},
+		NodeSettings:     newNodeSettings(),
 		SecurityGroupIds: []string{},
 		Gpu:              newDefaultGpu(),
 	}
