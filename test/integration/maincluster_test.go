@@ -1397,9 +1397,10 @@ worker:
 					}
 
 					expectedNodeLabels := model.NodeLabels{
-						"kube-aws.coreos.com/role": "worker",
+						"kube-aws.coreos.com/cluster-autoscaler-supported": "true",
+						"kube-aws.coreos.com/role":                         "worker",
 					}
-					actualNodeLabels := c.NodePools[0].NodeLabels
+					actualNodeLabels := c.NodePools[0].NodeLabels()
 					if !reflect.DeepEqual(expectedNodeLabels, actualNodeLabels) {
 						t.Errorf("worker node labels didn't match: expected=%v, actual=%v", expectedNodeLabels, actualNodeLabels)
 					}

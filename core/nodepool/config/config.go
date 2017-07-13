@@ -267,6 +267,14 @@ func (c ProvidedConfig) Config() (*ComputedConfig, error) {
 	return &config, nil
 }
 
+func (c ProvidedConfig) NodeLabels() model.NodeLabels {
+	labels := c.NodeSettings.NodeLabels
+	if c.ClusterAutoscalerSupport.Enabled {
+		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
+	}
+	return labels
+}
+
 func (c ProvidedConfig) WorkerDeploymentSettings() WorkerDeploymentSettings {
 	return WorkerDeploymentSettings{
 		WorkerNodePoolConfig: c.WorkerNodePoolConfig,
@@ -378,14 +386,6 @@ type WorkerDeploymentSettings struct {
 	WorkerNodePoolConfig
 	cfg.Experimental
 	DeploymentSettings
-}
-
-func (c WorkerDeploymentSettings) NodeLabels() model.NodeLabels {
-	labels := c.NodeSettings.NodeLabels
-	if c.ClusterAutoscalerSupport.Enabled {
-		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
-	}
-	return labels
 }
 
 func (c WorkerDeploymentSettings) WorkerSecurityGroupRefs() []string {
