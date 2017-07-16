@@ -115,6 +115,7 @@ func NewCluster(cfg *config.Cluster, opts config.StackTemplateOptions, awsDebug 
 	cluster := NewClusterRef(cfg, awsDebug)
 	// TODO Do this in a cleaner way e.g. in config.go
 	cluster.KubeResourcesAutosave.S3Path = model.NewS3Folders(opts.S3URI, cluster.ClusterName).ClusterBackups().Path()
+	cluster.ClusterS3Uri = model.NewS3Folders(opts.S3URI, cluster.ClusterName).Cluster().Path()
 	stackConfig, err := cluster.StackConfig(opts)
 	if err != nil {
 		return nil, err

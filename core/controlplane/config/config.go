@@ -499,6 +499,7 @@ type DeploymentSettings struct {
 	ManageCertificates     bool              `yaml:"manageCertificates,omitempty"`
 	WaitSignal             WaitSignal        `yaml:"waitSignal"`
 	CloudWatchLogging      `yaml:"cloudWatchLogging,omitempty"`
+	ClusterS3Uri           string
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`

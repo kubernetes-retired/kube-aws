@@ -97,6 +97,7 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 	s3Folders := model.NewS3Folders(opts.S3URI, c.ClusterName)
 	stackConfig.S3URI = s3Folders.ClusterExportedStacks().URI()
 	stackConfig.KubeResourcesAutosave.S3Path = s3Folders.ClusterBackups().Path()
+	stackConfig.ClusterS3Uri = s3Folders.Cluster().Path()
 
 	if opts.SkipWait {
 		enabled := false

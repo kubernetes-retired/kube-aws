@@ -20,6 +20,10 @@ func (p TemplateParams) CloudWatchLogging() config.CloudWatchLogging {
 	return p.cluster.controlPlane.CloudWatchLogging
 }
 
+func (p TemplateParams) ClusterS3Uri() string {
+	return p.cluster.controlPlane.ClusterS3Uri
+}
+
 func newTemplateParams(c clusterImpl) TemplateParams {
 	return TemplateParams{
 		cluster: c,
@@ -63,6 +67,10 @@ func (p controlPlane) CloudWatchLogging() config.CloudWatchLogging {
 	return p.controlPlane.CloudWatchLogging
 }
 
+func (p controlPlane) ClusterS3Uri() string {
+	return p.controlPlane.ClusterS3Uri
+}
+
 type nodePool struct {
 	nodePool *nodepool.Cluster
 }
@@ -87,6 +95,10 @@ func (p nodePool) TemplateURL() (string, error) {
 
 func (p nodePool) CloudWatchLogging() config.CloudWatchLogging {
 	return p.nodePool.CloudWatchLogging
+}
+
+func (p nodePool) ClusterS3Uri() string {
+	return p.nodePool.ClusterS3Uri
 }
 
 func (p nodePool) NeedToExportIAMroles() bool {
