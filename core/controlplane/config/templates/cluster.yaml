@@ -1090,6 +1090,8 @@ addons:
 #   admission:
 #     podSecurityPolicy:
 #       enabled: true
+#     denyEscalatingExec:
+#       enabled: true
 #   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #   awsEnvironment:
 #     enabled: true
