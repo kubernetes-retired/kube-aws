@@ -80,6 +80,9 @@ func TestMainClusterConfig(t *testing.T) {
 				PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
 					Enabled: false,
 				},
+				DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
+					Enabled: false,
+				},
 			},
 			AuditLog: controlplane_config.AuditLog{
 				Enabled: false,
@@ -1128,6 +1131,8 @@ experimental:
   admission:
     podSecurityPolicy:
       enabled: true
+    denyEscalatingExec:
+      enabled: true
   auditLog:
     enabled: true
     maxage: 100
@@ -1206,6 +1211,9 @@ worker:
 					expected := controlplane_config.Experimental{
 						Admission: controlplane_config.Admission{
 							PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
+								Enabled: true,
+							},
+							DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
 								Enabled: true,
 							},
 						},
