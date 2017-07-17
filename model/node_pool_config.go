@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -102,12 +101,6 @@ func (c NodePoolConfig) Valid() error {
 		fmt.Println(`WARNING: instance types "t2.nano" and "t2.micro" are not recommended. See https://github.com/kubernetes-incubator/kube-aws/issues/258 for more information`)
 	}
 
-	if c.IAMConfig.InstanceProfile.Arn != "" && c.IAMConfig.Role.Name != "" {
-		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
-	}
-	if c.IAMConfig.InstanceProfile.Arn != "" && len(c.IAMConfig.Role.ManagedPolicies) > 0 {
-		return errors.New("failed to parse `iam` config: either you set `role.*` options or `instanceProfile.arn` ones but not both")
-	}
 	if err := c.IAMConfig.Validate(); err != nil {
 		return err
 	}

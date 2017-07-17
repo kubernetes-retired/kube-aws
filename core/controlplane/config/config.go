@@ -481,20 +481,21 @@ type FlannelSettings struct {
 }
 
 type Cluster struct {
-	KubeClusterSettings    `yaml:",inline"`
-	DeploymentSettings     `yaml:",inline"`
-	DefaultWorkerSettings  `yaml:",inline"`
-	ControllerSettings     `yaml:",inline"`
-	EtcdSettings           `yaml:",inline"`
-	FlannelSettings        `yaml:",inline"`
-	AdminAPIEndpointName   string `yaml:"adminAPIEndpointName,omitempty"`
-	ServiceCIDR            string `yaml:"serviceCIDR,omitempty"`
-	CreateRecordSet        bool   `yaml:"createRecordSet,omitempty"`
-	RecordSetTTL           int    `yaml:"recordSetTTL,omitempty"`
-	TLSCADurationDays      int    `yaml:"tlsCADurationDays,omitempty"`
-	TLSCertDurationDays    int    `yaml:"tlsCertDurationDays,omitempty"`
-	HostedZoneID           string `yaml:"hostedZoneId,omitempty"`
-	ProvidedEncryptService EncryptService
+	AutoscalingNotification model.AutoscalingNotification `yaml:"autoscalingNotification,omitempty"`
+	KubeClusterSettings     `yaml:",inline"`
+	DeploymentSettings      `yaml:",inline"`
+	DefaultWorkerSettings   `yaml:",inline"`
+	ControllerSettings      `yaml:",inline"`
+	EtcdSettings            `yaml:",inline"`
+	FlannelSettings         `yaml:",inline"`
+	AdminAPIEndpointName    string `yaml:"adminAPIEndpointName,omitempty"`
+	ServiceCIDR             string `yaml:"serviceCIDR,omitempty"`
+	CreateRecordSet         bool   `yaml:"createRecordSet,omitempty"`
+	RecordSetTTL            int    `yaml:"recordSetTTL,omitempty"`
+	TLSCADurationDays       int    `yaml:"tlsCADurationDays,omitempty"`
+	TLSCertDurationDays     int    `yaml:"tlsCertDurationDays,omitempty"`
+	HostedZoneID            string `yaml:"hostedZoneId,omitempty"`
+	ProvidedEncryptService  EncryptService
 	// SSHAccessAllowedSourceCIDRs is network ranges of sources you'd like SSH accesses to be allowed from, in CIDR notation
 	SSHAccessAllowedSourceCIDRs model.CIDRRanges       `yaml:"sshAccessAllowedSourceCIDRs,omitempty"`
 	CustomSettings              map[string]interface{} `yaml:"customSettings,omitempty"`
@@ -1312,6 +1313,10 @@ func (c ControllerSettings) Valid() error {
 func (e EtcdSettings) Valid() error {
 	if !e.Etcd.DataVolume.Encrypted && e.Etcd.KMSKeyARN() != "" {
 		return errors.New("`etcd.kmsKeyArn` can only be specified when `etcdDataVolumeEncrypted` is enabled")
+	}
+
+	if err := e.IAMConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid etcd settings: %v", err)
 	}
 
 	if e.Etcd.Version().Is3() {

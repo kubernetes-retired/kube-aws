@@ -8,15 +8,16 @@ import (
 
 type Etcd struct {
 	Cluster            EtcdCluster          `yaml:",inline"`
+	CustomFiles        []CustomFile         `yaml:"customFiles,omitempty"`
+	CustomSystemdUnits []CustomSystemdUnit  `yaml:"customSystemdUnits,omitempty"`
 	DataVolume         DataVolume           `yaml:"dataVolume,omitempty"`
 	DisasterRecovery   EtcdDisasterRecovery `yaml:"disasterRecovery,omitempty"`
-	Snapshot           EtcdSnapshot         `yaml:"snapshot,omitempty"`
 	EC2Instance        `yaml:",inline"`
-	Nodes              []EtcdNode          `yaml:"nodes,omitempty"`
-	SecurityGroupIds   []string            `yaml:"securityGroupIds"`
-	Subnets            []Subnet            `yaml:"subnets,omitempty"`
-	CustomFiles        []CustomFile        `yaml:"customFiles,omitempty"`
-	CustomSystemdUnits []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
+	IAMConfig          IAMConfig    `yaml:"iam,omitempty"`
+	Nodes              []EtcdNode   `yaml:"nodes,omitempty"`
+	SecurityGroupIds   []string     `yaml:"securityGroupIds"`
+	Snapshot           EtcdSnapshot `yaml:"snapshot,omitempty"`
+	Subnets            []Subnet     `yaml:"subnets,omitempty"`
 	UnknownKeys        `yaml:",inline"`
 }
 
