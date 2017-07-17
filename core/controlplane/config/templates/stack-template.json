@@ -159,19 +159,6 @@
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
-    {{end}}
-    "IAMInstanceProfileEtcd": {
-      "Properties": {
-        "Path": "/",
-        "Roles": [
-          {
-            "Ref": "IAMRoleEtcd"
-          }
-        ]
-      },
-      "Type": "AWS::IAM::InstanceProfile"
-    },
-    {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
     "IAMManagedPolicyController" : {
       "Type" : "AWS::IAM::ManagedPolicy",
       "Properties" : {
@@ -344,6 +331,158 @@
       "Type": "AWS::IAM::Role"
     },
     {{end}}
+    {{ if not .Etcd.IAMConfig.InstanceProfile.Arn }}
+    "IAMInstanceProfileEtcd": {
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "IAMRoleEtcd"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::InstanceProfile"
+    },
+    "IAMManagedPolicyEtcd" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "Policy for managing kube-aws k8s etcd nodes",
+        "Path" : "/",
+        "PolicyDocument" :   {
+          "Version":"2012-10-17",
+          "Statement": [
+            {{if .AssetsEncryptionEnabled}}
+            {
+              "Action" : "kms:Decrypt",
+              "Effect" : "Allow",
+              "Resource" : "{{.KMSKeyARN}}"
+            },
+            {{end}}
+            {{if $.Etcd.KMSKeyARN -}}
+            {{/* Required for mounting encrypted data volume */}}
+            {
+            "Action": [
+              "kms:CreateGrant",
+              "kms:Decrypt",
+              "kms:Describe*",
+              "kms:Encrypt",
+              "kms:GenerateDataKey*",
+              "kms:ReEncrypt*"
+            ],
+            "Effect": "Allow",
+            "Resource": "{{ $.Etcd.KMSKeyARN }}"
+            },
+            {{end -}}
+            {
+              "Action": "ec2:DescribeTags",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{/* Required for cfn-etcd-environment.service to discover the volume */}}
+            {
+              "Action": "ec2:DescribeVolumes",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{/* Required for cfn-etcd-environment.service to start attaching the volume */}}
+            {
+              "Action": "ec2:AttachVolume",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{/* Required for cfn-etcd-environment.service to wait until the volume is attached */}}
+            {
+              "Action": "ec2:DescribeVolumeStatus",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{if $.Etcd.NodeShouldHaveEIP -}}
+            {{/* Required for cfn-etcd-environment.service to associate an EIP */}}
+            {
+              "Action": "ec2:AssociateAddress",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{end -}}
+            {{if $.Etcd.NodeShouldHaveSecondaryENI -}}
+            {{/* Required for cfn-etcd-environment.service to associate a network interface */}}
+            {
+              "Action": "ec2:AttachNetworkInterface",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": "ec2:DescribeNetworkInterfaces",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": "ec2:DescribeNetworkInterfaceAttribute",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {{end -}}
+            {{- if $.UserDataEtcd.Parts.s3 }}
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": "arn:{{.Region.Partition}}:s3:::{{ $.UserDataEtcd.Parts.s3.Asset.S3Prefix }}*"
+            },
+            {{- end }}
+            {{/* Required for `etcdadm reconfigure` to check existence of an etcd snapshot in S3 */}}
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}"
+            },
+            {{if .CloudWatchLogging.Enabled}}
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams"
+              ],
+              "Resource": [
+                { "Ref": "CloudWatchLogGroupARN" },
+                { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
+              ]
+            },{{ end }}
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:List*",
+                "s3:GetObject*"
+              ],
+              "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
+              "Condition": {
+                "StringLike": {
+                  "s3:prefix": { "Fn::Join" : [ "", [{{$.EtcdSnapshotsS3PrefixRef}}, "/*" ]]}
+                }
+              }
+            },
+            {{/* Required for `etcdadm save` to save etcd snapshots in S3 */}}
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:*"
+              ],
+              "Resource": { "Fn::Join" : [ "", ["arn:{{.Region.Partition}}:s3:::", {{$.EtcdSnapshotsS3PathRef}}, "/*" ]]}
+            },
+            {{/* Required for `etcdadm reconfigure` to determine the number of active etcd nodes */}}
+            {
+              "Action": "ec2:DescribeInstances",
+              "Resource": "*",
+              "Effect": "Allow"
+            }
+          ]
+        }
+      }
+    },
     "IAMRoleEtcd": {
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -363,146 +502,16 @@
           "Version": "2012-10-17"
         },
         "Path": "/",
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [{{if .AssetsEncryptionEnabled}}
-                {
-                  "Action" : "kms:Decrypt",
-                  "Effect" : "Allow",
-                  "Resource" : "{{.KMSKeyARN}}"
-                },{{end}}
-                {{if $.Etcd.KMSKeyARN -}}
-                {{/* Required for mounting encrypted data volume */}}
-                {
-                "Action": [
-                  "kms:CreateGrant",
-                  "kms:Decrypt",
-                  "kms:Describe*",
-                  "kms:Encrypt",
-                  "kms:GenerateDataKey*",
-                  "kms:ReEncrypt*"
-                ],
-                "Effect": "Allow",
-                "Resource": "{{ $.Etcd.KMSKeyARN }}"
-                },
-                {{end -}}
-                {
-                  "Action": "ec2:DescribeTags",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{/* Required for cfn-etcd-environment.service to discover the volume */}}
-                {
-                  "Action": "ec2:DescribeVolumes",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{/* Required for cfn-etcd-environment.service to start attaching the volume */}}
-                {
-                  "Action": "ec2:AttachVolume",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{/* Required for cfn-etcd-environment.service to wait until the volume is attached */}}
-                {
-                  "Action": "ec2:DescribeVolumeStatus",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{if $.Etcd.NodeShouldHaveEIP -}}
-                {{/* Required for cfn-etcd-environment.service to associate an EIP */}}
-                {
-                  "Action": "ec2:AssociateAddress",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{end -}}
-                {{if $.Etcd.NodeShouldHaveSecondaryENI -}}
-                {{/* Required for cfn-etcd-environment.service to associate a network interface */}}
-                {
-                  "Action": "ec2:AttachNetworkInterface",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {
-                  "Action": "ec2:DescribeNetworkInterfaces",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {
-                  "Action": "ec2:DescribeNetworkInterfaceAttribute",
-                  "Effect": "Allow",
-                  "Resource": "*"
-                },
-                {{end -}}
-                {{- if $.UserDataEtcd.Parts.s3 }}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:GetObject"
-                  ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{ $.UserDataEtcd.Parts.s3.Asset.S3Prefix }}*"
-                },
-                {{- end }}
-                {{/* Required for `etcdadm reconfigure` to check existence of an etcd snapshot in S3 */}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:ListBucket"
-                  ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}"
-                },
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    { "Ref": "CloudWatchLogGroupARN" },
-                    { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
-                  ]
-                },{{ end }}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:List*",
-                    "s3:GetObject*"
-                  ],
-                  "Resource": "arn:{{.Region.Partition}}:s3:::{{$.EtcdSnapshotsS3Bucket}}",
-                  "Condition": {
-                    "StringLike": {
-                      "s3:prefix": { "Fn::Join" : [ "", [{{$.EtcdSnapshotsS3PrefixRef}}, "/*" ]]}
-                    }
-                  }
-                },
-                {{/* Required for `etcdadm save` to save etcd snapshots in S3 */}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:*"
-                  ],
-                  "Resource": { "Fn::Join" : [ "", ["arn:{{.Region.Partition}}:s3:::", {{$.EtcdSnapshotsS3PathRef}}, "/*" ]]}
-                },
-                {{/* Required for `etcdadm reconfigure` to determine the number of active etcd nodes */}}
-                {
-                  "Action": "ec2:DescribeInstances",
-                  "Resource": "*",
-                  "Effect": "Allow"
-                }
-              ],
-              "Version": "2012-10-17"
-            },
-            "PolicyName": "root"
-          }
+        "ManagedPolicyArns": [
+          {{range $policyIndex, $policyArn := .Etcd.IAMConfig.Role.ManagedPolicies }}
+            "{{$policyArn.Arn}}",
+          {{end}}
+          {"Ref": "IAMManagedPolicyEtcd"}
         ]
       },
-
       "Type": "AWS::IAM::Role"
     },
+    {{end}}
     {{if $.Etcd.HostedZoneManaged}}
     "{{$.Etcd.HostedZoneLogicalName}}": {
       "Type": "AWS::Route53::HostedZone",
@@ -771,9 +780,13 @@
           }
           {{end}}
         ],
+        {{if $.Etcd.IAMConfig.InstanceProfile.Arn }}
+        "IamInstanceProfile": "{{$.Etcd.IAMConfig.InstanceProfile.Arn}}",
+        {{else}}
         "IamInstanceProfile": {
           "Ref": "IAMInstanceProfileEtcd"
         },
+        {{end}}
         "ImageId": "{{$.AMI}}",
         "InstanceType": "{{$.Etcd.InstanceType}}",
         {{if $.KeyName}}"KeyName": "{{$.KeyName}}",{{end}}

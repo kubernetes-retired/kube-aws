@@ -6,6 +6,7 @@ import (
 	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/cluster"
 	config "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
 type TemplateParams struct {
@@ -39,6 +40,10 @@ type NestedStack interface {
 
 type controlPlane struct {
 	controlPlane *controlplane.Cluster
+}
+
+func (p controlPlane) AutoscalingNotification() model.AutoscalingNotification {
+	return p.controlPlane.AutoscalingNotification
 }
 
 func (p controlPlane) Name() string {
@@ -97,7 +102,7 @@ func (p nodePool) NeedToExportIAMroles() bool {
 	return p.nodePool.IAMConfig.InstanceProfile.Arn == ""
 }
 
-func (c TemplateParams) ControlPlane() NestedStack {
+func (c TemplateParams) ControlPlane() controlPlane {
 	return controlPlane{
 		controlPlane: c.cluster.controlPlane,
 	}
