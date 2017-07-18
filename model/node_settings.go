@@ -13,7 +13,7 @@ func newNodeSettings() NodeSettings {
 }
 
 func (s NodeSettings) Validate() error {
-	if err := s.Taints.Valid(); err != nil {
+	if err := s.Taints.Validate(); err != nil {
 		return err
 	}
 	return nil

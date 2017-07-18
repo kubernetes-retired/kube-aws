@@ -54,15 +54,15 @@ func (c DeploymentSettings) ValidateInputs() error {
 		return fmt.Errorf("although you can't customize `kmsKeyArn` per node pool but you did specify \"%s\" in your cluster.yaml", c.KMSKeyARN)
 	}
 
-	if err := c.Experimental.Valid(); err != nil {
+	if err := c.Experimental.Validate(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s DeploymentSettings) Valid() error {
-	if err := s.Experimental.Valid(); err != nil {
+func (s DeploymentSettings) Validate() error {
+	if err := s.Experimental.Validate(); err != nil {
 		return err
 	}
 	return nil
