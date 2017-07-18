@@ -23,9 +23,9 @@ func (f SpotFleet) Enabled() bool {
 	return f.TargetCapacity > 0
 }
 
-func (c SpotFleet) Valid() error {
+func (c SpotFleet) Validate() error {
 	for i, spec := range c.LaunchSpecifications {
-		if err := spec.Valid(); err != nil {
+		if err := spec.Validate(); err != nil {
 			return fmt.Errorf("invalid launchSpecification at index %d: %v", i, err)
 		}
 	}

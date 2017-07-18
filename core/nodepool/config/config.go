@@ -161,7 +161,7 @@ func (c *ProvidedConfig) Load(main *cfg.Config) error {
 	c.Experimental.NodeDrainer = main.DeploymentSettings.Experimental.NodeDrainer
 
 	// Validate whole the inputs including inherited ones
-	if err := c.valid(); err != nil {
+	if err := c.validate(); err != nil {
 		return err
 	}
 
@@ -300,8 +300,8 @@ func (c ProvidedConfig) ValidateInputs() error {
 	return nil
 }
 
-func (c ProvidedConfig) valid() error {
-	if _, err := c.KubeClusterSettings.Valid(); err != nil {
+func (c ProvidedConfig) validate() error {
+	if _, err := c.KubeClusterSettings.Validate(); err != nil {
 		return err
 	}
 
@@ -309,15 +309,15 @@ func (c ProvidedConfig) valid() error {
 		return err
 	}
 
-	if err := c.DeploymentSettings.Valid(); err != nil {
+	if err := c.DeploymentSettings.Validate(); err != nil {
 		return err
 	}
 
-	if err := c.WorkerDeploymentSettings().Valid(); err != nil {
+	if err := c.WorkerDeploymentSettings().Validate(); err != nil {
 		return err
 	}
 
-	if err := c.Experimental.Valid(); err != nil {
+	if err := c.Experimental.Validate(); err != nil {
 		return err
 	}
 
@@ -420,7 +420,7 @@ func (c WorkerDeploymentSettings) StackTags() map[string]string {
 	return tags
 }
 
-func (c WorkerDeploymentSettings) Valid() error {
+func (c WorkerDeploymentSettings) Validate() error {
 	sgRefs := c.WorkerSecurityGroupRefs()
 	numSGs := len(sgRefs)
 

@@ -91,7 +91,7 @@ func ConfigFromBytes(data []byte) (*Config, error) {
 		if np == nil {
 			return nil, fmt.Errorf("Empty nodepool definition found at index %d", i)
 		}
-		if err := np.Taints.Valid(); err != nil {
+		if err := np.Taints.Validate(); err != nil {
 			return nil, fmt.Errorf("invalid taints for node pool at index %d: %v", i, err)
 		}
 

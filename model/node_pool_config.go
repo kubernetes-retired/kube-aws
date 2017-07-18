@@ -67,13 +67,13 @@ func (c NodePoolConfig) LogicalName() string {
 	return "Workers"
 }
 
-func (c NodePoolConfig) Valid() error {
+func (c NodePoolConfig) Validate() error {
 	// one is the default WorkerCount
 	if c.Count != 1 && (c.AutoScalingGroup.MinSize != nil && *c.AutoScalingGroup.MinSize != 0 || c.AutoScalingGroup.MaxSize != 0) {
 		return fmt.Errorf("`worker.autoScalingGroup.minSize` and `worker.autoScalingGroup.maxSize` can only be specified without `count`=%d", c.Count)
 	}
 
-	if err := c.AutoScalingGroup.Valid(); err != nil {
+	if err := c.AutoScalingGroup.Validate(); err != nil {
 		return err
 	}
 
@@ -89,7 +89,7 @@ func (c NodePoolConfig) Valid() error {
 		return err
 	}
 
-	if err := c.SpotFleet.Valid(); c.SpotFleet.Enabled() && err != nil {
+	if err := c.SpotFleet.Validate(); c.SpotFleet.Enabled() && err != nil {
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (c NodePoolConfig) Valid() error {
 		return err
 	}
 
-	if err := c.Gpu.Valid(c.InstanceType); err != nil {
+	if err := c.Gpu.Validate(c.InstanceType); err != nil {
 		return err
 	}
 
