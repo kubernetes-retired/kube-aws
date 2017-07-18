@@ -9,8 +9,11 @@ clusterName: {{.ClusterName}}
 
 # The AMI ID of CoreOS.
 # If omitted, the latest AMI for the releaseChannel is used.
+{{if .AmiId -}}
+amiId: "{{.AmiId}}"
+{{else -}}
 #amiId: ""
-
+{{- end}}
 # The ID of hosted zone to add the externalDNSName to.
 # Either specify hostedZoneId or hostedZone, but not both
 #hostedZoneId: ""

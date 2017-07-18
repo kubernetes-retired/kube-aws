@@ -136,6 +136,7 @@ configure() {
 }
 
 kube-aws() {
+  mkdir -p ${WORK_DIR}
   cd ${WORK_DIR}
   ${KUBE_AWS_CMD} "$@"
 }
