@@ -233,7 +233,7 @@ func (c *Cluster) Load() error {
 
 	c.ConsumeDeprecatedKeys()
 
-	if err := c.valid(); err != nil {
+	if err := c.validate(); err != nil {
 		return fmt.Errorf("invalid cluster: %v", err)
 	}
 
@@ -905,7 +905,7 @@ func (c *Config) Etcdadm() (string, error) {
 	return gzipcompressor.CompressData(Etcdadm)
 }
 
-func (c Cluster) valid() error {
+func (c Cluster) validate() error {
 	validClusterNaming := regexp.MustCompile("^[a-zA-Z0-9-:]+$")
 	if !validClusterNaming.MatchString(c.ClusterName) {
 		return fmt.Errorf("clusterName(=%s) is malformed. It must consist only of alphanumeric characters, colons, or hyphens", c.ClusterName)
@@ -935,7 +935,7 @@ func (c Cluster) valid() error {
 
 	var dnsServiceIPAddr net.IP
 
-	if kubeClusterValidationResult, err := c.KubeClusterSettings.Valid(); err != nil {
+	if kubeClusterValidationResult, err := c.KubeClusterSettings.Validate(); err != nil {
 		return err
 	} else {
 		dnsServiceIPAddr = kubeClusterValidationResult.dnsServiceIPAddr
@@ -943,7 +943,7 @@ func (c Cluster) valid() error {
 
 	var vpcNet *net.IPNet
 
-	if deploymentValidationResult, err := c.DeploymentSettings.Valid(); err != nil {
+	if deploymentValidationResult, err := c.DeploymentSettings.Validate(); err != nil {
 		return err
 	} else {
 		vpcNet = deploymentValidationResult.vpcNet
@@ -981,15 +981,15 @@ func (c Cluster) valid() error {
 		return fmt.Errorf("dnsServiceIp conflicts with kubernetesServiceIp (%s)", dnsServiceIPAddr)
 	}
 
-	if err := c.ControllerSettings.Valid(); err != nil {
+	if err := c.ControllerSettings.Validate(); err != nil {
 		return err
 	}
 
-	if err := c.DefaultWorkerSettings.Valid(); err != nil {
+	if err := c.DefaultWorkerSettings.Validate(); err != nil {
 		return err
 	}
 
-	if err := c.EtcdSettings.Valid(); err != nil {
+	if err := c.EtcdSettings.Validate(); err != nil {
 		return err
 	}
 
@@ -1021,7 +1021,7 @@ type InfrastructureValidationResult struct {
 	dnsServiceIPAddr net.IP
 }
 
-func (c KubeClusterSettings) Valid() (*InfrastructureValidationResult, error) {
+func (c KubeClusterSettings) Validate() (*InfrastructureValidationResult, error) {
 	if c.ExternalDNSName == "" && len(c.APIEndpointConfigs) == 0 {
 		return nil, errors.New("Either externalDNSName or apiEndpoints must be set")
 	}
@@ -1042,7 +1042,7 @@ type DeploymentValidationResult struct {
 	vpcNet *net.IPNet
 }
 
-func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
+func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
 	releaseChannelSupported := supportedReleaseChannels[c.ReleaseChannel]
 	if !releaseChannelSupported {
 		return nil, fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
@@ -1162,7 +1162,7 @@ func (c DeploymentSettings) Valid() (*DeploymentValidationResult, error) {
 		}
 	}
 
-	if err := c.Experimental.Valid(); err != nil {
+	if err := c.Experimental.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -1253,7 +1253,7 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 	return ngws
 }
 
-func (c DefaultWorkerSettings) Valid() error {
+func (c DefaultWorkerSettings) Validate() error {
 	if c.WorkerRootVolumeType == "io1" {
 		if c.WorkerRootVolumeIOPS < 100 || c.WorkerRootVolumeIOPS > 2000 {
 			return fmt.Errorf("invalid workerRootVolumeIOPS: %d", c.WorkerRootVolumeIOPS)
@@ -1275,7 +1275,7 @@ func (c DefaultWorkerSettings) Valid() error {
 	return nil
 }
 
-func (c ControllerSettings) Valid() error {
+func (c ControllerSettings) Validate() error {
 	controller := c.Controller
 	rootVolume := controller.RootVolume
 
@@ -1310,7 +1310,7 @@ func (c ControllerSettings) Valid() error {
 }
 
 // Valid returns an error when there's any user error in the `etcd` settings
-func (e EtcdSettings) Valid() error {
+func (e EtcdSettings) Validate() error {
 	if !e.Etcd.DataVolume.Encrypted && e.Etcd.KMSKeyARN() != "" {
 		return errors.New("`etcd.kmsKeyArn` can only be specified when `etcdDataVolumeEncrypted` is enabled")
 	}
@@ -1335,8 +1335,8 @@ func (e EtcdSettings) Valid() error {
 	return nil
 }
 
-func (c Experimental) Valid() error {
-	if err := c.NodeDrainer.Valid(); err != nil {
+func (c Experimental) Validate() error {
+	if err := c.NodeDrainer.Validate(); err != nil {
 		return err
 	}
 

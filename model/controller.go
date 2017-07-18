@@ -59,7 +59,7 @@ func (c Controller) SecurityGroupRefs() []string {
 }
 
 func (c Controller) Validate() error {
-	if err := c.AutoScalingGroup.Valid(); err != nil {
+	if err := c.AutoScalingGroup.Validate(); err != nil {
 		return err
 	}
 

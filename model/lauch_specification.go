@@ -29,7 +29,7 @@ func (s *LaunchSpecification) UnmarshalYAML(unmarshal func(interface{}) error) e
 	return nil
 }
 
-func (c LaunchSpecification) Valid() error {
+func (c LaunchSpecification) Validate() error {
 	if err := c.RootVolume.Validate(); err != nil {
 		return err
 	}
