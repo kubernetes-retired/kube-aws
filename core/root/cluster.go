@@ -403,5 +403,6 @@ func streamJournaldLogs(c clusterImpl, quit chan bool) error {
 				NextToken:     out.NextToken,
 				StartTime:     &startTime}
 		}
+		time.Sleep(time.Second)
 	}
 }
