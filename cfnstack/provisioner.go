@@ -1,7 +1,6 @@
 package cfnstack
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -233,10 +232,9 @@ func (c *Destroyer) Destroy() error {
 	return err
 }
 
-func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string, startTime time.Time, useStartTime bool) error {
+func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string, startTime time.Time) error {
 	cflSwf := cloudformation.New(c.session)
 	var eventId, nextEventId string
-	var outputMessage bytes.Buffer
 	nestedStacks := make(map[string]bool)
 	nestedQuit := make(chan bool)
 	defer func() { nestedQuit <- true }()
@@ -257,10 +255,15 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 			err := cflSwf.DescribeStackEventsPages(&dseInput,
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
 
+					if len(page.StackEvents) < 1 {
+						return false
+					}
+
 					switch state {
 					case STATE_INIT:
 						eventId = *page.StackEvents[0].EventId
 						nextEventId = eventId
+						state = STATE_DEFAULT
 						return false
 
 					case STATE_FIRST_PAGE:
@@ -270,22 +273,20 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 
 					case STATE_DEFAULT:
 						for _, event := range page.StackEvents {
-							if useStartTime && (*event.Timestamp).Unix() >= startTime.Unix() ||
-								!useStartTime && strings.Compare(*event.EventId, eventId) != 0 {
-								outputMessage.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t(%s)\n", (event.Timestamp).String(), *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus, *event.StackName))
+							if !startTime.IsZero() && startTime.Before(*event.Timestamp) ||
+								startTime.IsZero() && strings.Compare(*event.EventId, eventId) != 0 {
+								fmt.Printf("%s\t%s\t%s\t%s\t%s\n", (event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus)
 								if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 &&
 									strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 &&
 									!nestedStacks[*event.PhysicalResourceId] {
 									nestedStacks[*event.PhysicalResourceId] = true
-									go c.StreamCloudFormationNested(nestedQuit, *event.PhysicalResourceId, *event.Timestamp, true)
+									go c.StreamCloudFormationNested(nestedQuit, *event.PhysicalResourceId, *event.Timestamp)
 								}
 							} else {
-								if outputMessage.Len() > 0 {
-									fmt.Print(outputMessage.String())
-									outputMessage.Reset()
+								if !startTime.IsZero() {
+									startTime = *new(time.Time)
 								}
 								eventId = nextEventId
-								useStartTime = false
 								return false
 							}
 						}
@@ -297,8 +298,9 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 				fmt.Errorf("failed to get CloudFormation events")
 				continue
 			}
-			outputMessage.Reset()
-			state = STATE_FIRST_PAGE
+			if state != STATE_INIT {
+				state = STATE_FIRST_PAGE
+			}
 		}
 		time.Sleep(time.Second)
 	}

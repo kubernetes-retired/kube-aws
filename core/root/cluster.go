@@ -415,5 +415,5 @@ func printJournaldLogs(c clusterImpl, quit chan bool) error {
 
 func streamCloudFormation(c clusterImpl, quit chan bool) error {
 	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
-	return c.stackProvisioner().StreamCloudFormationNested(quit, c.controlPlane.ClusterName, *new(time.Time), false)
+	return c.stackProvisioner().StreamCloudFormationNested(quit, c.controlPlane.ClusterName, *new(time.Time))
 }
