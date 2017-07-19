@@ -1,6 +1,7 @@
 package cfnstack
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -230,4 +231,63 @@ func (c *Destroyer) Destroy() error {
 	}
 	_, err := cfSvc.DeleteStack(dreq)
 	return err
+}
+
+func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string, startTime time.Time, useStartTime bool) error {
+	cflSwf := cloudformation.New(c.session)
+	var eventId, nextEventId string
+	var outputMessage bytes.Buffer
+	nestedStacks := make(map[string]bool)
+	nestedQuit := make(chan bool)
+	defer func() { nestedQuit <- true }()
+	initialiseEventId := true
+	for {
+		select {
+		case <-quit:
+			return nil
+		default:
+			initialiseNextEventId := true
+			dseInput := cloudformation.DescribeStackEventsInput{
+				StackName: &stackId,
+			}
+			err := cflSwf.DescribeStackEventsPages(&dseInput,
+				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
+
+					if initialiseEventId {
+						eventId = *page.StackEvents[0].EventId
+						initialiseEventId = false
+					}
+
+					if initialiseNextEventId {
+						nextEventId = *page.StackEvents[0].EventId
+						initialiseNextEventId = false
+					}
+
+					for _, event := range page.StackEvents {
+						if (useStartTime && (*event.Timestamp).Unix() >= startTime.Unix()) || (!useStartTime && strings.Compare(*event.EventId, eventId) != 0) {
+							outputMessage.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t(%s)\n", (event.Timestamp).String(), *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus, *event.StackName))
+							if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 && strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 && !nestedStacks[*event.PhysicalResourceId] {
+								nestedStacks[*event.PhysicalResourceId] = true
+								go c.StreamCloudFormationNested(nestedQuit, *event.PhysicalResourceId, *event.Timestamp, true)
+							}
+						} else {
+							if outputMessage.Len() > 0 {
+								fmt.Print(outputMessage.String())
+								outputMessage.Reset()
+							}
+							eventId = nextEventId
+							useStartTime = false
+							return false
+						}
+					}
+					return true
+				})
+			if err != nil {
+				fmt.Errorf("failed to get CloudFormation events")
+				continue
+			}
+			outputMessage.Reset()
+		}
+		time.Sleep(time.Second)
+	}
 }

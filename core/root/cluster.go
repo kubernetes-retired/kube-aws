@@ -1,7 +1,6 @@
 package root
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -416,71 +415,5 @@ func printJournaldLogs(c clusterImpl, quit chan bool) error {
 
 func streamCloudFormation(c clusterImpl, quit chan bool) error {
 	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
-	return streamCloudFormationNested(c, quit, c.controlPlane.ClusterName, *new(time.Time), false)
-}
-
-func streamCloudFormationNested(c clusterImpl, quit chan bool, stackId string, startTime time.Time, useStartTime bool) error {
-	cflSwf := cloudformation.New(c.session)
-	dseInput := cloudformation.DescribeStackEventsInput{
-		StackName: &stackId,
-	}
-	useToken := false
-	var eventId, nextEventId string
-	var outputMessage bytes.Buffer
-	nestedStacks := make(map[string]bool)
-	nestedQuit := make(chan bool)
-	defer func() { nestedQuit <- true }()
-	out, err := cflSwf.DescribeStackEvents(&dseInput)
-	if err == nil && len(out.StackEvents) > 0 {
-		eventId = *out.StackEvents[0].EventId
-	}
-	for {
-		select {
-		case <-quit:
-			return nil
-		default:
-			if useToken {
-				dseInput = cloudformation.DescribeStackEventsInput{
-					StackName: &stackId,
-					NextToken: out.NextToken,
-				}
-			} else {
-				dseInput = cloudformation.DescribeStackEventsInput{
-					StackName: &stackId,
-				}
-			}
-			out, err = cflSwf.DescribeStackEvents(&dseInput)
-			if err != nil {
-				fmt.Errorf("failed to get CloudFormation events")
-				continue
-			}
-			if len(out.StackEvents) > 1 {
-				if !useToken {
-					nextEventId = *out.StackEvents[0].EventId
-					useToken = true
-				}
-				for _, event := range out.StackEvents {
-					if (useStartTime && (*event.Timestamp).Unix() >= startTime.Unix()) || (!useStartTime && strings.Compare(*event.EventId, eventId) != 0) {
-						outputMessage.WriteString(fmt.Sprintf("%s\t%s\t%s\t%s\t(%s)\n", (event.Timestamp).String(), *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus, *event.StackName))
-						if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 && strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 && !nestedStacks[*event.PhysicalResourceId] {
-							nestedStacks[*event.PhysicalResourceId] = true
-							go streamCloudFormationNested(c, nestedQuit, *event.PhysicalResourceId, *event.Timestamp, true)
-						}
-					} else {
-						if outputMessage.Len() > 0 {
-							fmt.Print(outputMessage.String())
-							outputMessage.Reset()
-						}
-						useToken = false
-						eventId = nextEventId
-						useStartTime = false
-						break
-					}
-				}
-			} else {
-				outputMessage.Reset()
-				useToken = false
-			}
-		}
-	}
+	return c.stackProvisioner().StreamCloudFormationNested(quit, c.controlPlane.ClusterName, *new(time.Time), false)
 }
