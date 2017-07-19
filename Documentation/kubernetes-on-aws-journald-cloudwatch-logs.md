@@ -26,7 +26,7 @@ journaldCloudWatchLogsImage:
 
 ## kube-aws up/update feedback
 
-During kube-aws up/update, filtered Journald logs can be printed to stdout.
+During kube-aws up/update, filtered Journald logs can be printed to stdout. This may assist debugging.
 This feature is configurable in cluster.yaml under the *cloudWatchLogging* section, and requires *cloudWatchLogging* to be enabled.
 ( Default values: )
 
@@ -36,8 +36,8 @@ cloudWatchLogging:
  imageWithTag: jollinshead/journald-cloudwatch-logs:0.1
  retentionInDays: 7
  localStreaming:
-  enabled: true,
-  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
+  enabled: true
+  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`
   interval: 60
 ```
 
