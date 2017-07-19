@@ -319,7 +319,7 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 		path := filepath.Join(dirname, file.name)
 		data, err := RawCredentialFileFromPath(path, file.defaultValue)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error reading credential file %s: %v", path, err)
 		}
 
 		*file.data = *data
@@ -371,12 +371,12 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 		path := filepath.Join(dirname, file.name)
 		data, err := encryptor.EncryptedCredentialFromPath(path, file.defaultValue)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error encrypting %s: %v", path, err)
 		}
 
 		*file.data = *data
 		if err := data.Persist(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error persisting %s: %v", path, err)
 		}
 	}
 
