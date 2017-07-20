@@ -12,7 +12,6 @@ For example:
 2017-07-19 09:09:10.593 +0000 UTC	my-cluster  AWS::CloudFormation::Stack	Nodepoola	UPDATE_IN_PROGRESS
 2017-07-19 09:09:16.635 +0000 UTC	my-cluster-Nodepoola-1XBQEN77K5CCE  AWS::AutoScaling::AutoScalingGroup	Workers	UPDATE_IN_PROGRESS
 ```
-NOTE: While events are likely to stream in order by timestamp, it is not guaranteed.
 
 This feature is enabled by default and configurable in cluster.yaml:
 

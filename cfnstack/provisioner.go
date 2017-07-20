@@ -249,6 +249,7 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 		case <-quit:
 			return nil
 		default:
+			outputMessage := ""
 			dseInput := cloudformation.DescribeStackEventsInput{
 				StackName: &stackId,
 			}
@@ -275,7 +276,7 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 						for _, event := range page.StackEvents {
 							if !startTime.IsZero() && startTime.Before(*event.Timestamp) ||
 								startTime.IsZero() && strings.Compare(*event.EventId, eventId) != 0 {
-								fmt.Printf("%s\t%s\t%s\t%s\t%s\n", (event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus)
+								outputMessage = fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n", (event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus) + outputMessage
 								if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 &&
 									strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 &&
 									!nestedStacks[*event.PhysicalResourceId] {
@@ -283,6 +284,9 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 									go c.StreamCloudFormationNested(nestedQuit, *event.PhysicalResourceId, *event.Timestamp)
 								}
 							} else {
+								if len(outputMessage) > 0 {
+									fmt.Print(outputMessage)
+								}
 								if !startTime.IsZero() {
 									startTime = *new(time.Time)
 								}
