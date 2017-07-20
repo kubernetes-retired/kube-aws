@@ -276,7 +276,8 @@ func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string,
 						for _, event := range page.StackEvents {
 							if !startTime.IsZero() && startTime.Before(*event.Timestamp) ||
 								startTime.IsZero() && strings.Compare(*event.EventId, eventId) != 0 {
-								outputMessage = fmt.Sprintf("%s\t%s\t%s\t%s\t%s\n", (event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus) + outputMessage
+								outputMessage = fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t\"%s\"\n",
+									(event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus, *event.ResourceStatusReason) + outputMessage
 								if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 &&
 									strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 &&
 									!nestedStacks[*event.PhysicalResourceId] {
