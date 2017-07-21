@@ -368,7 +368,7 @@ func (c clusterImpl) ValidateStack() (string, error) {
 }
 
 func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
-	fmt.Printf("Printing filtered Journald logs for log group '%s'...\nNOTE: Due to high initial entropy, '.service' failures may occur during the early stages of booting.\n", c.controlPlane.ClusterName)
+	fmt.Printf("Streaming filtered Journald logs for log group '%s'...\nNOTE: Due to high initial entropy, '.service' failures may occur during the early stages of booting.\n", c.controlPlane.ClusterName)
 	cwlSvc := cloudwatchlogs.New(c.session)
 	s := time.Now().Unix() * 1E3
 	t := s
