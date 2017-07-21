@@ -1142,6 +1142,10 @@ worker:
 #  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
 #  interval: 60
 
+# When enabled, CloudFormation events will stream to stdout during kube-aws 'apply | up'.
+# It is enabled by default.
+#cloudFormationStreaming: true
+
 # Addon features
 addons:
   # Will provision controller nodes with IAM permissions to run cluster-autoscaler and

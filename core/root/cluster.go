@@ -186,11 +186,14 @@ func (c clusterImpl) Create() error {
 		return err
 	}
 
+	quit := make(chan struct{}, 1)
+	defer func() { quit <- struct{}{} }()
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.RealtimeFeedback.Enabled {
-		// Return Journald logs in a separate GoRoutine
-		quit := make(chan bool)
-		defer func() { quit <- true }()
 		go printJournaldLogs(c, quit)
+	}
+
+	if c.controlPlane.CloudFormationStreaming {
+		go streamCloudFormation(c, cfSvc, quit)
 	}
 
 	return c.stackProvisioner().CreateStackAtURLAndWait(cfSvc, stackTemplateURL)
@@ -307,11 +310,14 @@ func (c clusterImpl) Update() (string, error) {
 		return "", err
 	}
 
+	quit := make(chan struct{}, 1)
+	defer func() { quit <- struct{}{} }()
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.RealtimeFeedback.Enabled {
-		// Return Journald logs in a separate GoRoutine
-		quit := make(chan bool)
-		defer func() { quit <- true }()
 		go printJournaldLogs(c, quit)
+	}
+
+	if c.controlPlane.CloudFormationStreaming {
+		go streamCloudFormation(c, cfSvc, quit)
 	}
 
 	return c.stackProvisioner().UpdateStackAtURLAndWait(cfSvc, templateUrl)
@@ -367,8 +373,8 @@ func (c clusterImpl) ValidateStack() (string, error) {
 	return strings.Join(reports, "\n"), nil
 }
 
-func printJournaldLogs(c clusterImpl, quit chan bool) error {
-	fmt.Printf("Printing filtered Journald logs for log group '%s'...\nNOTE: Due high initial entropy, failures may occur during the early stages of booting.\n", c.controlPlane.ClusterName)
+func printJournaldLogs(c clusterImpl, quit chan struct{}) error {
+	fmt.Printf("Printing filtered Journald logs for log group '%s'...\nNOTE: Due to high initial entropy, failures may occur during the early stages of booting.\n", c.controlPlane.ClusterName)
 	cwlSvc := cloudwatchlogs.New(c.session)
 	startTime := time.Now().Unix() * 1E3
 	fleInput := cloudwatchlogs.FilterLogEventsInput{
@@ -405,4 +411,9 @@ func printJournaldLogs(c clusterImpl, quit chan bool) error {
 				StartTime:     &startTime}
 		}
 	}
+}
+
+func streamCloudFormation(c clusterImpl, cfSvc *cloudformation.CloudFormation, quit chan struct{}) error {
+	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
+	return c.stackProvisioner().StreamCloudFormationNested(quit, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
 }
