@@ -382,7 +382,7 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 		select {
 		case <-q:
 			return nil
-		default:
+		case <-time.After(1 * time.Second):
 			out, err := cwlSvc.FilterLogEvents(&in)
 			if err != nil {
 				continue
@@ -406,6 +406,5 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 				NextToken:     out.NextToken,
 				StartTime:     &s}
 		}
-		time.Sleep(time.Second)
 	}
 }
