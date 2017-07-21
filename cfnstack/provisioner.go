@@ -247,14 +247,14 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 			_ = f.DescribeStackEventsPages(
 				&cloudformation.DescribeStackEventsInput{StackName: &s},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
-					for _, event := range page.StackEvents {
-						if (*event.Timestamp).Before(t) {
+					for _, e := range page.StackEvents {
+						if (*e.Timestamp).Before(t) {
 							return false
 						}
-						if *event.EventId == lastSeenEventId {
+						if *e.EventId == lastSeenEventId {
 							return false
 						}
-						events = append(events, *event)
+						events = append(events, *e)
 					}
 					return true
 				})
