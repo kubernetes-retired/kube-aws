@@ -285,10 +285,6 @@ func eventPrettyPrint(e cloudformation.StackEvent, n string, t time.Time) {
 		n = ""
 	}
 
-	r := *e.ResourceStatus
-	if len(r) < 24 {
-		r += strings.Repeat(" ", 24-len(r))
-	}
 	s := int((*e.Timestamp).Sub(t).Seconds())
 	d := fmt.Sprintf("+%.2d:%.2d:%.2d", s/3600, (s/60)%60, s%60)
 	if e.ResourceStatusReason != nil {
