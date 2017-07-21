@@ -232,81 +232,71 @@ func (c *Destroyer) Destroy() error {
 	return err
 }
 
-func (c *Provisioner) StreamCloudFormationNested(quit chan bool, stackId string, startTime time.Time) error {
-	cflSwf := cloudformation.New(c.session)
-	var eventId, nextEventId string
+func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformation.CloudFormation, s string, n string, t time.Time) error {
 	nestedStacks := make(map[string]bool)
-	nestedQuit := make(chan bool)
-	defer func() { nestedQuit <- true }()
-	const (
-		STATE_INIT = iota
-		STATE_FIRST_PAGE
-		STATE_DEFAULT
-	)
-	state := STATE_INIT
+	nestedQuit := make(chan struct{})
+	var lastSeenEventId string
+	defer func() { nestedQuit <- struct{}{} }()
 	for {
 		select {
-		case <-quit:
+		case <-q:
 			return nil
 		default:
-			outputMessage := ""
-			dseInput := cloudformation.DescribeStackEventsInput{
-				StackName: &stackId,
-			}
-			err := cflSwf.DescribeStackEventsPages(&dseInput,
+			events := make([]cloudformation.StackEvent, 0)
+
+			_ = f.DescribeStackEventsPages(
+				&cloudformation.DescribeStackEventsInput{StackName: &s},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
-
-					if len(page.StackEvents) < 1 {
-						return false
+					for _, event := range page.StackEvents {
+						if (*event.Timestamp).Before(t) { return false }
+						if *event.EventId == lastSeenEventId { return false }
+						events = append(events, *event)
 					}
-
-					switch state {
-					case STATE_INIT:
-						eventId = *page.StackEvents[0].EventId
-						nextEventId = eventId
-						state = STATE_DEFAULT
-						return false
-
-					case STATE_FIRST_PAGE:
-						nextEventId = *page.StackEvents[0].EventId
-						state = STATE_DEFAULT
-						fallthrough
-
-					case STATE_DEFAULT:
-						for _, event := range page.StackEvents {
-							if !startTime.IsZero() && startTime.Before(*event.Timestamp) ||
-								startTime.IsZero() && strings.Compare(*event.EventId, eventId) != 0 {
-								outputMessage = fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t\"%s\"\n",
-									(event.Timestamp).String(), *event.StackName, *event.ResourceType, *event.LogicalResourceId, *event.ResourceStatus, *event.ResourceStatusReason) + outputMessage
-								if strings.Compare(*event.ResourceType, "AWS::CloudFormation::Stack") == 0 &&
-									strings.Compare(*event.PhysicalResourceId, *event.StackId) != 0 &&
-									!nestedStacks[*event.PhysicalResourceId] {
-									nestedStacks[*event.PhysicalResourceId] = true
-									go c.StreamCloudFormationNested(nestedQuit, *event.PhysicalResourceId, *event.Timestamp)
-								}
-							} else {
-								if len(outputMessage) > 0 {
-									fmt.Print(outputMessage)
-								}
-								if !startTime.IsZero() {
-									startTime = *new(time.Time)
-								}
-								eventId = nextEventId
-								return false
-							}
-						}
-					}
-
 					return true
 				})
-			if err != nil {
-				fmt.Errorf("failed to get CloudFormation events")
-				continue
-			}
-			if state != STATE_INIT {
-				state = STATE_FIRST_PAGE
+
+			for i := len(events)-1; i >= 0 ; i-- {
+				e := events[i]
+				if eventRefersToUniqueStack(e) && !nestedStacks[*e.PhysicalResourceId] {
+					nestedStacks[*e.PhysicalResourceId] = true
+					go c.StreamCloudFormationNested(nestedQuit, f, *e.PhysicalResourceId, n, t)
+				}
+				eventPrettyPrint(e, n, t)
+				lastSeenEventId = *e.EventId
 			}
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func eventRefersToUniqueStack (e cloudformation.StackEvent) bool {
+	return strings.Compare(*e.ResourceType, "AWS::CloudFormation::Stack") == 0 &&	strings.Compare(*e.PhysicalResourceId, *e.StackId) != 0
+}
+
+func eventPrettyPrint (e cloudformation.StackEvent, n string, t time.Time) {
+	ns := strings.Split(strings.TrimLeft(*e.StackName, n), "-")
+	if len(ns) > 2 {
+		n = "\t" + ns[len(ns) - 2]
+	} else {
+		n = ""
+	}
+
+	r := *e.ResourceStatus
+	if len(r) < 24 {
+		r += strings.Repeat(" ", 24 - len(r))
+	}
+	s := int((*e.Timestamp).Sub(t).Seconds())
+	d := fmt.Sprintf("+%.2d:%.2d:%.2d", s / 3600, (s / 60) % 60, s % 60)
+	if e.ResourceStatusReason != nil {
+		fmt.Printf("%s%s\t%s\t\t%s\t\"%s\"\n", d, n, resize(*e.ResourceStatus, 24), resize(*e.LogicalResourceId, 22), *e.ResourceStatusReason)
+	} else {
+		fmt.Printf("%s%s\t%s\t\t%s\n", d, n, resize(*e.ResourceStatus, 24), resize(*e.LogicalResourceId, 22) )
+	}
+}
+
+func resize(s string, i int) string {
+	if len(s) < i {
+		s += strings.Repeat(" ", i - len(s))
+	}
+	return s
 }
