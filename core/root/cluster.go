@@ -388,7 +388,7 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 		select {
 		case <-q:
 			return nil
-		default:
+		case <-time.After(1 * time.Second):
 			out, err := cwlSvc.FilterLogEvents(&in)
 			if err != nil {
 				fmt.Errorf("failed to pull Logs from CloudWatch")
