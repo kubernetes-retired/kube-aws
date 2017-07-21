@@ -248,14 +248,18 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 				&cloudformation.DescribeStackEventsInput{StackName: &s},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
 					for _, event := range page.StackEvents {
-						if (*event.Timestamp).Before(t) { return false }
-						if *event.EventId == lastSeenEventId { return false }
+						if (*event.Timestamp).Before(t) {
+							return false
+						}
+						if *event.EventId == lastSeenEventId {
+							return false
+						}
 						events = append(events, *event)
 					}
 					return true
 				})
 
-			for i := len(events)-1; i >= 0 ; i-- {
+			for i := len(events) - 1; i >= 0; i-- {
 				e := events[i]
 				if eventRefersToUniqueStack(e) && !nestedStacks[*e.PhysicalResourceId] {
 					nestedStacks[*e.PhysicalResourceId] = true
@@ -269,34 +273,34 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 	}
 }
 
-func eventRefersToUniqueStack (e cloudformation.StackEvent) bool {
-	return strings.Compare(*e.ResourceType, "AWS::CloudFormation::Stack") == 0 &&	strings.Compare(*e.PhysicalResourceId, *e.StackId) != 0
+func eventRefersToUniqueStack(e cloudformation.StackEvent) bool {
+	return strings.Compare(*e.ResourceType, "AWS::CloudFormation::Stack") == 0 && strings.Compare(*e.PhysicalResourceId, *e.StackId) != 0
 }
 
-func eventPrettyPrint (e cloudformation.StackEvent, n string, t time.Time) {
+func eventPrettyPrint(e cloudformation.StackEvent, n string, t time.Time) {
 	ns := strings.Split(strings.TrimLeft(*e.StackName, n), "-")
 	if len(ns) > 2 {
-		n = "\t" + ns[len(ns) - 2]
+		n = "\t" + ns[len(ns)-2]
 	} else {
 		n = ""
 	}
 
 	r := *e.ResourceStatus
 	if len(r) < 24 {
-		r += strings.Repeat(" ", 24 - len(r))
+		r += strings.Repeat(" ", 24-len(r))
 	}
 	s := int((*e.Timestamp).Sub(t).Seconds())
-	d := fmt.Sprintf("+%.2d:%.2d:%.2d", s / 3600, (s / 60) % 60, s % 60)
+	d := fmt.Sprintf("+%.2d:%.2d:%.2d", s/3600, (s/60)%60, s%60)
 	if e.ResourceStatusReason != nil {
 		fmt.Printf("%s%s\t%s\t\t%s\t\"%s\"\n", d, n, resize(*e.ResourceStatus, 24), resize(*e.LogicalResourceId, 22), *e.ResourceStatusReason)
 	} else {
-		fmt.Printf("%s%s\t%s\t\t%s\n", d, n, resize(*e.ResourceStatus, 24), resize(*e.LogicalResourceId, 22) )
+		fmt.Printf("%s%s\t%s\t\t%s\n", d, n, resize(*e.ResourceStatus, 24), resize(*e.LogicalResourceId, 22))
 	}
 }
 
 func resize(s string, i int) string {
 	if len(s) < i {
-		s += strings.Repeat(" ", i - len(s))
+		s += strings.Repeat(" ", i-len(s))
 	}
 	return s
 }
