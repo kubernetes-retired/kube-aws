@@ -232,20 +232,20 @@ func (c *Destroyer) Destroy() error {
 	return err
 }
 
-func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformation.CloudFormation, s string, n string, t time.Time) error {
+func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformation.CloudFormation, stackId string, headStackName string, t time.Time) error {
 	nestedStacks := make(map[string]bool)
-	nestedQuit := make(chan struct{})
+	nestedQuit := make(chan struct{}, 1)
 	var lastSeenEventId string
 	defer func() { nestedQuit <- struct{}{} }()
 	for {
 		select {
 		case <-q:
 			return nil
-		default:
+		case <-time.After(1 * time.Second):
 			events := make([]cloudformation.StackEvent, 0)
 
 			_ = f.DescribeStackEventsPages(
-				&cloudformation.DescribeStackEventsInput{StackName: &s},
+				&cloudformation.DescribeStackEventsInput{StackName: &stackId},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
 					for _, e := range page.StackEvents {
 						if (*e.Timestamp).Before(t) {
@@ -261,20 +261,15 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 
 			for i := len(events) - 1; i >= 0; i-- {
 				e := events[i]
-				if eventRefersToUniqueStack(e) && !nestedStacks[*e.PhysicalResourceId] {
+				if *e.ResourceType == "AWS::CloudFormation::Stack" && *e.PhysicalResourceId != *e.StackId && !nestedStacks[*e.PhysicalResourceId] {
 					nestedStacks[*e.PhysicalResourceId] = true
-					go c.StreamCloudFormationNested(nestedQuit, f, *e.PhysicalResourceId, n, t)
+					go c.StreamCloudFormationNested(nestedQuit, f, *e.PhysicalResourceId, headStackName, t)
 				}
-				eventPrettyPrint(e, n, t)
+				eventPrettyPrint(e, headStackName, t)
 				lastSeenEventId = *e.EventId
 			}
 		}
-		time.Sleep(time.Second)
 	}
-}
-
-func eventRefersToUniqueStack(e cloudformation.StackEvent) bool {
-	return strings.Compare(*e.ResourceType, "AWS::CloudFormation::Stack") == 0 && strings.Compare(*e.PhysicalResourceId, *e.StackId) != 0
 }
 
 func eventPrettyPrint(e cloudformation.StackEvent, n string, t time.Time) {

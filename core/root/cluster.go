@@ -186,7 +186,7 @@ func (c clusterImpl) Create() error {
 		return err
 	}
 
-	quit := make(chan struct{})
+	quit := make(chan struct{}, 1)
 	defer func() { quit <- struct{}{} }()
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.RealtimeFeedback.Enabled {
 		go printJournaldLogs(c, quit)
@@ -310,7 +310,7 @@ func (c clusterImpl) Update() (string, error) {
 		return "", err
 	}
 
-	quit := make(chan struct{})
+	quit := make(chan struct{}, 1)
 	defer func() { quit <- struct{}{} }()
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.RealtimeFeedback.Enabled {
 		go printJournaldLogs(c, quit)
