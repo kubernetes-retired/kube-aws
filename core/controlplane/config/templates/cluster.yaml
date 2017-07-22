@@ -1207,14 +1207,6 @@ addons:
 #  Name: "Kubernetes"
 #  Environment: "Production"
 
-# Autoscaling lifecycle notifications are used by the kube-aws node drainer
-# in order to pend termination of an EC2 instance while gracefully stopping pods running on it
-#autoscalingNotification:
-#  iam:
-#    role:
-#      # When specified, kube-aws reuses an existing IAM role as the notification role of a autoscaling lifecycle hook
-#      arn: "arn:aws:iam::YOURACCOUNTID:role/ROLENAME"
-
 # User-provided YAML map available in control-plane's stack-template.json
 #customSettings:
 #  key1: [ 1, 2, 3 ]
