@@ -128,5 +128,8 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	// Inherit main CloudWatchLogging config
 	c.CloudWatchLogging.MergeIfEmpty(main.CloudWatchLogging)
 
+	// Inherit main AmazonSsmAgent config
+	c.AmazonSsmAgent = main.AmazonSsmAgent
+
 	return c
 }
