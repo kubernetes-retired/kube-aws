@@ -1087,6 +1087,15 @@ worker:
 #  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
 #  interval: 60
 
+# When enabled, all nodes will have Amazon SSM Agent installed.
+# It is disabled by default.
+# You might want to set 'managedPolicies' up to run the agents properly. More details: http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-configuring-access-policies.html
+#amazonSsmAgent:
+#  enabled: true
+#  downloadUrl: https://github.com/DailyHotel/amazon-ssm-agent/releases/download/v2.0.805.1/ssm.linux-amd64.tar.gz
+#  sha1sum: a6fff8f9839d5905934e7e3df3123b54020a1f5e
+
+
 # Addon features
 addons:
   # Will provision controller nodes with IAM permissions to run cluster-autoscaler and

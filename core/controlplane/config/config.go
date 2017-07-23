@@ -113,6 +113,11 @@ func NewDefaultCluster() *Cluster {
 			MapPublicIPs:       true,
 			Experimental:       experimental,
 			ManageCertificates: true,
+			AmazonSsmAgent: AmazonSsmAgent{
+				Enabled:     false,
+				DownloadUrl: "",
+				Sha1Sum:     "",
+			},
 			CloudWatchLogging: CloudWatchLogging{
 				Enabled:         false,
 				RetentionInDays: 7,
@@ -427,6 +432,7 @@ type DeploymentSettings struct {
 	ManageCertificates     bool              `yaml:"manageCertificates,omitempty"`
 	WaitSignal             WaitSignal        `yaml:"waitSignal"`
 	CloudWatchLogging      `yaml:"cloudWatchLogging,omitempty"`
+	AmazonSsmAgent         `yaml:"amazonSsmAgent,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
@@ -578,6 +584,12 @@ type Kube2IamSupport struct {
 type KubeResourcesAutosave struct {
 	Enabled bool `yaml:"enabled"`
 	S3Path  string
+}
+
+type AmazonSsmAgent struct {
+	Enabled     bool   `yaml:"enabled"`
+	DownloadUrl string `yaml:"downloadUrl"`
+	Sha1Sum     string `yaml:"sha1sum"`
 }
 
 type CloudWatchLogging struct {
