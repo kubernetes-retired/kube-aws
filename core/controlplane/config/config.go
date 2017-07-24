@@ -116,7 +116,7 @@ func NewDefaultCluster() *Cluster {
 			CloudWatchLogging: CloudWatchLogging{
 				Enabled:         false,
 				RetentionInDays: 7,
-				RealtimeFeedback: RealtimeFeedback{
+				LocalStreaming: LocalStreaming{
 					Enabled:  true,
 					Filter:   `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
 					interval: 60,
@@ -762,18 +762,18 @@ type KubeResourcesAutosave struct {
 }
 
 type CloudWatchLogging struct {
-	Enabled          bool `yaml:"enabled"`
-	RetentionInDays  int  `yaml:"retentionInDays"`
-	RealtimeFeedback `yaml:"realtimeFeedback"`
+	Enabled         bool `yaml:"enabled"`
+	RetentionInDays int  `yaml:"retentionInDays"`
+	LocalStreaming  `yaml:"localStreaming"`
 }
 
-type RealtimeFeedback struct {
+type LocalStreaming struct {
 	Enabled  bool   `yaml:"enabled"`
 	Filter   string `yaml:"filter"`
 	interval int    `yaml:"interval"`
 }
 
-func (c *RealtimeFeedback) Interval() int64 {
+func (c *LocalStreaming) Interval() int64 {
 	// Convert from seconds to milliseconds (and return as int64 type)
 	return int64(c.interval * 1000)
 }
