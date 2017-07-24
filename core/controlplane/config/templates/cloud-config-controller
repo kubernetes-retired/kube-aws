@@ -706,8 +706,13 @@ write_files:
       done
 
       {{ if .Experimental.TLSBootstrap.Enabled }}
-      kubectl create -f "${mfdir}/cluster-roles/node-bootstrapper.yaml" | echo 'Failed to create the cluster role named "kube-aws:node-bootstrapper". Skipping'
-      kubectl create -f "${mfdir}/cluster-role-bindings/node-bootstrapper.yaml" | echo 'Failed to create the cluster role binding "kube-aws:node-bootstrapper". Skipping'
+      for manifest in {node-bootstrapper,kubelet-certificate-bootstrap}; do
+          kubectl apply -f "${mfdir}/cluster-roles/$manifest.yaml"
+      done
+
+      for manifest in {node-bootstrapper,kubelet-certificate-bootstrap}; do
+          kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
+      done
       {{ end }}
       {{ end }}
 
@@ -1402,6 +1407,38 @@ write_files:
           namespace: kube-system
 
 {{ if .Experimental.TLSBootstrap.Enabled }}
+  # A ClusterRole which instructs the CSR approver to approve a user requesting
+  # node client credentials.
+  - path: /srv/kubernetes/rbac/cluster-roles/kubelet-certificate-bootstrap.yaml
+    content: |
+        kind: ClusterRole
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        metadata:
+          name: kube-aws:kubelet-certificate-bootstrap
+        rules:
+        - apiGroups:
+          - certificates.k8s.io
+          resources:
+          - certificatesigningrequests/nodeclient
+          verbs:
+          - create
+
+  # Approve all CSRs for the group "system:kubelet-bootstrap-token"
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/kubelet-certificate-bootstrap.yaml
+    content: |
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        metadata:
+          name: kube-aws:kubelet-certificate-bootstrap
+        subjects:
+        - kind: Group
+          name: system:kubelet-bootstrap
+          apiGroup: rbac.authorization.k8s.io
+        roleRef:
+          kind: ClusterRole
+          name: kube-aws:kubelet-certificate-bootstrap
+          apiGroup: rbac.authorization.k8s.io
+
   # Only allows certificate signing requests to be performed with the bootstrap token
   - path: /srv/kubernetes/rbac/cluster-roles/node-bootstrapper.yaml
     content: |
@@ -1411,7 +1448,7 @@ write_files:
           name: kube-aws:node-bootstrapper
         rules:
           - apiGroups:
-              - '*'
+              - certificates.k8s.io
             resources:
               - certificatesigningrequests
             verbs:
