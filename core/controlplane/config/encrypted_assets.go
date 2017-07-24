@@ -317,43 +317,52 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	r := new(EncryptedAssetsOnDisk)
 
 	type entry struct {
-		name         string
-		data         *EncryptedCredentialOnDisk
-		defaultValue *string
+		name          string
+		data          *EncryptedCredentialOnDisk
+		defaultValue  *string
+		readEncrypted bool
 	}
 
 	files := []entry{
-		{"tokens.csv", &r.AuthTokens, &defaultTokensFile},
-		{"kubelet-tls-bootstrap-token", &r.TLSBootstrapToken, &defaultTLSBootstrapToken},
+		{"tokens.csv", &r.AuthTokens, &defaultTokensFile, true},
+		{"kubelet-tls-bootstrap-token", &r.TLSBootstrapToken, &defaultTLSBootstrapToken, true},
 	}
 
 	if manageCertificates {
 		files = append(files, []entry{
-			{"ca.pem", &r.CACert, nil},
-			{"ca-key.pem", &r.CAKey, nil},
-			{"apiserver.pem", &r.APIServerCert, nil},
-			{"apiserver-key.pem", &r.APIServerKey, nil},
-			{"worker.pem", &r.WorkerCert, nil},
-			{"worker-key.pem", &r.WorkerKey, nil},
-			{"admin.pem", &r.AdminCert, nil},
-			{"admin-key.pem", &r.AdminKey, nil},
-			{"etcd.pem", &r.EtcdCert, nil},
-			{"etcd-key.pem", &r.EtcdKey, nil},
-			{"etcd-client.pem", &r.EtcdClientCert, nil},
-			{"etcd-client-key.pem", &r.EtcdClientKey, nil},
+			{"ca.pem", &r.CACert, nil, false},
+			{"ca-key.pem", &r.CAKey, nil, true},
+			{"apiserver.pem", &r.APIServerCert, nil, false},
+			{"apiserver-key.pem", &r.APIServerKey, nil, true},
+			{"worker.pem", &r.WorkerCert, nil, false},
+			{"worker-key.pem", &r.WorkerKey, nil, true},
+			{"admin.pem", &r.AdminCert, nil, false},
+			{"admin-key.pem", &r.AdminKey, nil, true},
+			{"etcd.pem", &r.EtcdCert, nil, false},
+			{"etcd-key.pem", &r.EtcdKey, nil, true},
+			{"etcd-client.pem", &r.EtcdClientCert, nil, false},
+			{"etcd-client-key.pem", &r.EtcdClientKey, nil, true},
 		}...)
 	}
 
 	for _, file := range files {
 		path := filepath.Join(dirname, file.name)
-		data, err := encryptor.EncryptedCredentialFromPath(path, file.defaultValue)
-		if err != nil {
-			return nil, fmt.Errorf("Error encrypting %s: %v", path, err)
-		}
+		if file.readEncrypted {
+			data, err := encryptor.EncryptedCredentialFromPath(path, file.defaultValue)
+			if err != nil {
+				return nil, fmt.Errorf("Error encrypting %s: %v", path, err)
+			}
 
-		*file.data = *data
-		if err := data.Persist(); err != nil {
-			return nil, fmt.Errorf("Error persisting %s: %v", path, err)
+			*file.data = *data
+			if err := data.Persist(); err != nil {
+				return nil, fmt.Errorf("Error persisting %s: %v", path, err)
+			}
+		} else {
+			raw, err := RawCredentialFileFromPath(path, file.defaultValue)
+			if err != nil {
+				return nil, fmt.Errorf("Error reading credential file %s: %v", path, err)
+			}
+			(*file.data).content = raw.content
 		}
 	}
 
