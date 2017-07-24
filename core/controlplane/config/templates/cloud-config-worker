@@ -230,6 +230,7 @@ coreos:
         After=nvidia-start.service
         {{- end }}
         [Service]
+        EnvironmentFile=/etc/environment
         EnvironmentFile=-/etc/etcd-environment
         EnvironmentFile=-/etc/default/kubelet
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
@@ -282,7 +283,7 @@ coreos:
         {{end}}--allow-privileged=true \
         {{if .NodeStatusUpdateFrequency}}--node-status-update-frequency={{.NodeStatusUpdateFrequency}} \
         {{end}}--pod-manifest-path=/etc/kubernetes/manifests \
-        --cluster-dns={{.DNSServiceIP}} \
+        --cluster-dns=${COREOS_PRIVATE_IPV4} \
         --cluster-domain=cluster.local \
         --cloud-provider=aws \
         --cert-dir=/etc/kubernetes/ssl \
