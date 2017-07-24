@@ -771,7 +771,7 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/ssl/certs/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/ca.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.CACert}}
 
@@ -779,11 +779,11 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdKey}}
 
-  - path: /etc/ssl/certs/etcd.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdCert}}
 
-  - path: /etc/ssl/certs/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-client.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientCert}}
 
