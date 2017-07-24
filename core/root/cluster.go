@@ -413,7 +413,7 @@ func printJournaldLogs(c clusterImpl, quit chan struct{}) error {
 	}
 }
 
-func streamCloudFormation(c clusterImpl, cfSvc *cloudformation.CloudFormation, quit chan struct{}) error {
+func streamCloudFormation(c clusterImpl, cfSvc *cloudformation.CloudFormation, q chan struct{}) error {
 	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
-	return c.stackProvisioner().StreamCloudFormationNested(quit, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
+	return c.stackProvisioner().StreamCloudFormationNested(q, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
 }
