@@ -1143,8 +1143,7 @@ addons:
 #   # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to
 #   # also enable the rbac plugin in order to limit requests using the bootstrap token to only be able to make
 #   # requests related to certificate provisioning.
-#   # The bootstrap token must be defined in ./credentials/tokens.csv; kube-aws creates this file automatically
-#   # with a randomly generated token when this setting is enabled.
+#   # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
 #   tlsBootstrap:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
