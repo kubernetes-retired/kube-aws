@@ -1190,7 +1190,7 @@ write_files:
                     while sleep ${POLL_INTERVAL}; do
 
                       # Fetch the list of instances being terminated by their respective ASGs
-                      instances_to_drain=$(asg describe-auto-scaling-groups | jq -r '.AutoScalingGroups[] | select(.Tags[].Key | contains("kube-aws")) | .Instances[] | select(.LifecycleState == "Terminating:Wait") | .InstanceId')
+                      instances_to_drain=$(asg describe-auto-scaling-groups | jq -r '.AutoScalingGroups[] | select((.Tags[].Key | contains("kube-aws")) and (.Tags[].Key | contains("kubernetes.io/cluster/{{.ClusterName}}"))) | .Instances[] | select(.LifecycleState == "Terminating:Wait") | .InstanceId')
 
                       # Mark each node with an annotation that's picked up by the node draining pod
                       for instance in $instances_to_drain; do
