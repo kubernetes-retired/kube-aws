@@ -194,7 +194,7 @@ func (c clusterImpl) Create() error {
 	}
 
 	if c.controlPlane.CloudFormationStreaming {
-		go streamCloudFormation(c, cfSvc, q)
+		go streamStackEvents(c, cfSvc, q)
 	}
 
 	return c.stackProvisioner().CreateStackAtURLAndWait(cfSvc, stackTemplateURL)
@@ -319,7 +319,7 @@ func (c clusterImpl) Update() (string, error) {
 	}
 
 	if c.controlPlane.CloudFormationStreaming {
-		go streamCloudFormation(c, cfSvc, q)
+		go streamStackEvents(c, cfSvc, q)
 	}
 
 	return c.stackProvisioner().UpdateStackAtURLAndWait(cfSvc, templateUrl)
@@ -417,7 +417,8 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 	}
 }
 
-func streamCloudFormation(c clusterImpl, cfSvc *cloudformation.CloudFormation, q chan struct{}) error {
+func streamStackEvents(c clusterImpl, cfSvc *cloudformation.CloudFormation, q chan struct{}) error {
 	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
-	return c.stackProvisioner().StreamCloudFormationNested(q, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
+	// StreamEventsNested streams all the events from the root, the contorl-plane, and worker node pool stacks
+	return c.stackProvisioner().StreamEventsNested(q, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
 }
