@@ -417,8 +417,8 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 	}
 }
 
+// streamStackEvents streams all the events from the root, the control-plane, and worker node pool stacks using StreamEventsNested
 func streamStackEvents(c clusterImpl, cfSvc *cloudformation.CloudFormation, q chan struct{}) error {
 	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
-	// StreamEventsNested streams all the events from the root, the contorl-plane, and worker node pool stacks
 	return c.stackProvisioner().StreamEventsNested(q, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
 }
