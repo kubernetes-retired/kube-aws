@@ -248,7 +248,7 @@ func (c *Provisioner) StreamEventsNested(q chan struct{}, f *cloudformation.Clou
 				&cloudformation.DescribeStackEventsInput{StackName: &stackId},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
 					for _, e := range page.StackEvents {
-						if (*e.Timestamp).Before(t) {
+						if (e.Timestamp).Before(t) {
 							return false
 						}
 						if *e.EventId == lastSeenEventId {
