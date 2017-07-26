@@ -186,11 +186,15 @@ func (c clusterImpl) Create() error {
 		return err
 	}
 
+	q := make(chan struct{}, 1)
+	defer func() { q <- struct{}{} }()
+
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.LocalStreaming.Enabled {
-		// Return Journald logs in a separate GoRoutine
-		q := make(chan struct{})
-		defer func() { q <- struct{}{} }()
 		go streamJournaldLogs(c, q)
+	}
+
+	if c.controlPlane.CloudFormationStreaming {
+		go streamStackEvents(c, cfSvc, q)
 	}
 
 	return c.stackProvisioner().CreateStackAtURLAndWait(cfSvc, stackTemplateURL)
@@ -307,11 +311,15 @@ func (c clusterImpl) Update() (string, error) {
 		return "", err
 	}
 
+	q := make(chan struct{}, 1)
+	defer func() { q <- struct{}{} }()
+
 	if c.controlPlane.CloudWatchLogging.Enabled && c.controlPlane.CloudWatchLogging.LocalStreaming.Enabled {
-		// Return Journald logs in a separate GoRoutine
-		q := make(chan struct{})
-		defer func() { q <- struct{}{} }()
 		go streamJournaldLogs(c, q)
+	}
+
+	if c.controlPlane.CloudFormationStreaming {
+		go streamStackEvents(c, cfSvc, q)
 	}
 
 	return c.stackProvisioner().UpdateStackAtURLAndWait(cfSvc, templateUrl)
@@ -407,4 +415,10 @@ func streamJournaldLogs(c clusterImpl, q chan struct{}) error {
 				StartTime:     &s}
 		}
 	}
+}
+
+// streamStackEvents streams all the events from the root, the control-plane, and worker node pool stacks using StreamEventsNested
+func streamStackEvents(c clusterImpl, cfSvc *cloudformation.CloudFormation, q chan struct{}) error {
+	fmt.Printf("Streaming CloudFormation events for the cluster '%s'...\n", c.controlPlane.ClusterName)
+	return c.stackProvisioner().StreamEventsNested(q, cfSvc, c.controlPlane.ClusterName, c.controlPlane.ClusterName, time.Now())
 }
