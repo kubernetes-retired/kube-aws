@@ -666,7 +666,7 @@ write_files:
       {{ end }}
 
       {{ if .Experimental.NodeDrainer.Enabled }}
-      for manifest in {kube-node-drainer-ds,kube-node-drainer-asg-status-updater-de}; do
+      for manifest in {kube-node-drainer-status-cm,kube-node-drainer-ds,kube-node-drainer-asg-status-updater-de}; do
           kubectl apply -f "${mfdir}/$manifest.yaml"
       done
       {{ end }}
@@ -1131,6 +1131,15 @@ write_files:
 {{ end }}
 
 {{if .Experimental.NodeDrainer.Enabled}}
+  - path: /srv/kubernetes/manifests/kube-node-drainer-status-cm.yaml
+    content: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kube-node-drainer-status
+        namespace: kube-system
+      data: {}
+
   - path: /srv/kubernetes/manifests/kube-node-drainer-asg-status-updater-de.yaml
     content: |
         kind: Deployment
@@ -1192,12 +1201,13 @@ write_files:
                       # Fetch the list of instances being terminated by their respective ASGs
                       instances_to_drain=$(asg describe-auto-scaling-groups | jq -r '.AutoScalingGroups[] | select((.Tags[].Key | contains("kube-aws")) and (.Tags[].Key | contains("kubernetes.io/cluster/{{.ClusterName}}"))) | .Instances[] | select(.LifecycleState == "Terminating:Wait") | .InstanceId')
 
-                      # Mark each node with an annotation that's picked up by the node draining pod
+                      # Add nodes to be drained to the kube-node-drainer-status ConfigMap, which will be picked
+                      # up by the node drainer pod running in every node
+                      node_data=$(kubectl get nodes -o json)
                       for instance in $instances_to_drain; do
-                        node=$(kubectl get nodes -o json | jq --arg instance "${instance}" -r '.items[] | select(.spec.externalID == $instance) | .metadata.name')
-
+                        node=$(echo $node_data | jq --arg instance "${instance}" -r '.items[] | select(.spec.externalID == $instance) | .metadata.name')
                         if [ -n "${node}" ]; then
-                          kubectl annotate --overwrite node "${node}" kube-aws.coreos.com/node-termination-source=asg
+                          kubectl -n kube-system patch configmap kube-node-drainer-status -p "{\"data\": {\"${node}\": \"asg\"}}"
                         fi
                       done
                     done
@@ -1285,9 +1295,10 @@ write_files:
                         break
                       fi
 
-                      # Termination annotation check
-                      termination_source=$(kubectl get nodes "${NODE_NAME}" -o json | jq -r '.metadata.annotations["kube-aws.coreos.com/node-termination-source"]')
-                      if [ "${termination_source}" == asg ]; then
+                      # Termination ConfigMap check
+                      if [ -e "/etc/kube-node-drainer/${NODE_NAME}" ]; then
+                        termination_source=$(cat "/etc/kube-node-drainer/${NODE_NAME}")
+                        kubectl -n kube-system patch configmap kube-node-drainer-status --type=json -p '[{ "op": "remove", "path": "/data/${NODE_NAME}"}]'
                         break
                       fi
                     done
@@ -1315,9 +1326,17 @@ write_files:
                   volumeMounts:
                   - mountPath: /opt/bin
                     name: workdir
+                  - mountPath: /etc/kube-node-drainer
+                    name: kube-node-drainer-status
+                    readOnly: true
               volumes:
-                - name: workdir
-                  emptyDir: {}
+              - name: workdir
+                emptyDir: {}
+              - name: kube-node-drainer-status
+                projected:
+                  sources:
+                  - configMap:
+                      name: kube-node-drainer-status
 {{end}}
 
 {{if .Experimental.Plugins.Rbac.Enabled }}
