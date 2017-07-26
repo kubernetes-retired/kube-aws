@@ -49,6 +49,7 @@ Check out our getting started tutorial on launching your first Kubernetes cluste
   * [Restore Kubernetes resources](/contrib/cluster-backup/README.md)
   * [Journald logging to AWS CloudWatch](/Documentation/kubernetes-on-aws-journald-cloudwatch-logs.md)
     * [kube-aws up/update feedback](/Documentation/kubernetes-on-aws-journald-cloudwatch-logs.md)
+  * [CloudFormation Streaming](/Documentation/kubernetes-on-aws-cloudformation-streaming.md)
 
 ## Examples
 
