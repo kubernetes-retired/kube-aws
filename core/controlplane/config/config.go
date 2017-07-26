@@ -127,6 +127,7 @@ func NewDefaultCluster() *Cluster {
 					interval: 60,
 				},
 			},
+			CloudFormationStreaming:            true,
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                        model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
 			CalicoNodeImage:                    model.Image{Repo: "quay.io/calico/node", Tag: "v1.2.1", RktPullDocker: false},
@@ -415,24 +416,25 @@ type DeploymentSettings struct {
 	InternetGateway             model.InternetGateway `yaml:"internetGateway,omitempty"`
 	RouteTableID                string                `yaml:"routeTableId,omitempty"`
 	// Required for validations like e.g. if instance cidr is contained in vpc cidr
-	VPCCIDR                string            `yaml:"vpcCIDR,omitempty"`
-	InstanceCIDR           string            `yaml:"instanceCIDR,omitempty"`
-	K8sVer                 string            `yaml:"kubernetesVersion,omitempty"`
-	ContainerRuntime       string            `yaml:"containerRuntime,omitempty"`
-	KMSKeyARN              string            `yaml:"kmsKeyArn,omitempty"`
-	StackTags              map[string]string `yaml:"stackTags,omitempty"`
-	Subnets                []model.Subnet    `yaml:"subnets,omitempty"`
-	EIPAllocationIDs       []string          `yaml:"eipAllocationIDs,omitempty"`
-	MapPublicIPs           bool              `yaml:"mapPublicIPs,omitempty"`
-	ElasticFileSystemID    string            `yaml:"elasticFileSystemId,omitempty"`
-	SharedPersistentVolume bool              `yaml:"sharedPersistentVolume,omitempty"`
-	SSHAuthorizedKeys      []string          `yaml:"sshAuthorizedKeys,omitempty"`
-	Addons                 model.Addons      `yaml:"addons"`
-	Experimental           Experimental      `yaml:"experimental"`
-	ManageCertificates     bool              `yaml:"manageCertificates,omitempty"`
-	WaitSignal             WaitSignal        `yaml:"waitSignal"`
-	CloudWatchLogging      `yaml:"cloudWatchLogging,omitempty"`
-	AmazonSsmAgent         `yaml:"amazonSsmAgent,omitempty"`
+	VPCCIDR                 string            `yaml:"vpcCIDR,omitempty"`
+	InstanceCIDR            string            `yaml:"instanceCIDR,omitempty"`
+	K8sVer                  string            `yaml:"kubernetesVersion,omitempty"`
+	ContainerRuntime        string            `yaml:"containerRuntime,omitempty"`
+	KMSKeyARN               string            `yaml:"kmsKeyArn,omitempty"`
+	StackTags               map[string]string `yaml:"stackTags,omitempty"`
+	Subnets                 []model.Subnet    `yaml:"subnets,omitempty"`
+	EIPAllocationIDs        []string          `yaml:"eipAllocationIDs,omitempty"`
+	MapPublicIPs            bool              `yaml:"mapPublicIPs,omitempty"`
+	ElasticFileSystemID     string            `yaml:"elasticFileSystemId,omitempty"`
+	SharedPersistentVolume  bool              `yaml:"sharedPersistentVolume,omitempty"`
+	SSHAuthorizedKeys       []string          `yaml:"sshAuthorizedKeys,omitempty"`
+	Addons                  model.Addons      `yaml:"addons"`
+	Experimental            Experimental      `yaml:"experimental"`
+	ManageCertificates      bool              `yaml:"manageCertificates,omitempty"`
+	WaitSignal              WaitSignal        `yaml:"waitSignal"`
+	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
+	AmazonSsmAgent          `yaml:"amazonSsmAgent,omitempty"`
+	CloudFormationStreaming bool `yaml:"cloudFormationStreaming,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
