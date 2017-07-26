@@ -1203,13 +1203,16 @@ write_files:
 
                       # Add nodes to be drained to the kube-node-drainer-status ConfigMap, which will be picked
                       # up by the node drainer pod running in every node
-                      node_data=$(kubectl get nodes -o json)
-                      for instance in $instances_to_drain; do
-                        node=$(echo $node_data | jq --arg instance "${instance}" -r '.items[] | select(.spec.externalID == $instance) | .metadata.name')
-                        if [ -n "${node}" ]; then
-                          kubectl -n kube-system patch configmap kube-node-drainer-status -p "{\"data\": {\"${node}\": \"asg\"}}"
-                        fi
-                      done
+                      if [ -n "${instances_to_drain}" ]; then
+                        node_data=$(kubectl get nodes -o json)
+
+                        for instance in $instances_to_drain; do
+                          node=$(echo $node_data | jq --arg instance "${instance}" -r '.items[] | select(.spec.externalID == $instance) | .metadata.name')
+                          if [ -n "${node}" ]; then
+                            kubectl -n kube-system patch configmap kube-node-drainer-status -p "{\"data\": {\"${node}\": \"asg\"}}"
+                          fi
+                        done
+                      fi
                     done
                   volumeMounts:
                   - mountPath: /opt/bin
