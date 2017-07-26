@@ -1925,22 +1925,6 @@ write_files:
                 resources:
                   requests:
                     memory: 20Mi
-              - name: healthz
-                image: {{ .ExecHealthzImage.RepoWithTag }}
-                resources:
-                  limits:
-                    memory: 50Mi
-                  requests:
-                    cpu: 10m
-                    memory: 50Mi
-                args:
-                - --cmd=nslookup ec2.amazonaws.com 127.0.0.1 >/dev/null
-                - --url=/healthz-amazon
-                - --port=10055
-                - --quiet
-                ports:
-                - containerPort: 10055
-                  protocol: TCP
               hostNetwork: true
               dnsPolicy: Default
               automountServiceAccountToken: false
