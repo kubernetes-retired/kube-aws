@@ -127,6 +127,9 @@ func NewDefaultCluster() *Cluster {
 					interval: 60,
 				},
 			},
+			KubeDnsMasq: KubeDnsMasq{
+				DaemonSet: false,
+			},
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                        model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
 			CalicoNodeImage:                    model.Image{Repo: "quay.io/calico/node", Tag: "v1.2.1", RktPullDocker: false},
@@ -433,6 +436,7 @@ type DeploymentSettings struct {
 	WaitSignal             WaitSignal        `yaml:"waitSignal"`
 	CloudWatchLogging      `yaml:"cloudWatchLogging,omitempty"`
 	AmazonSsmAgent         `yaml:"amazonSsmAgent,omitempty"`
+	KubeDnsMasq            `yaml:"kubeDnsMasq,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
@@ -634,6 +638,16 @@ type Plugins struct {
 
 type Rbac struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type KubeDnsMasq struct {
+	DaemonSet bool `yaml:"daemonSet"`
+}
+
+func (c *KubeDnsMasq) MergeIfEmpty(other KubeDnsMasq) {
+	if c.DaemonSet == false {
+		c.DaemonSet = other.DaemonSet
+	}
 }
 
 type WaitSignal struct {

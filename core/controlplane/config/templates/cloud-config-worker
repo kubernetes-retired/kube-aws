@@ -283,8 +283,9 @@ coreos:
         {{end}}--allow-privileged=true \
         {{if .NodeStatusUpdateFrequency}}--node-status-update-frequency={{.NodeStatusUpdateFrequency}} \
         {{end}}--pod-manifest-path=/etc/kubernetes/manifests \
-        --cluster-dns=${COREOS_PRIVATE_IPV4} \
-        --cluster-domain=cluster.local \
+        {{ if .KubeDnsMasq.DaemonSet }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
+        {{ else }}--cluster-dns={{.DNSServiceIP}} \
+        {{ end }}--cluster-domain=cluster.local \
         --cloud-provider=aws \
         --cert-dir=/etc/kubernetes/ssl \
         {{- if and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken }}
