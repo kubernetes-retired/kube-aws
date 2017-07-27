@@ -674,9 +674,10 @@ write_files:
       # Configmaps
       kubectl apply -f "${mfdir}/kube-dns-cm.yaml"
 
-      # Serviceaccounts
-      kubectl apply -f "${mfdir}/kube-dns-sa.yaml"
-      kubectl apply -f "${mfdir}/heapster-sa.yaml"
+      # Service Accounts
+      for manifest in {kube-dns,heapster}; do
+          kubectl apply -f "${mfdir}/$manifest-sa.yaml"
+      done
 
       # Install tiller by default
       kubectl apply -f "${mfdir}/tiller.yaml"
@@ -687,8 +688,8 @@ write_files:
       done
 
       # Services
-      for manifest in {kube-dns,heapster,kube-dashboard}-svc.yaml; do
-          kubectl apply -f "${mfdir}/$manifest"
+      for manifest in {kube-dns,heapster,kube-dashboard}; do
+          kubectl apply -f "${mfdir}/$manifest-svc.yaml"
       done
 
       {{- if .Addons.Rescheduler.Enabled }}
@@ -1492,6 +1493,7 @@ write_files:
         - kind: ServiceAccount
           name: heapster
           namespace: kube-system
+
   # Heapster's pod_nanny monitors the heapster deployment & its pod(s), and scales
   # the resources of the deployment if necessary.
   - path: /srv/kubernetes/rbac/roles/pod-nanny.yaml
@@ -1518,6 +1520,7 @@ write_files:
           verbs:
           - get
           - update
+
   # Allow heapster nanny access to the pod nanny role via its service account (same pod as heapster)
   - path: /srv/kubernetes/rbac/role-bindings/heapster-nanny.yaml
     content: |
