@@ -262,8 +262,9 @@ coreos:
         --register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
-        --cluster-dns=${COREOS_PRIVATE_IPV4} \
-        --cluster-domain=cluster.local \
+        {{ if .KubeDnsMasq.DaemonSet }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
+        {{ else }}--cluster-dns={{.DNSServiceIP}} \
+        {{ end }}--cluster-domain=cluster.local \
         --cloud-provider=aws
         Restart=always
         RestartSec=10
@@ -680,8 +681,10 @@ write_files:
       # Install tiller by default
       kubectl apply -f "${mfdir}/tiller.yaml"
 
+{{ if .KubeDnsMasq.DaemonSet }}
       # DNS Masq Fix
       kubectl apply -f "${mfdir}/dnsmasq-node-ds.yaml"
+{{ end }}
 
       # Deployments
       for manifest in {kube-dns-de,kube-dns-autoscaler-de,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler-de,{{ end }}heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}.yaml; do
@@ -1833,6 +1836,7 @@ write_files:
                   - --logtostderr=true
                   - --v=2
 
+{{ if .KubeDnsMasq.DaemonSet }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
     content: |
         apiVersion: extensions/v1beta1
@@ -1928,6 +1932,7 @@ write_files:
               hostNetwork: true
               dnsPolicy: Default
               automountServiceAccountToken: false
+{{ end }}
 
   - path: /srv/kubernetes/manifests/kube-dns-de.yaml
     content: |
