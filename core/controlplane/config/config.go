@@ -438,7 +438,7 @@ type DeploymentSettings struct {
 	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
 	AmazonSsmAgent          `yaml:"amazonSsmAgent,omitempty"`
 	CloudFormationStreaming bool `yaml:"cloudFormationStreaming,omitempty"`
-	KubeDnsMasq            `yaml:"kubeDnsMasq,omitempty"`
+	KubeDnsMasq             `yaml:"kubeDnsMasq,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
