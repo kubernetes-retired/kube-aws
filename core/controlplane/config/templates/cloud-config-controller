@@ -683,8 +683,8 @@ write_files:
       kubectl apply -f "${mfdir}/tiller.yaml"
 
       # Deployments
-      for manifest in {kube-dns-de,kube-dns-autoscaler-de,kube-dashboard-de,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler-de,{{ end }}heapster-de{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
-          kubectl apply -f "${mfdir}/$manifest.yaml"
+      for manifest in {kube-dns,kube-dns-autoscaler,kube-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
+          kubectl apply -f "${mfdir}/$manifest-de.yaml"
       done
 
       # Services
@@ -980,7 +980,7 @@ write_files:
 
 {{ end }}
 {{ if .KubeResourcesAutosave.Enabled }}
-  - path: /srv/kubernetes/manifests/kube-resources-autosave.yaml
+  - path: /srv/kubernetes/manifests/kube-resources-autosave-de.yaml
     content: |
       ---
       apiVersion: extensions/v1beta1
