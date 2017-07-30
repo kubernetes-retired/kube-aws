@@ -263,7 +263,8 @@ coreos:
         --pod-manifest-path=/etc/kubernetes/manifests \
         --cluster-dns={{.DNSServiceIP}} \
         --cluster-domain=cluster.local \
-        --cloud-provider=aws
+        --cloud-provider=aws \
+        $KUBELET_OPTS
         Restart=always
         RestartSec=10
 
@@ -642,6 +643,12 @@ write_files:
           '
 
       rkt rm --uuid-file=/var/run/coreos/cfn-etcd-environment.uuid || :
+
+  - path: /etc/default/kubelet
+    permissions: 0755
+    owner: root:root
+    content: |
+      KUBELET_OPTS="{{.Experimental.KubeletOpts}}"
 
   - path: /opt/bin/install-kube-system
     permissions: 0700
