@@ -678,7 +678,7 @@ write_files:
     permissions: 0755
     owner: root:root
     content: |
-      KUBELET_OPTS=""
+      KUBELET_OPTS="{{.Experimental.KubeletOpts}}"
 
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
