@@ -24,6 +24,10 @@ func (p TemplateParams) CloudWatchLogging() config.CloudWatchLogging {
 	return p.cluster.controlPlane.CloudWatchLogging
 }
 
+func (p TemplateParams) KubeDnsMasq() config.KubeDns {
+	return p.cluster.controlPlane.KubeDns
+}
+
 func newTemplateParams(c clusterImpl) TemplateParams {
 	return TemplateParams{
 		cluster: c,
@@ -67,6 +71,10 @@ func (p controlPlane) CloudWatchLogging() config.CloudWatchLogging {
 	return p.controlPlane.CloudWatchLogging
 }
 
+func (p controlPlane) KubeDns() config.KubeDns {
+	return p.controlPlane.KubeDns
+}
+
 type nodePool struct {
 	nodePool *nodepool.Cluster
 }
@@ -91,6 +99,10 @@ func (p nodePool) TemplateURL() (string, error) {
 
 func (p nodePool) CloudWatchLogging() config.CloudWatchLogging {
 	return p.nodePool.CloudWatchLogging
+}
+
+func (p nodePool) KubeDns() config.KubeDns {
+	return p.nodePool.KubeDns
 }
 
 func (p nodePool) NeedToExportIAMroles() bool {
