@@ -73,6 +73,7 @@ func NewDefaultCluster() *Cluster {
 		Kube2IamSupport: Kube2IamSupport{
 			Enabled: false,
 		},
+		KubeletOpts: "",
 		LoadBalancer: LoadBalancer{
 			Enabled: false,
 		},
@@ -127,8 +128,8 @@ func NewDefaultCluster() *Cluster {
 					interval: 60,
 				},
 			},
-			KubeDnsMasq: KubeDnsMasq{
-				DaemonSet: false,
+			KubeDns: KubeDns{
+				NodeLocalResolver: false,
 			},
 			CloudFormationStreaming:            true,
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
@@ -438,7 +439,7 @@ type DeploymentSettings struct {
 	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
 	AmazonSsmAgent          `yaml:"amazonSsmAgent,omitempty"`
 	CloudFormationStreaming bool `yaml:"cloudFormationStreaming,omitempty"`
-	KubeDnsMasq             `yaml:"kubeDnsMasq,omitempty"`
+	KubeDns                 `yaml:"kubeDns,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
@@ -525,6 +526,7 @@ type Experimental struct {
 	TLSBootstrap                TLSBootstrap                   `yaml:"tlsBootstrap"`
 	EphemeralImageStorage       EphemeralImageStorage          `yaml:"ephemeralImageStorage"`
 	Kube2IamSupport             Kube2IamSupport                `yaml:"kube2IamSupport,omitempty"`
+	KubeletOpts                 string                         `yaml:"kubeletOpts,omitempty"`
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
@@ -642,13 +644,13 @@ type Rbac struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-type KubeDnsMasq struct {
-	DaemonSet bool `yaml:"daemonSet"`
+type KubeDns struct {
+	NodeLocalResolver bool `yaml:"nodeLocalResolver"`
 }
 
-func (c *KubeDnsMasq) MergeIfEmpty(other KubeDnsMasq) {
-	if c.DaemonSet == false {
-		c.DaemonSet = other.DaemonSet
+func (c *KubeDns) MergeIfEmpty(other KubeDns) {
+	if c.NodeLocalResolver == false {
+		c.NodeLocalResolver = other.NodeLocalResolver
 	}
 }
 

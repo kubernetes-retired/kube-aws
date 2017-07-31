@@ -283,7 +283,7 @@ coreos:
         {{end}}--allow-privileged=true \
         {{if .NodeStatusUpdateFrequency}}--node-status-update-frequency={{.NodeStatusUpdateFrequency}} \
         {{end}}--pod-manifest-path=/etc/kubernetes/manifests \
-        {{ if .KubeDnsMasq.DaemonSet }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
+        {{ if .KubeDns.NodeLocalResolver }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
         {{ else }}--cluster-dns={{.DNSServiceIP}} \
         {{ end }}--cluster-domain=cluster.local \
         --cloud-provider=aws \
@@ -680,7 +680,7 @@ write_files:
     permissions: 0755
     owner: root:root
     content: |
-      KUBELET_OPTS=""
+      KUBELET_OPTS="{{.Experimental.KubeletOpts}}"
 
   - path: /etc/kubernetes/cni/docker_opts_cni.env
     content: |
