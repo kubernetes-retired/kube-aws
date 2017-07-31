@@ -468,6 +468,13 @@ worker:
 #      kube2IamSupport:
 #        enabled: true
 #
+#      # Propagate custom CLI options to kubelet
+#      # Provided example overrides default docker image garbage collection limits
+#      # as in https://kubernetes.io/docs/concepts/cluster-administration/kubelet-garbage-collection/
+#      # Anything from https://kubernetes.io/docs/admin/kubelet/ can be used as a value
+#
+#      kubeletOpts: --image-gc-low-threshold=50 --image-gc-high-threshold=65
+#
 #      # Kubernetes node labels to be added to worker nodes
 #      nodeLabels:
 #        kube-aws.coreos.com/role: worker
@@ -1097,8 +1104,8 @@ worker:
 
 # When enabled, will enable a DNS-masq DaemonSet to make PODs to resolve DNS names via locally running dnsmasq
 # It is disabled by default.
-#kubeDnsMasq:
-# daemonSet: false
+#kubeDns:
+# nodeLocalResolver: false
 
 # When enabled, CloudFormation events will stream to stdout during kube-aws 'update | up'.
 # It is enabled by default.

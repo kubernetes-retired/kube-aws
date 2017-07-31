@@ -131,8 +131,8 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 	// Inherit main AmazonSsmAgent config
 	c.AmazonSsmAgent = main.AmazonSsmAgent
 
-	//Inherit main KubeDnsMasq config
-	c.KubeDnsMasq.MergeIfEmpty(main.KubeDnsMasq)
+	//Inherit main KubeDns config
+	c.KubeDns.MergeIfEmpty(main.KubeDns)
 
 	return c
 }

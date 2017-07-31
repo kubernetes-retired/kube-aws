@@ -205,6 +205,7 @@ coreos:
         Wants=flanneld.service cfn-etcd-environment.service
         After=cfn-etcd-environment.service
         [Service]
+        # EnvironmentFile=/etc/environment allows the reading of COREOS_PRIVATE_IPV4
         EnvironmentFile=/etc/environment
         EnvironmentFile=-/etc/etcd-environment
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
@@ -262,10 +263,11 @@ coreos:
         --register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
-        {{ if .KubeDnsMasq.DaemonSet }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
+        {{ if .KubeDns.NodeLocalResolver }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
         {{ else }}--cluster-dns={{.DNSServiceIP}} \
         {{ end }}--cluster-domain=cluster.local \
         --cloud-provider=aws
+        $KUBELET_OPTS
         Restart=always
         RestartSec=10
 
@@ -645,6 +647,12 @@ write_files:
 
       rkt rm --uuid-file=/var/run/coreos/cfn-etcd-environment.uuid || :
 
+  - path: /etc/default/kubelet
+    permissions: 0755
+    owner: root:root
+    content: |
+      KUBELET_OPTS="{{.Experimental.KubeletOpts}}"
+
   - path: /opt/bin/install-kube-system
     permissions: 0700
     owner: root:root
@@ -683,7 +691,7 @@ write_files:
       # Install tiller by default
       kubectl apply -f "${mfdir}/tiller.yaml"
 
-{{ if .KubeDnsMasq.DaemonSet }}
+{{ if .KubeDns.NodeLocalResolver }}
       # DNS Masq Fix
       kubectl apply -f "${mfdir}/dnsmasq-node-ds.yaml"
 {{ end }}
@@ -1916,7 +1924,7 @@ write_files:
                   - --logtostderr=true
                   - --v=2
 
-{{ if .KubeDnsMasq.DaemonSet }}
+{{ if .KubeDns.NodeLocalResolver }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
     content: |
         apiVersion: extensions/v1beta1

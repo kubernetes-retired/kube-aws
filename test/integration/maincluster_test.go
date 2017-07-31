@@ -1154,6 +1154,7 @@ experimental:
     enabled: true
   kube2IamSupport:
     enabled: true
+  kubeletOpts: '--image-gc-low-threshold 60 --image-gc-high-threshold 70'
   loadBalancer:
     enabled: true
     names:
@@ -1254,6 +1255,7 @@ worker:
 						Kube2IamSupport: controlplane_config.Kube2IamSupport{
 							Enabled: true,
 						},
+						KubeletOpts: "--image-gc-low-threshold 60 --image-gc-high-threshold 70",
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},
