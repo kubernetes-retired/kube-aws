@@ -128,6 +128,9 @@ func NewDefaultCluster() *Cluster {
 					interval: 60,
 				},
 			},
+			KubeDns: KubeDns{
+				NodeLocalResolver: false,
+			},
 			CloudFormationStreaming:            true,
 			HyperkubeImage:                     model.Image{Repo: "quay.io/coreos/hyperkube", Tag: k8sVer, RktPullDocker: false},
 			AWSCliImage:                        model.Image{Repo: "quay.io/coreos/awscli", Tag: "master", RktPullDocker: false},
@@ -436,6 +439,7 @@ type DeploymentSettings struct {
 	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
 	AmazonSsmAgent          `yaml:"amazonSsmAgent,omitempty"`
 	CloudFormationStreaming bool `yaml:"cloudFormationStreaming,omitempty"`
+	KubeDns                 `yaml:"kubeDns,omitempty"`
 
 	// Images repository
 	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
@@ -638,6 +642,16 @@ type Plugins struct {
 
 type Rbac struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type KubeDns struct {
+	NodeLocalResolver bool `yaml:"nodeLocalResolver"`
+}
+
+func (c *KubeDns) MergeIfEmpty(other KubeDns) {
+	if c.NodeLocalResolver == false {
+		c.NodeLocalResolver = other.NodeLocalResolver
+	}
 }
 
 type WaitSignal struct {

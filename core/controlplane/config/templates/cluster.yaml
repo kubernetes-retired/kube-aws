@@ -1102,6 +1102,11 @@ worker:
 #  downloadUrl: https://github.com/DailyHotel/amazon-ssm-agent/releases/download/v2.0.805.1/ssm.linux-amd64.tar.gz
 #  sha1sum: a6fff8f9839d5905934e7e3df3123b54020a1f5e
 
+# When enabled, will enable a DNS-masq DaemonSet to make PODs to resolve DNS names via locally running dnsmasq
+# It is disabled by default.
+#kubeDns:
+# nodeLocalResolver: false
+
 # When enabled, CloudFormation events will stream to stdout during kube-aws 'update | up'.
 # It is enabled by default.
 #cloudFormationStreaming: true
