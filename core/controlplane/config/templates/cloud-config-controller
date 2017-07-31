@@ -1009,6 +1009,10 @@ write_files:
         replicas: 1
         template:
           metadata:
+          {{- if .Experimental.Kube2IamSupport.Enabled }}
+            annotations:
+              iam.amazonaws.com/role: {{ $.Region }}-{{.Controller.IAMConfig.Role.Name}}
+          {{- end }}
             name: kube-resources-autosave
             namespace: kube-system
             labels:
