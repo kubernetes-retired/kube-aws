@@ -1482,3 +1482,9 @@ func withHostedZoneIDPrefix(id string) string {
 	}
 	return id
 }
+
+func (c Config) AWSAccountID() string {
+	re := regexp.MustCompile("(?:[0-9]{12})")
+	id := re.FindStringSubmatch(c.KMSKeyARN)
+	return id[0]
+}
