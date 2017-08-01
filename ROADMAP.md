@@ -63,6 +63,8 @@ Please file an issue to make suggestions on this roadmap!
   * Experimental support for kube-aws plugins
   * Tiller installed by default
     * For use from the plugin support
+  * Scalability improvements
+    * More efficient node draining(@danielfm)
   * Cluster-provisioning observability improvements
     * Streaming stack events & journald logs (@jollinshead)
 
@@ -72,8 +74,6 @@ Please file an issue to make suggestions on this roadmap!
   * RBAC enabled by default
   * Security improvements
     * NodeRestriction admission controller + Node authorizer + Kubelet’s credential rotation (@danielfm)
-  * Scalability improvements
-    * More efficient node draining(@danielfm)
   * [Optional] Several kube-aws core features as plugins
 
 ## v0.9.10
