@@ -2707,12 +2707,16 @@ write_files:
         namespace: kube-system
         labels:
           app: kube2iam
+        annotations:
+          scheduler.alpha.kubernetes.io/critical-pod: ''
       spec:
         template:
           metadata:
             labels:
               name: kube2iam
           spec:
+            updateStrategy:
+              type: RollingUpdate
             {{- if .Experimental.Plugins.Rbac.Enabled}}
             serviceAccountName: kube2iam
             {{- end}}
@@ -2739,6 +2743,13 @@ write_files:
                   - containerPort: 8282
                     hostPort: 8282
                     name: http
+                resources:
+                  limits:
+                    cpu: 10m
+                    memory: 32Mi
+                  requests:
+                    cpu: 10m
+                    memory: 32Mi
                 securityContext:
                   privileged: true
   {{if .Experimental.Plugins.Rbac.Enabled}}
