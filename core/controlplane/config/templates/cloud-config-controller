@@ -266,7 +266,7 @@ coreos:
         {{ if .KubeDns.NodeLocalResolver }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
         {{ else }}--cluster-dns={{.DNSServiceIP}} \
         {{ end }}--cluster-domain=cluster.local \
-        --cloud-provider=aws
+        --cloud-provider=aws \
         $KUBELET_OPTS
         Restart=always
         RestartSec=10
