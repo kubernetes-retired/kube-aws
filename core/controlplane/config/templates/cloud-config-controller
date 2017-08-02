@@ -1017,10 +1017,6 @@ write_files:
         replicas: 1
         template:
           metadata:
-          {{- if .Experimental.Kube2IamSupport.Enabled }}
-            annotations:
-              iam.amazonaws.com/role: {{ $.Region }}-{{.Controller.IAMConfig.Role.Name}}
-          {{- end }}
             name: kube-resources-autosave
             namespace: kube-system
             labels:
@@ -2726,7 +2722,8 @@ write_files:
                 name: kube2iam
                 args:
                   - "--app-port=8282"
-                  - "--base-role-arn=arn:aws:iam::{{.AWSAccountID}}:role/"
+                  - "--auto-discover-base-arn"
+                  - "--auto-discover-default-role"
                   - "--iptables=true"
                   - "--host-ip=$(HOST_IP)"
            {{- if .UseCalico }}
