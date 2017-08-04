@@ -2706,13 +2706,13 @@ write_files:
         annotations:
           scheduler.alpha.kubernetes.io/critical-pod: ''
       spec:
+        updateStrategy:
+          type: RollingUpdate
         template:
           metadata:
             labels:
               name: kube2iam
           spec:
-            updateStrategy:
-              type: RollingUpdate
             {{- if .Experimental.Plugins.Rbac.Enabled}}
             serviceAccountName: kube2iam
             {{- end}}
