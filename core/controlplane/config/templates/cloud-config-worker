@@ -807,7 +807,7 @@ write_files:
 
       instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-      sudo rkt run \
+      rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
         --uuid-file-save=/var/run/coreos/tag-spot-instance.uuid \
@@ -825,7 +825,7 @@ write_files:
              --tags '"'"'Key=kubernetes.io/cluster/{{.ClusterName}},Value=""'"'"' '"'"'Key=Name,Value="{{.ClusterName}}-{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'
            echo done.'
 
-      sudo rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
+      rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
 {{if .Experimental.LoadBalancer.Enabled}}
   - path: /opt/bin/add-to-load-balancers
     owner: root:root
@@ -835,7 +835,7 @@ write_files:
 
       instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-      sudo rkt run \
+      rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
         --uuid-file-save=/var/run/coreos/add-to-load-balancers.uuid \
@@ -855,7 +855,7 @@ write_files:
            done
            echo done.'
 
-      sudo rkt rm --uuid-file=/var/run/coreos/add-to-load-balancers.uuid
+      rkt rm --uuid-file=/var/run/coreos/add-to-load-balancers.uuid
 {{end}}
 
 {{if .Experimental.TargetGroup.Enabled}}
@@ -867,7 +867,7 @@ write_files:
 
       instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-      sudo rkt run \
+      rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
         --uuid-file-save=/var/run/coreos/add-to-target-groups.uuid \
@@ -887,7 +887,7 @@ write_files:
            done
            echo done.'
 
-      sudo rkt rm --uuid-file=/var/run/coreos/add-to-target-groups.uuid
+      rkt rm --uuid-file=/var/run/coreos/add-to-target-groups.uuid
 {{end}}
 {{end}}
 
