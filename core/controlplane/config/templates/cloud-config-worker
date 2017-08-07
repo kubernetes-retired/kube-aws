@@ -847,7 +847,7 @@ write_files:
           -vxec \
           'echo adding this spot instance to load balancers
            instance_id="'$instance_id'"
-           lbs=({{range $i, $lb := .Experimental.LoadBalancer.Names}}"{{$lb}}" {{end}})
+           lbs=({{range $lb := .Experimental.LoadBalancer.Names}}"{{$lb}}" {{end}})
            add_to_lb="/usr/bin/aws --region {{.Region}} elb register-instances-with-load-balancer --instances $instance_id --load-balancer-name"
            for lb in ${lbs[@]}; do
              echo "$lb"
@@ -879,7 +879,7 @@ write_files:
           -vxec \
           'echo adding this spot instance to target groups
            instance_id="'$instance_id'"
-           tgs=({{range $i, $tg := .Experimental.TargetGroup.Arns}}"{{$tg}}" {{end}})
+           tgs=({{range $tg := .Experimental.TargetGroup.Arns}}"{{$tg}}" {{end}})
            add_to_tg="/usr/bin/aws --region {{.Region}} elbv2 register-targets --targets Id=$instance_id --target-group-arn"
            for tg in ${tgs[@]}; do
              echo "$tg"
