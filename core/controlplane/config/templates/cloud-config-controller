@@ -869,6 +869,8 @@ write_files:
                         key: etcd_endpoints
                   - name: CALICO_NETWORKING_BACKEND
                     value: "none"
+                  - name: CLUSTER_TYPE
+                    value: "kubeaws,canal"
                   - name: CALICO_DISABLE_FILE_LOGGING
                     value: "true"
                   - name: NO_DEFAULT_POOLS
