@@ -9,8 +9,6 @@
 
 `kube-aws` is a command-line tool to create/update/destroy Kubernetes clusters on AWS.
 
-View the latest manual for the `kube-aws` tool on [GitHub](/Documentation/kubernetes-on-aws.md).
-
 ## Features
 
 * Create, update and destroy Kubernetes clusters on AWS
@@ -18,38 +16,12 @@ View the latest manual for the `kube-aws` tool on [GitHub](/Documentation/kubern
 * Deployment to an existing VPC
 * Powered by various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
 
-## Getting Started
+## Getting Started / Manual
 
-Check out our getting started tutorial on launching your first Kubernetes cluster in AWS.
+[View the latest manual for `kube-aws`](https://kube-aws.gitbooks.io/manual/)
 
-* [Pre-requisites](/Documentation/kubernetes-on-aws-prerequisites.md)
-* [Step 1: Configure](/Documentation/kubernetes-on-aws.md)
-  * Download the latest release of kube-aws
-  * Define account and cluster settings
-* [Step 2: Render](/Documentation/kubernetes-on-aws-render.md)
-  * Compile a re-usable CloudFormation template for the cluster
-  * Optionally adjust template configuration
-  * Validate the rendered CloudFormation stack
-* [Step 3: Launch](/Documentation/kubernetes-on-aws-launch.md)
-  * Create the CloudFormation stack and start our EC2 machines
-  * Set up CLI access to the new cluster
-* [Step 4: Update](/Documentation/kube-aws-cluster-updates.md)
-  * Update the CloudFormation stack
-* [Step 5: Add Node Pool](/Documentation/kubernetes-on-aws-node-pool.md)
-  * Create the additional pool of worker nodes
-  * Adjust template configuration for each pool of worker nodes
-  * Required to support [cluster-autoscaler](https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler)
-* [Step 6: Configure add-ons](/Documentation/kubernetes-on-aws-add-ons.md)
-  * Configure various Kubernetes add-ons
-* [Step 7: Destroy](/Documentation/kubernetes-on-aws-destroy.md)
-  * Destroy the cluster
-* **Optional Features**
-  * [Backup and restore for etcd](/Documentation/kubernetes-on-aws-backup-and-restore-for-etcd.md)
-  * [Backup Kubernetes resources](/Documentation/kubernetes-on-aws-backup.md)
-  * [Restore Kubernetes resources](/contrib/cluster-backup/README.md)
-  * [Journald logging to AWS CloudWatch](/Documentation/kubernetes-on-aws-journald-cloudwatch-logs.md)
-    * [kube-aws up/update feedback](/Documentation/kubernetes-on-aws-journald-cloudwatch-logs.md)
-  * [CloudFormation Streaming](/Documentation/kubernetes-on-aws-cloudformation-streaming.md)
+Check out our [getting started tutorial](https://kube-aws.gitbooks.io/manual/getting-started/) 
+to launch your first Kubernetes cluster on AWS.
 
 ## Examples
 
@@ -111,41 +83,7 @@ $ kube-aws destroy
 
 ## Development
 
-### Build
-
-Clone this repository to the appropriate path under the GOPATH.
-
-```
-$ export GOPATH=$HOME/go
-$ git clone git@github.com:kubernetes-incubator/kube-aws.git $GOPATH/src/github.com/kubernetes-incubator/kube-aws
-```
-
-Run `make build` to compile `kube-aws` locally.
-
-This depends on having:
-* golang >= 1.7
-
-The compiled binary will be available at `bin/kube-aws`.
-
-### Run Unit Tests
-
-```sh
-make test
-```
-
-### Reformat Code
-
-```sh
-make format
-```
-
-### Modifying Templates
-
-The various templates are located in the `core/controlplane/config/templates/` and the `core/nodepool/config/templates/` directory of the source repo. `go generate` is used to pack these templates into the source code. In order for changes to templates to be reflected in the source code:
-
-```sh
-make build
-```
+Details of how to contribute to kube-aws are in our [Contributor Guide](https://kube-aws.gitbooks.io/manual/guides/contributor-guide.html)
 
 ## Other Resources
 
