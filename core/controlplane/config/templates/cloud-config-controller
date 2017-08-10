@@ -292,10 +292,12 @@ coreos:
         StartLimitInterval=0
         RestartSec=10
         Restart=on-failure
+        RemainAfterExit=true
         ExecStartPre=/usr/bin/systemctl is-active kubelet.service
         ExecStartPre=/usr/bin/systemctl is-active docker.service
         ExecStartPre=/usr/bin/curl -s -f http://127.0.0.1:8080/version
-        ExecStart=/opt/bin/install-kube-system
+        ExecStartPre=/opt/bin/install-kube-system
+        ExecStart=/bin/true
 
 {{ if $.ElasticFileSystemID }}
     - name: rpc-statd.service
@@ -321,11 +323,16 @@ coreos:
       command: start
       content: |
         [Unit]
-        Wants=kubelet.service docker.service
-        After=kubelet.service
+        Wants=kubelet.service docker.service install-kube-system.service
+        After=kubelet.service install-kube-system.service
 
         [Service]
-        Type=oneshot
+        Type=simple
+        Restart=on-failure
+        RestartSec=60
+        StartLimitInterval=320
+        StartLimitBurst=5
+        ExecStartPre=/usr/bin/systemctl is-active install-kube-system.service
         ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl -s -m 20 -f  http://127.0.0.1:8080/healthz > /dev/null &&  /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10252/healthz > /dev/null && /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10251/healthz > /dev/null &&  /usr/bin/curl --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
         {{ if .UseCalico }}
         ExecStartPre=/usr/bin/bash -c "until /usr/bin/docker run --net=host --pid=host --rm {{ .CalicoCtlImage.RepoWithTag }} node status > /dev/null; do sleep 3; done && echo Calico running"
