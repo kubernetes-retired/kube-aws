@@ -742,15 +742,6 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.CACert}}
 
-{{ if .Experimental.Dex.Enabled }}
-  - path: /etc/kubernetes/ssl/dex.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
-    encoding: gzip+base64
-    content: {{.AssetsConfig.DexCert}}
-
-  - path: /etc/kubernetes/ssl/dex-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
-    encoding: gzip+base64
-    content: {{.AssetsConfig.DexKey}}
-{{ end }}
 {{ end }}
 
 {{ if .AssetsEncryptionEnabled }}
