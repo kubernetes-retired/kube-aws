@@ -804,7 +804,86 @@ tlsBootstrap:
 			)
 		}
 	}
+}
 
+func TestNodeAuthorizerConfig(t *testing.T) {
+	validConfigs := []struct {
+		conf           string
+		nodeAuthorizer NodeAuthorizer
+	}{
+		{
+			conf: `
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: false,
+			},
+		},
+		{
+
+			conf: `
+experimental:
+  nodeAuthorizer:
+    enabled: false
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: false,
+			},
+		},
+		{
+
+			conf: `
+experimental:
+  tlsBootstrap:
+    enabled: true
+  nodeAuthorizer:
+    enabled: true
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: true,
+			},
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+# TLS bootstrap must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+`,
+		`
+# TLS bootstrap must be enabled as well
+experimental:
+  tlsBootstrap:
+    enabled: false
+  nodeAuthorizer:
+    enabled: true
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Experimental.NodeAuthorizer, conf.nodeAuthorizer) {
+			t.Errorf(
+				"parsed node authorizer settings %+v does not match config: %s",
+				c.Experimental.NodeAuthorizer,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := singleAzConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
 }
 
 func TestRktConfig(t *testing.T) {

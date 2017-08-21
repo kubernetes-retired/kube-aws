@@ -1167,6 +1167,10 @@ addons:
 #   # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
 #   tlsBootstrap:
 #     enabled: true
+#   # Enables the Node authorization + node restriction admission controller (requires Kubernetes 1.7.4+)
+#   # Requires TLS bootstrapping to be enabled as well
+#   nodeAuthorizer:
+#     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
 #   ephemeralImageStorage:
 #     enabled: true
