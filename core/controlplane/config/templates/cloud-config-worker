@@ -267,7 +267,7 @@ coreos:
                        --endpoints "${ETCD_ENDPOINTS}" \
                        cluster-health
         {{if .UseCalico -}}
-        ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
+        ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -e KUBERNETES_SERVICE_HOST= -e KUBERNETES_SERVICE_PORT= -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
         {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
