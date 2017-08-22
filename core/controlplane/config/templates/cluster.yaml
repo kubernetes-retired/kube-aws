@@ -920,7 +920,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.7.3_coreos.0
+# kubernetesVersion: v1.7.4_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -1002,7 +1002,7 @@ worker:
 # Heapster image repository to use.
 #heapsterImage:
 #  repo: gcr.io/google_containers/heapster
-#  tag: v1.4.0
+#  tag: v1.4.1
 #  rktPullDocker: false
 
 # Addon Resizer image repository to use.
