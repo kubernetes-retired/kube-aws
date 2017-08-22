@@ -27,3 +27,16 @@ test: build
 .PHONY: test-with-cover
 test-with-cover: build
 	./make/test with-cover
+
+.PHONY: docs-dependencies
+docs-dependencies:
+	npm install -g gitbook-cli
+	cd docs && gitbook install
+
+.PHONY: generate-docs
+generate-docs: docs-dependencies
+	cd docs && gitbook build
+
+.PHONY: serve-docs
+serve-docs: docs-dependencies
+	cd docs && gitbook serve

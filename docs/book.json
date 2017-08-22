@@ -1,0 +1,19 @@
+{
+  "plugins": ["edit-link", "prism", "-highlight", "github", "anchorjs"],
+  "pluginsConfig": {
+    "edit-link": {
+      "base": "https://github.com/kube-aws/docs/tree/master",
+      "label": "Edit This Page"
+    },
+    "github": {
+      "url": "https://github.com/kubernetes-incubator/kube-aws"
+    }
+  },
+  "links": {
+    "sidebar": {
+    }
+  },
+  "styles": {
+    "website": "styles/site.css"
+  }
+}
