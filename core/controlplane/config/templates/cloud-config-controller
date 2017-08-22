@@ -2339,18 +2339,18 @@ write_files:
           labels:
             k8s-app: heapster
             kubernetes.io/cluster-service: "true"
-            version: v1.4.0
+            version: v1.4.1
         spec:
           replicas: 1
           selector:
             matchLabels:
               k8s-app: heapster
-              version: v1.4.0
+              version: v1.4.1
           template:
             metadata:
               labels:
                 k8s-app: heapster
-                version: v1.4.0
+                version: v1.4.1
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
             spec:
