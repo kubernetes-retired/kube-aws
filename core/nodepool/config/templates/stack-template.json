@@ -288,6 +288,13 @@
         "PolicyDocument" :   {
           "Version":"2012-10-17",
           "Statement": [
+                {{range $s := .IAMConfig.Policy.Statements }}
+                {
+                  "Action": {{toJSON $s.Actions}},
+                  "Effect": {{toJSON $s.Effect}},
+                  "Resource": {{toJSON $s.Resources}}
+                },
+                {{end}}
                 {
                   "Action": "ec2:Describe*",
                   "Effect": "Allow",
@@ -501,6 +508,10 @@
     {{end}}
     {{if not .IAMConfig.InstanceProfile.Arn}}
     {{template "IAMRole" .}}
+    {{end}}
+    {{range $n, $r := .ExtraCfnResources}}
+    ,
+    {{quote $n}}: {{toJSON $r}}
     {{end}}
   },
   "Outputs": {

@@ -312,16 +312,27 @@ coreos:
         Wants=kubelet.service docker.service
 
         [Service]
-        Type=simple
+        Type=oneshot
         StartLimitInterval=0
-        RestartSec=10
-        Restart=on-failure
         RemainAfterExit=true
-        ExecStartPre=/usr/bin/systemctl is-active kubelet.service
-        ExecStartPre=/usr/bin/systemctl is-active docker.service
-        ExecStartPre=/usr/bin/curl -s -f http://127.0.0.1:8080/version
-        ExecStartPre=/opt/bin/install-kube-system
-        ExecStart=/bin/true
+        ExecStartPre=/usr/bin/bash -c "until /usr/bin/systemctl is-active kubelet.service; do echo waiting until kubelet starts; sleep 10; done"
+        ExecStartPre=/usr/bin/bash -c "until /usr/bin/systemctl is-active docker.service; do echo waiting until docker starts; sleep 10; done"
+        ExecStartPre=/usr/bin/bash -c "until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 10; done"
+        ExecStart=/opt/bin/retry 3 /opt/bin/install-kube-system
+
+    - name: apply-kube-aws-plugins.service
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Requires=install-kube-system.service
+        After=install-kube-system.service
+
+        [Service]
+        Type=oneshot
+        StartLimitInterval=0
+        RemainAfterExit=true
+        ExecStart=/opt/bin/retry 3 /opt/bin/apply-kube-aws-plugins
 
 {{ if $.ElasticFileSystemID }}
     - name: rpc-statd.service
@@ -347,16 +358,17 @@ coreos:
       command: start
       content: |
         [Unit]
-        Wants=kubelet.service docker.service install-kube-system.service
-        After=kubelet.service install-kube-system.service
+        Wants=kubelet.service docker.service install-kube-system.service apply-kube-aws-plugins.service
+        After=kubelet.service install-kube-system.service apply-kube-aws-plugins.service
 
         [Service]
         Type=simple
         Restart=on-failure
         RestartSec=60
-        StartLimitInterval=320
-        StartLimitBurst=5
+        StartLimitInterval=640
+        StartLimitBurst=10
         ExecStartPre=/usr/bin/systemctl is-active install-kube-system.service
+        ExecStartPre=/usr/bin/systemctl is-active apply-kube-aws-plugins.service
         ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl -s -m 20 -f  http://127.0.0.1:8080/healthz > /dev/null &&  /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10252/healthz > /dev/null && /usr/bin/curl -s -m 20 -f  http://127.0.0.1:10251/healthz > /dev/null &&  /usr/bin/curl --insecure -s -m 20 -f  https://127.0.0.1:10250/healthz > /dev/null ; then break ; fi;  done"
         {{ if .UseCalico }}
         ExecStartPre=/usr/bin/bash -c "until /usr/bin/docker run --net=host --pid=host --rm {{ .CalicoCtlImage.RepoWithTag }} node status > /dev/null; do sleep 3; done && echo Calico running"
@@ -371,6 +383,7 @@ coreos:
       content: |
         [Unit]
         Description=Label this kubernetes node with additional AWS parameters
+        Wants=kubelet.service
         After=kubelet.service
         Before=cfn-signal.service
 
@@ -391,7 +404,9 @@ coreos:
           aws autoscaling describe-auto-scaling-groups \
           --auto-scaling-group-name $AUTOSCALINGGROUP --region {{.Region}} \
           --query 'AutoScalingGroups[].LaunchConfigurationName' --output text)\""
+        ExecStartPre=/usr/bin/bash -c "until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done"
         ExecStart=/bin/sh -c "/usr/bin/curl \
+          --retry 3 \
           --request PATCH \
           -H 'Content-Type: application/strategic-merge-patch+json' \
           -d'{ \
@@ -536,6 +551,43 @@ write_files:
       [global]
       DisableSecurityGroupIngress = true
 {{end}}
+
+  - path: /opt/bin/apply-kube-aws-plugins
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -vxe
+
+      kubectl() {
+          /usr/bin/docker run --rm --net=host \
+            -v /etc/resolv.conf:/etc/resolv.conf \
+            -v {{.KubernetesManifestPlugin.Directory}}:{{.KubernetesManifestPlugin.Directory}} \
+            {{.HyperkubeImage.RepoWithTag}} /hyperkube kubectl "$@"
+      }
+
+      helm() {
+          /usr/bin/docker run --rm --net=host \
+            -v /etc/resolv.conf:/etc/resolv.conf \
+            -v {{.HelmReleasePlugin.Directory}}:{{.HelmReleasePlugin.Directory}} \
+            {{.HelmImage.RepoWithTag}} helm "$@"
+      }
+
+      while read m || [[ -n $m ]]; do
+        kubectl apply -f $m
+      done <{{.KubernetesManifestPlugin.ManifestListFile.Path}}
+
+      while read r || [[ -n $r ]]; do
+        release_name=$(jq .name $r)
+        chart_name=$(jq .chart.name $r)
+        chart_version=$(jq .chart.version $r)
+        values_file=$(jq .values.file $r)
+        if helm status $release_name; then
+          helm upgrade $release_name $chart_name --version $chart_version -f $values_file
+        else
+          helm install $release_name $chart_name --version $chart_version -f $values_file
+        fi
+      done <{{.HelmReleasePlugin.ReleaseListFile.Path}}
+
 {{if .Experimental.AwsEnvironment.Enabled}}
   - path: /opt/bin/set-aws-environment
     owner: root:root
@@ -1737,6 +1789,9 @@ write_files:
           - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1{{if .Experimental.Plugins.Rbac.Enabled}},rbac.authorization.k8s.io/v1beta1=true{{ end }}{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}
           - --cloud-provider=aws
+          {{range $f := .APIServerFlags}}
+          - --{{$f.Name}}={{$f.Value}}
+          {{ end -}}
           livenessProbe:
             httpGet:
               host: 127.0.0.1
@@ -1773,6 +1828,11 @@ write_files:
             name: var-log
             readOnly: false
           {{end}}
+          {{range $v := .APIServerVolumes}}
+          - mountPath: {{quote $v.Path}}
+            name: {{quote $v.Name}}
+            readOnly: {{$v.ReadOnly}}
+          {{end}}
         volumes:
         - hostPath:
             path: /etc/kubernetes/ssl
@@ -1794,6 +1854,11 @@ write_files:
         - hostPath:
             path: /var/log
           name: var-log
+        {{end}}
+        {{range $v := .APIServerVolumes}}
+        - hostPath:
+            path: {{quote $v.Path}}
+          name: {{quote $v.Name}}
         {{end}}
 
   - path: /etc/kubernetes/manifests/kube-controller-manager.yaml
@@ -2565,6 +2630,33 @@ write_files:
         status:
           loadBalancer: {}
 
+  - path: {{.KubernetesManifestPlugin.ManifestListFile.Path}}
+    encoding: gzip+base64
+    content: {{.KubernetesManifestPlugin.ManifestListFile.Content.ToGzip.ToBase64}}
+
+{{ range $m := .KubernetesManifestPlugin.Manifests }}
+{{ $f := $m.ManifestFile }}
+  - path: {{$f.Path}}
+    encoding: gzip+base64
+    content: {{$f.Content.ToGzip.ToBase64}}
+{{ end }}
+
+  - path: {{.HelmReleasePlugin.ReleaseListFile.Path}}
+    encoding: gzip+base64
+    content: {{.HelmReleasePlugin.ReleaseListFile.Content.ToGzip.ToBase64}}
+
+
+{{ range $r := .HelmReleasePlugin.Releases }}
+{{ $f := $r.ReleaseFile }}
+  - path: {{$f.Path}}
+    encoding: gzip+base64
+    content: {{$f.Content.ToGzip.ToBase64}}
+{{ $f := $r.ValuesFile }}
+  - path: {{$f.Path}}
+    encoding: gzip+base64
+    content: {{$f.Content.ToGzip.ToBase64}}
+{{ end }}
+
 {{ if .AssetsConfig.HasTLSBootstrapToken }}
   - path: /etc/kubernetes/auth/kubelet-tls-bootstrap-token.tmp{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
@@ -2780,4 +2872,28 @@ write_files:
         namespace: kube-system
   {{end}}
 {{end}}
+
+  - path: /opt/bin/retry
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      max_attempts="$1"; shift
+      cmd="$@"
+      attempt_num=1
+      attempt_interval_sec=3
+
+      until $cmd
+      do
+          if (( attempt_num == max_attempts ))
+          then
+              echo "Attempt $attempt_num failed and there are no more attempts left!"
+              return 1
+          else
+              echo "Attempt $attempt_num failed! Trying again in $attempt_interval_sec seconds..."
+              ((attempt_num++))
+              sleep $attempt_interval_sec;
+          fi
+      done
+
 {{ end }}

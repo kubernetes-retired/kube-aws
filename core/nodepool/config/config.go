@@ -39,8 +39,9 @@ type ProvidedConfig struct {
 	WorkerNodePoolConfig    `yaml:",inline"`
 	DeploymentSettings      `yaml:",inline"`
 	cfg.Experimental        `yaml:",inline"`
-	Private                 bool   `yaml:"private,omitempty"`
-	NodePoolName            string `yaml:"name,omitempty"`
+	Plugins                 model.PluginConfigs `yaml:"kubeAwsPlugins,omitempty"`
+	Private                 bool                `yaml:"private,omitempty"`
+	NodePoolName            string              `yaml:"name,omitempty"`
 	ProvidedEncryptService  cfg.EncryptService
 }
 
@@ -71,7 +72,9 @@ func (c ProvidedConfig) NestedStackName() string {
 
 func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, error) {
 	var err error
-	stackConfig := StackConfig{}
+	stackConfig := StackConfig{
+		ExtraCfnResources: map[string]interface{}{},
+	}
 
 	if stackConfig.ComputedConfig, err = c.Config(); err != nil {
 		return nil, fmt.Errorf("failed to generate config : %v", err)
@@ -273,6 +276,14 @@ func (c ProvidedConfig) NodeLabels() model.NodeLabels {
 		labels["kube-aws.coreos.com/cluster-autoscaler-supported"] = "true"
 	}
 	return labels
+}
+
+func (c ProvidedConfig) FeatureGates() model.FeatureGates {
+	gates := c.NodeSettings.FeatureGates
+	if c.Gpu.Nvidia.IsEnabledOn(c.InstanceType) {
+		gates["Accelerators"] = "true"
+	}
+	return gates
 }
 
 func (c ProvidedConfig) WorkerDeploymentSettings() WorkerDeploymentSettings {
