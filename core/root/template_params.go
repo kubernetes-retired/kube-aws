@@ -8,8 +8,13 @@ import (
 	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
 )
 
+// TemplateParams is the set of parameters exposed for templating cfn stack template for the root stack
 type TemplateParams struct {
 	cluster clusterImpl
+}
+
+func (p TemplateParams) ExtraCfnResources() map[string]interface{} {
+	return p.cluster.ExtraCfnResources
 }
 
 func (p TemplateParams) ClusterName() string {

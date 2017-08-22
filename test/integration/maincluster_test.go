@@ -12,6 +12,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/kubernetes-incubator/kube-aws/core/root/config"
 	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/plugin/pluginmodel"
 	"github.com/kubernetes-incubator/kube-aws/test/helper"
 )
 
@@ -3375,7 +3376,9 @@ worker:
 	for _, validCase := range validCases {
 		t.Run(validCase.context, func(t *testing.T) {
 			configBytes := validCase.configYaml
-			providedConfig, err := config.ConfigFromBytesWithEncryptService([]byte(configBytes), helper.DummyEncryptService{})
+			// TODO Allow including plugins in test data?
+			plugins := []*pluginmodel.Plugin{}
+			providedConfig, err := config.ConfigFromBytesWithEncryptService([]byte(configBytes), plugins, helper.DummyEncryptService{})
 			if err != nil {
 				t.Errorf("failed to parse config %s: %v", configBytes, err)
 				t.FailNow()
@@ -4305,7 +4308,9 @@ worker:
 	for _, invalidCase := range parseErrorCases {
 		t.Run(invalidCase.context, func(t *testing.T) {
 			configBytes := invalidCase.configYaml
-			providedConfig, err := config.ConfigFromBytes([]byte(configBytes))
+			// TODO Allow including plugins in test data?
+			plugins := []*pluginmodel.Plugin{}
+			providedConfig, err := config.ConfigFromBytes([]byte(configBytes), plugins)
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %+v", configBytes, *providedConfig)
 				t.FailNow()
