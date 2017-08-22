@@ -18,9 +18,9 @@
 
 ## Getting Started / Manual
 
-[View the latest manual for `kube-aws`](https://kube-aws.gitbooks.io/manual/)
+[View the latest manual for `kube-aws`](https://kubernetes-incubator.github.io/kube-aws/)
 
-Check out our [getting started tutorial](https://kube-aws.gitbooks.io/manual/getting-started/) 
+Check out our [getting started tutorial](https://kubernetes-incubator.github.io/kube-aws/getting-started/) 
 to launch your first Kubernetes cluster on AWS.
 
 ## Examples
@@ -83,7 +83,7 @@ $ kube-aws destroy
 
 ## Development
 
-Details of how to contribute to kube-aws are in our [Contributor Guide](https://kube-aws.gitbooks.io/manual/guides/contributor-guide.html)
+Details of how to contribute to kube-aws are in our [Contributor Guide](https://kubernetes-incubator.github.io/kube-aws/guides/contributor-guide.html)
 
 ## Other Resources
 
