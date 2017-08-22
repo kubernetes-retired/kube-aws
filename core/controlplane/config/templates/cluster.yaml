@@ -999,6 +999,12 @@ worker:
 #  tag: v2.5.1
 #  rktPullDocker: false
 
+# Tiller (Helm backend) image repository to use.
+#tillerImage:
+#  repo: gcr.io/kubernetes-helm/tiller
+#  tag: v2.6.0
+#  rktPullDocker: false
+
 # Heapster image repository to use.
 #heapsterImage:
 #  repo: gcr.io/google_containers/heapster
