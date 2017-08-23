@@ -996,7 +996,7 @@ worker:
 # Helm image repository to use.
 #helmImage:
 #  repo: quay.io/kube-aws/helm
-#  tag: v2.5.1
+#  tag: v2.6.0
 #  rktPullDocker: false
 
 # Tiller (Helm backend) image repository to use.
