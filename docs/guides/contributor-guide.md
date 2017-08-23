@@ -16,7 +16,6 @@ Clone the [kube-aws repository](https://github.com/kubernetes-incubator/kube-aws
 
 ```bash
 $ export GOPATH=$HOME/go
-$ mkdir -p $GOPATH/src/github.com/kubernetes-incubator/
 $ git clone git@github.com:kubernetes-incubator/kube-aws.git $GOPATH/src/github.com/kubernetes-incubator/kube-aws
 ```
 
@@ -69,7 +68,6 @@ The `FOCUS` environment variable can be used if you wish to target a particular 
 export FOCUS=.*Rescheduler.*
 ```
 
-
 ## Reformat Code
 
 ```bash
@@ -84,5 +82,14 @@ The various templates are located in the `core/controlplane/config/templates/` a
 make build
 ```
 
+## Documentation
 
+Documentation source lives inside the `docs` directory of the `master` branch. Generally we aim to add documentation in the same PR as any features/updates so it can be reviewed together. To update the documentation, create/update markdown files inside the `docs` directory and use the following command to generate the full documentation site locally:
 
+```
+make serve-docs
+```
+
+__NOTE:__ Since the documentation is generated via the [gitbook CLI](https://www.npmjs.com/package/gitbook-cli) NPM module you will need `node` and `npm` installed to generate and serve the site locally.
+
+It's worth looking through the existing sections to see where you changes would fit best. A page will not appear in the index listing unless it is added to `SUMMARY.md`.
