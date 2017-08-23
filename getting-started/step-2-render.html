@@ -1,0 +1,887 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Step 2: Render · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="step-3-launch.html" />
+    
+    
+    <link rel="prev" href="step-1-configure.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="prerequisites.html">
+            
+                <a href="prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="step-1-configure.html">
+            
+                <a href="step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2.3" data-path="step-2-render.html">
+            
+                <a href="step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="step-3-launch.html">
+            
+                <a href="step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="step-4-update.html">
+            
+                <a href="step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="step-5-add-node-pool.html">
+            
+                <a href="step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.7" data-path="step-6-configure-add-ons.html">
+            
+                <a href="step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.8" data-path="step-7-destroy.html">
+            
+                <a href="step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../cli-reference/">
+            
+                <a href="../cli-reference/">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../cli-reference/aws-credentials.html">
+            
+                <a href="../cli-reference/aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../add-ons/">
+            
+                <a href="../add-ons/">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                <a href="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                <a href="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../guides/contributor-guide.html">
+            
+                <a href="../guides/contributor-guide.html">
+            
+                    
+                    Contributor Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../advanced-topics/">
+            
+                <a href="../advanced-topics/">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="../advanced-topics/etcd-backup-and-restore.html">
+            
+                <a href="../advanced-topics/etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                <a href="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="../advanced-topics/use-an-existing-vpc.html">
+            
+                <a href="../advanced-topics/use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start (WIP)
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Step 2: Render</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="configure-your-kubernetes-cluster-on-aws">Configure your Kubernetes cluster on AWS</h1>
+<p>This is the second step of <a href="./">running Kubernetes on AWS</a>. Before we launch our cluster, let&apos;s define a few parameters that the cluster requires.</p>
+<h2 id="cluster-parameters">Cluster parameters</h2>
+<h3 id="ec2-key-pair">EC2 key pair</h3>
+<p>The keypair that will authenticate SSH access to your EC2 instances. The public half of this key pair will be configured on each CoreOS node.</p>
+<p>After creating a key pair, you will use the name you gave the keys to configure the cluster. Key pairs are only available to EC2 instances in the same region. More info in the <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html" target="_blank">EC2 Keypair docs</a>.</p>
+<h3 id="kms-key">KMS key</h3>
+<p><a href="http://docs.aws.amazon.com/kms/latest/developerguide/overview.html" target="_blank">Amazon KMS</a> keys are used to encrypt and decrypt cluster TLS assets. If you already have a KMS Key that you would like to use, you can skip creating a new key and provide the Arn string for your existing key.</p>
+<p>You can create a KMS key in the <a href="http://docs.aws.amazon.com/kms/latest/developerguide/create-keys.html" target="_blank">AWS console</a>, or with the <code>aws</code> command line tool:</p>
+<pre class="language-"><code class="lang-sh">$ aws kms --region<span class="token operator">=</span><span class="token operator">&lt;</span>your-region<span class="token operator">&gt;</span> create-key --description<span class="token operator">=</span><span class="token string">&quot;kube-aws assets&quot;</span>
+<span class="token punctuation">{</span>
+    <span class="token string">&quot;KeyMetadata&quot;</span><span class="token keyword">:</span> <span class="token punctuation">{</span>
+        <span class="token string">&quot;CreationDate&quot;</span><span class="token keyword">:</span> 1458235139.724,
+        <span class="token string">&quot;KeyState&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;Enabled&quot;</span>,
+        <span class="token string">&quot;Arn&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx&quot;</span>,
+        <span class="token string">&quot;AWSAccountId&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;xxxxxxxxxxxxx&quot;</span>,
+        <span class="token string">&quot;Enabled&quot;</span><span class="token keyword">:</span> true,
+        <span class="token string">&quot;KeyUsage&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;ENCRYPT_DECRYPT&quot;</span>,
+        <span class="token string">&quot;KeyId&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;xxxxxxxxx&quot;</span>,
+        <span class="token string">&quot;Description&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;kube-aws assets&quot;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>You will use the <code>KeyMetadata.Arn</code> string to identify your KMS key in the init step.</p>
+<h3 id="external-dns-name">External DNS name</h3>
+<p>Select a DNS hostname where the cluster API will be accessible. Typically this hostname is available over the internet (&quot;external&quot;), so end users can connect from different networks. This hostname will be used to provision the TLS certificate for the API server, which encrypts traffic between your users and the API. Optionally, you can provide the certificates yourself, which is recommended for production clusters.</p>
+<p>When the cluster is created, the controller will expose the TLS-secured API on a public IP address. You will need to create an A record for the external DNS hostname you want to point to this IP address. You can find the API external IP address after the cluster is created by invoking <code>kube-aws status</code>.</p>
+<p>Alternatively, kube-aws can automatically create this A record in an <em>existing</em> <a href="https://aws.amazon.com/route53/" target="_blank">Route 53</a> hosted zone. If you have a DNS zone hosted in Route 53, you can configure for it below.</p>
+<h3 id="s3-bucket">S3 bucket</h3>
+<p><a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/Welcome.html" target="_blank">Amazon S3</a> buckets are used to transfer large stack templates generated by kube-aws to CloudFormation. If you already have a S3 bucket that you would like to use, you can skip creating a new bucket and provide the URI for your existing bucket.</p>
+<p>You can create a S3 bucket in the <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html#create-bucket-intro" target="_blank">AWS console</a>, or with the <code>aws</code> command line tool.</p>
+<p>The command varies among AWS regions.</p>
+<p>For the us-east-1 region:</p>
+<pre class="language-"><code class="lang-sh">$ aws s3api --region<span class="token operator">=</span><span class="token operator">&lt;</span>your-region<span class="token operator">&gt;</span> create-bucket --bucket <span class="token operator">&lt;</span>your-bucket-name<span class="token operator">&gt;</span>
+<span class="token punctuation">{</span>
+    <span class="token string">&quot;Location&quot;</span><span class="token keyword">:</span> <span class="token string">&quot;/&lt;your-bucket-name&gt;&quot;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>For other regions:</p>
+<pre class="language-"><code class="lang-sh">$ aws s3api create-bucket --bucket my-bucket --region eu-west-1 --create-bucket-configuration LocationConstraint<span class="token operator">=</span>eu-west-1
+</code></pre>
+<h2 id="initialize-an-asset-directory">Initialize an asset directory</h2>
+<p>Create a directory on your local machine to hold the generated assets:</p>
+<pre class="language-"><code class="lang-sh">$ <span class="token function">mkdir</span> my-cluster
+$ <span class="token function">cd</span> my-cluster
+</code></pre>
+<p>Initialize the cluster CloudFormation stack with the KMS Arn, key pair name, and DNS name from the previous step:</p>
+<pre class="language-"><code class="lang-sh">$ kube-aws init \
+--cluster-name<span class="token operator">=</span>my-cluster-name \
+--external-dns-name<span class="token operator">=</span>my-cluster-endpoint \
+--region<span class="token operator">=</span>us-west-1 \
+--availability-zone<span class="token operator">=</span>us-west-1c \
+--key-name<span class="token operator">=</span>key-pair-name \
+--kms-key-arn<span class="token operator">=</span><span class="token string">&quot;arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx&quot;</span>
+</code></pre>
+<p>Here <code>us-west-1c</code> is used for parameter <code>--availability-zone</code>, but supported availability zone varies among AWS accounts.
+Please check if <code>us-west-1c</code> is supported by <code>aws ec2 --region us-west-1 describe-availability-zones</code>, if not switch to other supported availability zone. (e.g., <code>us-west-1a</code>, or <code>us-west-1b</code>)</p>
+<p>There will now be a <code>cluster.yaml</code> file in the asset directory. This is the main configuration file for your cluster.</p>
+<h3 id="render-contents-of-the-asset-directory">Render contents of the asset directory</h3>
+<h4 id="tls-certificates">TLS certificates</h4>
+<ul>
+<li><p>In the simplest case, you can have kube-aws generate both your TLS identities and certificate authority for you.</p>
+<pre class="language-"><code class="lang-sh">$ kube-aws render credentials --generate-ca
+</code></pre>
+<p>This is not recommended for production, but is fine for development or testing purposes.</p>
+</li>
+<li><p>It is recommended that you supply your own immediate certificate signing authority and let kube-aws take care of generating the cluster TLS credentials.</p>
+<pre class="language-"><code class="lang-sh">$ kube-aws render credentials --ca-cert-path<span class="token operator">=</span>/path/to/ca-cert.pem --ca-key-path<span class="token operator">=</span>/path/to/ca-key.pem
+</code></pre>
+<p>For more information on operating your own CA, check out this <a href="https://jamielinux.com/docs/openssl-certificate-authority/" target="_blank">awesome guide</a>.</p>
+</li>
+<li><p>In certain cases, such as users with advanced pre-existing PKI infrastructure, the operator may wish to pre-generate all cluster TLS assets. In this case, you can run <code>kube-aws render stack</code> and copy in your TLS assets into the <code>credentials/</code> folder before running <code>kube-aws up</code>.</p>
+<pre class="language-"><code class="lang-sh">
+<span class="token function">ls</span> -R credentials/
+admin-key.pem       apiserver-key.pem   ca-key.pem          etcd-client-key.pem etcd-key.pem        worker-key.pem
+admin.pem           apiserver.pem       ca.pem              etcd-client.pem     etcd.pem            worker.pem
+</code></pre>
+</li>
+</ul>
+<h3 id="render-cluster-assets">Render cluster assets</h3>
+<p>The next command generates the default set of cluster assets in your asset directory.</p>
+<pre class="language-"><code class="lang-sh">  $ kube-aws render stack
+</code></pre>
+<p>Here&apos;s what the directory structure looks like:</p>
+<pre class="language-"><code class="lang-sh">$ tree
+<span class="token keyword">.</span>
+&#x251C;&#x2500;&#x2500; cluster.yaml
+&#x251C;&#x2500;&#x2500; credentials
+&#x2502;   &#x251C;&#x2500;&#x2500; admin-key.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; admin.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; apiserver-key.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; apiserver.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; ca-key.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; ca.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; worker-key.pem
+&#x2502;   &#x2514;&#x2500;&#x2500; worker.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; etcd-key.pem
+&#x2502;   &#x2514;&#x2500;&#x2500; etcd.pem
+&#x2502;   &#x251C;&#x2500;&#x2500; etcd-client-key.pem
+&#x2502;   &#x2514;&#x2500;&#x2500; etcd-client.pem
+&#x251C;&#x2500;&#x2500; kubeconfig
+&#x251C;&#x2500;&#x2500; stack-template.json
+&#x2514;&#x2500;&#x2500; userdata
+    &#x251C;&#x2500;&#x2500; cloud-config-controller
+    &#x2514;&#x2500;&#x2500; cloud-config-worker
+</code></pre>
+<p>These assets (templates and credentials) are used to create, update and interact with your Kubernetes cluster.</p>
+<p>At this point you should be ready to create your cluster. You can also now check the <code>my-cluster</code> asset directory into version control if you desire. The contents of this directory are your reproducible cluster assets. Please take care not to commit the <code>my-cluster/credentials</code> directory but rather to encrypt and/or put it to more secure storage, as it contains your TLS secrets and access tokens. If you&apos;re using git, the <code>credentials</code> directory will already be ignored for you.</p>
+<p><strong>PRODUCTION NOTE</strong>: the TLS keys and certificates generated by <code>kube-aws</code> should <em>not</em> be used to deploy a production Kubernetes cluster.
+Each component certificate is only valid for 90 days, while the CA is valid for 365 days.
+If deploying a production Kubernetes cluster, consider establishing PKI independently of this tool first. <a href="#certificates-and-keys">Read more below.</a></p>
+<p><strong>Did everything render correctly?</strong>
+If you are familiar with CoreOS and the AWS platform, you may want to include some additional customizations or optional features. Read on below to explore more.</p>
+<p><a href="step-3-launch.html">Yes, ready to launch the cluster</a></p>
+<p><a href="#customizations-to-your-cluster">View optional features &amp; customizations below</a></p>
+<h2 id="customizations-to-your-cluster">Customizations to your cluster</h2>
+<p>You can now customize your cluster by editing asset files. Any changes to these files will require a <code>render</code> and <code>validate</code> workflow, covered below.</p>
+<h3 id="customize-infrastructure">Customize infrastructure</h3>
+<ul>
+<li><p><strong>cluster.yaml</strong></p>
+<p>This is the configuration file for your cluster. It contains the configuration parameters that are templated into your userdata and CloudFormation stack.</p>
+<p>Some common customizations are:</p>
+<ul>
+<li>change the number of workers</li>
+<li>specify tags applied to all created resources</li>
+<li>create cluster inside an existing VPC</li>
+<li>change controller and worker volume sizes
+<br><br></li>
+</ul>
+</li>
+<li><p><strong>userdata/</strong></p>
+<ul>
+<li><code>cloud-config-worker</code></li>
+<li><code>cloud-config-controller</code></li>
+</ul>
+<p>This directory contains the <a href="https://github.com/coreos/coreos-cloudinit" target="_blank">cloud-init</a> cloud-config userdata files. The CoreOS operating system supports automated provisioning via cloud-config files, which describe the various files, scripts and systemd actions necessary to produce a working cluster machine. These files are templated with your cluster configuration parameters and embedded into the CloudFormation stack template.</p>
+<p>Some common customizations are:</p>
+<ul>
+<li><a href="https://coreos.com/os/docs/latest/mounting-storage.html" target="_blank">mounting ephemeral disks</a></li>
+<li><a href="https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#allow-pods-to-use-rbd-volumes" target="_blank">allow pods to mount RDB</a> or <a href="https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#allow-pods-to-use-iscsi-mounts" target="_blank">iSCSI volumes</a></li>
+<li><a href="https://coreos.com/os/docs/latest/registry-authentication.html#using-a-registry-without-ssl-configured" target="_blank">allowing access to insecure container registries</a></li>
+<li><a href="https://github.com/coreos/coreos-kubernetes/blob/master/Documentation/kubelet-wrapper.md#use-the-hosts-dns-configuration" target="_blank">use host DNS configuration instead of a public DNS server</a></li>
+<li><a href="https://coreos.com/os/docs/latest/cloud-config.html#update" target="_blank">changing your CoreOS auto-update settings</a>
+<br><br></li>
+</ul>
+</li>
+<li><p><strong>stack-template.json</strong></p>
+<p>This file describes the <a href="https://aws.amazon.com/cloudformation/" target="_blank">AWS CloudFormation</a> stack which encompasses all the AWS resources associated with your cluster. This JSON document is templated with configuration parameters, we well as the encoded userdata files.</p>
+<p>Some common customizations are:</p>
+<ul>
+<li>tweak AutoScaling rules and timing</li>
+<li>instance IAM roles</li>
+<li>customize security groups beyond the initial configuration
+<br><br></li>
+</ul>
+</li>
+<li><p><strong>credentials/</strong></p>
+<p>This directory contains both encryped and <strong>unencrypted</strong> TLS assets for your cluster, along with a pre-configured <code>kubeconfig</code> file which provides access to your cluster api via kubectl.</p>
+<p>You can also specify additional access tokens in <code>tokens.csv</code> as shown in the <a href="https://kubernetes.io/docs/admin/authentication/#static-token-file" target="_blank">official docs</a>.</p>
+</li>
+</ul>
+<h3 id="kubernetes-container-runtime">Kubernetes Container Runtime</h3>
+<p>The kube-aws tool now optionally supports using rkt as the kubernetes container runtime. To configure rkt as the container runtime you must run with a CoreOS version &gt;= <code>v1151.0.0</code> and configure the runtime flag.</p>
+<p>Edit the <code>cluster.yaml</code> file:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">containerRuntime</span><span class="token punctuation">:</span> rkt
+<span class="token key atrule">releaseChannel</span><span class="token punctuation">:</span> stable
+</code></pre>
+<p>Note that while using rkt as the runtime is now supported, it is still a new option as of the Kubernetes v1.4 release and has a few <a href="http://kubernetes.io/docs/getting-started-guides/rkt/notes/" target="_blank">known issues</a>.</p>
+<h3 id="calico-network-policy">Calico network policy</h3>
+<p>The cluster can be optionally configured to use Calico to provide <a href="http://kubernetes.io/docs/user-guide/networkpolicies/" target="_blank">network policy</a>. These policies limit and control how different pods, namespaces, etc can communicate with each other. These rules can be managed after the cluster is launched, but the feature needs to be turned on beforehand.</p>
+<p>Edit the <code>cluster.yaml</code> file:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">useCalico</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<h3 id="route53-host-record">Route53 Host Record</h3>
+<p><code>kube-aws</code> can optionally create an ALIAS record for the controller&apos;s ELB in an existing Route53 hosted zone.</p>
+<p>Just run <code>kube-aws init</code> with the flag <code>--hosted-zone-id</code> to specify the id of the hosted zone in which the record is created.</p>
+<p>If you&apos;ve run <code>kube-aws init</code> without the flag, edit the <code>cluster.yaml</code> file to add <code>loadBalancer.hostedZone.id</code> under the first item of <code>apiEndpoints</code>:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">apiEndpoints</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> default
+  <span class="token key atrule">dNSName</span><span class="token punctuation">:</span> kubernetes.staging.example.com
+  <span class="token key atrule">loadBalancer</span><span class="token punctuation">:</span>
+    <span class="token key atrule">hostedZone</span><span class="token punctuation">:</span>
+      <span class="token key atrule">id</span><span class="token punctuation">:</span> A12B3CDE4FG5HI
+
+<span class="token comment" spellcheck="true"># DEPRECATED: use hostedZoneId instead</span>
+<span class="token comment" spellcheck="true">#hostedZone: staging.example.com</span>
+
+<span class="token comment" spellcheck="true"># DEPRECATED: use loadBalancer.hostedZone.id instead</span>
+<span class="token comment" spellcheck="true">#hostedZoneId: A12B3CDE4FG5HI</span>
+
+<span class="token comment" spellcheck="true"># DEPRECATED: use loadBalancer.createRecordSet instead</span>
+<span class="token comment" spellcheck="true"># This is even implied to be true when loadBalancer.hostedZone.id is specified</span>
+<span class="token comment" spellcheck="true">#createRecordSet: true</span>
+</code></pre>
+<p>If <code>createRecordSet</code> is not set to true, the deployer will be responsible for making externalDNSName routable to the the ELB managing the controller nodes after the cluster is created.</p>
+<h3 id="multi-az-clusters">Multi-AZ Clusters</h3>
+<p>Kube-aws supports &quot;spreading&quot; a cluster across any number of Availability Zones in a given region.</p>
+<p><strong>A word of caution about EBS and Persistent Volumes</strong>: Any pods deployed to a Multi-AZ cluster must mount EBS volumes via <a href="http://kubernetes.io/docs/user-guide/persistent-volumes/#persistentvolumeclaims" target="_blank">Persistent Volume Claims</a>. Specifying the ID of the EBS volume directly in the pod spec will not work consistently if nodes are spread across multiple zones.</p>
+<p>Read more about Kubernetes Multi-AZ cluster support <a href="http://kubernetes.io/docs/admin/multiple-zones/" target="_blank">here</a>.</p>
+<h4 id="a-common-pitfall-when-deploying-multi-az-clusters-in-combination-with-cluster-autoscaler">A common pitfall when deploying multi-AZ clusters in combination with cluster-autoscaler</h4>
+<p><a href="https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler" target="_blank">cluster-autoscaler</a> is a tool that automatically adjusts the number of Kubernetes worker nodes when:</p>
+<blockquote>
+<ul>
+<li>there is a pod that doesn&#x2019;t have enough space to run in the cluster</li>
+<li>some nodes in the cluster are so underutilized, for an extended period of time, that they can be deleted and their pods will be easily placed on some other, existing nodes.
+<a href="https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler" target="_blank">https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler</a></li>
+</ul>
+</blockquote>
+<p>A common pitfall in deploying cluster-autoscaler to a multi-AZ cluster is that you have to instruct an Auto Scaling Group not to spread over multiple availability zones or cluster-autoscaler results in instability while scaling out the nodes i.e. it takes unnecessary much time to finally bring up a node in the insufficient zone.</p>
+<blockquote>
+<p>The autoscaling group should span 1 availability zone for the cluster autoscaler to work. If you want to distribute workloads evenly across zones, set up multiple ASGs, with a cluster autoscaler for each ASG. At the time of writing this, cluster autoscaler is unaware of availability zones and although autoscaling groups can contain instances in multiple availability zones when configured so, the cluster autoscaler can&apos;t reliably add nodes to desired zones. That&apos;s because AWS AutoScaling determines which zone to add nodes which is out of the control of the cluster autoscaler. For more information, see <a href="https://github.com/kubernetes/contrib/pull/1552#discussion_r75533090" target="_blank">https://github.com/kubernetes/contrib/pull/1552#discussion_r75533090</a>.
+<a href="https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler/cloudprovider/aws#deployment-specification" target="_blank">https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler/cloudprovider/aws#deployment-specification</a></p>
+</blockquote>
+<p>Please read the following guides carefully and select the appropriate deployment according to your requirement regarding auto-scaling.</p>
+<h4 id="for-production-cluster-not-requiring-cluster-autoscaler">For production cluster not requiring cluster-autoscaler</h4>
+<p>If you don&apos;t need auto-scaling at all, or you need only the AWS-native auto-scaling i.e. the a combination of auto scaling groups, scaling policies, CloudWatch alarms,
+theoretically, you can safely go this way.</p>
+<p>Edit the <code>cluster.yaml</code> file to define multiple subnets, each with a different availability zone hence multi-AZ:</p>
+<pre class="language-"><code class="lang-yaml"> <span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+   <span class="token punctuation">-</span> <span class="token key atrule">availabilityZone</span><span class="token punctuation">:</span> us<span class="token punctuation">-</span>west<span class="token punctuation">-</span>1a
+     <span class="token key atrule">instanceCIDR</span><span class="token punctuation">:</span> <span class="token string">&quot;10.0.0.0/24&quot;</span>
+   <span class="token punctuation">-</span> <span class="token key atrule">availabilityZone</span><span class="token punctuation">:</span> us<span class="token punctuation">-</span>west<span class="token punctuation">-</span>1b
+     <span class="token key atrule">instanceCIDR</span><span class="token punctuation">:</span> <span class="token string">&quot;10.0.1.0/24&quot;</span>
+</code></pre>
+<p>This implies that you rely on AWS AutoScaling for selecting which subnet hence which availability zone to add a node when an auto-scaling group&apos;s <code>DesiredCapacity</code> is increased.</p>
+<p>Please read <a href="http://docs.aws.amazon.com/autoscaling/latest/userguide/WhatIsAutoScaling.html" target="_blank">the AWS documentation for more details about AWS Auto Scaling</a>.</p>
+<h4 id="for-production-cluster-requiring-cluster-autoscaler">For production cluster requiring cluster-autoscaler</h4>
+<p>You must utilize <a href="kubernetes-on-aws-node-pool.md">an experimental feature called Node Pool</a> to achieve this deployment.
+Please read <a href="aws-experimental-features">the documentation for experimental features</a> for more instructions.</p>
+<h3 id="certificates-and-keys">Certificates and Keys</h3>
+<p><code>kube-aws render</code> begins by initializing the TLS infrastructure needed to securely operate Kubernetes. If you have your own key/certificate management system, you can overwrite the generated TLS assets after <code>kube-aws render</code>. More information on <a href="openssl.md">Kubernetes certificate generation.</a></p>
+<p>When <code>kube-aws up</code> creates the cluster stack, it will use whatever TLS assets it finds in the <code>credentials</code> folder at the time.</p>
+<p>This includes the certificate authority, signed server certificates for the Kubernetes API server and workers, and a signed client certificate for administrative use.</p>
+<ul>
+<li><p><strong>APIServerCert, APIServerKey</strong></p>
+<p>The API server certificate will be valid for the value of <code>externalDNSName</code>, as well as a the DNS names used to route Kubernetes API requests inside the cluster.</p>
+<p><code>kube-aws</code> does <em>not</em> manage a DNS zone for the cluster.
+This means that the deployer is responsible for ensuring the routability of the external DNS name to the public IP of the master node instance.</p>
+<p>The certificate and key granted to the kube-apiserver.
+This certificate will be presented to external clients of the Kubernetes cluster, so it should be valid for external DNS names, if necessary.</p>
+<p>Additionally, the certificate must have the following Subject Alternative Names (SANs).
+These IPs and DNS names are used within the cluster to route from applications to the Kubernetes API:</p>
+<ul>
+<li>10.0.0.50</li>
+<li>10.3.0.1</li>
+<li>kubernetes</li>
+<li>kubernetes.default</li>
+<li>kubernetes.default.svc</li>
+<li>kubernetes.default.svc.cluster.local</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><p><strong>WorkerCert, WorkerKey</strong></p>
+<p>The certificate and key granted to the kubelets on worker instances.
+The certificate is shared across all workers, so it must be valid for all worker hostnames.
+This is achievable with the Subject Alternative Name (SAN) <code>*.*.compute.internal</code>, or <code>*.ec2.internal</code> if using the us-east-1 AWS region.</p>
+</li>
+<li><p><strong>CACert</strong></p>
+<p>The certificate authority&apos;s TLS certificate is used to sign other certificates in the cluster.</p>
+<p>These assets are stored unencrypted in your <code>credentials</code> folder, but are encyrpted using Amazon KMS before being embedded in the CloudFormation template.</p>
+<p>All keys and certs must be PEM-formatted and base64-encoded.</p>
+</li>
+</ul>
+<h2 id="render-and-validate-cluster-assets">Render and validate cluster assets</h2>
+<p>After you have completed your customizations, re-render your assets with the new settings:</p>
+<pre class="language-"><code class="lang-sh">$ kube-aws render credentials
+$ kube-aws render stack
+</code></pre>
+<p>The <code>validate</code> command check the validity of your changes to the cloud-config userdata files and the CloudFormation stack description.</p>
+<p>This is an important step to make sure your stack will launch successfully:</p>
+<pre class="language-"><code class="lang-sh">$ kube-aws validate --s3-uri s3://<span class="token operator">&lt;</span>your-bucket-name<span class="token operator">&gt;</span>/<span class="token operator">&lt;</span>prefix<span class="token operator">&gt;</span>
+</code></pre>
+<p>If your files are valid, you are ready to <a href="step-3-launch.html">launch your cluster</a>.</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="step-1-configure.html" class="navigation navigation-prev " aria-label="Previous page: Step 1: Configure">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="step-3-launch.html" class="navigation navigation-next " aria-label="Next page: Step 3: Launch">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Step 2: Render","level":"1.2.3","depth":2,"next":{"title":"Step 3: Launch","level":"1.2.4","depth":2,"path":"getting-started/step-3-launch.md","ref":"getting-started/step-3-launch.md","articles":[]},"previous":{"title":"Step 1: Configure","level":"1.2.2","depth":2,"path":"getting-started/step-1-configure.md","ref":"getting-started/step-1-configure.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kube-aws/docs/tree/master"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-2-render.md","mtime":"2017-08-23T02:58:31.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-08-23T03:16:12.640Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

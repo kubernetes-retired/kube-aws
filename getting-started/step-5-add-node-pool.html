@@ -1,0 +1,727 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Step 5: Add Node Pool · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="step-6-configure-add-ons.html" />
+    
+    
+    <link rel="prev" href="step-4-update.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="prerequisites.html">
+            
+                <a href="prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="step-1-configure.html">
+            
+                <a href="step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="step-2-render.html">
+            
+                <a href="step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="step-3-launch.html">
+            
+                <a href="step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="step-4-update.html">
+            
+                <a href="step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2.6" data-path="step-5-add-node-pool.html">
+            
+                <a href="step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.7" data-path="step-6-configure-add-ons.html">
+            
+                <a href="step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.8" data-path="step-7-destroy.html">
+            
+                <a href="step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../cli-reference/">
+            
+                <a href="../cli-reference/">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../cli-reference/aws-credentials.html">
+            
+                <a href="../cli-reference/aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../add-ons/">
+            
+                <a href="../add-ons/">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                <a href="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                <a href="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../guides/contributor-guide.html">
+            
+                <a href="../guides/contributor-guide.html">
+            
+                    
+                    Contributor Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../advanced-topics/">
+            
+                <a href="../advanced-topics/">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="../advanced-topics/etcd-backup-and-restore.html">
+            
+                <a href="../advanced-topics/etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                <a href="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="../advanced-topics/use-an-existing-vpc.html">
+            
+                <a href="../advanced-topics/use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start (WIP)
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Step 5: Add Node Pool</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="node-pool">Node Pool</h1>
+<p>Node Pool allows you to bring up additional pools of worker nodes each with a separate configuration including:</p>
+<ul>
+<li>Instance Type</li>
+<li>Storage Type/Size/IOPS</li>
+<li>Instance Profile</li>
+<li>Additional, User-Provided Security Group(s)</li>
+<li>Spot Price</li>
+<li>AWS service to manage your EC2 instances: <a href="http://docs.aws.amazon.com/autoscaling/latest/userguide/WhatIsAutoScaling.html" target="_blank">Auto Scaling</a> or <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html" target="_blank">Spot Fleet</a></li>
+<li><a href="http://kubernetes.io/docs/user-guide/node-selection/" target="_blank">Node labels</a></li>
+<li><a href="https://github.com/kubernetes/kubernetes/issues/17190" target="_blank">Taints</a></li>
+</ul>
+<h2 id="deploying-a-multi-az-cluster-with-cluster-autoscaler-support-with-node-pools">Deploying a Multi-AZ cluster with cluster-autoscaler support with Node Pools</h2>
+<p>kube-aws creates a node pool in a single AZ by default.
+On top of that, you can add one or more node pool in an another AZ to achieve Multi-AZ.</p>
+<p>Assuming you already have a subnet and a node pool in the subnet:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1a
+  <span class="token key atrule">availabilityZone</span><span class="token punctuation">:</span> us<span class="token punctuation">-</span>west<span class="token punctuation">-</span>1a
+  <span class="token key atrule">instanceCIDR</span><span class="token punctuation">:</span> 10.0.0.0/24
+
+<span class="token key atrule">worker</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodePools</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool1
+      <span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1a
+</code></pre>
+<p>Edit the <code>cluster.yaml</code> file to add the second node pool:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1a
+  <span class="token key atrule">availabilityZone</span><span class="token punctuation">:</span> us<span class="token punctuation">-</span>west<span class="token punctuation">-</span>1a
+  <span class="token key atrule">instanceCIDR</span><span class="token punctuation">:</span> 10.0.0.0/24
+<span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1c
+  <span class="token key atrule">availabilityZone</span><span class="token punctuation">:</span> us<span class="token punctuation">-</span>west<span class="token punctuation">-</span>1c
+  <span class="token key atrule">instanceCIDR</span><span class="token punctuation">:</span> 10.0.1.0/24
+
+<span class="token key atrule">worker</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodePools</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool1
+      <span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1a
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool2
+      <span class="token key atrule">subnets</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> managedPublicSubnetIn1c
+</code></pre>
+<p>Launch the secondary node pool by running <code>kube-aws update</code>:</p>
+<pre class="language-"><code>$ kube-aws update \
+  --s3-uri s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>my-bucket</span><span class="token punctuation">&gt;</span></span>/<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>optional-prefix</span><span class="token punctuation">&gt;</span></span>
+</code></pre><p>Beware that you have to associate only 1 AZ to a node pool or cluster-autoscaler may end up failing to reliably add nodes on demand due to the fact
+that what cluster-autoscaler does is to increase/decrease the desired capacity hence it has no way to selectively add node(s) in a desired AZ.</p>
+<p>Also note that deployment of cluster-autoscaler is currently out of scope of this documentation.
+Please read <a href="https://github.com/kubernetes/contrib/blob/master/cluster-autoscaler/cloudprovider/aws/README.md" target="_blank">cluster-autoscaler&apos;s documentation</a> for instructions on it.</p>
+<h2 id="customizing-minmax-size-of-the-auto-scaling-group">Customizing min/max size of the auto scaling group</h2>
+<p>If you&apos;ve chosen to power your worker nodes in a node pool with an auto scaling group, you can customize <code>MinSize</code>, <code>MaxSize</code>, <code>RollingUpdateMinInstancesInService</code> in <code>cluster.yaml</code>:</p>
+<p>Please read <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html#aws-properties-as-group-prop" target="_blank">the AWS documentation</a> for more information on <code>MinSize</code>, <code>MaxSize</code>, <code>MinInstancesInService</code> for ASGs.</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">worker</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodePools</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool1
+    <span class="token key atrule">autoScalingGroup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">minSize</span><span class="token punctuation">:</span> <span class="token number">1</span>
+      <span class="token key atrule">maxSize</span><span class="token punctuation">:</span> <span class="token number">3</span>
+      <span class="token key atrule">rollingUpdateMinInstancesInService</span><span class="token punctuation">:</span> <span class="token number">2</span>
+</code></pre>
+<p>See <a href="https://github.com/kubernetes-incubator/kube-aws/blob/master/core/controlplane/config/templates/cluster.yaml" target="_blank">the detailed comments in <code>cluster.yaml</code></a> for further information.</p>
+<h2 id="deploying-a-node-pool-powered-by-spot-fleet">Deploying a node pool powered by Spot Fleet</h2>
+<p>Utilizing Spot Fleet gives us chances to dramatically reduce cost being spent on EC2 instances powering Kubernetes worker nodes while achieving reasonable availability.
+AWS says cost reduction is up to 90% but the cost would slightly vary among instance types and other users&apos; bids.</p>
+<p>Spot Fleet support may change in backward-incompatible ways as it is still an experimental feature.
+So, please use this feature at your own risk.
+However, we&apos;d greatly appreciate your feedbacks because they do accelerate improvements in this area!</p>
+<h3 id="known-limitations">Known Limitations</h3>
+<ul>
+<li>Running <code>kube-aws update</code> to increase or decrease <code>targetCapacity</code> of a spot fleet results in a complete replacement of the Spot Fleet hence some downtime. <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520" target="_blank">This is due to how CloudFormation works for updating a Spot Fleet</a><ul>
+<li>It is recommended to temporarily bring up an another, spare node pool to maintain the whole cluster capacity at a certain level while replacing the spot fleet.</li>
+</ul>
+</li>
+</ul>
+<h3 id="pre-requisites">Pre-requisites</h3>
+<p>This feature assumes you already have the IAM role with ARN like &quot;arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-role&quot; in your own AWS account.
+It implies that you&apos;ve arrived &quot;Spot Requests&quot; in EC2 Dashboard in the AWS console at least once.
+See <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites" target="_blank">the AWS documentation describing pre-requisites for Spot Fleet</a> for details.</p>
+<h3 id="steps">Steps</h3>
+<p>To add a node pool powered by Spot Fleet, edit node pool&apos;s <code>cluster.yaml</code>:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">worker</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodePools</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool1
+    <span class="token key atrule">spotFleet</span><span class="token punctuation">:</span>
+      <span class="token key atrule">targetCapacity</span><span class="token punctuation">:</span> <span class="token number">3</span>
+</code></pre>
+<p>To customize your launch specifications to diversify your pool among instance types other than the defaults, edit <code>cluster.yaml</code>:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">worker</span><span class="token punctuation">:</span>
+  <span class="token key atrule">nodePools</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> pool1
+    <span class="token key atrule">spotFleet</span><span class="token punctuation">:</span>
+      <span class="token key atrule">targetCapacity</span><span class="token punctuation">:</span> <span class="token number">5</span>
+      <span class="token key atrule">launchSpecifications</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">weightedCapacity</span><span class="token punctuation">:</span> <span class="token number">1</span>
+        <span class="token key atrule">instanceType</span><span class="token punctuation">:</span> t2.medium
+      <span class="token punctuation">-</span> <span class="token key atrule">weightedCapacity</span><span class="token punctuation">:</span> <span class="token number">2</span>
+        <span class="token key atrule">instanceType</span><span class="token punctuation">:</span> m3.large
+      <span class="token punctuation">-</span> <span class="token key atrule">weightedCapacity</span><span class="token punctuation">:</span> <span class="token number">2</span>
+        <span class="token key atrule">instanceType</span><span class="token punctuation">:</span> m4.large
+</code></pre>
+<p>This configuration would normally result in Spot Fleet to bring up 3 instances to meet your target capacity:</p>
+<ul>
+<li>1x t2.medium = 1 capacity</li>
+<li>1x m3.large = 2 capacity</li>
+<li>1x m4.large = 2 capacity</li>
+</ul>
+<p>This is achieved by the <code>diversified</code> strategy of Spot Fleet.
+Please read <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html#spot-fleet-allocation-strategy" target="_blank">the AWS documentation describing Spot Fleet Allocation Strategy</a> for more details.</p>
+<p>Please also see <a href="https://github.com/kubernetes-incubator/kube-aws/blob/master/core/controlplane/config/templates/cluster.yaml" target="_blank">the detailed comments in <code>cluster.yaml</code></a> and <a href="https://github.com/kubernetes-incubator/kube-aws/issues/112" target="_blank">the GitHub issue summarizing the initial implementation</a> of this feature for further information.</p>
+<p>You can optionally <a href="step-6-configure-add-ons.html">configure various Kubernetes add-ons</a> according to your requirements.
+When you are done with your cluster, <a href="step-7-destroy.html">destroy your cluster</a></p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="step-4-update.html" class="navigation navigation-prev " aria-label="Previous page: Step 4: Update">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="step-6-configure-add-ons.html" class="navigation navigation-next " aria-label="Next page: Step 6: Configure Add-ons">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Step 5: Add Node Pool","level":"1.2.6","depth":2,"next":{"title":"Step 6: Configure Add-ons","level":"1.2.7","depth":2,"path":"getting-started/step-6-configure-add-ons.md","ref":"getting-started/step-6-configure-add-ons.md","articles":[]},"previous":{"title":"Step 4: Update","level":"1.2.5","depth":2,"path":"getting-started/step-4-update.md","ref":"getting-started/step-4-update.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kube-aws/docs/tree/master"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-5-add-node-pool.md","mtime":"2017-08-23T02:58:31.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-08-23T03:16:12.640Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

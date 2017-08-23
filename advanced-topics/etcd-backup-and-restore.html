@@ -1,0 +1,676 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>etcd Backup & Restore · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="cloudformation-updates-in-cli.html" />
+    
+    
+    <link rel="prev" href="./" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../getting-started/">
+            
+                <a href="../getting-started/">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../getting-started/prerequisites.html">
+            
+                <a href="../getting-started/prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../getting-started/step-1-configure.html">
+            
+                <a href="../getting-started/step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../getting-started/step-2-render.html">
+            
+                <a href="../getting-started/step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../getting-started/step-3-launch.html">
+            
+                <a href="../getting-started/step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="../getting-started/step-4-update.html">
+            
+                <a href="../getting-started/step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="../getting-started/step-5-add-node-pool.html">
+            
+                <a href="../getting-started/step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.7" data-path="../getting-started/step-6-configure-add-ons.html">
+            
+                <a href="../getting-started/step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.8" data-path="../getting-started/step-7-destroy.html">
+            
+                <a href="../getting-started/step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../cli-reference/">
+            
+                <a href="../cli-reference/">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../cli-reference/aws-credentials.html">
+            
+                <a href="../cli-reference/aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../add-ons/">
+            
+                <a href="../add-ons/">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                <a href="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                <a href="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../guides/contributor-guide.html">
+            
+                <a href="../guides/contributor-guide.html">
+            
+                    
+                    Contributor Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter active" data-level="1.7.1" data-path="etcd-backup-and-restore.html">
+            
+                <a href="etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="cloudformation-updates-in-cli.html">
+            
+                <a href="cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="use-an-existing-vpc.html">
+            
+                <a href="use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start (WIP)
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >etcd Backup & Restore</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="backup-and-restore-for-etcd">Backup and Restore for etcd</h1>
+<h2 id="backup">Backup</h2>
+<h3 id="manually-taking-an-etcd-snapshot">Manually taking an etcd snapshot</h3>
+<p>ssh into one of etcd nodes and run the following command:</p>
+<pre class="language-"><code class="lang-bash"><span class="token keyword">set</span> -a<span class="token punctuation">;</span> <span class="token function">source</span> /var/run/coreos/etcdadm-environment<span class="token punctuation">;</span> <span class="token keyword">set</span> +a
+/opt/bin/etcdadm save
+</code></pre>
+<p>The command takes an etcd snapshot by running an appropriate <code>etcdctl snapshot save</code> command.
+The snapshot is then exported to the S3 URI: <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-bucket-name</span><span class="token punctuation">&gt;</span></span>/.../<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-cluster-name</span><span class="token punctuation">&gt;</span></span>/exported/etcd-snapshots/snapshot.db</code>.</p>
+<h3 id="automatically-taking-an-etcd-snapshot">Automatically taking an etcd snapshot</h3>
+<p>A feature to periodically take a snapshot of an etcd cluster can be enabled by specifying the following in <code>cluster.yaml</code>:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">etcd</span><span class="token punctuation">:</span>
+  <span class="token key atrule">snapshot</span><span class="token punctuation">:</span>
+    <span class="token key atrule">automated</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<p>When enabled, the command <code>etcdadm save</code> is called periodically (every 1 minute by default) via a systemd timer.</p>
+<h2 id="restore">Restore</h2>
+<p>Please beware that you must have taken an etcd snapshot beforehand to restore your cluster.
+An etcd snapshot can be taken manually or automatically according to the steps described above.</p>
+<h3 id="manually-restoring-a-permanently-failed-etcd-node-from-etcd-snapshot">Manually restoring a permanently failed etcd node from etcd snapshot</h3>
+<p>It is impossible!
+However, you can recover a permanently failed etcd node, without losing data, by &quot;resetting&quot; the node.
+More concretely, you can run the following commands to remove the etcd member from the cluster, wipe etcd data, and then re-add the member to the cluster:</p>
+<pre class="language-"><code class="lang-bash"><span class="token function">sudo</span> systemctl stop etcd-member.service
+
+<span class="token keyword">set</span> -a<span class="token punctuation">;</span> <span class="token function">source</span> /var/run/coreos/etcdadm-environment<span class="token punctuation">;</span> <span class="token keyword">set</span> +a
+/opt/bin/etcdadm replace
+
+<span class="token function">sudo</span> systemctl start etcd-member.service
+</code></pre>
+<p>The reset member eventually catches up data from the etcd cluster hence the recovery is done without losing data.</p>
+<p>For more details, I&apos;d suggest you to read <a href="https://github.com/kubernetes/kubernetes/issues/40027#issuecomment-283501556" target="_blank">the revelant upstream issue</a>.</p>
+<h3 id="manually-restoring-a-cluster-from-etcd-snapshot">Manually restoring a cluster from etcd snapshot</h3>
+<p>ssh into every etcd node and stop the etcd3 process:</p>
+<pre class="language-"><code class="lang-bash"><span class="token keyword">for</span> h <span class="token keyword">in</span> <span class="token variable">$hosts</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+  <span class="token function">ssh</span> -i path/to/your/key core@<span class="token variable">$h</span> <span class="token function">sudo</span> systemctl stop etcd-member.service
+<span class="token keyword">done</span>
+</code></pre>
+<p>and then sart the etcd3 process:</p>
+<pre class="language-"><code class="lang-bash"><span class="token keyword">for</span> h <span class="token keyword">in</span> <span class="token variable">$hosts</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+  <span class="token function">ssh</span> -i path/to/your/key core@<span class="token variable">$h</span> <span class="token function">sudo</span> systemctl start etcd-member.service
+<span class="token keyword">done</span>
+</code></pre>
+<p>Doing this triggers the automated disaster recovery processes across etcd nodes by running <code>etcdadm-reconfigure.service</code>
+and your cluster will eventually be restored from the snapshot stored at <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-bucket-name</span><span class="token punctuation">&gt;</span></span>/.../<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-cluster-name</span><span class="token punctuation">&gt;</span></span>/exported/etcd-snapshots/snapshot.db</code>.</p>
+<h3 id="automatic-recovery">Automatic recovery</h3>
+<p>A feature to automatically restore a permanently failed etcd member or a cluster can be enabled by specifying:</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">etcd</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disasterRecovery</span><span class="token punctuation">:</span>
+    <span class="token key atrule">automated</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<p>When enabled,</p>
+<ul>
+<li>The command <code>etcdadm check</code> is called periodically by a systemd timer<ul>
+<li>The etcd cluster and each etcd node(=member) is checked by running <code>etcdctl endpoint health</code> command</li>
+</ul>
+</li>
+<li>When up to <code>1/N</code> etcd nodes failed successive health checks, it will be removed as an etcd member and then added again as a new member<ul>
+<li>The new member eventually catches up data from the etcd cluster</li>
+</ul>
+</li>
+<li>When more than <code>1/N</code> etcd nodes failed successive health checks, a disaster recovery process is executed to recover all the etcd nodes from the latest etcd snapshot</li>
+</ul>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: Advanced Topics">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="cloudformation-updates-in-cli.html" class="navigation navigation-next " aria-label="Next page: CloudFormation Updates in CLI">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"etcd Backup & Restore","level":"1.7.1","depth":2,"next":{"title":"CloudFormation Updates in CLI","level":"1.7.2","depth":2,"path":"advanced-topics/cloudformation-updates-in-cli.md","ref":"advanced-topics/cloudformation-updates-in-cli.md","articles":[]},"previous":{"title":"Advanced Topics","level":"1.7","depth":1,"path":"advanced-topics/README.md","ref":"advanced-topics/README.md","articles":[{"title":"etcd Backup & Restore","level":"1.7.1","depth":2,"path":"advanced-topics/etcd-backup-and-restore.md","ref":"advanced-topics/etcd-backup-and-restore.md","articles":[]},{"title":"CloudFormation Updates in CLI","level":"1.7.2","depth":2,"path":"advanced-topics/cloudformation-updates-in-cli.md","ref":"advanced-topics/cloudformation-updates-in-cli.md","articles":[]},{"title":"Use An Existing VPC","level":"1.7.3","depth":2,"path":"advanced-topics/use-an-existing-vpc.md","ref":"advanced-topics/use-an-existing-vpc.md","articles":[]}]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kube-aws/docs/tree/master"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"advanced-topics/etcd-backup-and-restore.md","mtime":"2017-08-23T02:58:31.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-08-23T03:16:12.640Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

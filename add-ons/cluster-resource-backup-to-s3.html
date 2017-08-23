@@ -1,0 +1,658 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Cluster Resource Backup to AWS S3 · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="journald-logging-to-cloudwatch.html" />
+    
+    
+    <link rel="prev" href="./" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../getting-started/">
+            
+                <a href="../getting-started/">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../getting-started/prerequisites.html">
+            
+                <a href="../getting-started/prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../getting-started/step-1-configure.html">
+            
+                <a href="../getting-started/step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../getting-started/step-2-render.html">
+            
+                <a href="../getting-started/step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../getting-started/step-3-launch.html">
+            
+                <a href="../getting-started/step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="../getting-started/step-4-update.html">
+            
+                <a href="../getting-started/step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="../getting-started/step-5-add-node-pool.html">
+            
+                <a href="../getting-started/step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.7" data-path="../getting-started/step-6-configure-add-ons.html">
+            
+                <a href="../getting-started/step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.8" data-path="../getting-started/step-7-destroy.html">
+            
+                <a href="../getting-started/step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../cli-reference/">
+            
+                <a href="../cli-reference/">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../cli-reference/aws-credentials.html">
+            
+                <a href="../cli-reference/aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter active" data-level="1.5.1" data-path="cluster-resource-backup-to-s3.html">
+            
+                <a href="cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="journald-logging-to-cloudwatch.html">
+            
+                <a href="journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../guides/contributor-guide.html">
+            
+                <a href="../guides/contributor-guide.html">
+            
+                    
+                    Contributor Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../advanced-topics/">
+            
+                <a href="../advanced-topics/">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="../advanced-topics/etcd-backup-and-restore.html">
+            
+                <a href="../advanced-topics/etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                <a href="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="../advanced-topics/use-an-existing-vpc.html">
+            
+                <a href="../advanced-topics/use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start (WIP)
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Cluster Resource Backup to AWS S3</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="kubernetes-resource-backup--autosave">Kubernetes Resource Backup / Autosave</h1>
+<p>A feature to backup of Kubernetes resources can be enabled by specifying the following in <code>cluster.yaml</code>: </p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">kubeResourcesAutosave</span><span class="token punctuation">:</span>
+    <span class="token key atrule">enabled</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<p>When active, a kube-system Deployment schedules a single pod to take and upload snapshots of all Kubernetes resources to S3.</p>
+<ul>
+<li>Backups are taken and exported when the pod (re)starts and then continues to backup in 24 hours intervals.</li>
+<li>Each snapshot resides in a timestamped folder</li>
+<li>The resources have several fields omitted such as status , uid, etc ... this is to allow the possibility of restoring resources inside a fresh cluster</li>
+<li>Resources that reside within namespaces are grouped inside folders labeled with the namespace name</li>
+<li>Resources outside namespaces are grouped at the same directory level as the namespace folders</li>
+<li>The backups are exported to the S3 URI: <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-bucket-name</span><span class="token punctuation">&gt;</span></span>/.../<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your-cluster-name</span><span class="token punctuation">&gt;</span></span>/backup/*</code></li>
+</ul>
+<h1 id="example">Example</h1>
+<p>A Kubernetes environment has the namespaces:</p>
+<ul>
+<li>kube-system</li>
+<li>alpha</li>
+<li>beta</li>
+</ul>
+<p>A backup is created on 04/05/2017 at 13:48:33.</p>
+<p>The backup is exported to S3 to the path: </p>
+<pre class="language-"><code>s3://my-bucket-name/my-cluster-name/backup/17-05-04_13-48-33
+</code></pre><p>Inside the <code>17-05-04_13-48-33</code> directory are be several .json files of the Kubernetes resources that reside outside namespaces, in addition to a number of folders with names matching the namespaces:</p>
+<pre class="language-"><code>17-05-04_13-48-33/kube-system
+17-05-04_13-48-33/alpha
+17-05-04_13-48-33/beta
+17-05-04_13-48-33/persistentvolumes.json
+17-05-04_13-48-33/storageclasses.json
+...
+...
+...
+</code></pre><p>Inside each namespace folder are be several .json files of the Kubernetes resources that reside inside the respective namespace</p>
+<pre class="language-"><code>17-05-04_13-48-33/kube-system/deployments.json
+17-05-04_13-48-33/kube-system/statefulsets.json
+...
+...
+...
+</code></pre><h1 id="notes">Notes</h1>
+<ul>
+<li>The exportation/synchronisation of the backup files to S3 is not guaranteed to succeed every time, because of this there may be few instances of the pusher container reporting the error: <code>Could not connect to the endpoint URL: &quot;https://......&quot;</code>. This is an AWS issue.
+If such an error does occur then the pushing process will be attempted at the next push interval - default: 1 minute later.
+Please see <a href="https://github.com/kubernetes-incubator/kube-aws/issues/591" target="_blank">#591</a> for more information</li>
+</ul>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: Add-ons">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="journald-logging-to-cloudwatch.html" class="navigation navigation-next " aria-label="Next page: Journald Logging to AWS CloudWatch">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Cluster Resource Backup to AWS S3","level":"1.5.1","depth":2,"next":{"title":"Journald Logging to AWS CloudWatch","level":"1.5.2","depth":2,"path":"add-ons/journald-logging-to-cloudwatch.md","ref":"add-ons/journald-logging-to-cloudwatch.md","articles":[]},"previous":{"title":"Add-ons","level":"1.5","depth":1,"path":"add-ons/README.md","ref":"add-ons/README.md","articles":[{"title":"Cluster Resource Backup to AWS S3","level":"1.5.1","depth":2,"path":"add-ons/cluster-resource-backup-to-s3.md","ref":"add-ons/cluster-resource-backup-to-s3.md","articles":[]},{"title":"Journald Logging to AWS CloudWatch","level":"1.5.2","depth":2,"path":"add-ons/journald-logging-to-cloudwatch.md","ref":"add-ons/journald-logging-to-cloudwatch.md","articles":[]}]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kube-aws/docs/tree/master"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"add-ons/cluster-resource-backup-to-s3.md","mtime":"2017-08-23T02:58:31.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-08-23T03:16:12.640Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

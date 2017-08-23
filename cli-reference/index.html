@@ -1,0 +1,842 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>CLI Reference · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="aws-credentials.html" />
+    
+    
+    <link rel="prev" href="../getting-in-touch.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../getting-started/">
+            
+                <a href="../getting-started/">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../getting-started/prerequisites.html">
+            
+                <a href="../getting-started/prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../getting-started/step-1-configure.html">
+            
+                <a href="../getting-started/step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../getting-started/step-2-render.html">
+            
+                <a href="../getting-started/step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../getting-started/step-3-launch.html">
+            
+                <a href="../getting-started/step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="../getting-started/step-4-update.html">
+            
+                <a href="../getting-started/step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="../getting-started/step-5-add-node-pool.html">
+            
+                <a href="../getting-started/step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.7" data-path="../getting-started/step-6-configure-add-ons.html">
+            
+                <a href="../getting-started/step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.8" data-path="../getting-started/step-7-destroy.html">
+            
+                <a href="../getting-started/step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.4" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="aws-credentials.html">
+            
+                <a href="aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../add-ons/">
+            
+                <a href="../add-ons/">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                <a href="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.2" data-path="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                <a href="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../guides/contributor-guide.html">
+            
+                <a href="../guides/contributor-guide.html">
+            
+                    
+                    Contributor Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../advanced-topics/">
+            
+                <a href="../advanced-topics/">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="../advanced-topics/etcd-backup-and-restore.html">
+            
+                <a href="../advanced-topics/etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                <a href="../advanced-topics/cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="../advanced-topics/use-an-existing-vpc.html">
+            
+                <a href="../advanced-topics/use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start (WIP)
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >CLI Reference</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="cli-reference">CLI Reference</h1>
+<p><a href="aws-credentials.html">AWS credentials</a> need to be configured for commands that run against your AWS account.</p>
+<h1 id="init"><code>init</code></h1>
+<p>Initialize the base configuration for a cluster ready for customization prior to deployment.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ami-id</code></td>
+<td>The AMI ID of CoreOS Container Linux to deploy</td>
+<td>The latest AMI for the Container Linux release channel specified in <code>cluster.yaml</code></td>
+</tr>
+<tr>
+<td><code>availability-zone</code></td>
+<td>The AWS availability-zone to deploy to. Note, this can be changed to multi AZ in <code>cluster.yaml</code></td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>cluster-name</code></td>
+<td>The name of this cluster. This will be the name of the cloudformation stack</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>external-dns-name</code></td>
+<td>The hostname that will route to the api server</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>hosted-zone-id</code></td>
+<td>The hosted zone in which a Route53 record set for a k8s API endpoint is created</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>key-name</code></td>
+<td>The AWS key-pair for SSH access to nodes</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>kms-key-arn</code></td>
+<td>The ARN of the AWS KMS key for encrypting TLS assets</td>
+</tr>
+<tr>
+<td><code>region</code></td>
+<td>The AWS region to deploy to</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h3 id="init-example"><code>init</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws init \
+  --cluster-name<span class="token operator">=</span>my-cluster \
+  --external-dns-name<span class="token operator">=</span>my-cluster-endpoint.mydomain.com \
+  --region<span class="token operator">=</span>us-west-1 \
+  --availability-zone<span class="token operator">=</span>us-west-1c \
+  --key-name<span class="token operator">=</span>key-pair-name \
+  --kms-key-arn<span class="token operator">=</span><span class="token string">&quot;arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx&quot;</span>
+</code></pre>
+<h1 id="render-credentials"><code>render credentials</code></h1>
+<p>Render TLS credentials required for cluster administration and communication between cluster nodes.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ca-cert-path</code></td>
+<td>Path to pem-encoded CA x509 certificate</td>
+<td><code>./credentials/ca.pem</code></td>
+</tr>
+<tr>
+<td><code>ca-key-path</code></td>
+<td>Path to pem-encoded CA RSA key</td>
+<td><code>./credentials/ca-key.pem</code></td>
+</tr>
+<tr>
+<td><code>generate-ca</code></td>
+<td>If generating credentials, generate root CA key and cert. <strong>NOT RECOMMENDED FOR PRODUCTION USE</strong>, use <code>-ca-key-path</code> and <code>-ca-cert-path</code> options to provide your own certificate authority assets.</td>
+<td><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="render-credentials-example"><code>render credentials</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws render credentials \
+  --ca-cert-path<span class="token operator">=</span>/path/to/ca-cert.pem
+  --ca-key-path<span class="token operator">=</span>/path/to/ca-key.pem
+</code></pre>
+<h1 id="render-stack"><code>render stack</code></h1>
+<p>Render <a href="https://aws.amazon.com/cloudformation/" target="_blank">CloudFormation</a> stack templates and <a href="https://github.com/coreos/coreos-cloudinit" target="_blank">coreos-cloudinit</a> userdata ready for customization prior to deployment.</p>
+<p><code>render stack</code> has no CLI flags.</p>
+<h3 id="render-stack-example"><code>render stack</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws render stack
+</code></pre>
+<h1 id="validate"><code>validate</code></h1>
+<p>Validate cluster assets prior to deployment.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws-debug</code></td>
+<td>Log debug information coming from the AWS SDK library</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>s3-uri</code></td>
+<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h3 id="validate-example"><code>validate</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws validate \
+  --s3-uri<span class="token operator">=</span>s3://my-kube-aws-assets-bucket
+</code></pre>
+<h1 id="up"><code>up</code></h1>
+<p>Deploy a new Kubernetes cluster.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws-debug</code></td>
+<td>Log debug information coming from the AWS SDK library</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>export</code></td>
+<td>Do not create cluster, instead export the CloudFormation stack file</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>pretty-print</code></td>
+<td>Pretty print the resulting CloudFormation</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>s3-uri</code></td>
+<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>skip-wait</code></td>
+<td>Do not wait for the cluster components be ready before the CLI exits</td>
+<td><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="up-example"><code>up</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws up \
+  --s3-uri<span class="token operator">=</span>s3://my-kube-aws-assets-bucket
+</code></pre>
+<h1 id="update"><code>update</code></h1>
+<p>Update an existing Kubernetes cluster that was created by kube-aws.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws-debug</code></td>
+<td>Log debug information coming from the AWS SDK library</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>pretty-print</code></td>
+<td>Pretty print the resulting CloudFormation</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>s3-uri</code></td>
+<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>skip-wait</code></td>
+<td>Do not wait for the cluster components be ready before the CLI exits</td>
+<td><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="update-example"><code>update</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws update \
+  --s3-uri<span class="token operator">=</span>s3://my-kube-aws-assets-bucket
+</code></pre>
+<h1 id="destroy"><code>destroy</code></h1>
+<p>Destroy an existing Kubernetes cluster that was created by kube-aws.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aws-debug</code></td>
+<td>Log debug information coming from the AWS SDK library</td>
+<td><code>false</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="destroy-example"><code>destroy</code> example</h3>
+<pre class="language-"><code class="lang-bash">$ kube-aws destory
+</code></pre>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="../getting-in-touch.html" class="navigation navigation-prev " aria-label="Previous page: Getting In Touch">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="aws-credentials.html" class="navigation navigation-next " aria-label="Next page: AWS Credentials">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"CLI Reference","level":"1.4","depth":1,"next":{"title":"AWS Credentials","level":"1.4.1","depth":2,"path":"cli-reference/aws-credentials.md","ref":"cli-reference/aws-credentials.md","articles":[]},"previous":{"title":"Getting In Touch","level":"1.3","depth":1,"path":"getting-in-touch.md","ref":"getting-in-touch.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kube-aws/docs/tree/master"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"cli-reference/README.md","mtime":"2017-08-23T02:58:31.000Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-08-23T03:16:12.640Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
