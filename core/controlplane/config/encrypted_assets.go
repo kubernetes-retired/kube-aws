@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"io/ioutil"
@@ -361,29 +362,43 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 
 func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error {
 	assets := []struct {
-		name string
-		data []byte
+		name      string
+		data      []byte
+		overwrite bool
 	}{
-		{"ca.pem", r.CACert},
-		{"ca-key.pem", r.CAKey},
-		{"apiserver.pem", r.APIServerCert},
-		{"apiserver-key.pem", r.APIServerKey},
-		{"worker.pem", r.WorkerCert},
-		{"worker-key.pem", r.WorkerKey},
-		{"admin.pem", r.AdminCert},
-		{"admin-key.pem", r.AdminKey},
-		{"etcd.pem", r.EtcdCert},
-		{"etcd-key.pem", r.EtcdKey},
-		{"etcd-client.pem", r.EtcdClientCert},
-		{"etcd-client-key.pem", r.EtcdClientKey},
+		{"ca.pem", r.CACert, true},
+		{"ca-key.pem", r.CAKey, true},
+		{"apiserver.pem", r.APIServerCert, true},
+		{"apiserver-key.pem", r.APIServerKey, true},
+		{"worker.pem", r.WorkerCert, true},
+		{"worker-key.pem", r.WorkerKey, true},
+		{"admin.pem", r.AdminCert, true},
+		{"admin-key.pem", r.AdminKey, true},
+		{"etcd.pem", r.EtcdCert, true},
+		{"etcd-key.pem", r.EtcdKey, true},
+		{"etcd-client.pem", r.EtcdClientCert, true},
+		{"etcd-client-key.pem", r.EtcdClientKey, true},
+		{"kubelet-tls-bootstrap-token", r.TLSBootstrapToken, true},
 
-		{"tokens.csv", r.AuthTokens},
-		{"kubelet-tls-bootstrap-token", r.TLSBootstrapToken},
+		// Content entirely provided by user, so do not overwrite it if
+		// the file already exists
+		{"tokens.csv", r.AuthTokens, false},
 	}
 	for _, asset := range assets {
 		path := filepath.Join(dirname, asset.name)
 
 		if asset.name != "ca-key.pem" || includeCAKey {
+			if !asset.overwrite {
+				info, err := os.Stat(path)
+				if info != nil {
+					continue
+				}
+
+				// Unexpected error
+				if err != nil && !os.IsNotExist(err) {
+					return err
+				}
+			}
 			if err := ioutil.WriteFile(path, asset.data, 0600); err != nil {
 				return err
 			}
