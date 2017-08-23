@@ -69,6 +69,9 @@ func NewDefaultCluster() *Cluster {
 		TLSBootstrap: TLSBootstrap{
 			Enabled: false,
 		},
+		NodeAuthorizer: NodeAuthorizer{
+			Enabled: false,
+		},
 		EphemeralImageStorage: EphemeralImageStorage{
 			Enabled:    false,
 			Disk:       "xvdb",
@@ -526,6 +529,7 @@ type Experimental struct {
 	// a node label and IAM permissions to run cluster-autoscaler
 	ClusterAutoscalerSupport    model.ClusterAutoscalerSupport `yaml:"clusterAutoscalerSupport"`
 	TLSBootstrap                TLSBootstrap                   `yaml:"tlsBootstrap"`
+	NodeAuthorizer              NodeAuthorizer                 `yaml:"nodeAuthorizer"`
 	EphemeralImageStorage       EphemeralImageStorage          `yaml:"ephemeralImageStorage"`
 	Kube2IamSupport             Kube2IamSupport                `yaml:"kube2IamSupport,omitempty"`
 	KubeletOpts                 string                         `yaml:"kubeletOpts,omitempty"`
@@ -578,6 +582,10 @@ type AwsNodeLabels struct {
 }
 
 type TLSBootstrap struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type NodeAuthorizer struct {
 	Enabled bool `yaml:"enabled"`
 }
 
@@ -1078,6 +1086,10 @@ func (c Cluster) validate() error {
 		if e := cfnresource.ValidateUnstableRoleNameLength(c.ClusterName, c.NestedStackName(), c.Controller.IAMConfig.Role.Name, c.Region.String()); e != nil {
 			return e
 		}
+	}
+
+	if c.Experimental.NodeAuthorizer.Enabled && !c.Experimental.TLSBootstrap.Enabled {
+		return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
 	}
 
 	return nil
