@@ -6,3 +6,8 @@ script:
   - make test-with-cover
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+deploy:
+  provider: script
+  script: ci/publish-docs-as-bot.sh
+  on:
+    branch: master
