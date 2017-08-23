@@ -16,7 +16,6 @@ Clone the [kube-aws repository](https://github.com/kubernetes-incubator/kube-aws
 
 ```bash
 $ export GOPATH=$HOME/go
-$ mkdir -p $GOPATH/src/github.com/kubernetes-incubator/
 $ git clone git@github.com:kubernetes-incubator/kube-aws.git $GOPATH/src/github.com/kubernetes-incubator/kube-aws
 ```
 
@@ -83,6 +82,3 @@ The various templates are located in the `core/controlplane/config/templates/` a
 ```bash
 make build
 ```
-
-
-
