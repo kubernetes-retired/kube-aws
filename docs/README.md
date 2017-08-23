@@ -1,6 +1,6 @@
 # Introduction {#introduction}
 
-kube-aws is a command-line tool to create/update/destroy Kubernetes clusters on AWS. The [full manual can be found here](https://kube-aws.gitbooks.io/manual/).
+kube-aws is a command-line tool to create/update/destroy Kubernetes clusters on AWS. The [full manual can be found here](https://kubernetes-incubator.github.io/kube-aws/).
 
 To start using kube-aws, try the [Getting Started Guide](getting-started/README.md).
 
