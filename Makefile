@@ -30,7 +30,8 @@ test-with-cover: build
 
 .PHONY: docs-dependencies
 docs-dependencies:
-	npm install -g gitbook-cli
+	if ! which gitbook; then npm install -g gitbook-cli; fi
+	if ! which gh-pages; then npm install -g gh-pages; fi
 	gitbook install
 
 .PHONY: generate-docs
@@ -40,3 +41,7 @@ generate-docs: docs-dependencies
 .PHONY: serve-docs
 serve-docs: docs-dependencies
 	gitbook serve
+
+.PHONY: publish-docs
+publish-docs: generate-docs
+	NODE_DEBUG=gh-pages gh-pages -d _book
