@@ -17,8 +17,8 @@
   * [Cluster Resource Backup to AWS S3](add-ons/cluster-resource-backup-to-s3.md)
   * [Journald Logging to AWS CloudWatch](add-ons/journald-logging-to-cloudwatch.md)
 * [Guides](guides/README.md)
+  * [Developer Guide](guides/developer-guide.md)
   * [Operator Guide](guides/operator-guide.md)
-  * [Contributor Guide](guides/contributor-guide.md)
 * [Advanced Topics](advanced-topics/README.md)
   * [etcd Backup & Restore](advanced-topics/etcd-backup-and-restore.md)
   * [CloudFormation Updates in CLI](advanced-topics/cloudformation-updates-in-cli.md)
@@ -27,4 +27,3 @@
   * [Known Limitations](troubleshooting/known-limitations.md)
   * [Common Problems](troubleshooting/common-problems.md)
 * [Quick Start \(WIP\)](tutorials/quick-start.md)
-
