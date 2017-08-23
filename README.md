@@ -81,10 +81,6 @@ Destroy:
 $ kube-aws destroy
 ```
 
-## Development
-
-Details of how to contribute to kube-aws are in our [Contributor Guide](https://kubernetes-incubator.github.io/kube-aws/guides/contributor-guide.html)
-
 ## Other Resources
 
 Extra or advanced topics in for kube-aws:
@@ -113,4 +109,5 @@ Participation in the Kubernetes community is governed by the [Kubernetes Code of
 ## Contributing
 
 Submit a PR to this repository, following the [contributors guide](CONTRIBUTING.md).
-The documentation is published from [this source](Documentation/kubernetes-on-aws.md).
+
+Details of how to develop kube-aws are in our [Developer Guide](https://kubernetes-incubator.github.io/kube-aws/guides/developer-guide.html).
