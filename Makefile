@@ -42,6 +42,15 @@ generate-docs: docs-dependencies
 serve-docs: docs-dependencies
 	gitbook serve
 
+# For publishing to the `git remote` named `mumoshu` linked to the repo url `git@github.com:mumoshu/kube-aws.git`, the env vars should be:
+#   REPO=mumoshu/kube-aws REMOTE=mumoshu make publish-docs
+# For publishing to the `git remote` named `origin` linked to the repo url `git@github.com:kubernetes-incubator/kube-aws.git`, the env vars should be:
+#   REPO=kubernetes-incubator/kube-aws REMOTE=origin make publish-docs
+# Or just:
+#   make publish-docs
+
 .PHONY: publish-docs
+publish-docs: REPO ?= kubernetes-incubator/kube-aws
+publish-docs: REMOTE ?= origin
 publish-docs: generate-docs
-	NODE_DEBUG=gh-pages gh-pages -d _book
+	NODE_DEBUG=gh-pages gh-pages -d _book -r git@github.com:$(REPO).git -o $(REMOTE)
