@@ -1,16 +1,12 @@
-# Contributor Guide
+# Developer Guide
 
 If you would like to contribute towards the goals of kube-aws, the easiest way to get started is to submit a pull request to the [kube-aws repository](https://github.com/kubernetes-incubator/kube-aws/), following the [contributors guide](https://github.com/kubernetes-incubator/kube-aws/blob/master/CONTRIBUTING.md). If you need some help getting started with a contribution let us know and we can point you in the right direction.
 
-## Code of conduct
+# Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](https://github.com/kubernetes-incubator/kube-aws/blob/master/code-of-conduct.md).
 
-Submit a PR to the [kube-aws repository](https://github.com/kubernetes-incubator/kube-aws/), following the [contributors guide](https://github.com/kubernetes-incubator/kube-aws/blob/master/CONTRIBUTING.md).
-
-# Developing kube-aws
-
-## Build
+# Build
 
 Clone the [kube-aws repository](https://github.com/kubernetes-incubator/kube-aws) to the appropriate path under the GOPATH.
 
@@ -27,13 +23,13 @@ This depends on having:
 
 The compiled binary will be available at `bin/kube-aws`.
 
-## Run Unit Tests
+# Run Unit Tests
 
 ```bash
 make test
 ```
 
-## Run e2e Tests
+# Run e2e Tests
 
 To run the e2e tests, you will need at least these environment variables setup with any missing values filled in with values from your AWS account:
 
@@ -68,13 +64,13 @@ The `FOCUS` environment variable can be used if you wish to target a particular 
 export FOCUS=.*Rescheduler.*
 ```
 
-## Reformat Code
+# Reformat Code
 
 ```bash
 make format
 ```
 
-## Modifying Templates
+# Modifying Templates
 
 The various templates are located in the `core/controlplane/config/templates/` and the `core/nodepool/config/templates/` directory of the source repo. `go generate` is used to pack these templates into the source code. In order for changes to templates to be reflected in the source code:
 
@@ -82,7 +78,7 @@ The various templates are located in the `core/controlplane/config/templates/` a
 make build
 ```
 
-## Documentation
+# Documentation
 
 Documentation source lives inside the `docs` directory of the `master` branch. Generally we aim to add documentation in the same PR as any features/updates so it can be reviewed together. To update the documentation, create/update markdown files inside the `docs` directory and use the following command to generate the full documentation site locally:
 
