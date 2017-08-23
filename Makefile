@@ -31,12 +31,12 @@ test-with-cover: build
 .PHONY: docs-dependencies
 docs-dependencies:
 	npm install -g gitbook-cli
-	cd docs && gitbook install
+	gitbook install
 
 .PHONY: generate-docs
 generate-docs: docs-dependencies
-	cd docs && gitbook build
+	gitbook build
 
 .PHONY: serve-docs
 serve-docs: docs-dependencies
-	cd docs && gitbook serve
+	gitbook serve
