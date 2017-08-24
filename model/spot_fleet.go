@@ -2,7 +2,6 @@ package model
 
 import (
 	"fmt"
-	"strconv"
 )
 
 // UnitRootVolumeSize/IOPS are used for spot fleets instead of WorkerRootVolumeSize/IOPS,
@@ -43,13 +42,6 @@ func (f *SpotFleet) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	launchSpecs := []LaunchSpecification{}
 	for _, spec := range f.LaunchSpecifications {
-		if spec.SpotPrice == "" {
-			p, err := strconv.ParseFloat(f.SpotPrice, 64)
-			if err != nil {
-				panic(fmt.Errorf(`failed to parse float from spotPrice "%s" in %+v: %v`, f.SpotPrice, f, err))
-			}
-			spec.SpotPrice = strconv.FormatFloat(p*float64(spec.WeightedCapacity), 'f', -1, 64)
-		}
 		if spec.RootVolume.Type == "" {
 			spec.RootVolume.Type = f.RootVolumeType
 		}
