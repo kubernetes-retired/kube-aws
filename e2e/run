@@ -267,7 +267,17 @@ experimental:
   awsNodeLabels:
     enabled: true
   auditLog:
+    enabled: true" >> cluster.yaml
+
+  if [ "${NODE_AUTHORIZER}" != "" ]; then
+    echo -e "
+  tlsBootstrap:
     enabled: true
+  nodeAuthorizer:
+    enabled: true" >> cluster.yaml
+  fi
+
+  echo -e "
 addons:
   clusterAutoscaler:
     enabled: true
