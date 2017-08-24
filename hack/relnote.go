@@ -102,7 +102,7 @@ func filesChangedInCommit(refName string) []string {
 func onlyDocsAreChanged(files []string) bool {
 	all := true
 	for _, file := range files {
-		all = all && strings.HasPrefix(file, "Documentation/")
+		all = all && (strings.HasPrefix(file, "Documentation/") || strings.HasPrefix(file, "docs/"))
 	}
 	return all
 }
