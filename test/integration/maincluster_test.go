@@ -571,6 +571,38 @@ worker:
 			},
 		},
 		{
+			context: "WithDifferentReleaseChannels",
+			configYaml: minimalValidConfigYaml + `
+releaseChannel: stable
+worker:
+  nodePools:
+  - name: pool1
+    releaseChanel: alpha
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+			},
+			assertCluster: []ClusterTester{
+				func(c root.Cluster, t *testing.T) {
+					cp := c.ControlPlane().StackConfig.AMI
+					np := c.NodePools()[0].AMI
+
+					if cp == "" {
+						t.Error("the default AMI ID should not be empty but it was")
+					}
+
+					if np == "" {
+						t.Error("the AMI ID for the node pool should not be empty but it was")
+					}
+
+					if cp != np {
+						t.Errorf("the default AMI ID and the AMI ID for the node pool didn't match: default=%s, nodepool=%s", cp, np)
+					}
+				},
+			},
+		},
+		{
 			context: "WithElasticFileSystemId",
 			configYaml: minimalValidConfigYaml + `
 elasticFileSystemId: efs-12345
