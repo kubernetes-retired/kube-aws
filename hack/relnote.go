@@ -107,10 +107,10 @@ func onlyDocsAreChanged(files []string) bool {
 	return all
 }
 
-func onlyTopLevelFilesAreChanged(files []string) bool {
+func onlyMiscFilesAreChanged(files []string) bool {
 	all := true
 	for _, file := range files {
-		all = all && len(strings.Split(file, "/")) == 1
+		all = all && (len(strings.Split(file, "/")) == 1 || strings.HasPrefix(file, "hack/") || strings.HasPrefix(file, "ci/") || strings.HasPrefix(file, "e2e/"))
 	}
 	return all
 }
@@ -243,27 +243,31 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 			fmt.Printf("labels=%v\n", labels)
 			changedFiles := filesChangedInCommit(hash)
 
-			isDocUpdate := onlyDocsAreChanged(changedFiles)
+			isFeature := labels.Contains("feature")
+
+			isDocUpdate := labels.Contains("documentation") ||
+				(!isFeature && onlyDocsAreChanged(changedFiles))
 			if isDocUpdate {
 				fmt.Printf("%s is doc update\n", title)
 			}
 
-			isMetaUpdate := onlyTopLevelFilesAreChanged(changedFiles)
-			if isMetaUpdate {
-				fmt.Printf("%s is meta update\n", title)
+			isMiscUpdate := onlyMiscFilesAreChanged(changedFiles)
+			if isMiscUpdate {
+				fmt.Printf("%s is misc update\n", title)
 			}
 
 			isBugFix := labels.Contains("bug") ||
-				(!isRefactoring && !isDocUpdate && !isMetaUpdate && (strings.Contains(title, "fix") || strings.Contains(title, "Fix")))
+				(!isRefactoring && !isDocUpdate && !isMiscUpdate && (strings.Contains(title, "fix") || strings.Contains(title, "Fix")))
 
 			isProposal := labels.Contains("proposal") ||
-				(!isRefactoring && !isDocUpdate && !isMetaUpdate && !isBugFix && (strings.Contains(title, "proposal") || strings.Contains(title, "Proposal")))
+				(!isRefactoring && !isDocUpdate && !isMiscUpdate && !isBugFix && (strings.Contains(title, "proposal") || strings.Contains(title, "Proposal")))
 
 			isImprovement := labels.Contains("improvement") ||
-				(!isRefactoring && !isDocUpdate && !isMetaUpdate && !isBugFix && !isProposal && containsAny(title, []string{"improve", "Improve", "update", "Update", "bump", "Bump", "Rename", "rename"}))
+				(!isRefactoring && !isDocUpdate && !isMiscUpdate && !isBugFix && !isProposal && containsAny(title, []string{"improve", "Improve", "update", "Update", "bump", "Bump", "Rename", "rename"}))
 
-			isFeature := labels.Contains("feature") ||
-				(!isRefactoring && !isDocUpdate && !isMetaUpdate && !isBugFix && !isProposal && !isImprovement)
+			if !isFeature {
+				isFeature = !isRefactoring && !isDocUpdate && !isMiscUpdate && !isBugFix && !isProposal && !isImprovement
+			}
 
 			actionsRequired := ""
 			noteShouldBeAdded := false
@@ -292,7 +296,7 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 				title:           title,
 				summary:         summary,
 				actionsRequired: actionsRequired,
-				isMetaUpdate:    isMetaUpdate,
+				isMetaUpdate:    isMiscUpdate,
 				isDocUpdate:     isDocUpdate,
 				isImprovement:   isImprovement,
 				isFeature:       isFeature,
@@ -316,6 +320,8 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 
 	println("Kubernetes: v")
 	println("Etcd: v")
+	println("Calico: v")
+	println("Helm/Tiller: v")
 
 	Header("Actions required")
 	for _, item := range items {
