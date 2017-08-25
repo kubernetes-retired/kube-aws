@@ -161,13 +161,13 @@ func TestMainClusterConfig(t *testing.T) {
 			{
 				WeightedCapacity: 1,
 				InstanceType:     "c4.large",
-				SpotPrice:        "0.06",
+				SpotPrice:        "",
 				RootVolume:       model.NewGp2RootVolume(30),
 			},
 			{
 				WeightedCapacity: 2,
 				InstanceType:     "c4.xlarge",
-				SpotPrice:        "0.12",
+				SpotPrice:        "",
 				RootVolume:       model.NewGp2RootVolume(60),
 			},
 		}
@@ -179,6 +179,11 @@ func TestMainClusterConfig(t *testing.T) {
 				expected,
 				actual,
 			)
+		}
+
+		globalSpotPrice := p.NodePoolConfig.SpotFleet.SpotPrice
+		if globalSpotPrice != "0.06" {
+			t.Errorf("Default spot price is expected to be 0.06 but was: %s", globalSpotPrice)
 		}
 	}
 
@@ -2775,7 +2780,7 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "c4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity
 							// RootVolumeType was not specified in the configYaml but should default to "gp2"
 							RootVolume: model.NewGp2RootVolume(40),
@@ -2783,7 +2788,7 @@ worker:
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "c4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							RootVolume:       model.NewGp2RootVolume(100),
 						},
 					}
@@ -2822,14 +2827,14 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "m4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeType was not specified in the configYaml but should default to gp2:
 							RootVolume: model.NewGp2RootVolume(40),
 						},
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "m4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							RootVolume:       model.NewGp2RootVolume(80),
 						},
 					}
@@ -2872,7 +2877,7 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "c4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity
 							// RootVolumeIOPS was not specified in the configYaml but should default to workerRootVolumeIOPS * weightedCapacity
 							// RootVolumeType was not specified in the configYaml but should default to "io1"
@@ -2881,7 +2886,7 @@ worker:
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "c4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							// RootVolumeType was not specified in the configYaml but should default to:
 							RootVolume: model.NewIo1RootVolume(80, 500),
 						},
