@@ -269,18 +269,32 @@ experimental:
   auditLog:
     enabled: true" >> cluster.yaml
 
-  if [ "${NODE_AUTHORIZER}" != "" ]; then
+  if [ "${NODE_AUTHORIZER}" != "" -o "${TLS_BOOTSTRAP}" != "" ]; then
     echo -e "
   tlsBootstrap:
-    enabled: true
+    enabled: true" >> cluster.yaml
+  fi
+
+  if [ "${NODE_AUTHORIZER}" != "" ]; then
+    echo -e "
   nodeAuthorizer:
     enabled: true" >> cluster.yaml
+  fi
+
+
+  if [ "${RBAC}" != "" ]; then
+    echo -e "
+  plugins:
+    rbac:
+      enabled: true" >> cluster.yaml
   fi
 
   echo -e "
 addons:
   clusterAutoscaler:
-    enabled: true
+    enabled: true" >> cluster.yaml
+
+  echo -e "
 cloudWatchLogging:
   enabled: true
 amazonSsmAgent:
