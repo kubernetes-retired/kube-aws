@@ -26,6 +26,8 @@ type RawAssetsOnMemory struct {
 	// PEM encoded TLS assets.
 	CACert         []byte
 	CAKey          []byte
+	WorkerCACert   []byte
+	WorkerCAKey    []byte
 	APIServerCert  []byte
 	APIServerKey   []byte
 	WorkerCert     []byte
@@ -36,6 +38,7 @@ type RawAssetsOnMemory struct {
 	EtcdClientCert []byte
 	EtcdKey        []byte
 	EtcdClientKey  []byte
+	EtcdTrustedCA  []byte
 
 	// Other assets.
 	AuthTokens        []byte
@@ -46,6 +49,8 @@ type RawAssetsOnDisk struct {
 	// PEM encoded TLS assets.
 	CACert         RawCredentialOnDisk
 	CAKey          RawCredentialOnDisk
+	WorkerCACert   RawCredentialOnDisk
+	WorkerCAKey    RawCredentialOnDisk
 	APIServerCert  RawCredentialOnDisk
 	APIServerKey   RawCredentialOnDisk
 	WorkerCert     RawCredentialOnDisk
@@ -56,6 +61,7 @@ type RawAssetsOnDisk struct {
 	EtcdClientCert RawCredentialOnDisk
 	EtcdKey        RawCredentialOnDisk
 	EtcdClientKey  RawCredentialOnDisk
+	EtcdTrustedCA  RawCredentialOnDisk
 
 	// Other assets.
 	AuthTokens        RawCredentialOnDisk
@@ -66,6 +72,8 @@ type EncryptedAssetsOnDisk struct {
 	// Encrypted PEM encoded TLS assets.
 	CACert         EncryptedCredentialOnDisk
 	CAKey          EncryptedCredentialOnDisk
+	WorkerCACert   EncryptedCredentialOnDisk
+	WorkerCAKey    EncryptedCredentialOnDisk
 	APIServerCert  EncryptedCredentialOnDisk
 	APIServerKey   EncryptedCredentialOnDisk
 	WorkerCert     EncryptedCredentialOnDisk
@@ -76,6 +84,7 @@ type EncryptedAssetsOnDisk struct {
 	EtcdClientCert EncryptedCredentialOnDisk
 	EtcdKey        EncryptedCredentialOnDisk
 	EtcdClientKey  EncryptedCredentialOnDisk
+	EtcdTrustedCA  EncryptedCredentialOnDisk
 
 	// Other encrypted assets.
 	AuthTokens        EncryptedCredentialOnDisk
@@ -86,6 +95,8 @@ type CompactAssets struct {
 	// PEM -> encrypted -> gzip -> base64 encoded TLS assets.
 	CACert         string
 	CAKey          string
+	WorkerCACert   string
+	WorkerCAKey    string
 	APIServerCert  string
 	APIServerKey   string
 	WorkerCert     string
@@ -96,6 +107,7 @@ type CompactAssets struct {
 	EtcdClientCert string
 	EtcdClientKey  string
 	EtcdKey        string
+	EtcdTrustedCA  string
 
 	// Encrypted -> gzip -> base64 encoded assets.
 	AuthTokens        string
@@ -281,6 +293,8 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil},
 			{"ca-key.pem", &r.CAKey, nil},
+			{"worker-ca.pem", &r.WorkerCACert, nil},
+			{"worker-ca-key.pem", &r.WorkerCAKey, nil},
 			{"apiserver.pem", &r.APIServerCert, nil},
 			{"apiserver-key.pem", &r.APIServerKey, nil},
 			{"worker.pem", &r.WorkerCert, nil},
@@ -291,6 +305,7 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 			{"etcd-key.pem", &r.EtcdKey, nil},
 			{"etcd-client.pem", &r.EtcdClientCert, nil},
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil},
+			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil},
 		}...)
 	}
 
@@ -331,7 +346,9 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	if manageCertificates {
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
-			{"ca-key.pem", &r.CAKey, nil, true},
+			//{"ca-key.pem", &r.CAKey, nil, true},
+			{"worker-ca.pem", &r.WorkerCACert, nil, false},
+			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
 			{"apiserver-key.pem", &r.APIServerKey, nil, true},
 			{"worker.pem", &r.WorkerCert, nil, false},
@@ -342,6 +359,7 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 			{"etcd-key.pem", &r.EtcdKey, nil, true},
 			{"etcd-client.pem", &r.EtcdClientCert, nil, false},
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil, true},
+			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil, false},
 		}...)
 	}
 
@@ -377,6 +395,8 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 	}{
 		{"ca.pem", r.CACert, true},
 		{"ca-key.pem", r.CAKey, true},
+		{"worker-ca.pem", r.WorkerCACert, true},
+		{"worker-ca-key.pem", r.WorkerCAKey, true},
 		{"apiserver.pem", r.APIServerCert, true},
 		{"apiserver-key.pem", r.APIServerKey, true},
 		{"worker.pem", r.WorkerCert, true},
@@ -387,12 +407,14 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 		{"etcd-key.pem", r.EtcdKey, true},
 		{"etcd-client.pem", r.EtcdClientCert, true},
 		{"etcd-client-key.pem", r.EtcdClientKey, true},
+		{"etcd-trusted-ca.pem", r.EtcdTrustedCA, true},
 		{"kubelet-tls-bootstrap-token", r.TLSBootstrapToken, true},
 
 		// Content entirely provided by user, so do not overwrite it if
 		// the file already exists
 		{"tokens.csv", r.AuthTokens, false},
 	}
+
 	for _, asset := range assets {
 		path := filepath.Join(dirname, asset.name)
 
@@ -413,6 +435,35 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 			}
 		}
 	}
+
+	// etcd trusted ca and worker-ca are separate files, but pointing to ca.pem by default.
+	// In advanced configurations, when certs are managed outside of kube-aws,
+	// these can be separate CAs to ensure that worker nodes have no certs which would let them
+	// access etcd directly. If worker-ca.pem != ca.pem, then ca.pem should include worker-ca.pem
+	// to let TLS bootstrapped workers acces APIServer.
+	symlinks := []struct {
+		from string
+		to   string
+	}{
+		{"ca.pem", "worker-ca.pem"},
+		{"ca.pem", "etcd-trusted-ca.pem"},
+		{"ca-key.pem", "worker-ca-key.pem"},
+	}
+
+	for _, sl := range symlinks {
+		from := filepath.Join(dirname, sl.from)
+		to := filepath.Join(dirname, sl.to)
+
+		if _, err := os.Lstat(to); err == nil {
+			if err := os.Remove(to); err != nil {
+				return err
+			}
+		}
+
+		if err := os.Symlink(from, to); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -423,6 +474,8 @@ func (r *EncryptedAssetsOnDisk) WriteToDir(dirname string) error {
 	}{
 		{"ca.pem", r.CACert},
 		{"ca-key.pem", r.CAKey},
+		{"worker-ca.pem", r.WorkerCACert},
+		{"worker-ca-key.pem", r.WorkerCAKey},
 		{"apiserver.pem", r.APIServerCert},
 		{"apiserver-key.pem", r.APIServerKey},
 		{"worker.pem", r.WorkerCert},
@@ -433,6 +486,7 @@ func (r *EncryptedAssetsOnDisk) WriteToDir(dirname string) error {
 		{"etcd-key.pem", r.EtcdKey},
 		{"etcd-client.pem", r.EtcdClientCert},
 		{"etcd-client-key.pem", r.EtcdClientKey},
+		{"etcd-trusted-ca.pem", r.EtcdTrustedCA},
 
 		{"tokens.csv", r.AuthTokens},
 		{"kubelet-tls-bootstrap-token", r.TLSBootstrapToken},
@@ -466,7 +520,9 @@ func (r *RawAssetsOnDisk) Compact() (*CompactAssets, error) {
 		return out
 	}
 	compactAssets := CompactAssets{
-		CACert:         compact(r.CACert),
+		CACert:       compact(r.CACert), // why no CAKey here?
+		WorkerCACert: compact(r.WorkerCACert),
+		//WorkerCAKey:    compact(r.WorkerCAKey),
 		APIServerCert:  compact(r.APIServerCert),
 		APIServerKey:   compact(r.APIServerKey),
 		WorkerCert:     compact(r.WorkerCert),
@@ -477,6 +533,7 @@ func (r *RawAssetsOnDisk) Compact() (*CompactAssets, error) {
 		EtcdClientCert: compact(r.EtcdClientCert),
 		EtcdClientKey:  compact(r.EtcdClientKey),
 		EtcdKey:        compact(r.EtcdKey),
+		EtcdTrustedCA:  compact(r.EtcdTrustedCA),
 
 		AuthTokens:        compact(r.AuthTokens),
 		TLSBootstrapToken: compact(r.TLSBootstrapToken),
@@ -508,6 +565,8 @@ func (r *EncryptedAssetsOnDisk) Compact() (*CompactAssets, error) {
 	compactAssets := CompactAssets{
 		CACert:         compact(r.CACert),
 		CAKey:          compact(r.CAKey),
+		WorkerCACert:   compact(r.WorkerCACert),
+		WorkerCAKey:    compact(r.WorkerCAKey),
 		APIServerCert:  compact(r.APIServerCert),
 		APIServerKey:   compact(r.APIServerKey),
 		WorkerCert:     compact(r.WorkerCert),
@@ -518,6 +577,7 @@ func (r *EncryptedAssetsOnDisk) Compact() (*CompactAssets, error) {
 		EtcdClientCert: compact(r.EtcdClientCert),
 		EtcdClientKey:  compact(r.EtcdClientKey),
 		EtcdKey:        compact(r.EtcdKey),
+		EtcdTrustedCA:  compact(r.EtcdTrustedCA),
 
 		AuthTokens:        compact(r.AuthTokens),
 		TLSBootstrapToken: compact(r.TLSBootstrapToken),

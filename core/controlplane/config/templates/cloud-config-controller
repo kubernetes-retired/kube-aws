@@ -22,7 +22,7 @@ coreos:
     reboot-strategy: "off"
   flannel:
     interface: $private_ipv4
-    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_cafile: /etc/kubernetes/ssl/etcd-trusted-ca.pem
     etcd_certfile: /etc/kubernetes/ssl/etcd-client.pem
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
@@ -167,7 +167,7 @@ coreos:
             ExecStartPre=/opt/bin/decrypt-assets
             {{- end}}
             ExecStartPre=/usr/bin/etcdctl \
-            --ca-file=/etc/kubernetes/ssl/ca.pem \
+            --ca-file=/etc/kubernetes/ssl/etcd-trusted-ca.pem \
             --cert-file=/etc/kubernetes/ssl/etcd-client.pem \
             --key-file=/etc/kubernetes/ssl/etcd-client-key.pem \
             --endpoints="${ETCD_ENDPOINTS}" \
@@ -211,7 +211,7 @@ coreos:
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
         Environment=KUBELET_IMAGE_URL={{ .HyperkubeImage.RktRepoWithoutTag }}
         Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
-        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/etcd-trusted-ca.pem \
         --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
         --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
@@ -237,7 +237,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
         ExecStartPre=/usr/bin/etcdctl \
-                       --ca-file /etc/kubernetes/ssl/ca.pem \
+                       --ca-file /etc/kubernetes/ssl/etcd-trusted-ca.pem \
                        --key-file /etc/kubernetes/ssl/etcd-client-key.pem \
                        --cert-file /etc/kubernetes/ssl/etcd-client.pem \
                        --endpoints "${ETCD_ENDPOINTS}" \
@@ -1044,7 +1044,7 @@ write_files:
     content: |
       #!/bin/bash -e
 
-      etcd_ca=$(cat /etc/kubernetes/ssl/ca.pem | base64 | tr -d '\n')
+      etcd_ca=$(cat /etc/kubernetes/ssl/etcd-trusted-ca.pem | base64 | tr -d '\n')
       etcd_key=$(cat /etc/kubernetes/ssl/etcd-client-key.pem | base64 | tr -d '\n')
       etcd_cert=$(cat /etc/kubernetes/ssl/etcd-client.pem | base64 | tr -d '\n')
 
@@ -1742,7 +1742,7 @@ write_files:
           - --apiserver-count={{if .MinControllerCount}}{{ .MinControllerCount }}{{else}}{{ .ControllerCount }}{{end}}
           - --bind-address=0.0.0.0
           - --etcd-servers=#ETCD_ENDPOINTS#
-          - --etcd-cafile=/etc/kubernetes/ssl/ca.pem
+          - --etcd-cafile=/etc/kubernetes/ssl/etcd-trusted-ca.pem
           - --etcd-certfile=/etc/kubernetes/ssl/etcd-client.pem
           - --etcd-keyfile=/etc/kubernetes/ssl/etcd-client-key.pem
           - --allow-privileged=true
@@ -1884,8 +1884,8 @@ write_files:
           - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           {{ if .Experimental.TLSBootstrap.Enabled }}
           - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
-          - --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem
-          - --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem
+          - --cluster-signing-cert-file=/etc/kubernetes/ssl/worker-ca.pem
+          - --cluster-signing-key-file=/etc/kubernetes/ssl/worker-ca-key.pem
           {{ end }}
           - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           - --cloud-provider=aws
@@ -2677,9 +2677,9 @@ write_files:
     content: {{.AssetsConfig.CACert}}
 
 {{ if .Experimental.TLSBootstrap.Enabled }}
-  - path: /etc/kubernetes/ssl/ca-key.pem.enc
+  - path: /etc/kubernetes/ssl/worker-ca-key.pem.enc
     encoding: gzip+base64
-    content: {{.AssetsConfig.CAKey}}
+    content: {{.AssetsConfig.WorkerCAKey}}
 {{ end }}
 
   - path: /etc/kubernetes/ssl/apiserver.pem
@@ -2698,6 +2698,9 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientKey}}
 
+  - path: /etc/kubernetes/ssl/etcd-trusted-ca.pem
+    encoding: gzip+base64
+    content: {{.AssetsConfig.EtcdTrustedCA}}
 {{ end }}
 
   - path: /etc/kubernetes/controller-kubeconfig.yaml
@@ -2740,7 +2743,7 @@ write_files:
           "etcd_endpoints": "#ETCD_ENDPOINTS#",
           "etcd_key_file": "/etc/kubernetes/ssl/etcd-client-key.pem",
           "etcd_cert_file": "/etc/kubernetes/ssl/etcd-client.pem",
-          "etcd_ca_cert_file": "/etc/kubernetes/ssl/ca.pem",
+          "etcd_ca_cert_file": "/etc/kubernetes/ssl/etcd-trusted-ca.pem",
           "log_level": "info",
           "policy": {
             "type": "k8s",

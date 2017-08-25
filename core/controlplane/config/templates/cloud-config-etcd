@@ -659,12 +659,12 @@ write_files:
 
       echo "KUBE_AWS_ASSUMED_HOSTNAME=$advertised_hostname
       ETCD_NAME=$name
-      ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCD_PEER_CERT_FILE=/etc/ssl/certs/etcd.pem
       ETCD_PEER_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
       ETCD_CLIENT_CERT_AUTH=true
-      ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCD_CERT_FILE=/etc/ssl/certs/etcd.pem
       ETCD_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
@@ -727,7 +727,7 @@ write_files:
     content: |
       COREOS_PUBLIC_IPV4=$public_ipv4
       COREOS_PRIVATE_IPV4=$private_ipv4
-      ETCDCTL_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCDCTL_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCDCTL_CERT_FILE=/etc/ssl/certs/etcd-client.pem
       ETCDCTL_KEY_FILE=/etc/ssl/certs/etcd-client-key.pem
       ETCDCTL_ENDPOINT=
@@ -771,9 +771,9 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/ssl/certs/ca.pem
+  - path: /etc/ssl/certs/etcd-trusted-ca.pem
     encoding: gzip+base64
-    content: {{.AssetsConfig.CACert}}
+    content: {{.AssetsConfig.EtcdTrustedCA}}
 
   - path: /etc/ssl/certs/etcd-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
