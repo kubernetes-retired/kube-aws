@@ -20,6 +20,14 @@ func WithTempDir(fn func(dir string)) {
 }
 
 func WithDummyCredentials(fn func(dir string)) {
+	withDummyCredentials(true, fn)
+}
+
+func WithDummyCredentialsButCAKey(fn func(dir string)) {
+	withDummyCredentials(false, fn)
+}
+
+func withDummyCredentials(alsoWriteCAKey bool, fn func(dir string)) {
 	dir, err := ioutil.TempDir("", "dummy-credentials")
 
 	if err != nil {
@@ -38,11 +46,13 @@ func WithDummyCredentials(fn func(dir string)) {
 		}
 		defer os.Remove(certFile)
 
-		keyFile := fmt.Sprintf("%s/%s-key.pem", dir, pairName)
-		if err := ioutil.WriteFile(keyFile, []byte("dummykey"), 0644); err != nil {
-			panic(err)
+		if pairName != "ca" || alsoWriteCAKey {
+			keyFile := fmt.Sprintf("%s/%s-key.pem", dir, pairName)
+			if err := ioutil.WriteFile(keyFile, []byte("dummykey"), 0644); err != nil {
+				panic(err)
+			}
+			defer os.Remove(keyFile)
 		}
-		defer os.Remove(keyFile)
 	}
 
 	symlinks := []struct {

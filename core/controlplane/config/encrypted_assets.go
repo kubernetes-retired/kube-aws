@@ -142,15 +142,50 @@ type CredentialsOptions struct {
 	CaCertPath string
 }
 
-func (c *Cluster) NewAssetsOnDisk(dir string, renderCredentialsOpts CredentialsOptions, caKey *rsa.PrivateKey, caCert *x509.Certificate) (*RawAssetsOnDisk, error) {
+func (c *Cluster) NewAssetsOnDisk(dir string, renderCredentialsOpts CredentialsOptions) (*RawAssetsOnDisk, error) {
+	fmt.Println("Generating credentials...")
+	var caKey *rsa.PrivateKey
+	var caCert *x509.Certificate
+	if renderCredentialsOpts.GenerateCA {
+		var err error
+		caKey, caCert, err = c.NewTLSCA()
+		if err != nil {
+			return nil, fmt.Errorf("failed generating cluster CA: %v", err)
+		}
+		fmt.Printf("-> Generating new TLS CA\n")
+	} else {
+		fmt.Printf("-> Parsing existing TLS CA\n")
+		if caKeyBytes, err := ioutil.ReadFile(renderCredentialsOpts.CaKeyPath); err != nil {
+			return nil, fmt.Errorf("failed reading ca key file %s : %v", renderCredentialsOpts.CaKeyPath, err)
+		} else {
+			if caKey, err = tlsutil.DecodePrivateKeyPEM(caKeyBytes); err != nil {
+				return nil, fmt.Errorf("failed parsing ca key: %v", err)
+			}
+		}
+		if caCertBytes, err := ioutil.ReadFile(renderCredentialsOpts.CaCertPath); err != nil {
+			return nil, fmt.Errorf("failed reading ca cert file %s : %v", renderCredentialsOpts.CaCertPath, err)
+		} else {
+			if caCert, err = tlsutil.DecodeCertificatePEM(caCertBytes); err != nil {
+				return nil, fmt.Errorf("failed parsing ca cert: %v", err)
+			}
+		}
+	}
+
 	assets, err := c.NewAssetsOnMemory(caKey, caCert)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating default assets: %v", err)
 	}
-	if err := assets.WriteToDir(dir, renderCredentialsOpts.GenerateCA); err != nil {
+
+	tlsBootstrappingEnabled := c.Experimental.TLSBootstrap.Enabled
+	certsManagedByKubeAws := c.ManageCertificates
+	caKeyRequiredOnController := certsManagedByKubeAws && tlsBootstrappingEnabled
+
+	alsoWriteCAKey := renderCredentialsOpts.GenerateCA || caKeyRequiredOnController
+	if err := assets.WriteToDir(dir, alsoWriteCAKey); err != nil {
 		return nil, fmt.Errorf("Error create assets: %v", err)
 	}
-	return ReadRawAssets(dir, true)
+
+	return ReadRawAssets(dir, certsManagedByKubeAws, tlsBootstrappingEnabled)
 }
 
 func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certificate) (*RawAssetsOnMemory, error) {
@@ -267,7 +302,7 @@ func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certific
 	}, nil
 }
 
-func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, error) {
+func ReadRawAssets(dirname string, manageCertificates bool, caKeyRequiredOnController bool) (*RawAssetsOnDisk, error) {
 	defaultTokensFile := ""
 	defaultTLSBootstrapToken, err := RandomTLSBootstrapTokenString()
 	if err != nil {
@@ -292,7 +327,6 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 		// Assumes no default values for any cert
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil},
-			{"ca-key.pem", &r.CAKey, nil},
 			{"worker-ca.pem", &r.WorkerCACert, nil},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil},
 			{"apiserver.pem", &r.APIServerCert, nil},
@@ -307,6 +341,10 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil},
 			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil},
 		}...)
+
+		if caKeyRequiredOnController {
+			files = append(files, entry{"ca-key.pem", &r.CAKey, nil})
+		}
 	}
 
 	for _, file := range files {
@@ -322,7 +360,7 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 	return r, nil
 }
 
-func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor CachedEncryptor) (*EncryptedAssetsOnDisk, error) {
+func ReadOrEncryptAssets(dirname string, manageCertificates bool, caKeyRequiredOnController bool, encryptor CachedEncryptor) (*EncryptedAssetsOnDisk, error) {
 	defaultTokensFile := ""
 	defaultTLSBootstrapToken, err := RandomTLSBootstrapTokenString()
 	if err != nil {
@@ -346,7 +384,6 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	if manageCertificates {
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
-			{"ca-key.pem", &r.CAKey, nil, true},
 			{"worker-ca.pem", &r.WorkerCACert, nil, false},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
@@ -361,6 +398,10 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil, true},
 			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil, false},
 		}...)
+
+		if caKeyRequiredOnController {
+			files = append(files, entry{"ca-key.pem", &r.CAKey, nil, true})
+		}
 	}
 
 	for _, file := range files {
@@ -598,7 +639,7 @@ type KMSConfig struct {
 	KMSKeyARN      string
 }
 
-func ReadOrCreateEncryptedAssets(tlsAssetsDir string, manageCertificates bool, kmsConfig KMSConfig) (*EncryptedAssetsOnDisk, error) {
+func ReadOrCreateEncryptedAssets(tlsAssetsDir string, manageCertificates bool, caKeyRequiredOnController bool, kmsConfig KMSConfig) (*EncryptedAssetsOnDisk, error) {
 	var kmsSvc EncryptService
 
 	// TODO Cleaner way to inject this dependency
@@ -620,11 +661,11 @@ func ReadOrCreateEncryptedAssets(tlsAssetsDir string, manageCertificates bool, k
 		bytesEncryptionService: encryptionSvc,
 	}
 
-	return ReadOrEncryptAssets(tlsAssetsDir, manageCertificates, encryptor)
+	return ReadOrEncryptAssets(tlsAssetsDir, manageCertificates, caKeyRequiredOnController, encryptor)
 }
 
-func ReadOrCreateCompactAssets(assetsDir string, manageCertificates bool, kmsConfig KMSConfig) (*CompactAssets, error) {
-	encryptedAssets, err := ReadOrCreateEncryptedAssets(assetsDir, manageCertificates, kmsConfig)
+func ReadOrCreateCompactAssets(assetsDir string, manageCertificates bool, caKeyRequiredOnController bool, kmsConfig KMSConfig) (*CompactAssets, error) {
+	encryptedAssets, err := ReadOrCreateEncryptedAssets(assetsDir, manageCertificates, caKeyRequiredOnController, kmsConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read/create encrypted assets: %v", err)
 	}
@@ -637,8 +678,8 @@ func ReadOrCreateCompactAssets(assetsDir string, manageCertificates bool, kmsCon
 	return compactAssets, nil
 }
 
-func ReadOrCreateUnencryptedCompactAssets(assetsDir string, manageCertificates bool) (*CompactAssets, error) {
-	unencryptedAssets, err := ReadRawAssets(assetsDir, manageCertificates)
+func ReadOrCreateUnencryptedCompactAssets(assetsDir string, manageCertificates bool, caKeyRequiredOnController bool) (*CompactAssets, error) {
+	unencryptedAssets, err := ReadRawAssets(assetsDir, manageCertificates, caKeyRequiredOnController)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read/create encrypted assets: %v", err)
 	}
