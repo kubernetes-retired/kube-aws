@@ -78,12 +78,15 @@ func (c DeploymentSettings) WithDefaultsFrom(main cfg.DeploymentSettings) Deploy
 
 	// No defaulting for AvailabilityZone: It must be set explicitly for high availability
 
+	// If there was a specific release channel specified for this node pool,
+	// the user would want to use the latest AMI for the channel, not the latest AMI for the default release channel
+	// specified in the top level of cluster.yaml
 	if c.ReleaseChannel == "" {
 		c.ReleaseChannel = main.ReleaseChannel
-	}
 
-	if c.AmiId == "" {
-		c.AmiId = main.AmiId
+		if c.AmiId == "" {
+			c.AmiId = main.AmiId
+		}
 	}
 
 	if c.K8sVer == "" {
