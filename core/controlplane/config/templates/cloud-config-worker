@@ -39,7 +39,7 @@ coreos:
     reboot-strategy: "off"
   flannel:
     interface: $private_ipv4
-    etcd_cafile: /etc/kubernetes/ssl/ca.pem
+    etcd_cafile: /etc/kubernetes/ssl/etcd-trusted-ca.pem
     etcd_certfile: /etc/kubernetes/ssl/etcd-client.pem
     etcd_keyfile: /etc/kubernetes/ssl/etcd-client-key.pem
 
@@ -236,7 +236,7 @@ coreos:
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
         Environment=KUBELET_IMAGE_URL={{.HyperkubeImage.RktRepoWithoutTag}}
         Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
-        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/ca.pem \
+        --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/etcd-trusted-ca.pem \
         --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
         --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         --mount volume=dns,target=/etc/resolv.conf \
@@ -261,7 +261,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /etc/kubernetes/cni/net.d/  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
         ExecStartPre=/usr/bin/etcdctl \
-                       --ca-file /etc/kubernetes/ssl/ca.pem \
+                       --ca-file /etc/kubernetes/ssl/etcd-trusted-ca.pem \
                        --key-file /etc/kubernetes/ssl/etcd-client-key.pem \
                        --cert-file /etc/kubernetes/ssl/etcd-client.pem \
                        --endpoints "${ETCD_ENDPOINTS}" \
@@ -728,6 +728,10 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientKey}}
 
+  - path: /etc/kubernetes/ssl/etcd-trusted-ca.pem
+    encoding: gzip+base64
+    content: {{.AssetsConfig.EtcdTrustedCA}}
+
 {{ if not .Experimental.TLSBootstrap.Enabled }}
   - path: /etc/kubernetes/ssl/worker.pem
     encoding: gzip+base64
@@ -989,7 +993,7 @@ write_files:
           "etcd_endpoints": "#ETCD_ENDPOINTS#",
           "etcd_key_file": "/etc/kubernetes/ssl/etcd-client-key.pem",
           "etcd_cert_file": "/etc/kubernetes/ssl/etcd-client.pem",
-          "etcd_ca_cert_file": "/etc/kubernetes/ssl/ca.pem",
+          "etcd_ca_cert_file": "/etc/kubernetes/ssl/etcd-trusted-ca.pem",
           "log_level": "info",
           "policy": {
             "type": "k8s",
