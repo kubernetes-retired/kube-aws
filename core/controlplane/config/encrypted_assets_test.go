@@ -120,7 +120,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 		// See https://github.com/kubernetes-incubator/kube-aws/issues/107
 		t.Run("CachedToPreventUnnecessaryNodeReplacement", func(t *testing.T) {
-			created, err := ReadOrCreateCompactAssets(dir, true, kmsConfig)
+			created, err := ReadOrCreateCompactAssets(dir, true, true, kmsConfig)
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
@@ -130,7 +130,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 			// This depends on TestDummyEncryptService which ensures dummy encrypt service to produce different ciphertext for each encryption
 			// created == read means that encrypted assets were loaded from cached files named *.pem.enc, instead of re-encrypting raw assets named *.pem files
 			// TODO Use some kind of mocking framework for tests like this
-			read, err := ReadOrCreateCompactAssets(dir, true, kmsConfig)
+			read, err := ReadOrCreateCompactAssets(dir, true, true, kmsConfig)
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
@@ -146,7 +146,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 		})
 
 		t.Run("RemoveFilesToRegenerate", func(t *testing.T) {
-			original, err := ReadOrCreateCompactAssets(dir, true, kmsConfig)
+			original, err := ReadOrCreateCompactAssets(dir, true, true, kmsConfig)
 
 			if err != nil {
 				t.Errorf("failed to read the original encrypted assets : %v", err)
@@ -165,7 +165,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 				}
 			}
 
-			regenerated, err := ReadOrCreateCompactAssets(dir, true, kmsConfig)
+			regenerated, err := ReadOrCreateCompactAssets(dir, true, true, kmsConfig)
 
 			if err != nil {
 				t.Errorf("failed to read the regenerated encrypted assets : %v", err)
@@ -208,15 +208,15 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 }
 
 func TestReadOrCreateUnEncryptedCompactAssets(t *testing.T) {
-	helper.WithDummyCredentials(func(dir string) {
+	run := func(dir string, caKeyRequiredOnController bool, t *testing.T) {
 		t.Run("CachedToPreventUnnecessaryNodeReplacementOnUnencrypted", func(t *testing.T) {
-			created, err := ReadOrCreateUnencryptedCompactAssets(dir, true)
+			created, err := ReadOrCreateUnencryptedCompactAssets(dir, true, caKeyRequiredOnController)
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
 			}
 
-			read, err := ReadOrCreateUnencryptedCompactAssets(dir, true)
+			read, err := ReadOrCreateUnencryptedCompactAssets(dir, true, caKeyRequiredOnController)
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
@@ -228,6 +228,17 @@ func TestReadOrCreateUnEncryptedCompactAssets(t *testing.T) {
  	created = %v
  	read = %v`, created, read)
 			}
+		})
+	}
+
+	t.Run("WithDummyCredentialsButCAKey", func(t *testing.T) {
+		helper.WithDummyCredentialsButCAKey(func(dir string) {
+			run(dir, false, t)
+		})
+	})
+	t.Run("WithDummyCredentials", func(t *testing.T) {
+		helper.WithDummyCredentials(func(dir string) {
+			run(dir, true, t)
 		})
 	})
 }

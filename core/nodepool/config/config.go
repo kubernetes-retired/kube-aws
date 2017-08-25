@@ -80,8 +80,9 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 		return nil, fmt.Errorf("failed to generate config : %v", err)
 	}
 
+	tlsBootstrappingEnabled := c.Experimental.TLSBootstrap.Enabled
 	if stackConfig.ComputedConfig.AssetsEncryptionEnabled() {
-		compactAssets, err := cfg.ReadOrCreateCompactAssets(opts.AssetsDir, c.ManageCertificates, cfg.KMSConfig{
+		compactAssets, err := cfg.ReadOrCreateCompactAssets(opts.AssetsDir, c.ManageCertificates, tlsBootstrappingEnabled, cfg.KMSConfig{
 			Region:         stackConfig.ComputedConfig.Region,
 			KMSKeyARN:      c.KMSKeyARN,
 			EncryptService: c.ProvidedEncryptService,
@@ -91,7 +92,7 @@ func (c ProvidedConfig) StackConfig(opts StackTemplateOptions) (*StackConfig, er
 		}
 		stackConfig.ComputedConfig.AssetsConfig = compactAssets
 	} else {
-		rawAssets, _ := cfg.ReadOrCreateUnencryptedCompactAssets(opts.AssetsDir, c.ManageCertificates)
+		rawAssets, _ := cfg.ReadOrCreateUnencryptedCompactAssets(opts.AssetsDir, c.ManageCertificates, tlsBootstrappingEnabled)
 		stackConfig.ComputedConfig.AssetsConfig = rawAssets
 	}
 
