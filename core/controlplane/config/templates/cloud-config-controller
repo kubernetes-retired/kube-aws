@@ -2804,7 +2804,7 @@ write_files:
             - operator: Exists
               key: CriticalAddonsOnly
             containers:
-              - image: jtblin/kube2iam:latest
+              - image: {{.Kube2IAMImage.RepoWithTag}}
                 name: kube2iam
                 args:
                   - "--app-port=8282"
