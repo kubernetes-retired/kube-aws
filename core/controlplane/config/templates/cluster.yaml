@@ -963,6 +963,12 @@ worker:
 #  tag: 1.1.1
 #  rktPullDocker: false
 
+# kube2iam image repository to use.
+#kube2iamImage:
+#  repo: jtblin/kube2iam
+#  tag: 0.7.0
+#  rktPullDocker: false
+
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64

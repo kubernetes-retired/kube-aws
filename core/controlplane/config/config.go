@@ -143,6 +143,7 @@ func NewDefaultCluster() *Cluster {
 			CalicoCtlImage:                     model.Image{Repo: "quay.io/calico/ctl", Tag: "v1.4.0", RktPullDocker: false},
 			ClusterAutoscalerImage:             model.Image{Repo: "gcr.io/google_containers/cluster-autoscaler", Tag: "v0.6.0", RktPullDocker: false},
 			ClusterProportionalAutoscalerImage: model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.1.2", RktPullDocker: false},
+			Kube2IAMImage:                      model.Image{Repo: "jtblin/kube2iam", Tag: "0.7.0", RktPullDocker: false},
 			KubeDnsImage:                       model.Image{Repo: "gcr.io/google_containers/k8s-dns-kube-dns-amd64", Tag: "1.14.4", RktPullDocker: false},
 			KubeDnsMasqImage:                   model.Image{Repo: "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64", Tag: "1.14.4", RktPullDocker: false},
 			KubeReschedulerImage:               model.Image{Repo: "gcr.io/google-containers/rescheduler", Tag: "v0.3.1", RktPullDocker: false},
@@ -454,6 +455,7 @@ type DeploymentSettings struct {
 	CalicoPolicyControllerImage        model.Image `yaml:"calicoPolicyControllerImage,omitempty"`
 	ClusterAutoscalerImage             model.Image `yaml:"clusterAutoscalerImage,omitempty"`
 	ClusterProportionalAutoscalerImage model.Image `yaml:"clusterProportionalAutoscalerImage,omitempty"`
+	Kube2IAMImage                      model.Image `yaml:"kube2iamImage,omitempty"`
 	KubeDnsImage                       model.Image `yaml:"kubeDnsImage,omitempty"`
 	KubeDnsMasqImage                   model.Image `yaml:"kubeDnsMasqImage,omitempty"`
 	KubeReschedulerImage               model.Image `yaml:"kubeReschedulerImage,omitempty"`
