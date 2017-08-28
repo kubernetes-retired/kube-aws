@@ -1090,8 +1090,14 @@ func (c Cluster) validate() error {
 		}
 	}
 
-	if c.Experimental.NodeAuthorizer.Enabled && !c.Experimental.TLSBootstrap.Enabled {
-		return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
+	if c.Experimental.NodeAuthorizer.Enabled {
+		if !c.Experimental.TLSBootstrap.Enabled {
+			return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
+		}
+
+		if !c.Experimental.Plugins.Rbac.Enabled {
+			return fmt.Errorf("RBAC is required in order to enable the node authorizer")
+		}
 	}
 
 	return nil

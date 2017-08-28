@@ -1764,8 +1764,6 @@ write_files:
           {{ end }}
           {{if .Experimental.Plugins.Rbac.Enabled}}
           - --authorization-mode={{if .Experimental.NodeAuthorizer.Enabled}}Node,{{end}}RBAC
-          {{ else if .Experimental.NodeAuthorizer.Enabled }}
-          - --authorization-mode=Node
           {{ end }}
           {{if .Experimental.Authentication.Webhook.Enabled}}
           - --authentication-token-webhook-config-file=/etc/kubernetes/webhooks/authentication.yaml
