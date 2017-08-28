@@ -819,7 +819,6 @@ func TestNodeAuthorizerConfig(t *testing.T) {
 			},
 		},
 		{
-
 			conf: `
 experimental:
   nodeAuthorizer:
@@ -830,13 +829,15 @@ experimental:
 			},
 		},
 		{
-
 			conf: `
 experimental:
-  tlsBootstrap:
-    enabled: true
   nodeAuthorizer:
     enabled: true
+  tlsBootstrap:
+    enabled: true
+  plugins:
+    rbac:
+      enabled: true
 `,
 			nodeAuthorizer: NodeAuthorizer{
 				Enabled: true,
@@ -846,18 +847,37 @@ experimental:
 
 	invalidConfigs := []string{
 		`
-# TLS bootstrap must be enabled as well
+# TLS bootstrap + RBAC must be enabled as well
 experimental:
   nodeAuthorizer:
     enabled: true
 `,
 		`
-# TLS bootstrap must be enabled as well
+# TLS bootstrap + RBAC must be enabled as well
 experimental:
-  tlsBootstrap:
-    enabled: false
   nodeAuthorizer:
     enabled: true
+  tlsBootstrap:
+    enabled: false
+`,
+		`
+# RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
+`,
+		`
+# RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
+  plugins:
+    rbac:
+      enabled: false
 `,
 	}
 
