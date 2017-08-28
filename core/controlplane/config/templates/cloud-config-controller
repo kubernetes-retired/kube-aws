@@ -2798,6 +2798,13 @@ write_files:
             serviceAccountName: kube2iam
             {{- end}}
             hostNetwork: true
+            tolerations:
+            - operator: Exists
+              effect: NoSchedule
+            - operator: Exists
+              effect: NoExecute
+            - operator: Exists
+              key: CriticalAddonsOnly
             containers:
               - image: jtblin/kube2iam:latest
                 name: kube2iam
