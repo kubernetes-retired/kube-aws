@@ -171,6 +171,7 @@ func (c *Cluster) NewAssetsOnDisk(dir string, renderCredentialsOpts CredentialsO
 		}
 	}
 
+	fmt.Println("-> Generating new assets")
 	assets, err := c.NewAssetsOnMemory(caKey, caCert)
 	if err != nil {
 		return nil, fmt.Errorf("Error generating default assets: %v", err)

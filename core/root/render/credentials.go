@@ -1,7 +1,6 @@
 package render
 
 import (
-	"fmt"
 	"github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
 	"github.com/kubernetes-incubator/kube-aws/core/root/defaults"
 	"os"
@@ -28,7 +27,6 @@ func (r credentialsRendererImpl) RenderCredentials(renderCredentialsOpts config.
 		return err
 	}
 
-	fmt.Println("-> Generating new assets")
 	_, err := cluster.NewAssetsOnDisk(dir, renderCredentialsOpts)
 	if err != nil {
 		return err
