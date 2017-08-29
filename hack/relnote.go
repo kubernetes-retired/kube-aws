@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -30,6 +31,10 @@ type Item struct {
 
 func Info(msg string) {
 	println(msg)
+}
+
+func Title(title string) {
+	fmt.Printf("\n# %s\n\n", title)
 }
 
 func Header(title string) {
@@ -160,33 +165,19 @@ func indent(orig string, num int) string {
 	return buf.String()
 }
 
-func generateNote(primaryMaintainer string, org string, repository string, releaseVersion string) {
-	accessToken, found := os.LookupEnv("GITHUB_ACCESS_TOKEN")
-	if !found {
-		exitWithErrorMessage("GITHUB_ACCESS_TOKEN must be set")
-	}
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: accessToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
+type Config struct {
+	ctx               context.Context
+	client            *github.Client
+	org               string
+	repository        string
+	primaryMaintainer string
+}
 
-	client := github.NewClient(tc)
-
-	milestoneOpt := &github.MilestoneListOptions{
-		ListOptions: github.ListOptions{PerPage: 10},
-	}
-
-	allMilestones := []*github.Milestone{}
-	for {
-		milestones, resp, err := client.Issues.ListMilestones(ctx, org, repository, milestoneOpt)
-		PanicIfError(err)
-		allMilestones = append(allMilestones, milestones...)
-		if resp.NextPage == 0 {
-			break
-		}
-		milestoneOpt.Page = resp.NextPage
-	}
+func collectIssuesForMilestoneNamed(releaseVersion string, config Config, allMilestones []*github.Milestone) []Item {
+	ctx := config.ctx
+	client := config.client
+	org := config.org
+	repository := config.repository
 
 	milestoneNumber := -1
 	for _, m := range allMilestones {
@@ -229,7 +220,7 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 			num := issue.GetNumber()
 			title := issue.GetTitle()
 			summary := ""
-			if login != primaryMaintainer {
+			if login != config.primaryMaintainer {
 				summary = fmt.Sprintf("#%d: %s(Thanks to @%s)", num, title, login)
 			} else {
 				summary = fmt.Sprintf("#%d: %s", num, title)
@@ -251,7 +242,8 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 				fmt.Printf("%s is doc update\n", title)
 			}
 
-			isMiscUpdate := onlyMiscFilesAreChanged(changedFiles)
+			isMiscUpdate := labels.Contains("release-infra") ||
+				onlyMiscFilesAreChanged(changedFiles)
 			if isMiscUpdate {
 				fmt.Printf("%s is misc update\n", title)
 			}
@@ -314,7 +306,70 @@ func generateNote(primaryMaintainer string, org string, repository string, relea
 		opt.Page = resp.NextPage
 	}
 
-	Info("# Changelog since v")
+	return items
+}
+
+func generateNote(primaryMaintainer string, org string, repository string, releaseVersion string) {
+	rc := strings.Contains(releaseVersion, "rc")
+
+	accessToken, found := os.LookupEnv("GITHUB_ACCESS_TOKEN")
+	if !found {
+		exitWithErrorMessage("GITHUB_ACCESS_TOKEN must be set")
+	}
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: accessToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
+
+	config := Config{
+		ctx:               ctx,
+		client:            client,
+		primaryMaintainer: primaryMaintainer,
+		org:               org,
+		repository:        repository,
+	}
+
+	milestoneOpt := &github.MilestoneListOptions{
+		ListOptions: github.ListOptions{PerPage: 10},
+	}
+
+	allMilestones := []*github.Milestone{}
+	for {
+		milestones, resp, err := client.Issues.ListMilestones(ctx, org, repository, milestoneOpt)
+		PanicIfError(err)
+		allMilestones = append(allMilestones, milestones...)
+		if resp.NextPage == 0 {
+			break
+		}
+		milestoneOpt.Page = resp.NextPage
+	}
+
+	milestoneNames := []string{}
+
+	if rc {
+		milestoneNames = append(milestoneNames, releaseVersion)
+	} else {
+		for _, m := range allMilestones {
+			if strings.HasPrefix(m.GetTitle(), releaseVersion) {
+				milestoneNames = append(milestoneNames, m.GetTitle())
+			}
+		}
+	}
+
+	sort.Strings(milestoneNames)
+
+	fmt.Printf("Aggregating milestones: %s\n", strings.Join(milestoneNames, ", "))
+
+	items := []Item{}
+	for _, n := range milestoneNames {
+		is := collectIssuesForMilestoneNamed(n, config, allMilestones)
+		items = append(items, is...)
+	}
+
+	Title("Changelog since v")
+	Info("Please see our [roadmap](https://github.com/kubernetes-incubator/kube-aws/blob/master/ROADMAP.md) for details on upcoming releases.")
 
 	Header("Component versions")
 
