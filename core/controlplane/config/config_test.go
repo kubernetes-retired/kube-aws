@@ -835,6 +835,18 @@ experimental:
     enabled: true
   tlsBootstrap:
     enabled: true
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: true,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
   plugins:
     rbac:
       enabled: true
@@ -859,14 +871,6 @@ experimental:
     enabled: true
   tlsBootstrap:
     enabled: false
-`,
-		`
-# RBAC must be enabled as well
-experimental:
-  nodeAuthorizer:
-    enabled: true
-  tlsBootstrap:
-    enabled: true
 `,
 		`
 # RBAC must be enabled as well

@@ -93,7 +93,7 @@ func NewDefaultCluster() *Cluster {
 		},
 		Plugins: Plugins{
 			Rbac: Rbac{
-				Enabled: false,
+				Enabled: true,
 			},
 		},
 		Oidc: model.Oidc{
