@@ -236,10 +236,11 @@ worker:
   nodePools:
     - # Name of this node pool. Must be unique among all the node pools in this cluster
       name: nodepool1
+#      # Subnet(s) to which worker nodes in this node pool are deployed
+#      # References subnets defined under the top-level `subnets` key by their names
 #      # If omitted, public subnets are created by kube-aws and used for worker nodes
 #      subnets:
-#      - # References subnets defined under the top-level `subnets` key by their names
-#        name: ManagedPublicSubnet1
+#      - name: ManagedPublicSubnet1
 #
 #      # Existing "glue" security groups attached to worker nodes which are typically used to allow
 #      # access from worker nodes to services running on an existing infrastructure
