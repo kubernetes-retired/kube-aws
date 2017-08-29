@@ -451,7 +451,6 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 	}
 
 	for _, sl := range symlinks {
-		from := filepath.Join(dirname, sl.from)
 		to := filepath.Join(dirname, sl.to)
 
 		if _, err := os.Lstat(to); err == nil {
@@ -460,7 +459,7 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 			}
 		}
 
-		if err := os.Symlink(from, to); err != nil {
+		if err := os.Symlink(sl.from, to); err != nil {
 			return err
 		}
 	}

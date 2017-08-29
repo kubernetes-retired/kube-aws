@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func WithTempDir(fn func(dir string)) {
@@ -42,6 +43,30 @@ func WithDummyCredentials(fn func(dir string)) {
 			panic(err)
 		}
 		defer os.Remove(keyFile)
+	}
+
+	symlinks := []struct {
+		from string
+		to   string
+	}{
+		{"ca.pem", "worker-ca.pem"},
+		{"ca.pem", "etcd-trusted-ca.pem"},
+		{"ca-key.pem", "worker-ca-key.pem"},
+	}
+
+	for _, sl := range symlinks {
+		to := filepath.Join(dir, sl.to)
+
+		if _, err := os.Lstat(to); err == nil {
+			if err := os.Remove(to); err != nil {
+				panic(err)
+			}
+		}
+
+		if err := os.Symlink(sl.from, to); err != nil {
+			panic(err)
+		}
+		defer os.Remove(to)
 	}
 
 	fn(dir)
