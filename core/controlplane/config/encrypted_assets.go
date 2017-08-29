@@ -346,7 +346,7 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	if manageCertificates {
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
-			//{"ca-key.pem", &r.CAKey, nil, true},
+			{"ca-key.pem", &r.CAKey, nil, true},
 			{"worker-ca.pem", &r.WorkerCACert, nil, false},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
@@ -394,7 +394,6 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 		overwrite bool
 	}{
 		{"ca.pem", r.CACert, true},
-		{"ca-key.pem", r.CAKey, true},
 		{"worker-ca.pem", r.WorkerCACert, true},
 		{"worker-ca-key.pem", r.WorkerCAKey, true},
 		{"apiserver.pem", r.APIServerCert, true},
@@ -415,24 +414,30 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 		{"tokens.csv", r.AuthTokens, false},
 	}
 
+	if includeCAKey {
+		assets = append(assets, struct {
+			name      string
+			data      []byte
+			overwrite bool
+		}{"ca-key.pem", r.CACert, true})
+	}
+
 	for _, asset := range assets {
 		path := filepath.Join(dirname, asset.name)
 
-		if asset.name != "ca-key.pem" || includeCAKey {
-			if !asset.overwrite {
-				info, err := os.Stat(path)
-				if info != nil {
-					continue
-				}
-
-				// Unexpected error
-				if err != nil && !os.IsNotExist(err) {
-					return err
-				}
+		if !asset.overwrite {
+			info, err := os.Stat(path)
+			if info != nil {
+				continue
 			}
-			if err := ioutil.WriteFile(path, asset.data, 0600); err != nil {
+
+			// Unexpected error
+			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
+		}
+		if err := ioutil.WriteFile(path, asset.data, 0600); err != nil {
+			return err
 		}
 	}
 
