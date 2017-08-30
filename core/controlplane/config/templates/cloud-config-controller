@@ -770,7 +770,6 @@ write_files:
       kubectl apply -f "${mfdir}/kube-rescheduler-de.yaml"
       {{- end }}
 
-      {{if .Experimental.Plugins.Rbac.Enabled}}
       mfdir=/srv/kubernetes/rbac
 
       # Cluster roles and bindings
@@ -798,13 +797,10 @@ write_files:
           kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
       done
       {{ end }}
-      {{ end }}
 
       {{if .Experimental.Kube2IamSupport.Enabled }}
         mfdir=/srv/kubernetes/manifests
-       {{if .Experimental.Plugins.Rbac.Enabled}}
         kubectl apply -f "${mfdir}/kube2iam-rbac.yaml"
-       {{end}}
         kubectl apply -f "${mfdir}/kube2iam-ds.yaml";
       {{ end }}
 
@@ -1415,7 +1411,6 @@ write_files:
                       optional: true
 {{end}}
 
-{{if .Experimental.Plugins.Rbac.Enabled }}
   # TODO: remove the following binding once the TLS Bootstrapping feature is enabled by default, see:
   # https://github.com/kubernetes-incubator/kube-aws/pull/618#discussion_r115162048
   # https://kubernetes.io/docs/admin/authorization/rbac/#core-component-roles
@@ -1682,7 +1677,6 @@ write_files:
           name: kube-aws:node-bootstrapper
           apiGroup: rbac.authorization.k8s.io
 {{ end }}
-{{ end }}
 
   - path: /etc/kubernetes/manifests/kube-proxy.yaml
     content: |
@@ -1762,9 +1756,7 @@ write_files:
           - --audit-log-path={{.Experimental.AuditLog.LogPath}}
           - --audit-log-maxbackup=1
           {{ end }}
-          {{if .Experimental.Plugins.Rbac.Enabled}}
           - --authorization-mode={{if .Experimental.NodeAuthorizer.Enabled}}Node,{{end}}RBAC
-          {{ end }}
           {{if .Experimental.Authentication.Webhook.Enabled}}
           - --authentication-token-webhook-config-file=/etc/kubernetes/webhooks/authentication.yaml
           - --authentication-token-webhook-cache-ttl={{ .Experimental.Authentication.Webhook.CacheTTL }}
@@ -1787,7 +1779,7 @@ write_files:
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1{{if .Experimental.Plugins.Rbac.Enabled}},rbac.authorization.k8s.io/v1beta1=true{{ end }}{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}
+          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1beta1=true{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}
           - --cloud-provider=aws
           {{range $f := .APIServerFlags}}
           - --{{$f.Name}}={{$f.Value}}
@@ -2792,9 +2784,7 @@ write_files:
             labels:
               name: kube2iam
           spec:
-            {{- if .Experimental.Plugins.Rbac.Enabled}}
             serviceAccountName: kube2iam
-            {{- end}}
             hostNetwork: true
             tolerations:
             - operator: Exists
@@ -2835,7 +2825,6 @@ write_files:
                     memory: 32Mi
                 securityContext:
                   privileged: true
-  {{if .Experimental.Plugins.Rbac.Enabled}}
   - path: /srv/kubernetes/manifests/kube2iam-rbac.yaml
     content: |
       apiVersion: v1
@@ -2877,7 +2866,6 @@ write_files:
       - kind: ServiceAccount
         name: kube2iam
         namespace: kube-system
-  {{end}}
 {{end}}
 
   - path: /opt/bin/retry

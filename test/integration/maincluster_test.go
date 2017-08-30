@@ -131,11 +131,7 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled:      false,
 				DrainTimeout: 5,
 			},
-			Plugins: controlplane_config.Plugins{
-				Rbac: controlplane_config.Rbac{
-					Enabled: true,
-				},
-			},
+			Plugins: controlplane_config.Plugins{},
 		}
 
 		actual := c.Experimental
@@ -1296,11 +1292,7 @@ worker:
 							Enabled:      true,
 							DrainTimeout: 3,
 						},
-						Plugins: controlplane_config.Plugins{
-							Rbac: controlplane_config.Rbac{
-								Enabled: true,
-							},
-						},
+						Plugins: controlplane_config.Plugins{},
 					}
 
 					actual := c.Experimental

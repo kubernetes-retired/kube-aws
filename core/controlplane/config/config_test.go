@@ -840,50 +840,23 @@ experimental:
 				Enabled: true,
 			},
 		},
-		{
-			conf: `
-experimental:
-  nodeAuthorizer:
-    enabled: true
-  tlsBootstrap:
-    enabled: true
-  plugins:
-    rbac:
-      enabled: true
-`,
-			nodeAuthorizer: NodeAuthorizer{
-				Enabled: true,
-			},
-		},
 	}
 
 	invalidConfigs := []string{
 		`
-# TLS bootstrap + RBAC must be enabled as well
+# TLS bootstrap must be enabled as well
 experimental:
   nodeAuthorizer:
     enabled: true
 `,
 		`
-# TLS bootstrap + RBAC must be enabled as well
+# TLS bootstrap must be enabled as well
 experimental:
   nodeAuthorizer:
     enabled: true
   tlsBootstrap:
     enabled: false
-`,
-		`
-# RBAC must be enabled as well
-experimental:
-  nodeAuthorizer:
-    enabled: true
-  tlsBootstrap:
-    enabled: true
-  plugins:
-    rbac:
-      enabled: false
-`,
-	}
+`}
 
 	for _, conf := range validConfigs {
 		confBody := singleAzConfigYaml + conf.conf
