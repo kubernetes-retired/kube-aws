@@ -720,7 +720,7 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientCert}}
 
@@ -729,7 +729,7 @@ write_files:
     content: {{.AssetsConfig.EtcdClientKey}}
 
 {{ if not .Experimental.TLSBootstrap.Enabled }}
-  - path: /etc/kubernetes/ssl/worker.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/worker.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.WorkerCert}}
 
@@ -738,7 +738,7 @@ write_files:
     content: {{.AssetsConfig.WorkerKey}}
 {{ end }}
 
-  - path: /etc/kubernetes/ssl/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/ca.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.CACert}}
 

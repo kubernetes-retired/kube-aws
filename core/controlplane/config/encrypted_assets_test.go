@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"fmt"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/test/helper"
 	"os"
@@ -125,6 +124,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
+				t.FailNow()
 			}
 
 			// This depends on TestDummyEncryptService which ensures dummy encrypt service to produce different ciphertext for each encryption
@@ -134,6 +134,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("failed to read or update compact assets in %s : %v", dir, err)
+				t.FailNow()
 			}
 
 			if !reflect.DeepEqual(created, read) {
@@ -149,15 +150,15 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("failed to read the original encrypted assets : %v", err)
+				t.FailNow()
 			}
 
 			files := []string{
-				"ca", "admin", "admin-key", "worker", "worker-key", "apiserver", "apiserver-key",
-				"etcd", "etcd-key", "etcd-client", "etcd-client-key",
+				"ca-key.pem.enc", "admin-key.pem.enc", "worker-key.pem.enc", "apiserver-key.pem.enc",
+				"etcd-key.pem.enc", "etcd-client-key.pem.enc",
 			}
 
-			for _, f := range files {
-				filename := fmt.Sprintf("%s.pem.enc", f)
+			for _, filename := range files {
 				if err := os.Remove(filepath.Join(dir, filename)); err != nil {
 					t.Errorf("failed to remove %s for test setup : %v", filename, err)
 					t.FailNow()
@@ -168,56 +169,34 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("failed to read the regenerated encrypted assets : %v", err)
+				t.FailNow()
 			}
 
-			if original.AdminCert == regenerated.AdminCert {
-				t.Errorf("AdminCert must change but it didn't : original = %v, regenrated = %v ", original.AdminCert, regenerated.AdminCert)
+			for _, v := range [][]string{
+				{"AdminCert", original.AdminCert, regenerated.AdminCert},
+				{"CACert", original.CACert, regenerated.CACert},
+				{"WorkerCert", original.WorkerCert, regenerated.WorkerCert},
+				{"APIServerCert", original.APIServerCert, regenerated.APIServerCert},
+				{"EtcdClientCert", original.EtcdClientCert, regenerated.EtcdClientCert},
+				{"EtcdCert", original.EtcdCert, regenerated.EtcdCert},
+			} {
+				if v[1] != v[2] {
+					t.Errorf("%s must NOT change but it did : original = %v, regenrated = %v ", v[0], v[1], v[2])
+				}
 			}
 
-			if original.AdminKey == regenerated.AdminKey {
-				t.Errorf("AdminKey must change but it didn't : original = %v, regenrated = %v ", original.AdminKey, regenerated.AdminKey)
+			for _, v := range [][]string{
+				{"AdminKey", original.AdminKey, regenerated.AdminKey},
+				{"CAKey", original.CAKey, regenerated.CAKey},
+				{"WorkerKey", original.WorkerKey, regenerated.WorkerKey},
+				{"APIServerKey", original.APIServerKey, regenerated.APIServerKey},
+				{"EtcdClientKey", original.EtcdClientKey, regenerated.EtcdClientKey},
+				{"EtcdKey", original.EtcdKey, regenerated.EtcdKey},
+			} {
+				if v[1] == v[2] {
+					t.Errorf("%s must change but it didn't : original = %v, regenrated = %v ", v[0], v[1], v[2])
+				}
 			}
-
-			if original.CACert == regenerated.CACert {
-				t.Errorf("CACert must change but it didn't : original = %v, regenrated = %v ", original.CACert, regenerated.CACert)
-			}
-
-			if original.CACert == regenerated.CACert {
-				t.Errorf("CACert must change but it didn't : original = %v, regenrated = %v ", original.CACert, regenerated.CACert)
-			}
-
-			if original.WorkerCert == regenerated.WorkerCert {
-				t.Errorf("WorkerCert must change but it didn't : original = %v, regenrated = %v ", original.WorkerCert, regenerated.WorkerCert)
-			}
-
-			if original.WorkerCert == regenerated.WorkerCert {
-				t.Errorf("WorkerCert must change but it didn't : original = %v, regenrated = %v ", original.WorkerCert, regenerated.WorkerCert)
-			}
-
-			if original.APIServerCert == regenerated.APIServerCert {
-				t.Errorf("APIServerCert must change but it didn't : original = %v, regenrated = %v ", original.APIServerCert, regenerated.APIServerCert)
-			}
-
-			if original.APIServerCert == regenerated.APIServerCert {
-				t.Errorf("APIServerCert must change but it didn't : original = %v, regenrated = %v ", original.APIServerCert, regenerated.APIServerCert)
-			}
-
-			if original.EtcdClientCert == regenerated.EtcdClientCert {
-				t.Errorf("EtcdClientCert must change but it didn't : original = %v, regenrated = %v ", original.EtcdClientCert, regenerated.EtcdClientCert)
-			}
-
-			if original.EtcdClientCert == regenerated.EtcdClientCert {
-				t.Errorf("EtcdClientCert must change but it didn't : original = %v, regenrated = %v ", original.EtcdClientCert, regenerated.EtcdClientCert)
-			}
-
-			if original.EtcdCert == regenerated.EtcdCert {
-				t.Errorf("EtcdCert must change but it didn't : original = %v, regenrated = %v ", original.EtcdCert, regenerated.EtcdCert)
-			}
-
-			if original.EtcdCert == regenerated.EtcdCert {
-				t.Errorf("EtcdCert must change but it didn't : original = %v, regenrated = %v ", original.EtcdCert, regenerated.EtcdCert)
-			}
-
 			if reflect.DeepEqual(original, regenerated) {
 				t.Errorf(`unexpecteed data contained in (possibly) regenerated encrypted assets.
 	encrypted assets must change after regeneration but they didn't:

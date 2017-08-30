@@ -2670,7 +2670,7 @@ write_files:
 {{ end }}
 
 {{ if .ManageCertificates }}
-  - path: /etc/kubernetes/ssl/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/ca.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.CACert}}
 
@@ -2680,7 +2680,7 @@ write_files:
     content: {{.AssetsConfig.CAKey}}
 {{ end }}
 
-  - path: /etc/kubernetes/ssl/apiserver.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/apiserver.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.APIServerCert}}
 
@@ -2688,7 +2688,7 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.APIServerKey}}
 
-  - path: /etc/kubernetes/ssl/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/kubernetes/ssl/etcd-client.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientCert}}
 
