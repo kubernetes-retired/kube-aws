@@ -292,7 +292,6 @@ func ReadRawAssets(dirname string, manageCertificates bool) (*RawAssetsOnDisk, e
 		// Assumes no default values for any cert
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil},
-			{"ca-key.pem", &r.CAKey, nil},
 			{"worker-ca.pem", &r.WorkerCACert, nil},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil},
 			{"apiserver.pem", &r.APIServerCert, nil},
@@ -346,7 +345,7 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	if manageCertificates {
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
-			{"ca-key.pem", &r.CAKey, nil, true},
+			//{"ca-key.pem", &r.CAKey, nil, true},
 			{"worker-ca.pem", &r.WorkerCACert, nil, false},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
