@@ -186,9 +186,9 @@ func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certific
 	etcdConfig := tlsutil.ServerCertConfig{
 		CommonName: "kube-etcd",
 		DNSNames:   c.EtcdCluster().DNSNames(),
-		//etcd https client/peer interfaces are not exposed externally
-		//will live the full year with the CA
-		Duration: tlsutil.Duration365d,
+		// etcd https client/peer interfaces are not exposed externally
+		// but anyway we'll make it valid for the same duration as other certs just because it is easy to implement.
+		Duration: certDuration,
 	}
 
 	etcdCert, err := tlsutil.NewSignedServerCertificate(etcdConfig, etcdKey, caCert, caKey)
