@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func WithTempDir(fn func(dir string)) {
@@ -30,7 +31,7 @@ func WithDummyCredentials(fn func(dir string)) {
 	// config/temp, nodepool/config/temp, test/integration/temp
 	defer os.RemoveAll(dir)
 
-	for _, pairName := range []string{"ca", "apiserver", "worker", "admin", "etcd", "etcd-client", "dex"} {
+	for _, pairName := range []string{"ca", "apiserver", "worker", "admin", "etcd", "etcd-client"} {
 		certFile := fmt.Sprintf("%s/%s.pem", dir, pairName)
 		if err := ioutil.WriteFile(certFile, []byte("dummycert"), 0644); err != nil {
 			panic(err)
@@ -42,6 +43,30 @@ func WithDummyCredentials(fn func(dir string)) {
 			panic(err)
 		}
 		defer os.Remove(keyFile)
+	}
+
+	symlinks := []struct {
+		from string
+		to   string
+	}{
+		{"ca.pem", "worker-ca.pem"},
+		{"ca.pem", "etcd-trusted-ca.pem"},
+		{"ca-key.pem", "worker-ca-key.pem"},
+	}
+
+	for _, sl := range symlinks {
+		to := filepath.Join(dir, sl.to)
+
+		if _, err := os.Lstat(to); err == nil {
+			if err := os.Remove(to); err != nil {
+				panic(err)
+			}
+		}
+
+		if err := os.Symlink(sl.from, to); err != nil {
+			panic(err)
+		}
+		defer os.Remove(to)
 	}
 
 	fn(dir)

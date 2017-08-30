@@ -12,6 +12,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/kubernetes-incubator/kube-aws/core/root/config"
 	"github.com/kubernetes-incubator/kube-aws/model"
+	"github.com/kubernetes-incubator/kube-aws/plugin/pluginmodel"
 	"github.com/kubernetes-incubator/kube-aws/test/helper"
 )
 
@@ -80,6 +81,9 @@ func TestMainClusterConfig(t *testing.T) {
 				PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
 					Enabled: false,
 				},
+				DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
+					Enabled: false,
+				},
 			},
 			AuditLog: controlplane_config.AuditLog{
 				Enabled: false,
@@ -116,23 +120,17 @@ func TestMainClusterConfig(t *testing.T) {
 			LoadBalancer: controlplane_config.LoadBalancer{
 				Enabled: false,
 			},
-			Dex: model.Dex{
-				Enabled:         false,
-				Url:             "https://dex.example.com",
-				ClientId:        "example-app",
-				Username:        "email",
-				Groups:          "groups",
-				SelfSignedCa:    true,
-				Connectors:      []model.Connector{},
-				StaticClients:   []model.StaticClient{},
-				StaticPasswords: []model.StaticPassword{},
+			Oidc: model.Oidc{
+				Enabled:       false,
+				IssuerUrl:     "https://accounts.google.com",
+				ClientId:      "kubernetes",
+				UsernameClaim: "email",
+				GroupsClaim:   "groups",
 			},
 			NodeDrainer: model.NodeDrainer{
 				Enabled:      false,
 				DrainTimeout: 5,
 			},
-			NodeLabels: model.NodeLabels{},
-			Taints:     model.Taints{},
 		}
 
 		actual := c.Experimental
@@ -163,13 +161,13 @@ func TestMainClusterConfig(t *testing.T) {
 			{
 				WeightedCapacity: 1,
 				InstanceType:     "c4.large",
-				SpotPrice:        "0.06",
+				SpotPrice:        "",
 				RootVolume:       model.NewGp2RootVolume(30),
 			},
 			{
 				WeightedCapacity: 2,
 				InstanceType:     "c4.xlarge",
-				SpotPrice:        "0.12",
+				SpotPrice:        "",
 				RootVolume:       model.NewGp2RootVolume(60),
 			},
 		}
@@ -181,6 +179,11 @@ func TestMainClusterConfig(t *testing.T) {
 				expected,
 				actual,
 			)
+		}
+
+		globalSpotPrice := p.NodePoolConfig.SpotFleet.SpotPrice
+		if globalSpotPrice != "0.06" {
+			t.Errorf("Default spot price is expected to be 0.06 but was: %s", globalSpotPrice)
 		}
 	}
 
@@ -570,6 +573,38 @@ worker:
 			},
 			assertCluster: []ClusterTester{
 				hasDefaultCluster,
+			},
+		},
+		{
+			context: "WithDifferentReleaseChannels",
+			configYaml: minimalValidConfigYaml + `
+releaseChannel: stable
+worker:
+  nodePools:
+  - name: pool1
+    releaseChanel: alpha
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				asgBasedNodePoolHasWaitSignalEnabled,
+			},
+			assertCluster: []ClusterTester{
+				func(c root.Cluster, t *testing.T) {
+					cp := c.ControlPlane().StackConfig.AMI
+					np := c.NodePools()[0].AMI
+
+					if cp == "" {
+						t.Error("the default AMI ID should not be empty but it was")
+					}
+
+					if np == "" {
+						t.Error("the AMI ID for the node pool should not be empty but it was")
+					}
+
+					if cp != np {
+						t.Errorf("the default AMI ID and the AMI ID for the node pool didn't match: default=%s, nodepool=%s", cp, np)
+					}
+				},
 			},
 		},
 		{
@@ -1130,6 +1165,8 @@ experimental:
   admission:
     podSecurityPolicy:
       enabled: true
+    denyEscalatingExec:
+      enabled: true
   auditLog:
     enabled: true
     maxage: 100
@@ -1151,6 +1188,7 @@ experimental:
     enabled: true
   kube2IamSupport:
     enabled: true
+  kubeletOpts: '--image-gc-low-threshold 60 --image-gc-high-threshold 70'
   loadBalancer:
     enabled: true
     names:
@@ -1163,45 +1201,21 @@ experimental:
       - arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx
     securityGroupIds:
       - sg-12345678
-  dex:
+  oidc:
     enabled: true
-    url: "https://dex.example.com"
-    clientId: "example-app"
-    username: "email"
-    groups: "groups"
-    SelfSignedCa: true
-    connectors:
-    - type: github
-      id: github
-      name: GitHub
-      config:
-        clientId: "your_client_id"
-        clientSecret: "your_client_secret"
-        redirectURI: https://dex.example.com/callback
-        org: your_organization
-    staticClients:
-    - id: 'example-app'
-      redirectURIs: 'http://127.0.0.1:5555/callback'
-      name: 'Example App'
-      secret: 'ZXhhbXBsZS1hcHAtc2VjcmV0'
-    staticPasswords:
-    - email: 'admin@example.com'
-      hash: '$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W'
-      username: 'admin'
-      userID: '08a8684b-db88-4b73-90a9-3cd1661f5466'
+    oidc-issuer-url: "https://accounts.google.com"
+    oidc-client-id: "kubernetes"
+    oidc-username-claim: "email"
+    oidc-groups-claim: "groups"
   nodeDrainer:
     enabled: true
     drainTimeout: 3
-  nodeLabels:
-    kube-aws.coreos.com/role: worker
   plugins:
     rbac:
       enabled: true
-  taints:
-    - key: reservation
-      value: spot
-      effect: NoSchedule
 cloudWatchLogging:
+  enabled: true
+amazonSsmAgent:
   enabled: true
 worker:
   nodePools:
@@ -1214,6 +1228,9 @@ worker:
 					expected := controlplane_config.Experimental{
 						Admission: controlplane_config.Admission{
 							PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
+								Enabled: true,
+							},
+							DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
 								Enabled: true,
 							},
 						},
@@ -1252,6 +1269,7 @@ worker:
 						Kube2IamSupport: controlplane_config.Kube2IamSupport{
 							Enabled: true,
 						},
+						KubeletOpts: "--image-gc-low-threshold 60 --image-gc-high-threshold 70",
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},
@@ -1262,37 +1280,21 @@ worker:
 							Arns:             []string{"arn:aws:elasticloadbalancing:eu-west-1:xxxxxxxxxxxx:targetgroup/manuallymanagedetg/xxxxxxxxxxxxxxxx"},
 							SecurityGroupIds: []string{"sg-12345678"},
 						},
-						Dex: model.Dex{
-							Enabled:      true,
-							Url:          "https://dex.example.com",
-							ClientId:     "example-app",
-							Username:     "email",
-							Groups:       "groups",
-							SelfSignedCa: true,
-							Connectors: []model.Connector{
-								{Type: "github", Id: "github", Name: "GitHub", Config: map[string]string{"clientId": "your_client_id", "clientSecret": "your_client_secret", "redirectURI": "https://dex.example.com/callback", "org": "your_organization"}},
-							},
-							StaticClients: []model.StaticClient{
-								{Id: "example-app", RedirectURIs: "http://127.0.0.1:5555/callback", Name: "Example App", Secret: "ZXhhbXBsZS1hcHAtc2VjcmV0"},
-							},
-							StaticPasswords: []model.StaticPassword{
-								{Email: "admin@example.com", Hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W", Username: "admin", UserId: "08a8684b-db88-4b73-90a9-3cd1661f5466"},
-							},
+						Oidc: model.Oidc{
+							Enabled:       true,
+							IssuerUrl:     "https://accounts.google.com",
+							ClientId:      "kubernetes",
+							UsernameClaim: "email",
+							GroupsClaim:   "groups",
 						},
 						NodeDrainer: model.NodeDrainer{
 							Enabled:      true,
 							DrainTimeout: 3,
 						},
-						NodeLabels: model.NodeLabels{
-							"kube-aws.coreos.com/role": "worker",
-						},
 						Plugins: controlplane_config.Plugins{
 							Rbac: controlplane_config.Rbac{
 								Enabled: true,
 							},
-						},
-						Taints: model.Taints{
-							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
 						},
 					}
 
@@ -1404,17 +1406,29 @@ worker:
 							Enabled:      false,
 							DrainTimeout: 0,
 						},
-						NodeLabels: model.NodeLabels{
-							"kube-aws.coreos.com/role": "worker",
-						},
-						Taints: model.Taints{
-							{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
-						},
 					}
 					p := c.NodePools[0]
 					if reflect.DeepEqual(expected, p.Experimental) {
 						t.Errorf("experimental settings for node pool didn't match : expected=%v actual=%v", expected, p.Experimental)
 					}
+
+					expectedNodeLabels := model.NodeLabels{
+						"kube-aws.coreos.com/cluster-autoscaler-supported": "true",
+						"kube-aws.coreos.com/role":                         "worker",
+					}
+					actualNodeLabels := c.NodePools[0].NodeLabels()
+					if !reflect.DeepEqual(expectedNodeLabels, actualNodeLabels) {
+						t.Errorf("worker node labels didn't match: expected=%v, actual=%v", expectedNodeLabels, actualNodeLabels)
+					}
+
+					expectedTaints := model.Taints{
+						{Key: "reservation", Value: "spot", Effect: "NoSchedule"},
+					}
+					actualTaints := c.NodePools[0].Taints
+					if !reflect.DeepEqual(expectedTaints, actualTaints) {
+						t.Errorf("worker node taints didn't match: expected=%v, actual=%v", expectedTaints, actualTaints)
+					}
+
 				},
 			},
 		},
@@ -1625,8 +1639,10 @@ worker:
 		{
 			context: "WithMultiAPIEndpoints",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: privateSubnet1
@@ -1813,7 +1829,8 @@ apiEndpoints:
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecated",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
@@ -1884,14 +1901,16 @@ subnets:
 		{
 			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecated",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 # This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
 routeTableId: rtb-1a2b3c4d
 # This means that all the subnets created by kube-aws should be public
 mapPublicIPs: true
-# internetGatewayId should be omitted as we assume that the route table specified by routeTableId already contain a route to one
-#internetGatewayId:
+# internetGateway.id should be omitted as we assume that the route table specified by routeTableId already contain a route to one
+#internetGateway:
+#  id:
 subnets:
 - availabilityZone: us-west-1a
   instanceCIDR: "10.0.1.0/24"
@@ -1957,8 +1976,10 @@ subnets:
 		{
 			context: "WithNetworkTopologyExplicitSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2067,8 +2088,10 @@ worker:
 		{
 			context: "WithNetworkTopologyImplicitSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2145,8 +2168,10 @@ subnets:
 		{
 			context: "WithNetworkTopologyControllerPrivateLB",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2247,8 +2272,10 @@ worker:
 		{
 			context: "WithNetworkTopologyControllerPublicLB",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # routeTableId must be omitted
 # See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275962332
 # routeTableId: rtb-1a2b3c4d
@@ -2349,7 +2376,8 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingVaryingSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2442,7 +2470,8 @@ worker:
 		{
 			context: "WithNetworkTopologyAllExistingPrivateSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2474,7 +2503,8 @@ worker:
 		{
 			context: "WithNetworkTopologyAllExistingPublicSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -2504,8 +2534,10 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingNATGateways",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2603,8 +2635,10 @@ worker:
 		{
 			context: "WithNetworkTopologyExistingNATGatewayEIPs",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -2693,10 +2727,12 @@ worker:
 		{
 			context: "WithNetworkTopologyVaryingPublicSubnets",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 #required only for the managed subnet "public1"
 # "public2" is assumed to have an existing route table and an igw already associated to it
-internetGatewayId: igw-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -2776,7 +2812,7 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "c4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity
 							// RootVolumeType was not specified in the configYaml but should default to "gp2"
 							RootVolume: model.NewGp2RootVolume(40),
@@ -2784,7 +2820,7 @@ worker:
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "c4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							RootVolume:       model.NewGp2RootVolume(100),
 						},
 					}
@@ -2823,14 +2859,14 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "m4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeType was not specified in the configYaml but should default to gp2:
 							RootVolume: model.NewGp2RootVolume(40),
 						},
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "m4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							RootVolume:       model.NewGp2RootVolume(80),
 						},
 					}
@@ -2873,7 +2909,7 @@ worker:
 						{
 							WeightedCapacity: 1,
 							InstanceType:     "c4.large",
-							SpotPrice:        "0.06",
+							SpotPrice:        "",
 							// RootVolumeSize was not specified in the configYaml but should default to workerRootVolumeSize * weightedCapacity
 							// RootVolumeIOPS was not specified in the configYaml but should default to workerRootVolumeIOPS * weightedCapacity
 							// RootVolumeType was not specified in the configYaml but should default to "io1"
@@ -2882,7 +2918,7 @@ worker:
 						{
 							WeightedCapacity: 2,
 							InstanceType:     "c4.xlarge",
-							SpotPrice:        "0.12",
+							SpotPrice:        "",
 							// RootVolumeType was not specified in the configYaml but should default to:
 							RootVolume: model.NewIo1RootVolume(80, 500),
 						},
@@ -2902,19 +2938,54 @@ worker:
 		{
 			context: "WithVpcIdSpecified",
 			configYaml: minimalValidConfigYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
+`,
+			assertConfig: []ConfigTester{
+				hasDefaultEtcdSettings,
+				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					vpcId := "vpc-1a2b3c4d"
+					if c.VPC.ID != vpcId {
+						t.Errorf("vpc id didn't match: expected=%v actual=%v", vpcId, c.VPC.ID)
+					}
+					igwId := "igw-1a2b3c4d"
+					if c.InternetGateway.ID != igwId {
+						t.Errorf("internet gateway id didn't match: expected=%v actual=%v", igwId, c.InternetGateway.ID)
+					}
+				},
+			},
+		},
+		{
+			context: "WithLegacyVpcAndIGWIdSpecified",
+			configYaml: minimalValidConfigYaml + `
 vpcId: vpc-1a2b3c4d
 internetGatewayId: igw-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
 				hasDefaultExperimentalFeatures,
+				func(c *config.Config, t *testing.T) {
+					vpcId := "vpc-1a2b3c4d"
+					if c.VPC.ID != vpcId {
+						t.Errorf("vpc id didn't match: expected=%v actual=%v", vpcId, c.VPC.ID)
+					}
+					igwId := "igw-1a2b3c4d"
+					if c.InternetGateway.ID != igwId {
+						t.Errorf("internet gateway id didn't match: expected=%v actual=%v", igwId, c.InternetGateway.ID)
+					}
+				},
 			},
 		},
 		{
 			context: "WithVpcIdAndRouteTableIdSpecified",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 routeTableId: rtb-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
@@ -2985,7 +3056,7 @@ worker:
   - name: pool1
     iam:
       role:
-        managedPolicies: 
+        managedPolicies:
          - arn: "arn:aws:iam::aws:policy/AdministratorAccess"
          - arn: "arn:aws:iam::000000000000:policy/myManagedPolicy"
 `,
@@ -3196,162 +3267,19 @@ etcd:
 			},
 		},
 		{
-			context: "WithControllerNodesWithLegacyKeys",
+			context: "WithControllerNodeLabels",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
-controllerCount: 2
-controllerCreateTimeout: PT10M
-controllerInstanceType: t2.large
-controllerRootVolumeSize: 101
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 102
-controllerTenancy: dedicated
+controller:
+  nodeLabels:
+    kube-aws.coreos.com/role: controller
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				func(c *config.Config, t *testing.T) {
-					expected := model.EC2Instance{
-						Count:         2,
-						InstanceType:  "t2.large",
-						CreateTimeout: "PT10M",
-						RootVolume: model.RootVolume{
-							Size: 101,
-							Type: "io1",
-							IOPS: 102,
-						},
-						Tenancy: "dedicated",
-					}
-
-					actual := c.Controller.EC2Instance
+					expected := model.NodeLabels{"kube-aws.coreos.com/role": "controller"}
+					actual := c.NodeLabels()
 					if !reflect.DeepEqual(expected, actual) {
-						t.Errorf(
-							"Controller didn't match: expected=%v actual=%v",
-							expected,
-							actual,
-						)
-					}
-
-					if c.ControllerInstanceType() != "t2.large" {
-						t.Errorf("unexpected controller instance type: expected=t2.large, actual=%s", c.ControllerInstanceType())
-					}
-					if c.ControllerCreateTimeout() != "PT10M" {
-						t.Errorf("unexpected controller create timeout: expected=PT10M, actual=%s", c.ControllerCreateTimeout())
-					}
-					if c.ControllerCount() != 2 {
-						t.Errorf("unexpected controller count: expected=2, actual=%d", c.ControllerCount())
-					}
-					if c.ControllerRootVolumeSize() != 101 {
-						t.Errorf("unexpected controller root volume size: expected=101, actual=%d", c.ControllerRootVolumeSize())
-					}
-					if c.ControllerRootVolumeType() != "io1" {
-						t.Errorf("unexpected controller root volume type: expected=io1, actual=%s", c.ControllerRootVolumeType())
-					}
-					if c.ControllerRootVolumeIOPS() != 102 {
-						t.Errorf("unexpected controller root volume iops: expected=102, actual=%d", c.ControllerRootVolumeIOPS())
-					}
-					if c.ControllerTenancy() != "dedicated" {
-						t.Errorf("unexpected controller tenancy: expected=dedicated, actual=%s", c.ControllerTenancy())
-					}
-				},
-			},
-		},
-		{
-			context: "WithEtcdNodesWithLegacyKeys",
-			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
-etcdCount: 2
-etcdTenancy: dedicated
-etcdInstanceType: t2.large
-etcdRootVolumeSize: 101
-etcdRootVolumeType: io1
-etcdRootVolumeIOPS: 102
-etcdDataVolumeSize: 103
-etcdDataVolumeType: io1
-etcdDataVolumeIOPS: 104
-etcdDataVolumeEncrypted: true
-`,
-			assertConfig: []ConfigTester{
-				hasDefaultExperimentalFeatures,
-				func(c *config.Config, t *testing.T) {
-					//intp := func(v int) *int {
-					//	return &v
-					//}
-					//boolp := func(v bool) *bool {
-					//	return &v
-					//}
-					//strp := func(v string) *string {
-					//	return &v
-					//}
-					subnet1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
-					subnet1.Name = "Subnet0"
-					subnets := []model.Subnet{
-						subnet1,
-					}
-					expected := model.Etcd{
-						EC2Instance: model.EC2Instance{
-							Count:        2,
-							InstanceType: "t2.large",
-							RootVolume: model.RootVolume{
-								Size: 101,
-								Type: "io1",
-								IOPS: 102,
-							},
-							Tenancy: "dedicated",
-						},
-						DataVolume: model.DataVolume{
-							Size:      103,
-							Type:      "io1",
-							IOPS:      104,
-							Ephemeral: false,
-							Encrypted: true,
-						},
-						Subnets: subnets,
-					}
-
-					actual := c.EtcdSettings.Etcd
-					if !reflect.DeepEqual(expected, actual) {
-						t.Errorf(
-							"EtcdSettings didn't match: expected=%v actual=%v",
-							expected,
-							actual,
-						)
-					}
-					if c.EtcdInstanceType() != "t2.large" {
-						t.Errorf("unexpected etcd instance type: expected=t2.large, actual=%s", c.EtcdInstanceType())
-					}
-					//if c.EtcdCreateTimeout() != "PT10M" {
-					//	t.Errorf("unexpected etcd create timeout: expected=PT10M, actual=%s", c.EtcdCreateTimeout())
-					//}
-					if c.EtcdCount() != 2 {
-						t.Errorf("unexpected etcd count: expected=2, actual=%d", c.EtcdCount())
-					}
-					if c.EtcdRootVolumeSize() != 101 {
-						t.Errorf("unexpected etcd root volume size: expected=101, actual=%d", c.EtcdRootVolumeSize())
-					}
-					if c.EtcdRootVolumeType() != "io1" {
-						t.Errorf("unexpected etcd root volume type: expected=io1, actual=%s", c.EtcdRootVolumeType())
-					}
-					if c.EtcdRootVolumeIOPS() != 102 {
-						t.Errorf("unexpected etcd root volume iops: expected=102, actual=%d", c.EtcdRootVolumeIOPS())
-					}
-					if c.EtcdDataVolumeSize() != 103 {
-						t.Errorf("unexpected etcd data volume size: expected=103, actual=%d", c.EtcdDataVolumeSize())
-					}
-					if c.EtcdDataVolumeType() != "io1" {
-						t.Errorf("unexpected etcd data volume type: expected=io1, actual=%s", c.EtcdDataVolumeType())
-					}
-					if c.EtcdDataVolumeIOPS() != 104 {
-						t.Errorf("unexpected etcd data volume iops: expected=104, actual=%d", c.EtcdDataVolumeIOPS())
-					}
-					if !c.EtcdDataVolumeEncrypted() {
-						t.Errorf("unexpected etcd data volume encrypted: expected=true, actual=%v", c.EtcdDataVolumeEncrypted())
-					}
-					if c.EtcdTenancy() != "dedicated" {
-						t.Errorf("unexpected etcd tenancy: expected=dedicated, actual=%s", c.EtcdTenancy())
+						t.Errorf("unexpected controller node labels: expected=%v, actual=%v", expected, actual)
 					}
 				},
 			},
@@ -3485,7 +3413,9 @@ worker:
 	for _, validCase := range validCases {
 		t.Run(validCase.context, func(t *testing.T) {
 			configBytes := validCase.configYaml
-			providedConfig, err := config.ConfigFromBytesWithEncryptService([]byte(configBytes), helper.DummyEncryptService{})
+			// TODO Allow including plugins in test data?
+			plugins := []*pluginmodel.Plugin{}
+			providedConfig, err := config.ConfigFromBytesWithEncryptService([]byte(configBytes), plugins, helper.DummyEncryptService{})
 			if err != nil {
 				t.Errorf("failed to parse config %s: %v", configBytes, err)
 				t.FailNow()
@@ -3599,6 +3529,17 @@ controller:
 			expectedErrorMessage: "clusterName(=my.cluster) is malformed. It must consist only of alphanumeric characters, colons, or hyphens",
 		},
 		{
+			context: "WithControllerTaint",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  taints:
+  - key: foo
+    value: bar
+    effect: NoSchedule
+`,
+			expectedErrorMessage: "`controller.taints` must not be specified because tainting controller nodes breaks the cluster",
+		},
+		{
 			context: "WithElasticFileSystemIdInSpecificNodePoolWithManagedSubnets",
 			configYaml: mainClusterYaml + `
 subnets:
@@ -3674,7 +3615,45 @@ worker:
 `,
 			expectedErrorMessage: "invalid taint effect: UnknownEffect",
 		},
-
+		{
+			context: "WithLegacyControllerSettingKeys",
+			configYaml: minimalValidConfigYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+controllerCount: 2
+controllerCreateTimeout: PT10M
+controllerInstanceType: t2.large
+controllerRootVolumeSize: 101
+controllerRootVolumeType: io1
+controllerRootVolumeIOPS: 102
+controllerTenancy: dedicated
+`,
+			expectedErrorMessage: "unknown keys found: controllerCount, controllerCreateTimeout, controllerInstanceType, controllerRootVolumeIOPS, controllerRootVolumeSize, controllerRootVolumeType, controllerTenancy",
+		},
+		{
+			context: "WithLegacyEtcdSettingKeys",
+			configYaml: minimalValidConfigYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
+routeTableId: rtb-1a2b3c4d
+etcdCount: 2
+etcdTenancy: dedicated
+etcdInstanceType: t2.large
+etcdRootVolumeSize: 101
+etcdRootVolumeType: io1
+etcdRootVolumeIOPS: 102
+etcdDataVolumeSize: 103
+etcdDataVolumeType: io1
+etcdDataVolumeIOPS: 104
+etcdDataVolumeEncrypted: true
+`,
+			expectedErrorMessage: "unknown keys found: etcdCount, etcdDataVolumeEncrypted, etcdDataVolumeIOPS, etcdDataVolumeSize, etcdDataVolumeType, etcdInstanceType, etcdRootVolumeIOPS, etcdRootVolumeSize, etcdRootVolumeType, etcdTenancy",
+		},
 		{
 			context: "WithAwsNodeLabelEnabledForTooLongClusterNameAndPoolName",
 			configYaml: minimalValidConfigYaml + `
@@ -3706,8 +3685,10 @@ experimental:
 		{
 			context: "WithMultiAPIEndpointsInvalidLB",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3733,8 +3714,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsInvalidWorkerAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3768,8 +3751,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsInvalidWorkerNodePoolAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3807,8 +3792,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsMissingDNSName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3824,8 +3811,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsMissingGlobalAPIEndpointName",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3863,8 +3852,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedBySubnetsMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3889,8 +3880,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedByExplicitPublicMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3914,8 +3907,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsRecordSetImpliedByExplicitPrivateMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3942,8 +3937,10 @@ apiEndpoints:
 		{
 			context: "WithMultiAPIEndpointsExplicitRecordSetMissingHostedZoneID",
 			configYaml: kubeAwsSettings.mainClusterYamlWithoutExternalDNS() + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 
 subnets:
 - name: publicSubnet1
@@ -3967,8 +3964,10 @@ apiEndpoints:
 		{
 			context: "WithNetworkTopologyAllExistingPrivateSubnetsRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: private1
   availabilityZone: us-west-1a
@@ -3986,13 +3985,15 @@ worker:
     subnets:
     - name: private1
 `,
-			expectedErrorMessage: `internetGatewayId can't be spcified when all the subnets are existing private subnets`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the subnets are existing private subnets`,
 		},
 		{
 			context: "WithNetworkTopologyAllExistingPublicSubnetsRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -4009,13 +4010,15 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
 		},
 		{
 			context: "WithNetworkTopologyAllManagedPublicSubnetsWithExistingRouteTableRejectingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -4034,14 +4037,16 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
+			expectedErrorMessage: `internet gateway id can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway`,
 		},
 		{
 			context: "WithNetworkTopologyAllManagedPublicSubnetsMissingExistingIGW",
 			configYaml: mainClusterYaml + `
-vpcId: vpc-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
 #misses this
-#internetGatewayId: igw-1a2b3c4d
+#internetGateway:
+#  id: igw-1a2b3c4d
 subnets:
 - name: public1
   availabilityZone: us-west-1a
@@ -4058,7 +4063,7 @@ worker:
     subnets:
     - name: public1
 `,
-			expectedErrorMessage: `internetGatewayId can't be omitted when there're one or more managed public subnets in an existing VPC`,
+			expectedErrorMessage: `internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC`,
 		},
 		{
 			context: "WithNonZeroWorkerCount",
@@ -4070,8 +4075,10 @@ workerCount: 1
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
 			configYaml: minimalValidConfigYaml + `
-vpcId: vpc-1a2b3c4d
-internetGatewayId: igw-1a2b3c4d
+vpc:
+  id: vpc-1a2b3c4d
+internetGateway:
+  id: igw-1a2b3c4d
 # vpcCIDR (10.1.0.0/16) does not contain instanceCIDR (10.0.1.0/24)
 vpcCIDR: "10.1.0.0/16"
 `,
@@ -4079,7 +4086,7 @@ vpcCIDR: "10.1.0.0/16"
 		{
 			context: "WithRouteTableIdSpecified",
 			configYaml: minimalValidConfigYaml + `
-# vpcId must be specified if routeTableId is specified
+# vpc.id must be specified if routeTableId is specified
 routeTableId: rtb-1a2b3c4d
 `,
 		},
@@ -4243,9 +4250,9 @@ addons:
 controller:
   iam:
     role:
-      name: foobarba
+      name: foobarba-foobarba-foobarba-foobarba-foobarba-foobarba
 `,
-			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Controlplane-PRK1CVQNY7XZ-ap-northeast-1-foobarba) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Controlplane) + managed iam role name(=foobarba) should be less than or equal to 34",
+			expectedErrorMessage: "IAM role name(=ap-northeast-1-foobarba-foobarba-foobarba-foobarba-foobarba-foobarba) will be 68 characters long. It exceeds the AWS limit of 64 characters: region name(=ap-northeast-1) + managed iam role name(=foobarba-foobarba-foobarba-foobarba-foobarba-foobarba) should be less than or equal to 49",
 		},
 		{
 			context: "WithTooLongWorkerIAMRoleName",
@@ -4255,12 +4262,33 @@ worker:
   - name: pool1
     iam:
       role:
-        name: foobarbazbaraaa
+        name: foobarba-foobarba-foobarba-foobarba-foobarba-foobarbazzz
 `,
-			expectedErrorMessage: "IAM role name(=kubeaws-it-main-Pool1-PRK1CVQNY7XZ-ap-northeast-1-foobarbazbaraaa) will be 65 characters long. It exceeds the AWS limit of 64 characters: cluster name(=kubeaws-it-main) + nested stack name(=Pool1) + managed iam role name(=foobarbazbaraaa) should be less than or equal to 34",
+			expectedErrorMessage: "IAM role name(=ap-northeast-1-foobarba-foobarba-foobarba-foobarba-foobarba-foobarbazzz) will be 71 characters long. It exceeds the AWS limit of 64 characters: region name(=ap-northeast-1) + managed iam role name(=foobarba-foobarba-foobarba-foobarba-foobarba-foobarbazzz) should be less than or equal to 49",
 		},
 		{
-			context: "WithInvalidInstanceProfileArn",
+			context: "WithInvalidEtcdInstanceProfileArn",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  iam:
+    instanceProfile:
+      arn: "badArn"
+`,
+			expectedErrorMessage: "invalid etcd settings: invalid instance profile, your instance profile must match (=arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME), provided (badArn)",
+		},
+		{
+			context: "WithInvalidEtcdManagedPolicyArn",
+			configYaml: minimalValidConfigYaml + `
+etcd:
+  iam:
+    role:
+      managedPolicies:
+      - arn: "badArn"
+`,
+			expectedErrorMessage: "invalid etcd settings: invalid managed policy arn, your managed policy must match this (=arn:aws:iam::(YOURACCOUNTID|aws):policy/POLICYNAME), provided this (badArn)",
+		},
+		{
+			context: "WithInvalidWorkerInstanceProfileArn",
 			configYaml: minimalValidConfigYaml + `
 worker:
   nodePools:
@@ -4272,7 +4300,7 @@ worker:
 			expectedErrorMessage: "invalid instance profile, your instance profile must match (=arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME), provided (badArn)",
 		},
 		{
-			context: "WithInvalidManagedPolicyArn",
+			context: "WithInvalidWorkerManagedPolicyArn",
 			configYaml: minimalValidConfigYaml + `
 worker:
   nodePools:
@@ -4317,7 +4345,9 @@ worker:
 	for _, invalidCase := range parseErrorCases {
 		t.Run(invalidCase.context, func(t *testing.T) {
 			configBytes := invalidCase.configYaml
-			providedConfig, err := config.ConfigFromBytes([]byte(configBytes))
+			// TODO Allow including plugins in test data?
+			plugins := []*pluginmodel.Plugin{}
+			providedConfig, err := config.ConfigFromBytes([]byte(configBytes), plugins)
 			if err == nil {
 				t.Errorf("expected to fail parsing config %s: %+v", configBytes, *providedConfig)
 				t.FailNow()

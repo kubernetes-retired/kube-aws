@@ -73,6 +73,27 @@ coreos:
 
         [Install]
         RequiredBy=format-etcd2-volume.service
+{{if and (.AmazonSsmAgent.Enabled) (ne .AmazonSsmAgent.DownloadUrl "")}}
+    - name: amazon-ssm-agent.service
+      command: start
+      enable: true
+      content: |
+        [Unit]
+        Description=amazon-ssm-agent
+        Requires=network-online.target
+        After=network-online.target
+
+        [Service]
+        Type=simple
+        ExecStartPre=/opt/ssm/bin/install-ssm-agent.sh
+        ExecStart=/opt/ssm/bin/amazon-ssm-agent
+        KillMode=control-group
+        Restart=on-failure
+        RestartSec=1min
+
+        [Install]
+        WantedBy=network-online.target
+{{end}}
 {{if .CloudWatchLogging.Enabled}}
     - name: journald-cloudwatch-logs.service
       command: start
@@ -358,6 +379,41 @@ write_files:
     content: {{$w.GzippedBase64Content}}
   {{- end }}
 {{- end }}
+{{if and (.AmazonSsmAgent.Enabled) (ne .AmazonSsmAgent.DownloadUrl "")}}
+  - path: "/opt/ssm/bin/install-ssm-agent.sh"
+    permissions: 0700
+    content: |
+      #!/bin/bash
+      set -e
+
+      TARGET_DIR=/opt/ssm
+      if [[ -f "${TARGET_DIR}"/bin/amazon-ssm-agent ]]; then
+        exit 0
+      fi
+
+      TMP_DIR=$(mktemp -d)
+      trap "rm -rf ${TMP_DIR}" EXIT
+
+      TAR_FILE=ssm.linux-amd64.tar.gz
+      CHECKSUM_FILE="${TAR_FILE}.sha1"
+
+      echo -n "{{ .AmazonSsmAgent.Sha1Sum }} ${TMP_DIR}/${TAR_FILE}" > "${TMP_DIR}/${CHECKSUM_FILE}"
+
+      curl --silent -L -o "${TMP_DIR}/${TAR_FILE}" "{{ .AmazonSsmAgent.DownloadUrl }}"
+
+      sha1sum --quiet -c "${TMP_DIR}/${CHECKSUM_FILE}"
+
+      tar zfx "${TMP_DIR}"/"${TAR_FILE}" -C "${TMP_DIR}"
+      chown -R root:root "${TMP_DIR}"/ssm
+
+      CONFIG_DIR=/etc/amazon/ssm
+      mkdir -p "${CONFIG_DIR}"
+      mv -f "${TMP_DIR}"/ssm/amazon-ssm-agent.json "${CONFIG_DIR}"/amazon-ssm-agent.json
+      mv -f "${TMP_DIR}"/ssm/seelog_unix.xml "${CONFIG_DIR}"/seelog.xml
+
+      mv -f "${TMP_DIR}"/ssm/* "${TARGET_DIR}"/bin/
+
+{{end}}
   - path: /opt/bin/cfn-init-etcd-server
     owner: root:root
     permissions: 0700
@@ -606,12 +662,12 @@ write_files:
 
       echo "KUBE_AWS_ASSUMED_HOSTNAME=$advertised_hostname
       ETCD_NAME=$name
-      ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_PEER_TRUSTED_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCD_PEER_CERT_FILE=/etc/ssl/certs/etcd.pem
       ETCD_PEER_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
       ETCD_CLIENT_CERT_AUTH=true
-      ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCD_TRUSTED_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCD_CERT_FILE=/etc/ssl/certs/etcd.pem
       ETCD_KEY_FILE=/etc/ssl/certs/etcd-key.pem
 
@@ -674,7 +730,7 @@ write_files:
     content: |
       COREOS_PUBLIC_IPV4=$public_ipv4
       COREOS_PRIVATE_IPV4=$private_ipv4
-      ETCDCTL_CA_FILE=/etc/ssl/certs/ca.pem
+      ETCDCTL_CA_FILE=/etc/ssl/certs/etcd-trusted-ca.pem
       ETCDCTL_CERT_FILE=/etc/ssl/certs/etcd-client.pem
       ETCDCTL_KEY_FILE=/etc/ssl/certs/etcd-client-key.pem
       ETCDCTL_ENDPOINT=
@@ -718,19 +774,19 @@ write_files:
 
 {{ if .ManageCertificates }}
 
-  - path: /etc/ssl/certs/ca.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-trusted-ca.pem
     encoding: gzip+base64
-    content: {{.AssetsConfig.CACert}}
+    content: {{.AssetsConfig.EtcdTrustedCA}}
 
   - path: /etc/ssl/certs/etcd-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdKey}}
 
-  - path: /etc/ssl/certs/etcd.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdCert}}
 
-  - path: /etc/ssl/certs/etcd-client.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+  - path: /etc/ssl/certs/etcd-client.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdClientCert}}
 
