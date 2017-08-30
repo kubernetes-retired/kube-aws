@@ -155,7 +155,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			files := []string{
 				"ca-key.pem.enc", "admin-key.pem.enc", "worker-key.pem.enc", "apiserver-key.pem.enc",
-				"etcd-key.pem.enc", "etcd-client-key.pem.enc",
+				"etcd-key.pem.enc", "etcd-client-key.pem.enc", "worker-ca-key.pem.enc",
 			}
 
 			for _, filename := range files {
