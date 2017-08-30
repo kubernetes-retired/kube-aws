@@ -181,12 +181,24 @@ func (c *Cluster) NewAssetsOnDisk(dir string, renderCredentialsOpts CredentialsO
 	certsManagedByKubeAws := c.ManageCertificates
 	caKeyRequiredOnController := certsManagedByKubeAws && tlsBootstrappingEnabled
 
+	fmt.Printf("--> Summarizing the configuration\n    Kubelet TLS bootstrapping enabled=%v, TLS certificates managed by kube-aws=%v, CA key required on controller nodes=%v\n", tlsBootstrappingEnabled, certsManagedByKubeAws, caKeyRequiredOnController)
+
+	fmt.Println("--> Writing to the storage")
 	alsoWriteCAKey := renderCredentialsOpts.GenerateCA || caKeyRequiredOnController
 	if err := assets.WriteToDir(dir, alsoWriteCAKey); err != nil {
-		return nil, fmt.Errorf("Error create assets: %v", err)
+		return nil, fmt.Errorf("Error creating assets: %v", err)
 	}
 
-	return ReadRawAssets(dir, certsManagedByKubeAws, tlsBootstrappingEnabled)
+	{
+		fmt.Println("--> Verifying the result")
+		verified, err := ReadRawAssets(dir, certsManagedByKubeAws, tlsBootstrappingEnabled)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed verifying the result: %v", err)
+		}
+
+		return verified, nil
+	}
 }
 
 func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certificate) (*RawAssetsOnMemory, error) {
