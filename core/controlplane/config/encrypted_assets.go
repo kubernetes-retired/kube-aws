@@ -341,7 +341,6 @@ func ReadRawAssets(dirname string, manageCertificates bool, caKeyRequiredOnContr
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil},
 			{"worker-ca.pem", &r.WorkerCACert, nil},
-			{"worker-ca-key.pem", &r.WorkerCAKey, nil},
 			{"apiserver.pem", &r.APIServerCert, nil},
 			{"apiserver-key.pem", &r.APIServerKey, nil},
 			{"worker.pem", &r.WorkerCert, nil},
@@ -356,7 +355,7 @@ func ReadRawAssets(dirname string, manageCertificates bool, caKeyRequiredOnContr
 		}...)
 
 		if caKeyRequiredOnController {
-			files = append(files, entry{"ca-key.pem", &r.CAKey, nil})
+			files = append(files, entry{"worker-ca-key.pem", &r.WorkerCAKey, nil})
 		}
 	}
 
@@ -398,7 +397,6 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, caKeyRequiredO
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
 			{"worker-ca.pem", &r.WorkerCACert, nil, false},
-			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
 			{"apiserver-key.pem", &r.APIServerKey, nil, true},
 			{"worker.pem", &r.WorkerCert, nil, false},
@@ -413,7 +411,7 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, caKeyRequiredO
 		}...)
 
 		if caKeyRequiredOnController {
-			files = append(files, entry{"ca-key.pem", &r.CAKey, nil, true})
+			files = append(files, entry{"worker-ca-key.pem", &r.WorkerCAKey, nil, true})
 		}
 	}
 
@@ -469,6 +467,7 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 	}
 
 	if includeCAKey {
+		// This is required to be linked from worker-ca-key.pem
 		assets = append(assets, struct {
 			name      string
 			data      []byte
@@ -500,13 +499,17 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 	// these can be separate CAs to ensure that worker nodes have no certs which would let them
 	// access etcd directly. If worker-ca.pem != ca.pem, then ca.pem should include worker-ca.pem
 	// to let TLS bootstrapped workers acces APIServer.
-	symlinks := []struct {
+	type symlink struct {
 		from string
 		to   string
-	}{
+	}
+	symlinks := []symlink{
 		{"ca.pem", "worker-ca.pem"},
 		{"ca.pem", "etcd-trusted-ca.pem"},
-		{"ca-key.pem", "worker-ca-key.pem"},
+	}
+
+	if includeCAKey {
+		symlinks = append(symlinks, symlink{"ca-key.pem", "worker-ca-key.pem"})
 	}
 
 	wd, err := os.Getwd()
