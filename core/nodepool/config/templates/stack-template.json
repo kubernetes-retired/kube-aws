@@ -384,7 +384,7 @@
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeTags",
+                    "autoscaling:DescribeTags"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"
