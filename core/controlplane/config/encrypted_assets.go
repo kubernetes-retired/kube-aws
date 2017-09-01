@@ -345,7 +345,6 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, encryptor Cach
 	if manageCertificates {
 		files = append(files, []entry{
 			{"ca.pem", &r.CACert, nil, false},
-			//{"ca-key.pem", &r.CAKey, nil, true},
 			{"worker-ca.pem", &r.WorkerCACert, nil, false},
 			{"worker-ca-key.pem", &r.WorkerCAKey, nil, true},
 			{"apiserver.pem", &r.APIServerCert, nil, false},
