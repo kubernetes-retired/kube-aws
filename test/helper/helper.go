@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 )
 
 func WithTempDir(fn func(dir string)) {
@@ -55,17 +54,32 @@ func withDummyCredentials(alsoWriteCAKey bool, fn func(dir string)) {
 		}
 	}
 
-	symlinks := []struct {
+	type symlink struct {
 		from string
 		to   string
-	}{
+	}
+
+	symlinks := []symlink{
 		{"ca.pem", "worker-ca.pem"},
 		{"ca.pem", "etcd-trusted-ca.pem"},
-		{"ca-key.pem", "worker-ca-key.pem"},
+	}
+
+	if alsoWriteCAKey {
+		symlinks = append(symlinks, symlink{"ca-key.pem", "worker-ca-key.pem"})
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	if err := os.Chdir(dir); err != nil {
+		panic(err)
 	}
 
 	for _, sl := range symlinks {
-		to := filepath.Join(dir, sl.to)
+		from := sl.from
+		to := sl.to
 
 		if _, err := os.Lstat(to); err == nil {
 			if err := os.Remove(to); err != nil {
@@ -73,10 +87,14 @@ func withDummyCredentials(alsoWriteCAKey bool, fn func(dir string)) {
 			}
 		}
 
-		if err := os.Symlink(sl.from, to); err != nil {
+		if err := os.Symlink(from, to); err != nil {
 			panic(err)
 		}
 		defer os.Remove(to)
+	}
+
+	if err := os.Chdir(wd); err != nil {
+		panic(err)
 	}
 
 	fn(dir)
