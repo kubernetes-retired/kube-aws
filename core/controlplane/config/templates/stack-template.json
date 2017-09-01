@@ -235,14 +235,23 @@
                 {{end}}
                 {{if .Addons.ClusterAutoscaler.Enabled}}
                 {
-                "Effect": "Allow",
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeTags",
+                    "autoscaling:DescribeTags"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
                     "autoscaling:SetDesiredCapacity",
                     "autoscaling:TerminateInstanceInAutoScalingGroup"
                   ],
+                  "Condition": {
+                    "Null": { "autoscaling:ResourceTag/kubernetes.io/cluster/{{.ClusterName}}": "false" }
+                  },
+                  "Effect": "Allow",
                   "Resource": "*"
                 },
                 {{end}}
