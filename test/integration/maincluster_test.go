@@ -104,7 +104,7 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled: false,
 			},
 			ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
-				Enabled: false,
+				Enabled: true,
 			},
 			TLSBootstrap: controlplane_config.TLSBootstrap{
 				Enabled: false,
@@ -145,6 +145,10 @@ func TestMainClusterConfig(t *testing.T) {
 
 		if c.WaitSignal.MaxBatchSize() != 1 {
 			t.Errorf("waitSignal.maxBatchSize should be 1 but was %d: %v", c.WaitSignal.MaxBatchSize(), c.WaitSignal)
+		}
+
+		if len(c.NodePools) > 0 && c.NodePools[0].ClusterAutoscalerSupport.Enabled {
+			t.Errorf("ClusterAutoscalerSupport must be disabled by default on node pools")
 		}
 	}
 
@@ -1256,7 +1260,7 @@ worker:
 							Enabled: true,
 						},
 						ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
-							Enabled: false,
+							Enabled: true,
 						},
 						TLSBootstrap: controlplane_config.TLSBootstrap{
 							Enabled: true,
@@ -1317,6 +1321,9 @@ worker:
 		{
 			context: "WithExperimentalFeaturesForWorkerNodePool",
 			configYaml: minimalValidConfigYaml + `
+addons:
+  clusterAutoscaler:
+    enabled: true
 worker:
   nodePools:
   - name: pool1
