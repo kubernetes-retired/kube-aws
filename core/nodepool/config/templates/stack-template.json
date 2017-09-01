@@ -379,7 +379,7 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
-                {{if .Addons.ClusterAutoscaler.Enabled}}
+                {{if .ClusterAutoscalerSupport.Enabled}}
                 {
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
