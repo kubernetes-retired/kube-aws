@@ -473,7 +473,7 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 			name      string
 			data      []byte
 			overwrite bool
-		}{"ca-key.pem", r.CACert, true})
+		}{"ca-key.pem", r.CAKey, true})
 	}
 
 	for _, asset := range assets {
