@@ -509,8 +509,18 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 		{"ca-key.pem", "worker-ca-key.pem"},
 	}
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	if err := os.Chdir(dirname); err != nil {
+		return err
+	}
+
 	for _, sl := range symlinks {
-		to := filepath.Join(dirname, sl.to)
+		from := sl.from
+		to := sl.to
 
 		if _, err := os.Lstat(to); err == nil {
 			if err := os.Remove(to); err != nil {
@@ -518,10 +528,15 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 			}
 		}
 
-		if err := os.Symlink(sl.from, to); err != nil {
+		if err := os.Symlink(from, to); err != nil {
 			return err
 		}
 	}
+
+	if err := os.Chdir(wd); err != nil {
+		return err
+	}
+
 	return nil
 }
 
