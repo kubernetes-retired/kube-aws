@@ -154,7 +154,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 			}
 
 			files := []string{
-				"ca-key.pem.enc", "admin-key.pem.enc", "worker-key.pem.enc", "apiserver-key.pem.enc",
+				"admin-key.pem.enc", "worker-key.pem.enc", "apiserver-key.pem.enc",
 				"etcd-key.pem.enc", "etcd-client-key.pem.enc", "worker-ca-key.pem.enc",
 			}
 
@@ -187,7 +187,7 @@ func TestReadOrCreateCompactAssets(t *testing.T) {
 
 			for _, v := range [][]string{
 				{"AdminKey", original.AdminKey, regenerated.AdminKey},
-				{"CAKey", original.CAKey, regenerated.CAKey},
+				{"WorkerCAKey", original.WorkerCAKey, regenerated.WorkerCAKey},
 				{"WorkerKey", original.WorkerKey, regenerated.WorkerKey},
 				{"APIServerKey", original.APIServerKey, regenerated.APIServerKey},
 				{"EtcdClientKey", original.EtcdClientKey, regenerated.EtcdClientKey},
