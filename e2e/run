@@ -290,13 +290,6 @@ experimental:
   fi
 
 
-  if [ "${RBAC}" != "" ]; then
-    echo -e "
-  plugins:
-    rbac:
-      enabled: true" >> cluster.yaml
-  fi
-
   echo -e "
 addons:
   clusterAutoscaler:
