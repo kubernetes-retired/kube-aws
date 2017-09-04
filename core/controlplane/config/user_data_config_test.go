@@ -61,11 +61,6 @@ func TestCloudConfigTemplating(t *testing.T) {
 		t.Fatalf("Failed to create config: %v", err)
 	}
 
-	// TLS assets
-	caKey, caCert, err := cluster.NewTLSCA()
-	if err != nil {
-		t.Fatalf("failed generating tls ca: %v", err)
-	}
 	opts := CredentialsOptions{
 		GenerateCA: true,
 	}
@@ -77,12 +72,12 @@ func TestCloudConfigTemplating(t *testing.T) {
 	}
 
 	helper.WithTempDir(func(dir string) {
-		_, err = cluster.NewAssetsOnDisk(dir, opts, caKey, caCert)
+		_, err = cluster.NewAssetsOnDisk(dir, opts)
 		if err != nil {
 			t.Fatalf("Error generating default assets: %v", err)
 		}
 
-		encryptedAssets, err := ReadOrEncryptAssets(dir, true, cachedEncryptor)
+		encryptedAssets, err := ReadOrEncryptAssets(dir, true, true, cachedEncryptor)
 		if err != nil {
 			t.Fatalf("failed to compress assets: %v", err)
 		}
