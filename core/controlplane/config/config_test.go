@@ -835,9 +835,6 @@ experimental:
     enabled: true
   tlsBootstrap:
     enabled: true
-  plugins:
-    rbac:
-      enabled: true
 `,
 			nodeAuthorizer: NodeAuthorizer{
 				Enabled: true,
@@ -847,39 +844,19 @@ experimental:
 
 	invalidConfigs := []string{
 		`
-# TLS bootstrap + RBAC must be enabled as well
+# TLS bootstrap must be enabled as well
 experimental:
   nodeAuthorizer:
     enabled: true
 `,
 		`
-# TLS bootstrap + RBAC must be enabled as well
+# TLS bootstrap must be enabled as well
 experimental:
   nodeAuthorizer:
     enabled: true
   tlsBootstrap:
     enabled: false
-`,
-		`
-# RBAC must be enabled as well
-experimental:
-  nodeAuthorizer:
-    enabled: true
-  tlsBootstrap:
-    enabled: true
-`,
-		`
-# RBAC must be enabled as well
-experimental:
-  nodeAuthorizer:
-    enabled: true
-  tlsBootstrap:
-    enabled: true
-  plugins:
-    rbac:
-      enabled: false
-`,
-	}
+`}
 
 	for _, conf := range validConfigs {
 		confBody := singleAzConfigYaml + conf.conf

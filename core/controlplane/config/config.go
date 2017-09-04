@@ -91,11 +91,7 @@ func NewDefaultCluster() *Cluster {
 			Enabled:      false,
 			DrainTimeout: 5,
 		},
-		Plugins: Plugins{
-			Rbac: Rbac{
-				Enabled: false,
-			},
-		},
+		Plugins: Plugins{},
 		Oidc: model.Oidc{
 			Enabled:       false,
 			IssuerUrl:     "https://accounts.google.com",
@@ -651,11 +647,6 @@ type TargetGroup struct {
 }
 
 type Plugins struct {
-	Rbac Rbac `yaml:"rbac"`
-}
-
-type Rbac struct {
-	Enabled bool `yaml:"enabled"`
 }
 
 type KubeDns struct {
@@ -853,10 +844,6 @@ func (c Cluster) StackConfig(opts StackTemplateOptions, extra ...[]*pluginmodel.
 		}
 
 		stackConfig.Config.AssetsConfig = rawAssets
-	}
-
-	if c.Experimental.TLSBootstrap.Enabled && !c.Experimental.Plugins.Rbac.Enabled {
-		fmt.Println(`WARNING: enabling cluster-level TLS bootstrapping without RBAC is not recommended. See https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/ for more information`)
 	}
 
 	stackConfig.StackTemplateOptions = opts
@@ -1095,10 +1082,6 @@ func (c Cluster) validate() error {
 	if c.Experimental.NodeAuthorizer.Enabled {
 		if !c.Experimental.TLSBootstrap.Enabled {
 			return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
-		}
-
-		if !c.Experimental.Plugins.Rbac.Enabled {
-			return fmt.Errorf("RBAC is required in order to enable the node authorizer")
 		}
 	}
 
