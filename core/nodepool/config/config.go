@@ -163,6 +163,12 @@ func (c *ProvidedConfig) Load(main *cfg.Config) error {
 	c.Experimental.TLSBootstrap = main.DeploymentSettings.Experimental.TLSBootstrap
 	c.Experimental.NodeDrainer = main.DeploymentSettings.Experimental.NodeDrainer
 
+	if c.Experimental.ClusterAutoscalerSupport.Enabled {
+		if !main.Addons.ClusterAutoscaler.Enabled {
+			return fmt.Errorf("clusterAutoscalerSupport can't be enabled on node pools when cluster-autoscaler is not going to be deployed to the cluster")
+		}
+	}
+
 	// Validate whole the inputs including inherited ones
 	if err := c.validate(); err != nil {
 		return err

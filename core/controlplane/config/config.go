@@ -64,7 +64,7 @@ func NewDefaultCluster() *Cluster {
 			Enabled: false,
 		},
 		ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
-			Enabled: false,
+			Enabled: true,
 		},
 		TLSBootstrap: TLSBootstrap{
 			Enabled: false,
