@@ -1207,10 +1207,6 @@ addons:
 #     usernameClaim: "email"
 #     groupsClaim: "groups"
 #
-#   plugins:
-#     rbac:
-#       enabled: true
-#
 #   # When set to true this configures the k8s aws provider so that it doesn't modify every node's security group to include an additional ingress rule per an ELB created for a k8s service whose type is "LoadBalancer"
 #   # It requires that the user has setup a rule that allows inbound traffic on kubelet ports
 #   # from the local VPC subnet so that load balancers can access it.  Ref: https://github.com/kubernetes/kubernetes/issues/26670

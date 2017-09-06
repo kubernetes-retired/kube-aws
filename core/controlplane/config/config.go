@@ -91,7 +91,6 @@ func NewDefaultCluster() *Cluster {
 			Enabled:      false,
 			DrainTimeout: 5,
 		},
-		Plugins: Plugins{},
 		Oidc: model.Oidc{
 			Enabled:       false,
 			IssuerUrl:     "https://accounts.google.com",
@@ -536,7 +535,6 @@ type Experimental struct {
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
-	Plugins                     Plugins                        `yaml:"plugins"`
 	Oidc                        model.Oidc                     `yaml:"oidc"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                         `yaml:"nodeMonitorGracePeriod"`
@@ -644,9 +642,6 @@ type TargetGroup struct {
 	Enabled          bool     `yaml:"enabled"`
 	Arns             []string `yaml:"arns"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
-}
-
-type Plugins struct {
 }
 
 type KubeDns struct {
