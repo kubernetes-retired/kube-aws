@@ -586,7 +586,7 @@ releaseChannel: stable
 worker:
   nodePools:
   - name: pool1
-    releaseChanel: alpha
+    releaseChannel: alpha
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultEtcdSettings,
@@ -605,8 +605,8 @@ worker:
 						t.Error("the AMI ID for the node pool should not be empty but it was")
 					}
 
-					if cp != np {
-						t.Errorf("the default AMI ID and the AMI ID for the node pool didn't match: default=%s, nodepool=%s", cp, np)
+					if cp == np {
+						t.Errorf("the default AMI ID and the AMI ID for the node pool should not match but they did: default=%s, nodepool=%s", cp, np)
 					}
 				},
 			},
@@ -4141,22 +4141,11 @@ worker:
 			expectedErrorMessage: "number of user provided security groups must be less than or equal to 4 but was 5",
 		},
 		{
-			context: "WithUnknownKeyInControlPlane",
+			context: "WithUnknownKeyInRoot",
 			configYaml: minimalValidConfigYaml + `
-# Must be "nodePools"
-nodePool:
-- name: pool1
+foo: bar
 `,
-			expectedErrorMessage: "unknown keys found: nodePool",
-		},
-		{
-			context: "WithUnknownKeyInControlPlaneExperimentals",
-			configYaml: minimalValidConfigYaml + `
-# Settings for an experimental feature must be under the "experimental" field. Ignored.
-nodeDrainer:
-  enabled: true
-`,
-			expectedErrorMessage: "unknown keys found: nodeDrainer",
+			expectedErrorMessage: "unknown keys found: foo",
 		},
 		{
 			context: "WithUnknownKeyInController",
@@ -4182,6 +4171,17 @@ etcd:
   foo: 1
 `,
 			expectedErrorMessage: "unknown keys found in etcd: foo",
+		},
+		{
+			context: "WithUnknownKeyInWorkerNodePool",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    clusterAutoscaler:
+      enabled: true
+`,
+			expectedErrorMessage: "unknown keys found in worker.nodePools[0]: clusterAutoscaler",
 		},
 		{
 			context: "WithUnknownKeyInWorkerNodePoolASG",

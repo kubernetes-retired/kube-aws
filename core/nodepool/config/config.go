@@ -43,6 +43,7 @@ type ProvidedConfig struct {
 	Private                 bool                `yaml:"private,omitempty"`
 	NodePoolName            string              `yaml:"name,omitempty"`
 	ProvidedEncryptService  cfg.EncryptService
+	model.UnknownKeys       `yaml:",inline"`
 }
 
 type DeploymentSettings struct {
