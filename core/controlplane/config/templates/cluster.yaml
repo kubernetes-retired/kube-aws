@@ -221,9 +221,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
-# Default number of worker nodes per node pool to create, for more control use `worker.nodePools[].count` and/or `worker.autoScalingGroup` and do not use this setting
-#workerCount: 1
-
 worker:
 #
 #  # Settings that apply to all worker node pools
@@ -320,6 +317,7 @@ worker:
 #      #
 #
 #      # Number of worker nodes to create for an autoscaling group based pool
+#      # Specify `worker.autoScalingGroup` instead for more control over its min/max/desired capacity.
 #      count: 1
 #
 #      # Instance type for worker nodes
