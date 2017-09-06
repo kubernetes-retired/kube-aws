@@ -4065,13 +4065,6 @@ worker:
 			expectedErrorMessage: `internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC`,
 		},
 		{
-			context: "WithNonZeroWorkerCount",
-			configYaml: minimalValidConfigYaml + `
-workerCount: 1
-`,
-			expectedErrorMessage: "`workerCount` is removed. Set worker.nodePools[].count per node pool instead",
-		},
-		{
 			context: "WithVpcIdAndVPCCIDRSpecified",
 			configYaml: minimalValidConfigYaml + `
 vpc:

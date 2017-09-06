@@ -157,7 +157,6 @@ func NewDefaultCluster() *Cluster {
 			DNSServiceIP: "10.3.0.10",
 		},
 		DefaultWorkerSettings: DefaultWorkerSettings{
-			WorkerCount:            0,
 			WorkerCreateTimeout:    "PT15M",
 			WorkerInstanceType:     "t2.medium",
 			WorkerRootVolumeType:   "gp2",
@@ -468,7 +467,6 @@ type DeploymentSettings struct {
 
 // Part of configuration which is specific to worker nodes
 type DefaultWorkerSettings struct {
-	WorkerCount            int      `yaml:"workerCount,omitempty"`
 	WorkerCreateTimeout    string   `yaml:"workerCreateTimeout,omitempty"`
 	WorkerInstanceType     string   `yaml:"workerInstanceType,omitempty"`
 	WorkerRootVolumeType   string   `yaml:"workerRootVolumeType,omitempty"`
@@ -1332,10 +1330,6 @@ func (c DefaultWorkerSettings) Validate() error {
 		if c.WorkerRootVolumeType != "standard" && c.WorkerRootVolumeType != "gp2" {
 			return fmt.Errorf("invalid workerRootVolumeType: %s", c.WorkerRootVolumeType)
 		}
-	}
-
-	if c.WorkerCount != 0 {
-		return errors.New("`workerCount` is removed. Set worker.nodePools[].count per node pool instead")
 	}
 
 	return nil
