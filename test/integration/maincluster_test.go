@@ -131,7 +131,6 @@ func TestMainClusterConfig(t *testing.T) {
 				Enabled:      false,
 				DrainTimeout: 5,
 			},
-			Plugins: controlplane_config.Plugins{},
 		}
 
 		actual := c.Experimental
@@ -1215,9 +1214,6 @@ experimental:
   nodeDrainer:
     enabled: true
     drainTimeout: 3
-  plugins:
-    rbac:
-      enabled: true
 cloudWatchLogging:
   enabled: true
 amazonSsmAgent:
@@ -1296,7 +1292,6 @@ worker:
 							Enabled:      true,
 							DrainTimeout: 3,
 						},
-						Plugins: controlplane_config.Plugins{},
 					}
 
 					actual := c.Experimental
