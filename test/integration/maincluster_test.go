@@ -60,7 +60,7 @@ func TestMainClusterConfig(t *testing.T) {
 					IOPS:      0,
 					Ephemeral: false,
 				},
-				Subnets: []model.Subnet{
+				Subnets: model.Subnets{
 					subnet1,
 				},
 			},
@@ -719,7 +719,7 @@ etcd:
 								IOPS:      0,
 								Ephemeral: false,
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -776,7 +776,7 @@ etcd:
 							Cluster: model.EtcdCluster{
 								MemberIdentityProvider: "eni",
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -834,7 +834,7 @@ etcd:
 								Type:      "gp2",
 								IOPS:      0,
 								Ephemeral: false,
-							}, Subnets: []model.Subnet{
+							}, Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -908,7 +908,7 @@ etcd:
 									FQDN: "etcd1c.internal.example.com",
 								},
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -982,7 +982,7 @@ etcd:
 									Name: "etcd1c",
 								},
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -1059,7 +1059,7 @@ etcd:
 									Name: "etcd1c",
 								},
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -1136,7 +1136,7 @@ etcd:
 									Name: "etcd1c",
 								},
 							},
-							Subnets: []model.Subnet{
+							Subnets: model.Subnets{
 								subnet1,
 							},
 						},
@@ -1738,7 +1738,7 @@ apiEndpoints:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "publicSubnet2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
@@ -1748,12 +1748,12 @@ apiEndpoints:
 						t.Errorf("Managed subnets didn't match: expected=%+v actual=%+v", subnets, c.AllSubnets())
 					}
 
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
 
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
@@ -1780,15 +1780,15 @@ apiEndpoints:
 						t.Errorf("unversionedPrivate: it should be enabled as the lb to which controller nodes are added, but it was not: loadBalancer=%+v", unversionedPrivate.LoadBalancer)
 					}
 
-					if !reflect.DeepEqual(versionedPublic.LoadBalancer.Subnets, []model.Subnet{public1}) {
-						t.Errorf("versionedPublic: subnets didn't match: expected=%+v actual=%+v", []model.Subnet{public1}, versionedPublic.LoadBalancer.Subnets)
+					if !reflect.DeepEqual(versionedPublic.LoadBalancer.Subnets, model.Subnets{public1}) {
+						t.Errorf("versionedPublic: subnets didn't match: expected=%+v actual=%+v", model.Subnets{public1}, versionedPublic.LoadBalancer.Subnets)
 					}
 					if !versionedPublic.LoadBalancer.Enabled() {
 						t.Errorf("versionedPublic: it should be enabled as the lb to which controller nodes are added, but it was not: loadBalancer=%+v", versionedPublic.LoadBalancer)
 					}
 
-					if !reflect.DeepEqual(versionedPrivate.LoadBalancer.Subnets, []model.Subnet{private1}) {
-						t.Errorf("versionedPrivate: subnets didn't match: expected=%+v actual=%+v", []model.Subnet{private1}, versionedPrivate.LoadBalancer.Subnets)
+					if !reflect.DeepEqual(versionedPrivate.LoadBalancer.Subnets, model.Subnets{private1}) {
+						t.Errorf("versionedPrivate: subnets didn't match: expected=%+v actual=%+v", model.Subnets{private1}, versionedPrivate.LoadBalancer.Subnets)
 					}
 					if !versionedPrivate.LoadBalancer.Enabled() {
 						t.Errorf("versionedPrivate: it should be enabled as the lb to which controller nodes are added, but it was not: loadBalancer=%+v", versionedPrivate.LoadBalancer)
@@ -1821,153 +1821,6 @@ apiEndpoints:
 
 					if !reflect.DeepEqual(c.APIEndpoints.ManagedELBLogicalNames(), []string{"APIEndpointVersionedPrivateAltELB", "APIEndpointVersionedPrivateELB", "APIEndpointVersionedPublicAltELB", "APIEndpointVersionedPublicELB"}) {
 						t.Errorf("unexpected managed ELB logical names: %s", strings.Join(c.APIEndpoints.ManagedELBLogicalNames(), ", "))
-					}
-				},
-			},
-		},
-		{
-			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecated",
-			configYaml: mainClusterYaml + `
-vpc:
-  id: vpc-1a2b3c4d
-# This, in combination with mapPublicIPs=false, implies that the route table contains a route to a preconfigured NAT gateway
-# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
-routeTableId: rtb-1a2b3c4d
-# This means that all the subnets created by kube-aws should be private
-mapPublicIPs: false
-subnets:
-- availabilityZone: us-west-1a
-  instanceCIDR: "10.0.1.0/24"
-  # implies
-  # private: true
-  # routeTable
-  #   id: rtb-1a2b3c4d
-- availabilityZone: us-west-1b
-  instanceCIDR: "10.0.2.0/24"
-  # implies
-  # private: true
-  # routeTable
-  #   id: rtb-1a2b3c4d
-`,
-			assertConfig: []ConfigTester{
-				hasDefaultExperimentalFeatures,
-				hasNoNGWsOrEIPsOrRoutes,
-				func(c *config.Config, t *testing.T) {
-					private1 := model.NewPrivateSubnetWithPreconfiguredRouteTable("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
-					private1.Name = "Subnet0"
-
-					private2 := model.NewPrivateSubnetWithPreconfiguredRouteTable("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
-					private2.Name = "Subnet1"
-
-					subnets := []model.Subnet{
-						private1,
-						private2,
-					}
-					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
-						t.Errorf("Managed subnets didn't match: expected=%+v actual=%+v", subnets, c.AllSubnets())
-					}
-
-					privateSubnets := []model.Subnet{
-						private1,
-						private2,
-					}
-					if !reflect.DeepEqual(c.Controller.Subnets, privateSubnets) {
-						t.Errorf("Controller subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Controller.Subnets)
-					}
-					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, privateSubnets) {
-						t.Errorf("Controller loadbalancer subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Controller.LoadBalancer.Subnets)
-					}
-					if !reflect.DeepEqual(c.Etcd.Subnets, privateSubnets) {
-						t.Errorf("Etcd subnets didn't match: expected=%+v actual=%+v", privateSubnets, c.Etcd.Subnets)
-					}
-
-					for i, s := range c.PrivateSubnets() {
-						if s.ManageNATGateway() {
-							t.Errorf("NAT gateway for the private subnet #%d is externally managed and shouldn't created by kube-aws", i)
-						}
-
-						if s.ManageRouteToInternet() {
-							t.Errorf("Route to IGW shouldn't be created for a private subnet: %+v", s)
-						}
-					}
-
-					if len(c.PublicSubnets()) != 0 {
-						t.Errorf("Number of public subnets should be zero but it wasn't: %d", len(c.PublicSubnets()))
-					}
-				},
-			},
-		},
-		{
-			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecated",
-			configYaml: mainClusterYaml + `
-vpc:
-  id: vpc-1a2b3c4d
-# This, in combination with mapPublicIPs=true, implies that the route table contains a route to a preconfigured internet gateway
-# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
-routeTableId: rtb-1a2b3c4d
-# This means that all the subnets created by kube-aws should be public
-mapPublicIPs: true
-# internetGateway.id should be omitted as we assume that the route table specified by routeTableId already contain a route to one
-#internetGateway:
-#  id:
-subnets:
-- availabilityZone: us-west-1a
-  instanceCIDR: "10.0.1.0/24"
-  # #implies
-  # private: false
-  # routeTable
-  #   id: rtb-1a2b3c4d
-- availabilityZone: us-west-1b
-  instanceCIDR: "10.0.2.0/24"
-  # #implies
-  # private: false
-  # routeTable
-  #   id: rtb-1a2b3c4d
-`,
-			assertConfig: []ConfigTester{
-				hasDefaultExperimentalFeatures,
-				hasNoNGWsOrEIPsOrRoutes,
-				func(c *config.Config, t *testing.T) {
-					private1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1a", "10.0.1.0/24", "rtb-1a2b3c4d")
-					private1.Name = "Subnet0"
-
-					private2 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1b", "10.0.2.0/24", "rtb-1a2b3c4d")
-					private2.Name = "Subnet1"
-
-					subnets := []model.Subnet{
-						private1,
-						private2,
-					}
-					if !reflect.DeepEqual(c.AllSubnets(), subnets) {
-						t.Errorf("Managed subnets didn't match: expected=%+v actual=%+v", subnets, c.AllSubnets())
-					}
-
-					publicSubnets := []model.Subnet{
-						private1,
-						private2,
-					}
-					if !reflect.DeepEqual(c.Controller.Subnets, publicSubnets) {
-						t.Errorf("Controller subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Controller.Subnets)
-					}
-					if !reflect.DeepEqual(c.Controller.LoadBalancer.Subnets, publicSubnets) {
-						t.Errorf("Controller loadbalancer subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Controller.LoadBalancer.Subnets)
-					}
-					if !reflect.DeepEqual(c.Etcd.Subnets, publicSubnets) {
-						t.Errorf("Etcd subnets didn't match: expected=%+v actual=%+v", publicSubnets, c.Etcd.Subnets)
-					}
-
-					for i, s := range c.PublicSubnets() {
-						if s.RouteTableID() != "rtb-1a2b3c4d" {
-							t.Errorf("Subnet %d should be associated to a route table with an IGW preconfigured but it wasn't", i)
-						}
-
-						if s.ManageRouteToInternet() {
-							t.Errorf("Route to IGW shouldn't be created for a public subnet with a preconfigured IGW: %+v", s)
-						}
-					}
-
-					if len(c.PrivateSubnets()) != 0 {
-						t.Errorf("Number of private subnets should be zero but it wasn't: %d", len(c.PrivateSubnets()))
 					}
 				},
 			},
@@ -2034,7 +1887,7 @@ worker:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
@@ -2044,11 +1897,11 @@ worker:
 						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
 					}
 
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
-					importedPublicSubnets := []model.Subnet{
+					importedPublicSubnets := model.Subnets{
 						model.NewPublicSubnetFromFn("us-west-1a", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public1"}}`),
 						model.NewPublicSubnetFromFn("us-west-1b", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public2"}}`),
 					}
@@ -2058,7 +1911,7 @@ worker:
 						t.Errorf("Worker subnets didn't match: expected=%v actual=%v", importedPublicSubnets, p.Subnets)
 					}
 
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
@@ -2127,7 +1980,7 @@ subnets:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
@@ -2137,7 +1990,7 @@ subnets:
 						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
 					}
 
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
@@ -2223,7 +2076,7 @@ worker:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
@@ -2233,7 +2086,7 @@ worker:
 						t.Errorf("Managed subnets didn't match: expected=%v actual=%v", subnets, c.AllSubnets())
 					}
 
-					importedPublicSubnets := []model.Subnet{
+					importedPublicSubnets := model.Subnets{
 						model.NewPublicSubnetFromFn("us-west-1a", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public1"}}`),
 						model.NewPublicSubnetFromFn("us-west-1b", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public2"}}`),
 					}
@@ -2242,7 +2095,7 @@ worker:
 						t.Errorf("Worker subnets didn't match: expected=%v actual=%v", importedPublicSubnets, p.Subnets)
 					}
 
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
@@ -2324,21 +2177,21 @@ worker:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
 						public2,
 					}
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
-					importedPublicSubnets := []model.Subnet{
+					importedPublicSubnets := model.Subnets{
 						model.NewPublicSubnetFromFn("us-west-1a", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public1"}}`),
 						model.NewPublicSubnetFromFn("us-west-1b", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public2"}}`),
 					}
@@ -2422,17 +2275,17 @@ worker:
 					public2 := model.NewImportedPublicSubnet("us-west-1b", "mycluster-public-subnet-1")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
 						public2,
 					}
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
@@ -2483,6 +2336,9 @@ subnets:
 controller:
   loadBalancer:
     private: true
+  subnets:
+  - name: private1
+  - name: private2
 etcd:
   subnets:
   - name: private1
@@ -2583,21 +2439,21 @@ worker:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
 						public2,
 					}
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
-					importedPublicSubnets := []model.Subnet{
+					importedPublicSubnets := model.Subnets{
 						model.NewPublicSubnetFromFn("us-west-1a", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public1"}}`),
 						model.NewPublicSubnetFromFn("us-west-1b", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public2"}}`),
 					}
@@ -2685,21 +2541,21 @@ worker:
 					public2 := model.NewPublicSubnet("us-west-1b", "10.0.4.0/24")
 					public2.Name = "public2"
 
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						private1,
 						private2,
 						public1,
 						public2,
 					}
-					publicSubnets := []model.Subnet{
+					publicSubnets := model.Subnets{
 						public1,
 						public2,
 					}
-					privateSubnets := []model.Subnet{
+					privateSubnets := model.Subnets{
 						private1,
 						private2,
 					}
-					importedPublicSubnets := []model.Subnet{
+					importedPublicSubnets := model.Subnets{
 						model.NewPublicSubnetFromFn("us-west-1a", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public1"}}`),
 						model.NewPublicSubnetFromFn("us-west-1b", `{"Fn::ImportValue":{"Fn::Sub":"${ControlPlaneStackName}-Public2"}}`),
 					}
@@ -2980,19 +2836,22 @@ internetGatewayId: igw-1a2b3c4d
 		},
 		{
 			context: "WithVpcIdAndRouteTableIdSpecified",
-			configYaml: minimalValidConfigYaml + `
+			configYaml: mainClusterYaml + `
 vpc:
   id: vpc-1a2b3c4d
-internetGateway:
-  id: igw-1a2b3c4d
-routeTableId: rtb-1a2b3c4d
+subnets:
+- name: Subnet0
+  availabilityZone: us-west-1c
+  instanceCIDR: "10.0.0.0/24"
+  routeTable:
+    id: rtb-1a2b3c4d
 `,
 			assertConfig: []ConfigTester{
 				hasDefaultExperimentalFeatures,
 				func(c *config.Config, t *testing.T) {
 					subnet1 := model.NewPublicSubnetWithPreconfiguredRouteTable("us-west-1c", "10.0.0.0/24", "rtb-1a2b3c4d")
 					subnet1.Name = "Subnet0"
-					subnets := []model.Subnet{
+					subnets := model.Subnets{
 						subnet1,
 					}
 					expected := controlplane_config.EtcdSettings{
@@ -4063,6 +3922,61 @@ worker:
     - name: public1
 `,
 			expectedErrorMessage: `internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC`,
+		},
+		{
+			context: "WithNetworkTopologyAllPreconfiguredPrivateDeprecatedAndThenRemoved",
+			configYaml: mainClusterYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+# This, in combination with mapPublicIPs=false, had been implying that the route table contains a route to a preconfigured NAT gateway
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
+routeTableId: rtb-1a2b3c4d
+# This had been implied that all the subnets created by kube-aws should be private
+mapPublicIPs: false
+subnets:
+- availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  # implies
+  # private: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+- availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  # implies
+  # private: true
+  # routeTable
+  #   id: rtb-1a2b3c4d
+`,
+			expectedErrorMessage: "internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC",
+		},
+		{
+			context: "WithNetworkTopologyAllPreconfiguredPublicDeprecatedAndThenRemoved",
+			configYaml: mainClusterYaml + `
+vpc:
+  id: vpc-1a2b3c4d
+# This, in combination with mapPublicIPs=true, had been implying that the route table contains a route to a preconfigured internet gateway
+# See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-276008202
+routeTableId: rtb-1a2b3c4d
+# This had been implied that all the subnets created by kube-aws should be public
+mapPublicIPs: true
+# internetGateway.id should be omitted as we assume that the route table specified by routeTableId already contain a route to one
+#internetGateway:
+#  id:
+subnets:
+- availabilityZone: us-west-1a
+  instanceCIDR: "10.0.1.0/24"
+  # #implies
+  # private: false
+  # routeTable
+  #   id: rtb-1a2b3c4d
+- availabilityZone: us-west-1b
+  instanceCIDR: "10.0.2.0/24"
+  # #implies
+  # private: false
+  # routeTable
+  #   id: rtb-1a2b3c4d
+`,
+			expectedErrorMessage: "internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC",
 		},
 		{
 			context: "WithVpcIdAndVPCCIDRSpecified",

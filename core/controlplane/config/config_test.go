@@ -102,7 +102,13 @@ podCIDR: 172.4.0.0/16
 serviceCIDR: 172.5.0.0/16
 dnsServiceIP: 172.6.100.101 #dnsServiceIP not in service CIDR
 `, `
-routeTableId: rtb-xxxxxx # routeTableId specified without vpcId
+
+subnets:
+- name: Subnet0
+  instanceCIDR: "10.0.0.0/24"
+  availabilityZone: us-west-1c
+  routeTable:
+    id: rtb-xxxxxx # routeTable.id specified without vpcId
 `, `
 # invalid TTL
 recordSetTTL: 0
@@ -324,7 +330,7 @@ func TestMultipleSubnets(t *testing.T) {
 
 	validConfigs := []struct {
 		conf    string
-		subnets []model.Subnet
+		subnets model.Subnets
 	}{
 		{
 			conf: `
@@ -336,7 +342,7 @@ subnets:
   - availabilityZone: ap-northeast-1c
     instanceCIDR: 10.4.4.0/24
 `,
-			subnets: []model.Subnet{
+			subnets: model.Subnets{
 				{
 					InstanceCIDR:     "10.4.3.0/24",
 					AvailabilityZone: "ap-northeast-1a",
@@ -356,7 +362,7 @@ vpcCIDR: 10.4.3.0/16
 availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 `,
-			subnets: []model.Subnet{
+			subnets: model.Subnets{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
@@ -372,7 +378,7 @@ availabilityZone: ap-northeast-1a
 instanceCIDR: 10.4.3.0/24
 subnets: []
 `,
-			subnets: []model.Subnet{
+			subnets: model.Subnets{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.4.3.0/24",
@@ -386,7 +392,7 @@ subnets: []
 availabilityZone: "ap-northeast-1a"
 subnets: []
 `,
-			subnets: []model.Subnet{
+			subnets: model.Subnets{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
@@ -399,7 +405,7 @@ subnets: []
 # Missing subnets field fall-backs to the single subnet with the default az/cidr.
 availabilityZone: "ap-northeast-1a"
 `,
-			subnets: []model.Subnet{
+			subnets: model.Subnets{
 				{
 					AvailabilityZone: "ap-northeast-1a",
 					InstanceCIDR:     "10.0.0.0/24",
@@ -939,7 +945,7 @@ func TestValidateExistingVPC(t *testing.T) {
 	cluster := NewDefaultCluster()
 
 	cluster.VPCCIDR = "10.0.0.0/16"
-	cluster.Subnets = []model.Subnet{
+	cluster.Subnets = model.Subnets{
 		model.NewPublicSubnet("ap-northeast-1a", "10.0.1.0/24"),
 		model.NewPublicSubnet("ap-northeast-1a", "10.0.2.0/24"),
 	}
