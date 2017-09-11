@@ -17,7 +17,7 @@ type Etcd struct {
 	Nodes              []EtcdNode   `yaml:"nodes,omitempty"`
 	SecurityGroupIds   []string     `yaml:"securityGroupIds"`
 	Snapshot           EtcdSnapshot `yaml:"snapshot,omitempty"`
-	Subnets            []Subnet     `yaml:"subnets,omitempty"`
+	Subnets            Subnets      `yaml:"subnets,omitempty"`
 	UnknownKeys        `yaml:",inline"`
 }
 

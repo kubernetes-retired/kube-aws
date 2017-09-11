@@ -176,8 +176,11 @@ func TestExistingVPCValidation(t *testing.T) {
 		`
 vpcCIDR: 10.5.0.0/16
 vpcId: vpc-xxx1
-routeTableId: rtb-xxxxxx
-instanceCIDR: 10.5.11.0/24
+subnets:
+- name: Subnet0
+  routeTable:
+    id: rtb-xxxxxx
+  instanceCIDR: 10.5.11.0/24
 `, `
 vpcCIDR: 192.168.1.0/24
 vpcId: vpc-xxx2
@@ -198,30 +201,37 @@ subnets:
 		`
 vpcCIDR: 10.0.0.0/16
 vpcId: vpc-xxx3 #vpc does not exist
-instanceCIDR: 10.0.0.0/24
-routeTableId: rtb-xxxxxx
+subnets:
+- name: Subnet0
+  routeTable:
+    id: rtb-xxxxxx
+  instanceCIDR: 10.0.0.0/24
 `, `
 vpcCIDR: 10.10.0.0/16 #vpc cidr does match existing vpc-xxx1
 vpcId: vpc-xxx1
-instanceCIDR: 10.10.0.0/24
-routeTableId: rtb-xxxxxx
+subnets:
+- name: Subnet0
+  routeTable:
+    id: rtb-xxxxxx
+  instanceCIDR: 10.10.0.0/24
 `, `
 vpcCIDR: 10.5.0.0/16
 instanceCIDR: 10.5.2.0/28 #instance cidr conflicts with existing subnet
 vpcId: vpc-xxx1
-routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 192.168.1.0/24
 instanceCIDR: 192.168.1.100/26 #instance cidr conflicts with existing subnet
 vpcId: vpc-xxx2
-routeTableId: rtb-xxxxxx
 `, `
 vpcCIDR: 192.168.1.0/24
 vpcId: vpc-xxx2
-routeTableId: rtb-xxxxxx
 subnets:
   - instanceCIDR: 192.168.1.100/26  #instance cidr conflicts with existing subnet
+    routeTable:
+      id: rtb-xxxxxx
   - instanceCIDR: 192.168.1.0/26
+    routeTable:
+      id: rtb-xxxxxx
 `,
 	}
 
