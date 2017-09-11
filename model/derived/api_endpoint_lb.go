@@ -13,7 +13,7 @@ type APIEndpointLB struct {
 	// APIEndpoint is inherited to configure this load balancer
 	model.APIEndpoint
 	// Subnets contains all the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
-	Subnets []model.Subnet
+	Subnets model.Subnets
 }
 
 // DNSNameRef returns a CloudFormation ref for the Amazon-provided DNS name of this load balancer, which is typically used
