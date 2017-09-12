@@ -2670,6 +2670,10 @@ write_files:
   - path: /etc/kubernetes/ssl/worker-ca-key.pem.enc
     encoding: gzip+base64
     content: {{.AssetsConfig.WorkerCAKey}}
+
+  - path: /etc/kubernetes/ssl/worker-ca.pem
+    encoding: gzip+base64
+    content: {{.AssetsConfig.WorkerCACert}}
 {{ end }}
 
   - path: /etc/kubernetes/ssl/apiserver.pem
