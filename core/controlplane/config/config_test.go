@@ -110,23 +110,46 @@ subnets:
   routeTable:
     id: rtb-xxxxxx # routeTable.id specified without vpcId
 `, `
-# invalid TTL
-recordSetTTL: 0
+# hostedZone.id shouldn't be blank when recordSetManaged is true
+apiEndpoints:
+- name: public
+  loadBalancer:
+    hostedZone:
+      id:
+    recordSetManaged: true
+
 `, `
-# hostedZone and hostedZoneID shouldn't be blank when createRecordSet is true
-createRecordSet: true
+# hostedZone.id shouldn't be blank when recordSetManaged is true(=default)
+apiEndpoints:
+- name: public
+  loadBalancer:
+    hostedZone:
+      id:
 `, `
-# recordSetTTL shouldn't be modified when createRecordSet is false
-createRecordSet: false
-recordSetTTL: 400
+# recordSetTTL shouldn't be modified when you're going to manage the hostname yourself(=hostedZone.id is nil and recordSetManaged is false)
+apiEndpoints:
+- name: public
+  loadBalancer:
+    hostedZone:
+      id:
+    recordSetManaged: false
+    recordSetTTL: 400
 `, `
-# hostedZoneId should'nt be modified when createRecordSet is false
-createRecordSet: false
-hostedZoneId: /hostedzone/staging_id_2 #hostedZone and hostedZoneId defined
+# hostedZoneId should'nt be modified when recordSetManaged is false
+apiEndpoints:
+- name: public
+  loadBalancer:
+    hostedZone:
+      id: hostedzone-xxxxxx
+    recordSetManaged: false
 `, `
-# hostedZone had been deprecated and then dropped
-createRecordSet: true
-hostedZone: "staging.core-os.net"
+# recordSetTTL should be greater than zero
+apiEndpoints:
+- name: public
+  loadBalancer:
+    hostedZone:
+      id: hostedzone-xxxxxx
+    recordSetTTL: 0
 `,
 }
 
