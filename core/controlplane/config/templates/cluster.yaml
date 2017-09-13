@@ -52,13 +52,6 @@ apiEndpoints:
     # Also, don't forget to add controller.securityGroupIds to include a glue SG to allow your existing ELB to access controller nodes created by kube-aws
     #id: existing-elb
 
-    # Set to true when you want kube-aws to create a Route53 ALIAS record set for this API load balancer for you
-    # Must be omitted when `id` is specified
-    {{if .HostedZoneID -}}
-    createRecordSet: true
-    {{else -}}
-    createRecordSet: false
-    {{- end}}
     # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
     # Must be omitted when `id` is specified
     #subnets:
@@ -69,11 +62,19 @@ apiEndpoints:
     # Must be omitted when `id` is specified
     #private: false
 
-    # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+    # TTL in seconds for the Route53 RecordSet created if hostedZone.id is set to a non-nil value.
     #recordSetTTL: 300
 
+    {{if .NoRecordSet -}}
+    recordSetManaged: false
+    {{- end}}
+
     # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
-    # Must be omitted when `id` is specified
+    #
+    # Omitting hostedZone.id implies you must configure Route 53 hosted zone and record set or your own DNS so that worker nodes
+    # are able to resolve DNS names of this API endpoint.
+    #
+    # Must be omitted when `id` is specified because kube-aws doesn't deal with the existing ELB by design
     {{if .HostedZoneID -}}
     hostedZone:
       # The ID of hosted zone to add the dnsName to.
@@ -116,6 +117,18 @@ apiEndpoints:
 #  #
 #  - name: extra
 #    dnsName: youralias.example.com
+#    loadBalancer:
+#      managed: false
+#
+#  #
+#  # Uncommon configuration #1: Managed, internet-facing API endpoint, without a Route53 record set
+#  #
+#  - name: elbOnly
+#    dnsName: youralias.example.com
+#    loadBalancer:
+#      # Setting this to false allows you to omit hostedZone.id and hence the creation of Route53 record set is skipped
+#      recordSetManaged: false
+#
 
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.

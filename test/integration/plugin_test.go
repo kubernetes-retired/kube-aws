@@ -23,10 +23,8 @@ func TestPlugin(t *testing.T) {
 		t.Logf(`Falling back s3URI to a stub value "%s" for tests of validating stack templates. No assets will actually be uploaded to S3`, s3URI)
 	}
 
-	mainClusterYaml := kubeAwsSettings.mainClusterYaml()
-	minimalValidConfigYaml := mainClusterYaml + `
-availabilityZone: us-west-1c
-`
+	minimalValidConfigYaml := kubeAwsSettings.minimumValidClusterYamlWithAZ("c")
+
 	validCases := []struct {
 		context       string
 		clusterYaml   string
@@ -37,6 +35,8 @@ availabilityZone: us-west-1c
 		{
 			context: "WithAddons",
 			clusterYaml: minimalValidConfigYaml + `
+
+
 kubeAwsPlugins:
   myPlugin:
     enabled: true
