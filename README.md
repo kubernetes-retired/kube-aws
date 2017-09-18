@@ -85,7 +85,7 @@ $ kube-aws destroy
 
 Extra or advanced topics in for kube-aws:
 
-* [Known Limitations](/Documentation/kubernetes-on-aws-limitations.md)
+* [Known Limitations](/docs/troubleshooting/known-limitations.md)
 * [Roadmap](/ROADMAP.md)
 
 The following links can be useful for development:
