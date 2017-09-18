@@ -3579,7 +3579,7 @@ apiEndpoints:
     hostedZone:
       id: hostedzone-public
 `,
-			expectedErrorMessage: "invalid apiEndpoint \"unversionedPublic\" at index 0: invalid loadBalancer: private, subnets, hostedZone must be omitted when id is specified to reuse an existing ELB",
+			expectedErrorMessage: "invalid apiEndpoint \"unversionedPublic\" at index 0: invalid loadBalancer: type, private, subnets, hostedZone must be omitted when id is specified to reuse an existing ELB",
 		},
 		{
 			context: "WithMultiAPIEndpointsInvalidWorkerAPIEndpointName",
