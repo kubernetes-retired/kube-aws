@@ -1041,6 +1041,12 @@ func (c Cluster) validate() error {
 		}
 	}
 
+	for i, e := range c.APIEndpointConfigs {
+		if e.LoadBalancer.NetworkLoadBalancer() && !c.Region.SupportsNetworkLoadBalancers() {
+			return fmt.Errorf("api endpoint %d is not valid: network load balancer not supported in region", i)
+		}
+	}
+
 	return nil
 }
 

@@ -49,7 +49,13 @@
           {{end}}
         ],
         "LoadBalancerNames" : [
-          {{range $i, $ref := .APIEndpoints.ELBRefs -}}
+          {{range $i, $ref := .APIEndpoints.ELBClassicRefs -}}
+          {{- if gt $i 0}},{{end}}
+          {{ $ref }}
+          {{- end}}
+        ],
+        "TargetGroupARNs": [
+          {{range $i, $ref := .APIEndpoints.ELBV2TargetGroupRefs -}}
           {{- if gt $i 0}},{{end}}
           {{ $ref }}
           {{- end}}
@@ -895,6 +901,50 @@
       }
     },
     {{ end -}}
+    {{ if .LoadBalancer.LoadBalancerV2 }}
+    "{{.LoadBalancer.LogicalName}}TargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthCheckIntervalSeconds": "10",
+        "HealthyThresholdCount": "3",
+        "UnhealthyThresholdCount": "3",
+        "Port": "443",
+        "VpcId": {{$.VPCRef}},
+        "Protocol": "TCP"
+      }
+    },
+    "{{.LoadBalancer.LogicalName}}Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {"Ref": "{{.LoadBalancer.LogicalName}}TargetGroup"},
+            "Type": "forward"
+          }
+        ],
+        "LoadBalancerArn": {"Ref": "{{.LoadBalancer.LogicalName}}"},
+        "Port": "443",
+        "Protocol": "TCP"
+      }
+    },
+    "{{.LoadBalancer.LogicalName}}" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties" : {
+        "Type": "network",
+        "Subnets" : [
+          {{range $index, $subnet := .LoadBalancer.Subnets}}
+          {{if gt $index 0}},{{end}}
+          {{$subnet.Ref}}
+          {{end}}
+        ],
+        {{if .LoadBalancer.Private}}
+        "Scheme": "internal"
+        {{else}}
+        "Scheme": "internet-facing"
+        {{end}}
+      }
+    },
+    {{ else }}
     "{{.LoadBalancer.LogicalName}}" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
@@ -936,6 +986,7 @@
         ]
       }
     },
+    {{ end }}
     {{if .LoadBalancer.ManageSecurityGroup -}}
     "{{.LoadBalancer.SecurityGroupLogicalName}}" : {
       "Properties": {
@@ -1029,6 +1080,14 @@
             "ToPort": 22
           },
           {{end -}}
+          {{ if $.KubeClusterSettings.APIEndpointConfigs.HasNetworkLoadBalancers }}
+          {
+            "CidrIp": "{{.VPCCIDR}}",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+          {{ end }}
           {
             "SourceSecurityGroupId" : { "Ref" : "SecurityGroupElbAPIServer" },
             "FromPort": 443,
