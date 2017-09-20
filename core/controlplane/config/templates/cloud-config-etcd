@@ -40,17 +40,31 @@ coreos:
   units:
 {{- range $u := .Etcd.CustomSystemdUnits}}
     - name: {{$u.Name}}
+      {{- if $u.Command }}
       command: {{ $u.Command }}
+      {{- end}}
       {{- if $u.Enable }}
       enable: {{ $u.Enable }}
       {{- end }}
       {{- if $u.Runtime }}
       runtime: {{ $u.Runtime }}
       {{- end }}
+      {{- if $u.DropInsPresent }}
+      drop-ins:
+        {{- range $d := $u.DropIns }}
+        - name: {{ $d.Name }}
+          content: |
+            {{- range $i := $d.ContentArray }}
+            {{ $i }}
+            {{- end}}
+        {{- end }}
+      {{- end}}
+      {{- if $u.ContentPresent }}
       content: |
         {{- range $l := $u.ContentArray}}
         {{ $l }}
         {{- end }}
+      {{- end}}
 {{- end}}
     - name: cfn-etcd-environment.service
       enable: true
