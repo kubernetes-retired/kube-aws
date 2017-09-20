@@ -70,7 +70,7 @@ func (e APIEndpointLB) LoadBalancerV2() bool {
 
 // NetworkLoadBalancer returns true if the load balancer is a ELBV2 network load balancer
 func (e APIEndpointLB) NetworkLoadBalancer() bool {
-	return e.Type != nil && *e.Type != "classic"
+	return e.Type != nil && *e.Type == "network"
 }
 
 // ManageELBRecordSet returns true if kube-aws should create a record set for the ELB
