@@ -901,7 +901,7 @@
       }
     },
     {{ end -}}
-    {{ if .LoadBalancer.LoadBalancerV2 }}
+    {{ if .LoadBalancer.NetworkLoadBalancer }}
     "{{.LoadBalancer.LogicalName}}TargetGroup": {
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
       "Properties": {
