@@ -80,7 +80,7 @@ func (e APIEndpointLB) ManageELBRecordSet() bool {
 
 // ManageSecurityGroup returns true if kube-aws should create a security group for this ELB
 func (e APIEndpointLB) ManageSecurityGroup() bool {
-	return len(e.APIAccessAllowedSourceCIDRs) > 0
+	return !e.NetworkLoadBalancer() && len(e.APIAccessAllowedSourceCIDRs) > 0
 }
 
 // Validate returns an error when there's any user error in the settings of the `loadBalancer` field
@@ -138,20 +138,8 @@ func (e APIEndpointLB) Validate() error {
 	}
 
 	if e.NetworkLoadBalancer() {
-		defaultRanges := DefaultCIDRRanges()
-
 		if len(e.SecurityGroupIds) > 0 {
 			return errors.New("cannot specify security group IDs for a network load balancer")
-		}
-
-		if len(e.APIAccessAllowedSourceCIDRs) != len(defaultRanges) {
-			return errors.New("cannot override apiAccessAllowedSourceCIDRs for a network load balancer")
-		}
-
-		for i, r := range defaultRanges {
-			if r != e.APIAccessAllowedSourceCIDRs[i] {
-				return errors.New("cannot override apiAccessAllowedSourceCIDRs for a network load balancer")
-			}
 		}
 	}
 

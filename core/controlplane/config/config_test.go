@@ -283,6 +283,72 @@ func TestMinimalChinaConfig(t *testing.T) {
 	}
 }
 
+func TestAPIAccessAllowedSourceCIDRs(t *testing.T) {
+	testCases := []struct {
+		conf  string
+		cidrs []string
+	}{
+		{
+			conf:  externalDNSNameConfig,
+			cidrs: []string{"0.0.0.0/0"},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32
+`,
+			cidrs: []string{"127.0.0.1/32"},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32
+      - 0.0.0.0/0
+- name: endpoint-2
+  dnsName: test-2.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32   # Duplicated CIDR
+      - 192.168.0.0/24
+`,
+			cidrs: []string{"0.0.0.0/0", "127.0.0.1/32", "192.168.0.0/24"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		confBody := availabilityZoneConfig + apiEndpointMinimalConfigYaml + testCase.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("Unexpected error parsing config: %v\n %s", err, confBody)
+			continue
+		}
+
+		actualCIDRs := c.APIAccessAllowedSourceCIDRs()
+		if !reflect.DeepEqual(actualCIDRs, testCase.cidrs) {
+			t.Errorf(
+				"CIDRs %s do not match actual list %s in config: %s",
+				testCase.cidrs,
+				actualCIDRs,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestKubernetesServiceIPInference(t *testing.T) {
 
 	// We sill assert that after parsing the network configuration,
@@ -342,7 +408,6 @@ dnsServiceIP: 10.6.142.100
 				testConfig.KubernetesServiceIP)
 		}
 	}
-
 }
 
 func TestReleaseChannel(t *testing.T) {
@@ -400,7 +465,6 @@ releaseChannel: non-existent #this release channel will never exist
 			t.Errorf("expected error parsing invalid config: %s", confBody)
 		}
 	}
-
 }
 
 func TestAvailabilityZones(t *testing.T) {
