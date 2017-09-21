@@ -922,17 +922,24 @@ func (c Cluster) ExternalDNSNames() []string {
 	return names
 }
 
-// APIAccessAllowedSourceCIDRs returns all the CIDRs of Kubernetes API endpoints that controller nodes must allow access from
-func (c Cluster) APIAccessAllowedSourceCIDRs() []string {
+// APIAccessAllowedSourceCIDRsForControllerSG returns all the CIDRs of Kubernetes API endpoints that controller nodes must allow access from
+func (c Cluster) APIAccessAllowedSourceCIDRsForControllerSG() []string {
 	cidrs := []string{}
 	seen := map[string]bool{}
 
 	for _, e := range c.APIEndpointConfigs {
-		for _, r := range e.LoadBalancer.APIAccessAllowedSourceCIDRs {
-			val := r.String()
-			if _, ok := seen[val]; !ok {
-				cidrs = append(cidrs, val)
-				seen[val] = true
+		if !e.LoadBalancer.NetworkLoadBalancer() {
+			continue
+		}
+
+		ranges := e.LoadBalancer.APIAccessAllowedSourceCIDRs
+		if len(ranges) > 0 {
+			for _, r := range ranges {
+				val := r.String()
+				if _, ok := seen[val]; !ok {
+					cidrs = append(cidrs, val)
+					seen[val] = true
+				}
 			}
 		}
 	}
