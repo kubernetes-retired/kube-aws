@@ -146,6 +146,15 @@ apiEndpoints:
     type: network
     recordSetManaged: false
     securityGroupIds: []
+`, `
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    securityGroupIds: []
+    apiAccessAllowedSourceCIDRs: []
 `,
 }
 
@@ -211,23 +220,14 @@ apiEndpoints:
     securityGroupIds:
       - sg-1234
 `, `
-# cannot override apiAccessAllowedSourceCIDRs
+# must specify either securityGroupIds or apiAccessAllowedSourceCIDRs for classic ELBs
 apiEndpoints:
 - name: public
+  dnsName: test.staging.core-os.net
   loadBalancer:
-    type: network
-    hostedZone:
-      id: hostedzone-xxxxxx
-    apiAccessAllowedSourceCIDRs:
-      - 127.0.0.1/32
-`, `
-# cannot specify empty apiAccessAllowedSourceCIDRs
-apiEndpoints:
-- name: public
-  loadBalancer:
-    type: network
-    hostedZone:
-      id: hostedzone-xxxxxx
+    type: classic
+    recordSetManaged: false
+    securityGroupIds: []
     apiAccessAllowedSourceCIDRs: []
 `,
 }
