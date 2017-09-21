@@ -1088,7 +1088,7 @@
             "IpProtocol": "tcp",
             "ToPort": 443
           },
-          {{ range $_, $r := $.APIAccessAllowedSourceCIDRs -}}
+          {{ range $_, $r := $.APIAccessAllowedSourceCIDRsForControllerSG -}}
           {
             "CidrIp": "{{$r}}",
             "FromPort": 443,

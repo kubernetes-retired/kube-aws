@@ -283,13 +283,36 @@ func TestMinimalChinaConfig(t *testing.T) {
 	}
 }
 
-func TestAPIAccessAllowedSourceCIDRs(t *testing.T) {
+func TestAPIAccessAllowedSourceCIDRsForControllerSG(t *testing.T) {
 	testCases := []struct {
 		conf  string
 		cidrs []string
 	}{
 		{
 			conf:  externalDNSNameConfig,
+			cidrs: []string{},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs: []
+`,
+			cidrs: []string{},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+`,
 			cidrs: []string{"0.0.0.0/0"},
 		},
 		{
@@ -302,6 +325,23 @@ apiEndpoints:
     recordSetManaged: false
     apiAccessAllowedSourceCIDRs:
       - 127.0.0.1/32
+
+# Ignores non-network load balancers
+- name: endpoint-2
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.2/32
+
+# Ignores non-network load balancers
+- name: endpoint-2
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: classic
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.3/32
 `,
 			cidrs: []string{"127.0.0.1/32"},
 		},
@@ -316,6 +356,7 @@ apiEndpoints:
     apiAccessAllowedSourceCIDRs:
       - 127.0.0.1/32
       - 0.0.0.0/0
+
 - name: endpoint-2
   dnsName: test-2.staging.core-os.net
   loadBalancer:
@@ -337,7 +378,7 @@ apiEndpoints:
 			continue
 		}
 
-		actualCIDRs := c.APIAccessAllowedSourceCIDRs()
+		actualCIDRs := c.APIAccessAllowedSourceCIDRsForControllerSG()
 		if !reflect.DeepEqual(actualCIDRs, testCase.cidrs) {
 			t.Errorf(
 				"CIDRs %s do not match actual list %s in config: %s",
