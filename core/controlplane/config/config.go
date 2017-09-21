@@ -922,6 +922,26 @@ func (c Cluster) ExternalDNSNames() []string {
 	return names
 }
 
+// APIAccessAllowedSourceCIDRs returns all the CIDRs of Kubernetes API endpoints that controller nodes must allow access from
+func (c Cluster) APIAccessAllowedSourceCIDRs() []string {
+	cidrs := []string{}
+	seen := map[string]bool{}
+
+	for _, e := range c.APIEndpointConfigs {
+		for _, r := range e.LoadBalancer.APIAccessAllowedSourceCIDRs {
+			val := r.String()
+			if _, ok := seen[val]; !ok {
+				cidrs = append(cidrs, val)
+				seen[val] = true
+			}
+		}
+	}
+
+	sort.Strings(cidrs)
+
+	return cidrs
+}
+
 // NestedStackName returns a sanitized name of this control-plane which is usable as a valid cloudformation nested stack name
 func (c Cluster) NestedStackName() string {
 	// Convert stack name into something valid as a cfn resource name or
