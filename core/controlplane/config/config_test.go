@@ -10,24 +10,26 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/netutil"
 )
 
-const minimalConfigYaml = `externalDNSName: test.staging.core-os.net
-keyName: test-key-name
+const externalDNSNameConfig = `externalDNSName: test.staging.core-os.net
+`
+
+const availabilityZoneConfig = `availabilityZone: us-west-1c
+`
+
+const apiEndpointMinimalConfigYaml = `keyName: test-key-name
 region: us-west-1
 clusterName: test-cluster-name
 kmsKeyArn: "arn:aws:kms:us-west-1:xxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
 `
 
-const minimalChinaConfigYaml = `externalDNSName: test.staging.core-os.net
-keyName: test-key-name
+const chinaAPIEndpointMinimalConfigYaml = `keyName: test-key-name
 region: cn-north-1
 availabilityZone: cn-north-1a
 clusterName: test-cluster-name
 `
 
-const availabilityZoneConfig = `
-availabilityZone: us-west-1c
-`
-
+const minimalConfigYaml = externalDNSNameConfig + apiEndpointMinimalConfigYaml
+const minimalChinaConfigYaml = externalDNSNameConfig + chinaAPIEndpointMinimalConfigYaml
 const singleAzConfigYaml = minimalConfigYaml + availabilityZoneConfig
 
 var goodNetworkingConfigs = []string{
@@ -109,7 +111,55 @@ subnets:
   availabilityZone: us-west-1c
   routeTable:
     id: rtb-xxxxxx # routeTable.id specified without vpcId
+`,
+}
+
+var goodAPIEndpointConfigs = []string{
+	`
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    recordSetManaged: false
 `, `
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: classic
+    recordSetManaged: false
+    securityGroupIds: []
+    apiAccessAllowedSourceCIDRs:
+      - 0.0.0.0/0
+`, `
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+`, `
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    securityGroupIds: []
+`, `
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    securityGroupIds: []
+    apiAccessAllowedSourceCIDRs: []
+`,
+}
+
+var incorrectAPIEndpointConfigs = []string{
+	`
 # hostedZone.id shouldn't be blank when recordSetManaged is true
 apiEndpoints:
 - name: public
@@ -135,7 +185,7 @@ apiEndpoints:
     recordSetManaged: false
     recordSetTTL: 400
 `, `
-# hostedZoneId should'nt be modified when recordSetManaged is false
+# hostedZoneId shouldn't be modified when recordSetManaged is false
 apiEndpoints:
 - name: public
   loadBalancer:
@@ -150,11 +200,39 @@ apiEndpoints:
     hostedZone:
       id: hostedzone-xxxxxx
     recordSetTTL: 0
+`, `
+# type is invalid
+apiEndpoints:
+- name: public
+  loadBalancer:
+    type: invalid
+    hostedZone:
+      id: hostedzone-xxxxxx
+    recordSetTTL: 0
+`, `
+# cannot set security groups for a network load balancer
+apiEndpoints:
+- name: public
+  loadBalancer:
+    type: network
+    hostedZone:
+      id: hostedzone-xxxxxx
+    securityGroupIds:
+      - sg-1234
+`, `
+# must specify either securityGroupIds or apiAccessAllowedSourceCIDRs for classic ELBs
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    type: classic
+    recordSetManaged: false
+    securityGroupIds: []
+    apiAccessAllowedSourceCIDRs: []
 `,
 }
 
 func TestNetworkValidation(t *testing.T) {
-
 	for _, networkConfig := range goodNetworkingConfigs {
 		configBody := singleAzConfigYaml + networkConfig
 		if _, err := ClusterFromBytes([]byte(configBody)); err != nil {
@@ -168,7 +246,22 @@ func TestNetworkValidation(t *testing.T) {
 			t.Errorf("Incorrect config tested valid, expected error:\n%s", networkConfig)
 		}
 	}
+}
 
+func TestAPIEndpointValidation(t *testing.T) {
+	for _, networkConfig := range goodAPIEndpointConfigs {
+		configBody := apiEndpointMinimalConfigYaml + availabilityZoneConfig + networkConfig
+		if _, err := ClusterFromBytes([]byte(configBody)); err != nil {
+			t.Errorf("Correct config tested invalid: %s\n%s", err, networkConfig)
+		}
+	}
+
+	for _, networkConfig := range incorrectAPIEndpointConfigs {
+		configBody := apiEndpointMinimalConfigYaml + availabilityZoneConfig + networkConfig
+		if _, err := ClusterFromBytes([]byte(configBody)); err == nil {
+			t.Errorf("Incorrect config tested valid, expected error:\n%s", networkConfig)
+		}
+	}
 }
 
 func TestMinimalChinaConfig(t *testing.T) {
@@ -183,6 +276,117 @@ func TestMinimalChinaConfig(t *testing.T) {
 
 	if c.AssetsEncryptionEnabled() {
 		t.Error("Assets encryption must be disabled on China.")
+	}
+
+	if c.Region.SupportsNetworkLoadBalancers() {
+		t.Error("Network load balancers are still not supported on China.")
+	}
+}
+
+func TestAPIAccessAllowedSourceCIDRsForControllerSG(t *testing.T) {
+	testCases := []struct {
+		conf  string
+		cidrs []string
+	}{
+		{
+			conf:  externalDNSNameConfig,
+			cidrs: []string{},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs: []
+`,
+			cidrs: []string{},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+`,
+			cidrs: []string{"0.0.0.0/0"},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32
+
+# Ignores non-network load balancers
+- name: endpoint-2
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.2/32
+
+# Ignores non-network load balancers
+- name: endpoint-2
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: classic
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.3/32
+`,
+			cidrs: []string{"127.0.0.1/32"},
+		},
+		{
+			conf: `
+apiEndpoints:
+- name: endpoint-1
+  dnsName: test-1.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32
+      - 0.0.0.0/0
+
+- name: endpoint-2
+  dnsName: test-2.staging.core-os.net
+  loadBalancer:
+    type: network
+    recordSetManaged: false
+    apiAccessAllowedSourceCIDRs:
+      - 127.0.0.1/32   # Duplicated CIDR
+      - 192.168.0.0/24
+`,
+			cidrs: []string{"0.0.0.0/0", "127.0.0.1/32", "192.168.0.0/24"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		confBody := availabilityZoneConfig + apiEndpointMinimalConfigYaml + testCase.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("Unexpected error parsing config: %v\n %s", err, confBody)
+			continue
+		}
+
+		actualCIDRs := c.APIAccessAllowedSourceCIDRsForControllerSG()
+		if !reflect.DeepEqual(actualCIDRs, testCase.cidrs) {
+			t.Errorf(
+				"CIDRs %s do not match actual list %s in config: %s",
+				testCase.cidrs,
+				actualCIDRs,
+				confBody,
+			)
+		}
 	}
 }
 
@@ -245,7 +449,6 @@ dnsServiceIP: 10.6.142.100
 				testConfig.KubernetesServiceIP)
 		}
 	}
-
 }
 
 func TestReleaseChannel(t *testing.T) {
@@ -303,7 +506,6 @@ releaseChannel: non-existent #this release channel will never exist
 			t.Errorf("expected error parsing invalid config: %s", confBody)
 		}
 	}
-
 }
 
 func TestAvailabilityZones(t *testing.T) {
