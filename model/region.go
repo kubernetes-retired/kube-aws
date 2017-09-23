@@ -67,3 +67,7 @@ func (r Region) IsEmpty() bool {
 func (r Region) SupportsKMS() bool {
 	return !r.IsChina()
 }
+
+func (r Region) SupportsNetworkLoadBalancers() bool {
+	return !r.IsChina()
+}

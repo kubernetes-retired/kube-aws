@@ -29,7 +29,7 @@ amiId: "{{.AmiId}}"
 # Required if there are 2 or more API endpoints defined in `apiEndpoints`
 #adminAPIEndpointName: versionedPublic
 
-# Kubernetes API endpoints with each one has a DNS name and is with/without a managed/unmanaged ELB, Route 53 record set
+# Kubernetes API endpoints with each one has a DNS name and is with/without a managed/unmanaged load balancer, Route 53 record set
 # CAUTION: `externalDNSName` must be omitted when there are one or more items under `apiEndpoints`
 apiEndpoints:
 - # The unique name of this API endpoint used to identify it inside CloudFormation stacks or
@@ -43,8 +43,8 @@ apiEndpoints:
   # for you.  Otherwise the deployer is responsible for making this name routable
   dnsName: {{.ExternalDNSName}}
 
-  # Configuration for an ELB serving this endpoint
-  # Omit all the settings when you want kube-aws not to provision an ELB for you
+  # Configuration for the load balancer serving this endpoint
+  # Omit all the settings when you want kube-aws not to provision a load balancer for you
   loadBalancer:
     # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
     # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
@@ -61,6 +61,12 @@ apiEndpoints:
     # When set to true while subnets are omitted, one or more private subnets in the top-level `subnets` must exist
     # Must be omitted when `id` is specified
     #private: false
+
+    # Set to 'network' to provision a Network Load Balancer instead of a classic ELB; this will cause
+    # the controller nodes SG to allow inbound traffic from the VPC CIDR to port 443 TCP, see:
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-register-targets.html
+    # Must be omitted when `id` is specified
+    #type: classic
 
     # TTL in seconds for the Route53 RecordSet created if hostedZone.id is set to a non-nil value.
     #recordSetTTL: 300

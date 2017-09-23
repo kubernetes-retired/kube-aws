@@ -31,6 +31,8 @@ type APIEndpointLB struct {
 	//SecurityGroups []SecurityGroup
 	// SecurityGroupIds represents SGs associated to this LB. Required when APIAccessAllowedSourceCIDRs is explicitly set to empty
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
+	// Load balancer type. It is 'classic' by default, but can be changed to 'network'
+	Type *string `yaml:"type,omitempty"`
 }
 
 // UnmarshalYAML unmarshals YAML data to an APIEndpointLB object with defaults
@@ -56,22 +58,38 @@ func (e APIEndpointLB) ManageELB() bool {
 	return e.managedELBImplied() || (e.Managed != nil && *e.Managed)
 }
 
-// ManageELBRecordSet returns tru if kube-aws should create a record set for the ELB
+// ClassicLoadBalancer returns true if the load balancer is a classic ELB
+func (e APIEndpointLB) ClassicLoadBalancer() bool {
+	return e.Type == nil || *e.Type == "classic"
+}
+
+// LoadBalancerV2 returns true if the load balancer is a ELBV2 load balancer (only network load balancer is supported for now)
+func (e APIEndpointLB) LoadBalancerV2() bool {
+	return e.Type != nil && *e.Type != "classic"
+}
+
+// NetworkLoadBalancer returns true if the load balancer is a ELBV2 network load balancer
+func (e APIEndpointLB) NetworkLoadBalancer() bool {
+	return e.Type != nil && *e.Type == "network"
+}
+
+// ManageELBRecordSet returns true if kube-aws should create a record set for the ELB
 func (e APIEndpointLB) ManageELBRecordSet() bool {
 	return e.HostedZone.HasIdentifier()
 }
 
 // ManageSecurityGroup returns true if kube-aws should create a security group for this ELB
 func (e APIEndpointLB) ManageSecurityGroup() bool {
-	return len(e.APIAccessAllowedSourceCIDRs) > 0
+	return !e.NetworkLoadBalancer() && len(e.APIAccessAllowedSourceCIDRs) > 0
 }
 
 // Validate returns an error when there's any user error in the settings of the `loadBalancer` field
 func (e APIEndpointLB) Validate() error {
 	if e.Identifier.HasIdentifier() {
-		if e.PrivateSpecified != nil || len(e.SubnetReferences) > 0 || e.HostedZone.HasIdentifier() {
-			return errors.New("private, subnets, hostedZone must be omitted when id is specified to reuse an existing ELB")
+		if e.PrivateSpecified != nil || !e.ClassicLoadBalancer() || len(e.SubnetReferences) > 0 || e.HostedZone.HasIdentifier() {
+			return errors.New("type, private, subnets, hostedZone must be omitted when id is specified to reuse an existing ELB")
 		}
+
 		return nil
 	}
 
@@ -82,6 +100,10 @@ func (e APIEndpointLB) Validate() error {
 
 		if e.HostedZone.HasIdentifier() {
 			return errors.New("hostedZone.id should not be specified when an API endpoint LB is not managed by kube-aws")
+		}
+
+		if e.Type != nil && len(*e.Type) > 0 {
+			return errors.New("type should not be specified when an API endpoint LB is not managed by kube-aws")
 		}
 
 		return nil
@@ -107,8 +129,18 @@ func (e APIEndpointLB) Validate() error {
 		}
 	}
 
-	if e.ManageELB() && len(e.APIAccessAllowedSourceCIDRs) == 0 && len(e.SecurityGroupIds) == 0 {
+	if e.ClassicLoadBalancer() && e.ManageELB() && len(e.APIAccessAllowedSourceCIDRs) == 0 && len(e.SecurityGroupIds) == 0 {
 		return errors.New("either apiAccessAllowedSourceCIDRs or securityGroupIds must be present. Try not to explicitly empty apiAccessAllowedSourceCIDRs or set one or more securityGroupIDs")
+	}
+
+	if !e.NetworkLoadBalancer() && !e.ClassicLoadBalancer() {
+		return errors.New("load balancer type must be either 'classic' or 'network'")
+	}
+
+	if e.NetworkLoadBalancer() {
+		if len(e.SecurityGroupIds) > 0 {
+			return errors.New("cannot specify security group IDs for a network load balancer")
+		}
 	}
 
 	return nil

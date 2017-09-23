@@ -33,7 +33,7 @@ func (b APIEndpointLB) HostedZoneRef() string {
 	return b.HostedZone.Identifier.ID
 }
 
-// LogicalName returns the unique resource name of the ELB
+// LogicalName returns the unique resource name of the load balancer
 func (b APIEndpointLB) LogicalName() string {
 	return fmt.Sprintf("APIEndpoint%sELB", strings.Title(b.Name))
 }
@@ -43,13 +43,21 @@ func (b APIEndpointLB) Enabled() bool {
 	return b.ManageELB() || b.Identifier.HasIdentifier()
 }
 
-// Ref returns a CloudFormation ref for the ELB backing the API endpoint
+// Ref returns a CloudFormation ref for the load balancer backing the API endpoint
 func (b APIEndpointLB) Ref() string {
 	return b.Identifier.Ref(func() string {
 		return b.LogicalName()
 	})
 }
 
+// TargetGroupRef returns a CloudFormation ref for the Target Group backing the API endpoint
+func (b APIEndpointLB) TargetGroupRef() string {
+	return b.Identifier.Ref(func() string {
+		return fmt.Sprintf("%sTargetGroup", b.LogicalName())
+	})
+}
+
+// SecurityGroupLogicalName returns a CloudFormation ref for the Security Group backing the API endpoint
 func (b APIEndpointLB) SecurityGroupLogicalName() string {
 	return fmt.Sprintf("APIEndpoint%sSG", strings.Title(b.Name))
 }

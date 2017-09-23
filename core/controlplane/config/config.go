@@ -922,6 +922,33 @@ func (c Cluster) ExternalDNSNames() []string {
 	return names
 }
 
+// APIAccessAllowedSourceCIDRsForControllerSG returns all the CIDRs of Kubernetes API endpoints that controller nodes must allow access from
+func (c Cluster) APIAccessAllowedSourceCIDRsForControllerSG() []string {
+	cidrs := []string{}
+	seen := map[string]bool{}
+
+	for _, e := range c.APIEndpointConfigs {
+		if !e.LoadBalancer.NetworkLoadBalancer() {
+			continue
+		}
+
+		ranges := e.LoadBalancer.APIAccessAllowedSourceCIDRs
+		if len(ranges) > 0 {
+			for _, r := range ranges {
+				val := r.String()
+				if _, ok := seen[val]; !ok {
+					cidrs = append(cidrs, val)
+					seen[val] = true
+				}
+			}
+		}
+	}
+
+	sort.Strings(cidrs)
+
+	return cidrs
+}
+
 // NestedStackName returns a sanitized name of this control-plane which is usable as a valid cloudformation nested stack name
 func (c Cluster) NestedStackName() string {
 	// Convert stack name into something valid as a cfn resource name or
@@ -1038,6 +1065,12 @@ func (c Cluster) validate() error {
 	if c.Experimental.NodeAuthorizer.Enabled {
 		if !c.Experimental.TLSBootstrap.Enabled {
 			return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
+		}
+	}
+
+	for i, e := range c.APIEndpointConfigs {
+		if e.LoadBalancer.NetworkLoadBalancer() && !c.Region.SupportsNetworkLoadBalancers() {
+			return fmt.Errorf("api endpoint %d is not valid: network load balancer not supported in region", i)
 		}
 	}
 
