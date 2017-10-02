@@ -990,13 +990,13 @@ worker:
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1008,7 +1008,7 @@ worker:
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  repo: gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
