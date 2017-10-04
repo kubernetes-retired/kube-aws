@@ -273,6 +273,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /etc/kubernetes/cni/net.d/  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
         ExecStartPre=/usr/bin/etcdctl \
                        --ca-file /etc/kubernetes/ssl/etcd-trusted-ca.pem \
@@ -906,46 +907,25 @@ write_files:
 {{end}}
 {{end}}
 
-  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+  - path: /etc/kubernetes/proxy-kubeconfig.yaml
     content: |
         apiVersion: v1
-        kind: Pod
-        metadata:
-          name: kube-proxy
-          namespace: kube-system
-          annotations:
-            rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
-        spec:
-          hostNetwork: true
-          containers:
-          - name: kube-proxy
-            image: {{.HyperkubeImage.RepoWithTag}}
-            command:
-            - /hyperkube
-            - proxy
-            - --master={{.APIEndpointURL}}
-            - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
-            securityContext:
-              privileged: true
-            volumeMounts:
-              - mountPath: /etc/ssl/certs
-                name: ssl-certs
-              - mountPath: /etc/kubernetes
-                name: kubeconfig
-                readOnly: true
-              - mountPath: /var/run/dbus
-                name: dbus
-                readOnly: false
-          volumes:
-            - name: ssl-certs
-              hostPath:
-                path: /usr/share/ca-certificates
-            - name: kubeconfig
-              hostPath:
-                path: /etc/kubernetes
-            - name: dbus
-              hostPath:
-                path: /var/run/dbus
+        kind: Config
+        clusters:
+        - name: default
+          cluster:
+            certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            server: {{.APIEndpointURL}}:443
+        users:
+        - name: default
+          user:
+            tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        contexts:
+        - context:
+            cluster: default
+            user: default
+          name: default
+        current-context: default
 
 {{ if and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken }}
   - path: /etc/kubernetes/worker-bootstrap-kubeconfig.yaml
