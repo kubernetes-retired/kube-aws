@@ -46,6 +46,9 @@ func (r Region) S3Endpoint() string {
 	if r.IsChina() {
 		return fmt.Sprintf("https://s3.%s.amazonaws.com.cn", r.Name)
 	}
+	if r.IsGovcloud() {
+		return fmt.Sprintf("https://s3-%s.amazonaws.com", r.Name)
+	}
 	return "https://s3.amazonaws.com"
 }
 
@@ -53,11 +56,18 @@ func (r Region) Partition() string {
 	if r.IsChina() {
 		return "aws-cn"
 	}
+	if r.IsGovcloud() {
+		return "aws-us-gov"
+	}
 	return "aws"
 }
 
 func (r Region) IsChina() bool {
 	return strings.HasPrefix(r.Name, "cn-")
+}
+
+func (r Region) IsGovcloud() bool {
+	return strings.HasPrefix(r.Name, "us-gov-")
 }
 
 func (r Region) IsEmpty() bool {
