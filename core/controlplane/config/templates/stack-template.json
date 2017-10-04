@@ -279,7 +279,8 @@
                 {
                   "Action": [
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeLifecycleHooks"
+                    "autoscaling:DescribeLifecycleHooks",
+                    "autoscaling:DescribeAutoScalingGroups"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"
