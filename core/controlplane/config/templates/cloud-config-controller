@@ -250,6 +250,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
+        ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStartPre=/usr/bin/etcdctl \
                        --ca-file /etc/kubernetes/ssl/etcd-trusted-ca.pem \
                        --key-file /etc/kubernetes/ssl/etcd-client-key.pem \
@@ -758,7 +759,7 @@ write_files:
       kubectl apply -f "${mfdir}/kube-dns-cm.yaml"
 
       # Service Accounts
-      for manifest in {kube-dns,heapster}; do
+      for manifest in {kube-dns,heapster,kube-proxy}; do
           kubectl apply -f "${mfdir}/$manifest-sa.yaml"
       done
 
@@ -773,6 +774,11 @@ write_files:
       # Deployments
       for manifest in {kube-dns,kube-dns-autoscaler,kube-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
           kubectl apply -f "${mfdir}/$manifest-de.yaml"
+      done
+
+      # Daemonsets
+      for manifest in {kube-proxy,}; do
+          kubectl apply -f "${mfdir}/$manifest-ds.yaml"
       done
 
       # Services
@@ -1504,10 +1510,8 @@ write_files:
           name: cluster-admin
           apiGroup: rbac.authorization.k8s.io
 
-  # Allows both `kube-worker` user and members of the `system:nodes` group
-  # to perform actions needed by the `kube-proxy` component. Once kube-proxy
-  # is migrated to DaemonSets, we could set up a ServiceAccount for it and
-  # associate this role to it instead.
+  # Also allows `kube-worker` user to perform actions needed by the
+  # `kube-proxy` component.
   - path: /srv/kubernetes/rbac/cluster-role-bindings/node-proxier.yaml
     content: |
         kind: ClusterRoleBinding
@@ -1517,8 +1521,9 @@ write_files:
         subjects:
           - kind: User
             name: kube-worker
-          - kind: Group
-            name: system:nodes
+          - kind: ServiceAccount
+            name: kube-proxy
+            namespace: kube-system
         roleRef:
           kind: ClusterRole
           name: system:node-proxier
@@ -1692,10 +1697,10 @@ write_files:
           apiGroup: rbac.authorization.k8s.io
 {{ end }}
 
-  - path: /etc/kubernetes/manifests/kube-proxy.yaml
+  - path: /srv/kubernetes/manifests/kube-proxy-ds.yaml
     content: |
-        apiVersion: v1
-        kind: Pod
+        apiVersion: extensions/v1beta1
+        kind: DaemonSet
         metadata:
           name: kube-proxy
           namespace: kube-system
@@ -1703,32 +1708,49 @@ write_files:
             k8s-app: kube-proxy
           annotations:
             rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
-
         spec:
-          hostNetwork: true
-          containers:
-          - name: kube-proxy
-            image: {{.HyperkubeImage.RepoWithTag}}
-            command:
-            - /hyperkube
-            - proxy
-            - --master=http://127.0.0.1:8080
-            securityContext:
-              privileged: true
-            volumeMounts:
-            - mountPath: /etc/ssl/certs
-              name: ssl-certs-host
-              readOnly: true
-            - mountPath: /var/run/dbus
-              name: dbus
-              readOnly: false
-          volumes:
-          - hostPath:
-              path: /usr/share/ca-certificates
-            name: ssl-certs-host
-          - hostPath:
-              path: /var/run/dbus
-            name: dbus
+          updateStrategy:
+            type: RollingUpdate
+          template:
+            metadata:
+              labels:
+                k8s-app: kube-proxy
+              annotations:
+                scheduler.alpha.kubernetes.io/critical-pod: ''
+            spec:
+              serviceAccountName: kube-proxy
+              tolerations:
+              - operator: Exists
+                effect: NoSchedule
+              - operator: Exists
+                effect: NoExecute
+              - operator: Exists
+                key: CriticalAddonsOnly
+              hostNetwork: true
+              containers:
+              - name: kube-proxy
+                image: {{.HyperkubeImage.RepoWithTag}}
+                command:
+                - /hyperkube
+                - proxy
+                - --kubeconfig=/etc/kubernetes/proxy-kubeconfig.yaml
+                - --cluster-cidr={{.PodCIDR}}
+                securityContext:
+                  privileged: true
+                volumeMounts:
+                - mountPath: /etc/kubernetes
+                  name: kubeconfig
+                  readOnly: true
+                - mountPath: /var/run/dbus
+                  name: dbus
+                  readOnly: false
+              volumes:
+              - name: kubeconfig
+                hostPath:
+                  path: /etc/kubernetes
+              - hostPath:
+                  path: /var/run/dbus
+                name: dbus
 
   - path: /etc/kubernetes/manifests/kube-apiserver.yaml
     content: |
@@ -1998,6 +2020,16 @@ write_files:
                   cpu: 10m
                   memory: 100Mi
   {{- end }}
+
+  - path: /srv/kubernetes/manifests/kube-proxy-sa.yaml
+    content: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: kube-proxy
+          namespace: kube-system
+          labels:
+            kubernetes.io/cluster-service: "true"
 
   - path: /srv/kubernetes/manifests/kube-dns-sa.yaml
     content: |
@@ -2711,6 +2743,23 @@ write_files:
     content: {{.AssetsConfig.EtcdTrustedCA}}
 {{ end }}
 
+  - path: /etc/kubernetes/proxy-kubeconfig.yaml
+    content: |
+        apiVersion: v1
+        kind: Config
+        clusters:
+        - name: local
+          cluster:
+            server: http://127.0.0.1:8080
+        users:
+        - name: kubelet
+        contexts:
+        - context:
+            cluster: local
+            user: kubelet
+          name: kubelet-context
+        current-context: kubelet-context
+
   - path: /etc/kubernetes/controller-kubeconfig.yaml
     content: |
         apiVersion: v1
@@ -2718,7 +2767,7 @@ write_files:
         clusters:
         - name: local
           cluster:
-            server: http://localhost:8080
+            server: http://127.0.0.1:8080
         users:
         - name: kubelet
         contexts:
