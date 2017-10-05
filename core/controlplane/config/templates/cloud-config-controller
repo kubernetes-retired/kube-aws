@@ -2737,6 +2737,7 @@ write_files:
     content: {{.AssetsConfig.EtcdTrustedCA}}
 {{ end }}
 
+  # File needed on every node (used by the kube-proxy DaemonSet), including controllers
   - path: /etc/kubernetes/kubeconfig/kube-proxy.yaml
     content: |
         apiVersion: v1
