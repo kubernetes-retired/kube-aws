@@ -2744,9 +2744,12 @@ write_files:
         clusters:
         - name: local
           cluster:
+            certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
             server: http://127.0.0.1:8080
         users:
         - name: kubelet
+          user:
+            tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
         contexts:
         - context:
             cluster: local
