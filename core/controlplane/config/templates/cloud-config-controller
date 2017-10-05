@@ -264,7 +264,7 @@ coreos:
         ExecStartPre=/usr/bin/docker run --rm -e SLEEP=false -e KUBERNETES_SERVICE_HOST= -e KUBERNETES_SERVICE_PORT= -v /opt/cni/bin:/host/opt/cni/bin {{ .CalicoCniImage.RepoWithTag }} /install-cni.sh
         {{end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
-        --kubeconfig=/etc/kubernetes/controller-kubeconfig.yaml \
+        --kubeconfig=/etc/kubernetes/kubeconfig/controller.yaml \
         --require-kubeconfig \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
         {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
@@ -1733,24 +1733,18 @@ write_files:
                 command:
                 - /hyperkube
                 - proxy
-                - --kubeconfig=/etc/kubernetes/proxy-kubeconfig.yaml
+                - --kubeconfig=/etc/kubernetes/kubeconfig/kube-proxy.yaml
                 - --cluster-cidr={{.PodCIDR}}
                 securityContext:
                   privileged: true
                 volumeMounts:
-                - mountPath: /etc/kubernetes
+                - mountPath: /etc/kubernetes/kubeconfig
                   name: kubeconfig
                   readOnly: true
-                - mountPath: /var/run/dbus
-                  name: dbus
-                  readOnly: false
               volumes:
               - name: kubeconfig
                 hostPath:
-                  path: /etc/kubernetes
-              - hostPath:
-                  path: /var/run/dbus
-                name: dbus
+                  path: /etc/kubernetes/kubeconfig
 
   - path: /etc/kubernetes/manifests/kube-apiserver.yaml
     content: |
@@ -2743,7 +2737,7 @@ write_files:
     content: {{.AssetsConfig.EtcdTrustedCA}}
 {{ end }}
 
-  - path: /etc/kubernetes/proxy-kubeconfig.yaml
+  - path: /etc/kubernetes/kubeconfig/kube-proxy.yaml
     content: |
         apiVersion: v1
         kind: Config
@@ -2760,7 +2754,7 @@ write_files:
           name: kubelet-context
         current-context: kubelet-context
 
-  - path: /etc/kubernetes/controller-kubeconfig.yaml
+  - path: /etc/kubernetes/kubeconfig/controller.yaml
     content: |
         apiVersion: v1
         kind: Config
