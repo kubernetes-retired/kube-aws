@@ -2743,20 +2743,19 @@ write_files:
         apiVersion: v1
         kind: Config
         clusters:
-        - name: local
+        - name: default
           cluster:
-            certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
             server: http://localhost:8080
         users:
-        - name: kubelet
+        - name: default
           user:
             tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
         contexts:
         - context:
-            cluster: local
-            user: kubelet
-          name: kubelet-context
-        current-context: kubelet-context
+            cluster: default
+            user: default
+          name: default
+        current-context: default
 
   - path: /etc/kubernetes/kubeconfig/controller.yaml
     content: |
