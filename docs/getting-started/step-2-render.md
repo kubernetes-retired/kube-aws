@@ -38,9 +38,9 @@ You will use the `KeyMetadata.Arn` string to identify your KMS key in the init s
 
 Select a DNS hostname where the cluster API will be accessible. Typically this hostname is available over the internet ("external"), so end users can connect from different networks. This hostname will be used to provision the TLS certificate for the API server, which encrypts traffic between your users and the API. Optionally, you can provide the certificates yourself, which is recommended for production clusters.
 
-When the cluster is created, the controller will expose the TLS-secured API on a public IP address. You will need to create an A record for the external DNS hostname you want to point to this IP address. You can find the API external IP address after the cluster is created by invoking `kube-aws status`.
+When the cluster is created, the cluster will expose the TLS-secured API on an internet-facing ELB. kube-aws can automatically create an ALIAS record for the ELB in an *existing* [Route 53][route53] hosted zone specified via the `--hosted-zone-id` flag. If you have a DNS zone hosted in Route 53, you can configure for it below.
 
-Alternatively, kube-aws can automatically create this A record in an *existing* [Route 53][route53] hosted zone. If you have a DNS zone hosted in Route 53, you can configure for it below.
+You can also omit `--hosted-zone-id` by specifying the `--no-record-set` flag. However, then, you will need to create an Route53 ALIAS record or a CNAME record for the external DNS hostname you want to point to this ELB. You can find the public DNS name of the ELB after the cluster is created by invoking `kube-aws status`.
 
 ### S3 bucket
 
@@ -80,6 +80,7 @@ Initialize the cluster CloudFormation stack with the KMS Arn, key pair name, and
 $ kube-aws init \
 --cluster-name=my-cluster-name \
 --external-dns-name=my-cluster-endpoint \
+--hosted-zone-id=hosted-zone-xxxxx \
 --region=us-west-1 \
 --availability-zone=us-west-1c \
 --key-name=key-pair-name \
@@ -249,11 +250,11 @@ useCalico: true
 
 ### Route53 Host Record
 
-`kube-aws` can optionally create an ALIAS record for the controller's ELB in an existing Route53 hosted zone.
+`kube-aws` can create an ALIAS record for the controller's ELB in an existing Route53 hosted zone.
 
 Just run `kube-aws init` with the flag `--hosted-zone-id` to specify the id of the hosted zone in which the record is created.
 
-If you've run `kube-aws init` without the flag, edit the `cluster.yaml` file to add `loadBalancer.hostedZone.id` under the first item of `apiEndpoints`:
+If you've run `kube-aws init` without the flag but with `--no-record-set`, edit the `cluster.yaml` file to add `loadBalancer.hostedZone.id` under the first item of `apiEndpoints` while setting `recordSetManaged` to `true` or removing it:
 
 ```yaml
 apiEndpoints:

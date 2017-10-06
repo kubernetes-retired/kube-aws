@@ -125,7 +125,15 @@ configure() {
 
   rm -rf ./kubeconfig ./credentials ./userdata ./stack-templates ./exported
 
-  ${KUBE_AWS_CMD} render
+  ${KUBE_AWS_CMD} render stack
+  ${KUBE_AWS_CMD} render credentials --generate-ca
+
+  if [ "${EXISTING_CA}" != "" ]; then
+    mv ./credentials/ca-key.pem my-ca-key.pem
+    mv ./credentials/ca.pem my-ca.pem
+    rm -rf ./credentials
+    ${KUBE_AWS_CMD} render credentials --ca-key-path=./my-ca-key.pem --ca-cert-path=./my-ca.pem
+  fi
 
   validate
 
@@ -281,13 +289,6 @@ experimental:
     enabled: true" >> cluster.yaml
   fi
 
-
-  if [ "${RBAC}" != "" ]; then
-    echo -e "
-  plugins:
-    rbac:
-      enabled: true" >> cluster.yaml
-  fi
 
   echo -e "
 addons:

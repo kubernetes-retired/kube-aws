@@ -379,12 +379,12 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
-                {{if .Addons.ClusterAutoscaler.Enabled}}
+                {{if .ClusterAutoscalerSupport.Enabled}}
                 {
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeTags",
+                    "autoscaling:DescribeTags"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"

@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	k8sVer = "v1.7.4_coreos.0"
+	k8sVer = "v1.7.6_coreos.0"
 
 	credentialsDir = "credentials"
 	userDataDir    = "userdata"
@@ -64,7 +64,7 @@ func NewDefaultCluster() *Cluster {
 			Enabled: false,
 		},
 		ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
-			Enabled: false,
+			Enabled: true,
 		},
 		TLSBootstrap: TLSBootstrap{
 			Enabled: false,
@@ -91,11 +91,6 @@ func NewDefaultCluster() *Cluster {
 			Enabled:      false,
 			DrainTimeout: 5,
 		},
-		Plugins: Plugins{
-			Rbac: Rbac{
-				Enabled: false,
-			},
-		},
 		Oidc: model.Oidc{
 			Enabled:       false,
 			IssuerUrl:     "https://accounts.google.com",
@@ -114,7 +109,6 @@ func NewDefaultCluster() *Cluster {
 			ContainerRuntime:   "docker",
 			Subnets:            []model.Subnet{},
 			EIPAllocationIDs:   []string{},
-			MapPublicIPs:       true,
 			Experimental:       experimental,
 			ManageCertificates: true,
 			AmazonSsmAgent: AmazonSsmAgent{
@@ -144,10 +138,10 @@ func NewDefaultCluster() *Cluster {
 			ClusterAutoscalerImage:             model.Image{Repo: "gcr.io/google_containers/cluster-autoscaler", Tag: "v0.6.0", RktPullDocker: false},
 			ClusterProportionalAutoscalerImage: model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.1.2", RktPullDocker: false},
 			Kube2IAMImage:                      model.Image{Repo: "jtblin/kube2iam", Tag: "0.7.0", RktPullDocker: false},
-			KubeDnsImage:                       model.Image{Repo: "gcr.io/google_containers/k8s-dns-kube-dns-amd64", Tag: "1.14.4", RktPullDocker: false},
-			KubeDnsMasqImage:                   model.Image{Repo: "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64", Tag: "1.14.4", RktPullDocker: false},
+			KubeDnsImage:                       model.Image{Repo: "gcr.io/google_containers/k8s-dns-kube-dns-amd64", Tag: "1.14.5", RktPullDocker: false},
+			KubeDnsMasqImage:                   model.Image{Repo: "gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64", Tag: "1.14.5", RktPullDocker: false},
 			KubeReschedulerImage:               model.Image{Repo: "gcr.io/google-containers/rescheduler", Tag: "v0.3.1", RktPullDocker: false},
-			DnsMasqMetricsImage:                model.Image{Repo: "gcr.io/google_containers/k8s-dns-sidecar-amd64", Tag: "1.14.4", RktPullDocker: false},
+			DnsMasqMetricsImage:                model.Image{Repo: "gcr.io/google_containers/k8s-dns-sidecar-amd64", Tag: "1.14.5", RktPullDocker: false},
 			ExecHealthzImage:                   model.Image{Repo: "gcr.io/google_containers/exechealthz-amd64", Tag: "1.2", RktPullDocker: false},
 			HelmImage:                          model.Image{Repo: "quay.io/kube-aws/helm", Tag: "v2.6.0", RktPullDocker: false},
 			TillerImage:                        model.Image{Repo: "gcr.io/kubernetes-helm/tiller", Tag: "v2.6.0", RktPullDocker: false},
@@ -162,7 +156,6 @@ func NewDefaultCluster() *Cluster {
 			DNSServiceIP: "10.3.0.10",
 		},
 		DefaultWorkerSettings: DefaultWorkerSettings{
-			WorkerCount:            0,
 			WorkerCreateTimeout:    "PT15M",
 			WorkerInstanceType:     "t2.medium",
 			WorkerRootVolumeType:   "gp2",
@@ -185,7 +178,6 @@ func NewDefaultCluster() *Cluster {
 		// for base cloudformation stack
 		TLSCADurationDays:           365 * 10,
 		TLSCertDurationDays:         365,
-		CreateRecordSet:             false,
 		RecordSetTTL:                300,
 		SSHAccessAllowedSourceCIDRs: model.DefaultCIDRRanges(),
 		CustomSettings:              make(map[string]interface{}),
@@ -252,7 +244,9 @@ func (c *Cluster) Load() error {
 		return fmt.Errorf("invalid cluster: %v", err)
 	}
 
-	c.SetDefaults()
+	if err := c.SetDefaults(); err != nil {
+		return fmt.Errorf("invalid cluster: %v", err)
+	}
 
 	if c.ExternalDNSName != "" {
 		// TODO: Deprecate externalDNSName?
@@ -270,7 +264,6 @@ func (c *Cluster) Load() error {
 			c.ExternalDNSName,
 			subnetRefs,
 			c.HostedZoneID,
-			c.CreateRecordSet,
 			c.RecordSetTTL,
 			c.Controller.LoadBalancer.Private,
 		)
@@ -292,7 +285,7 @@ func (c *Cluster) ConsumeDeprecatedKeys() {
 	}
 }
 
-func (c *Cluster) SetDefaults() {
+func (c *Cluster) SetDefaults() error {
 	// For backward-compatibility
 	if len(c.Subnets) == 0 {
 		c.Subnets = []model.Subnet{
@@ -300,38 +293,9 @@ func (c *Cluster) SetDefaults() {
 		}
 	}
 
-	privateTopologyImplied := c.RouteTableID != "" && !c.MapPublicIPs
-	publicTopologyImplied := c.RouteTableID != "" && c.MapPublicIPs
-
 	for i, s := range c.Subnets {
 		if s.Name == "" {
 			c.Subnets[i].Name = fmt.Sprintf("Subnet%d", i)
-		}
-
-		// DEPRECATED AND REMOVED IN THE FUTURE
-		// See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275998862
-		//
-		// This implies a deployment to an existing VPC with a route table with a preconfigured Internet Gateway
-		// and all the subnets created by kube-aws are public
-		if publicTopologyImplied {
-			c.Subnets[i].RouteTable.ID = c.RouteTableID
-			if s.Private {
-				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts: %+v", c.MapPublicIPs, i, s.Private, s))
-			}
-			c.Subnets[i].Private = false
-		}
-
-		// DEPRECATED AND REMOVED IN THE FUTURE
-		// See https://github.com/kubernetes-incubator/kube-aws/pull/284#issuecomment-275998862
-		//
-		// This implies a deployment to an existing VPC with a route table with a preconfigured NAT Gateway
-		// and all the subnets created by kube-aws are private
-		if privateTopologyImplied {
-			c.Subnets[i].RouteTable.ID = c.RouteTableID
-			if s.Private {
-				panic(fmt.Sprintf("mapPublicIPs(=%v) and subnets[%d].private(=%v) conflicts. You don't need to set true to both of them. If you want to make all the subnets private, make mapPublicIPs false. If you want to make only part of subnets private, make subnets[].private true accordingly: %+v", c.MapPublicIPs, i, s.Private, s))
-			}
-			c.Subnets[i].Private = true
 		}
 	}
 
@@ -351,15 +315,17 @@ func (c *Cluster) SetDefaults() {
 	}
 
 	if len(c.Controller.Subnets) == 0 {
-		if privateTopologyImplied {
-			c.Controller.Subnets = c.PrivateSubnets()
-		} else {
-			c.Controller.Subnets = c.PublicSubnets()
+		c.Controller.Subnets = c.PublicSubnets()
+
+		if len(c.Controller.Subnets) == 0 {
+			return errors.New("`controller.subnets` in cluster.yaml defaults to include only public subnets defined under `subnets`. However, there was no public subnet for that. Please define one or more public subnets under `subnets` or set `controller.subnets`.")
 		}
+	} else if c.Controller.Subnets.ContainsBothPrivateAndPublic() {
+		return errors.New("You can not mix private and public subnets for controller nodes. Please explicitly configure controller.subnets[] to contain either public or private subnets only")
 	}
 
 	if len(c.Controller.LoadBalancer.Subnets) == 0 {
-		if c.Controller.LoadBalancer.Private || privateTopologyImplied {
+		if c.Controller.LoadBalancer.Private {
 			c.Controller.LoadBalancer.Subnets = c.PrivateSubnets()
 			c.Controller.LoadBalancer.Private = true
 		} else {
@@ -368,12 +334,16 @@ func (c *Cluster) SetDefaults() {
 	}
 
 	if len(c.Etcd.Subnets) == 0 {
-		if privateTopologyImplied {
-			c.Etcd.Subnets = c.PrivateSubnets()
-		} else {
-			c.Etcd.Subnets = c.PublicSubnets()
+		c.Etcd.Subnets = c.PublicSubnets()
+
+		if len(c.Etcd.Subnets) == 0 {
+			return errors.New("`etcd.subnets` in cluster.yaml defaults to include only public subnets defined under `subnets`. However, there was no public subnet for that. Please define one or more public subnets under `subnets` or set `etcd.subnets`.")
 		}
+	} else if c.Etcd.Subnets.ContainsBothPrivateAndPublic() {
+		return fmt.Errorf("You can not mix private and public subnets for etcd nodes. Please explicitly configure etcd.subnets[] to contain either public or private subnets only")
 	}
+
+	return nil
 }
 
 func ClusterFromBytesWithEncryptService(data []byte, encryptService EncryptService) (*Cluster, error) {
@@ -423,7 +393,6 @@ type DeploymentSettings struct {
 	VPC                         model.VPC             `yaml:"vpc,omitempty"`
 	DeprecatedInternetGatewayID string                `yaml:"internetGatewayId,omitempty"`
 	InternetGateway             model.InternetGateway `yaml:"internetGateway,omitempty"`
-	RouteTableID                string                `yaml:"routeTableId,omitempty"`
 	// Required for validations like e.g. if instance cidr is contained in vpc cidr
 	VPCCIDR                 string            `yaml:"vpcCIDR,omitempty"`
 	InstanceCIDR            string            `yaml:"instanceCIDR,omitempty"`
@@ -431,9 +400,8 @@ type DeploymentSettings struct {
 	ContainerRuntime        string            `yaml:"containerRuntime,omitempty"`
 	KMSKeyARN               string            `yaml:"kmsKeyArn,omitempty"`
 	StackTags               map[string]string `yaml:"stackTags,omitempty"`
-	Subnets                 []model.Subnet    `yaml:"subnets,omitempty"`
+	Subnets                 model.Subnets     `yaml:"subnets,omitempty"`
 	EIPAllocationIDs        []string          `yaml:"eipAllocationIDs,omitempty"`
-	MapPublicIPs            bool              `yaml:"mapPublicIPs,omitempty"`
 	ElasticFileSystemID     string            `yaml:"elasticFileSystemId,omitempty"`
 	SharedPersistentVolume  bool              `yaml:"sharedPersistentVolume,omitempty"`
 	SSHAuthorizedKeys       []string          `yaml:"sshAuthorizedKeys,omitempty"`
@@ -473,7 +441,6 @@ type DeploymentSettings struct {
 
 // Part of configuration which is specific to worker nodes
 type DefaultWorkerSettings struct {
-	WorkerCount            int      `yaml:"workerCount,omitempty"`
 	WorkerCreateTimeout    string   `yaml:"workerCreateTimeout,omitempty"`
 	WorkerInstanceType     string   `yaml:"workerInstanceType,omitempty"`
 	WorkerRootVolumeType   string   `yaml:"workerRootVolumeType,omitempty"`
@@ -510,7 +477,6 @@ type Cluster struct {
 	FlannelSettings        `yaml:",inline"`
 	AdminAPIEndpointName   string              `yaml:"adminAPIEndpointName,omitempty"`
 	ServiceCIDR            string              `yaml:"serviceCIDR,omitempty"`
-	CreateRecordSet        bool                `yaml:"createRecordSet,omitempty"`
 	RecordSetTTL           int                 `yaml:"recordSetTTL,omitempty"`
 	TLSCADurationDays      int                 `yaml:"tlsCADurationDays,omitempty"`
 	TLSCertDurationDays    int                 `yaml:"tlsCertDurationDays,omitempty"`
@@ -540,7 +506,6 @@ type Experimental struct {
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
-	Plugins                     Plugins                        `yaml:"plugins"`
 	Oidc                        model.Oidc                     `yaml:"oidc"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                         `yaml:"nodeMonitorGracePeriod"`
@@ -648,14 +613,6 @@ type TargetGroup struct {
 	Enabled          bool     `yaml:"enabled"`
 	Arns             []string `yaml:"arns"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
-}
-
-type Plugins struct {
-	Rbac Rbac `yaml:"rbac"`
-}
-
-type Rbac struct {
-	Enabled bool `yaml:"enabled"`
 }
 
 type KubeDns struct {
@@ -836,7 +793,7 @@ func (c Cluster) StackConfig(opts StackTemplateOptions, extra ...[]*pluginmodel.
 	var compactAssets *CompactAssets
 
 	if c.AssetsEncryptionEnabled() {
-		compactAssets, err = ReadOrCreateCompactAssets(opts.AssetsDir, c.ManageCertificates, KMSConfig{
+		compactAssets, err = ReadOrCreateCompactAssets(opts.AssetsDir, c.ManageCertificates, c.Experimental.TLSBootstrap.Enabled, KMSConfig{
 			Region:         stackConfig.Config.Region,
 			KMSKeyARN:      c.KMSKeyARN,
 			EncryptService: c.ProvidedEncryptService,
@@ -847,16 +804,12 @@ func (c Cluster) StackConfig(opts StackTemplateOptions, extra ...[]*pluginmodel.
 
 		stackConfig.Config.AssetsConfig = compactAssets
 	} else {
-		rawAssets, err := ReadOrCreateUnencryptedCompactAssets(opts.AssetsDir, c.ManageCertificates)
+		rawAssets, err := ReadOrCreateUnencryptedCompactAssets(opts.AssetsDir, c.ManageCertificates, c.Experimental.TLSBootstrap.Enabled)
 		if err != nil {
 			return nil, err
 		}
 
 		stackConfig.Config.AssetsConfig = rawAssets
-	}
-
-	if c.Experimental.TLSBootstrap.Enabled && !c.Experimental.Plugins.Rbac.Enabled {
-		fmt.Println(`WARNING: enabling cluster-level TLS bootstrapping without RBAC is not recommended. See https://kubernetes.io/docs/admin/kubelet-tls-bootstrapping/ for more information`)
 	}
 
 	stackConfig.StackTemplateOptions = opts
@@ -868,6 +821,18 @@ func (c Cluster) StackConfig(opts StackTemplateOptions, extra ...[]*pluginmodel.
 	}
 
 	return &stackConfig, nil
+}
+
+type InitialConfig struct {
+	AmiId            string
+	AvailabilityZone string
+	ClusterName      string
+	ExternalDNSName  string
+	HostedZoneID     string
+	KMSKeyARN        string
+	KeyName          string
+	NoRecordSet      bool
+	Region           model.Region
 }
 
 // Config contains configuration parameters available when rendering userdata injected into a controller or an etcd node from golang text templates
@@ -957,6 +922,33 @@ func (c Cluster) ExternalDNSNames() []string {
 	return names
 }
 
+// APIAccessAllowedSourceCIDRsForControllerSG returns all the CIDRs of Kubernetes API endpoints that controller nodes must allow access from
+func (c Cluster) APIAccessAllowedSourceCIDRsForControllerSG() []string {
+	cidrs := []string{}
+	seen := map[string]bool{}
+
+	for _, e := range c.APIEndpointConfigs {
+		if !e.LoadBalancer.NetworkLoadBalancer() {
+			continue
+		}
+
+		ranges := e.LoadBalancer.APIAccessAllowedSourceCIDRs
+		if len(ranges) > 0 {
+			for _, r := range ranges {
+				val := r.String()
+				if _, ok := seen[val]; !ok {
+					cidrs = append(cidrs, val)
+					seen[val] = true
+				}
+			}
+		}
+	}
+
+	sort.Strings(cidrs)
+
+	return cidrs
+}
+
 // NestedStackName returns a sanitized name of this control-plane which is usable as a valid cloudformation nested stack name
 func (c Cluster) NestedStackName() string {
 	// Convert stack name into something valid as a cfn resource name or
@@ -981,28 +973,6 @@ func (c Cluster) validate() error {
 	validClusterNaming := regexp.MustCompile("^[a-zA-Z0-9-:]+$")
 	if !validClusterNaming.MatchString(c.ClusterName) {
 		return fmt.Errorf("clusterName(=%s) is malformed. It must consist only of alphanumeric characters, colons, or hyphens", c.ClusterName)
-	}
-
-	if c.CreateRecordSet {
-		if c.HostedZoneID == "" {
-			return errors.New("hostedZoneID must be specified when createRecordSet is true")
-		}
-
-		if c.RecordSetTTL < 1 {
-			return errors.New("TTL must be at least 1 second")
-		}
-	} else {
-		if c.RecordSetTTL != NewDefaultCluster().RecordSetTTL {
-			return errors.New(
-				"recordSetTTL should not be modified when createRecordSet is false",
-			)
-		}
-
-		if c.HostedZoneID != "" {
-			return errors.New(
-				"hostedZoneId should not be modified when createRecordSet is false",
-			)
-		}
 	}
 
 	var dnsServiceIPAddr net.IP
@@ -1096,9 +1066,11 @@ func (c Cluster) validate() error {
 		if !c.Experimental.TLSBootstrap.Enabled {
 			return fmt.Errorf("TLS bootstrap is required in order to enable the node authorizer")
 		}
+	}
 
-		if !c.Experimental.Plugins.Rbac.Enabled {
-			return fmt.Errorf("RBAC is required in order to enable the node authorizer")
+	for i, e := range c.APIEndpointConfigs {
+		if e.LoadBalancer.NetworkLoadBalancer() && !c.Region.SupportsNetworkLoadBalancers() {
+			return fmt.Errorf("api endpoint %d is not valid: network load balancer not supported in region", i)
 		}
 	}
 
@@ -1144,10 +1116,6 @@ func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
 	}
 	if c.KMSKeyARN == "" && c.AssetsEncryptionEnabled() {
 		return nil, errors.New("kmsKeyArn must be set")
-	}
-
-	if !c.VPC.HasIdentifier() && (c.RouteTableID != "" || c.InternetGateway.HasIdentifier()) {
-		return nil, errors.New("vpc id must be specified if route table id or internet gateway id are specified")
 	}
 
 	if c.Region.IsEmpty() {
@@ -1215,11 +1183,11 @@ func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
 				)
 			}
 
-			if subnet.RouteTableID() != "" && c.RouteTableID != "" {
-				return nil, fmt.Errorf("either subnets[].routeTable.id(%s) or routeTableId(%s) but not both can be specified", subnet.RouteTableID(), c.RouteTableID)
+			if !c.VPC.HasIdentifier() && (subnet.RouteTable.HasIdentifier() || c.InternetGateway.HasIdentifier()) {
+				return nil, errors.New("vpcId must be specified if subnets[].routeTable.id or internetGateway.id are specified")
 			}
 
-			if subnet.ManageSubnet() && (subnet.Public() && c.MapPublicIPs) && c.VPC.HasIdentifier() && (subnet.ManageRouteTable() && c.RouteTableID == "") && !c.InternetGateway.HasIdentifier() {
+			if subnet.ManageSubnet() && subnet.Public() && c.VPC.HasIdentifier() && subnet.ManageRouteTable() && !c.InternetGateway.HasIdentifier() {
 				return nil, errors.New("internet gateway id can't be omitted when there're one or more managed public subnets in an existing VPC")
 			}
 		}
@@ -1227,17 +1195,13 @@ func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
 		// All the subnets are explicitly/implicitly(they're public by default) configured to be "public".
 		// They're also configured to reuse existing route table(s).
 		// However, the IGW, which won't be applied to anywhere, is specified
-		if (allPublic && c.MapPublicIPs) && (c.RouteTableID != "" || allExistingRouteTable) && c.InternetGateway.HasIdentifier() {
+		if allPublic && allExistingRouteTable && c.InternetGateway.HasIdentifier() {
 			return nil, errors.New("internet gateway id can't be specified when all the public subnets have existing route tables associated. kube-aws doesn't try to modify an exisinting route table to include a route to the internet gateway")
 		}
 
 		// All the subnets are explicitly configured to be "private" but the IGW, which won't be applied anywhere, is specified
-		if (allPrivate || !c.MapPublicIPs) && c.InternetGateway.HasIdentifier() {
+		if allPrivate && c.InternetGateway.HasIdentifier() {
 			return nil, errors.New("internet gateway id can't be specified when all the subnets are existing private subnets")
-		}
-
-		if c.RouteTableID != "" && !allPublic && !allPrivate {
-			return nil, fmt.Errorf("network topology including both private and public subnets specified while the single route table(%s) is also specified. You must differentiate the route table at least between private and public subnets. Use subets[].routeTable.id instead of routeTableId for that.", c.RouteTableID)
 		}
 
 		for i, a := range instanceCIDRs {
@@ -1267,7 +1231,7 @@ func (c DeploymentSettings) AssetsEncryptionEnabled() bool {
 	return c.ManageCertificates && c.Region.SupportsKMS()
 }
 
-func (s DeploymentSettings) AllSubnets() []model.Subnet {
+func (s DeploymentSettings) AllSubnets() model.Subnets {
 	subnets := s.Subnets
 	return subnets
 }
@@ -1285,7 +1249,7 @@ func (c DeploymentSettings) FindSubnetMatching(condition model.Subnet) model.Sub
 	panic(fmt.Errorf("No subnet matching %v found in %s", condition, out))
 }
 
-func (c DeploymentSettings) PrivateSubnets() []model.Subnet {
+func (c DeploymentSettings) PrivateSubnets() model.Subnets {
 	result := []model.Subnet{}
 	for _, s := range c.Subnets {
 		if s.Private {
@@ -1295,7 +1259,7 @@ func (c DeploymentSettings) PrivateSubnets() []model.Subnet {
 	return result
 }
 
-func (c DeploymentSettings) PublicSubnets() []model.Subnet {
+func (c DeploymentSettings) PublicSubnets() model.Subnets {
 	result := []model.Subnet{}
 	for _, s := range c.Subnets {
 		if !s.Private {
@@ -1354,10 +1318,6 @@ func (c DefaultWorkerSettings) Validate() error {
 		if c.WorkerRootVolumeType != "standard" && c.WorkerRootVolumeType != "gp2" {
 			return fmt.Errorf("invalid workerRootVolumeType: %s", c.WorkerRootVolumeType)
 		}
-	}
-
-	if c.WorkerCount != 0 {
-		return errors.New("`workerCount` is removed. Set worker.nodePools[].count per node pool instead")
 	}
 
 	return nil

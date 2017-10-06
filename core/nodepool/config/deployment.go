@@ -23,17 +23,11 @@ func (c DeploymentSettings) ValidateInputs() error {
 	if c.InternetGateway.HasIdentifier() {
 		return fmt.Errorf("although you can't customize internet gateway per node pool but you did specify \"%v\" in your cluster.yaml", c.InternetGateway)
 	}
-	if c.RouteTableID != "" {
-		return fmt.Errorf("although you can't customize `routeTableId` per node pool but you did specify \"%s\" in your cluster.yaml", c.RouteTableID)
-	}
 	if c.VPCCIDR != "" {
 		return fmt.Errorf("although you can't customize `vpcCIDR` per node pool but you did specify \"%s\" in your cluster.yaml", c.VPCCIDR)
 	}
 	if c.InstanceCIDR != "" {
 		return fmt.Errorf("although you can't customize `instanceCIDR` per node pool but you did specify \"%s\" in your cluster.yaml", c.InstanceCIDR)
-	}
-	if c.MapPublicIPs {
-		return fmt.Errorf("although you can't customize `mapPublicIPs` per node pool but you did specify %v in your cluster.yaml", c.MapPublicIPs)
 	}
 	if c.ElasticFileSystemID != "" {
 		return fmt.Errorf("although you can't customize `elasticFileSystemId` per node pool but you did specify \"%s\" in your cluster.yaml", c.ElasticFileSystemID)

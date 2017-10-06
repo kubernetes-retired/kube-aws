@@ -88,7 +88,12 @@ func (svc dummyEC2DescribeKeyPairsService) DescribeKeyPairs(input *ec2.DescribeK
 
 func TestValidateKeyPair(t *testing.T) {
 	main, err := controlplane.ConfigFromBytes([]byte(`clusterName: test-cluster
-externalDNSName: test-cluster.example.com
+apiEndpoints:
+- name: public
+  dnsName: test-cluster.example.com
+  loadBalancer:
+    hostedZone:
+      id: hostedzone-xxxx
 keyName: mykey
 kmsKeyArn: mykeyarn
 region: us-west-1
@@ -123,7 +128,11 @@ const minimalYaml = `name: pool1
 
 func TestValidateWorkerRootVolume(t *testing.T) {
 	main, err := controlplane.ConfigFromBytes([]byte(`clusterName: test-cluster
-externalDNSName: test-cluster.example.com
+apiEndpoints:
+- name: public
+  dnsName: test-cluster.example.com
+  loadBalancer:
+    recordSetManaged: false
 keyName: mykey
 kmsKeyArn: mykeyarn
 region: us-west-1
@@ -204,7 +213,11 @@ rootVolume:
 
 func TestStackUploadsAndCreation(t *testing.T) {
 	mainConfigBody := `
-externalDNSName: test.staging.core-os.net
+apiEndpoints:
+- name: public
+  dnsName: test.staging.core-os.net
+  loadBalancer:
+    recordSetManaged: false
 keyName: test-key-name
 region: us-west-1
 clusterName: test-cluster-name
