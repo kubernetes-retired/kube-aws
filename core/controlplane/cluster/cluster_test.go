@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kubernetes-incubator/kube-aws/plugin/pluginmodel"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -391,7 +392,7 @@ hostedZoneId: /hostedzone/staging_id_3 # <staging_id_id> is not a super-domain
 `, `
 createRecordSet: true
 recordSetTTL: 60
-hostedZoneId: /hostedzone/staging_id_5 #non-existant hostedZoneId
+hostedZoneId: /hostedzone/staging_id_5 #non-existent hostedZoneId
 `,
 	}
 
@@ -477,7 +478,7 @@ stackTags:
 				S3URI: "s3://test-bucket/foo/bar",
 			}
 
-			cluster, err := NewCluster(clusterConfig, stackTemplateOptions, false)
+			cluster, err := NewCluster(clusterConfig, stackTemplateOptions, []*pluginmodel.Plugin{}, false)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -741,7 +742,7 @@ func newDefaultClusterWithDeps(opts config.StackTemplateOptions) (*Cluster, erro
 	if err := cluster.Load(); err != nil {
 		return &Cluster{}, err
 	}
-	return NewCluster(cluster, opts, false)
+	return NewCluster(cluster, opts, []*pluginmodel.Plugin{}, false)
 }
 
 func TestRenderStackTemplate(t *testing.T) {

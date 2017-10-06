@@ -136,6 +136,7 @@ configure() {
 }
 
 kube-aws() {
+  mkdir -p ${WORK_DIR}
   cd ${WORK_DIR}
   ${KUBE_AWS_CMD} "$@"
 }
@@ -149,8 +150,8 @@ customize_cluster_yaml() {
   echo Writing to $(pwd)/cluster.yaml
 
   if [ "${KUBE_AWS_DEPLOY_TO_EXISTING_VPC}" != "" ]; then
-    echo "vpcId: $(testinfra_vpc)" >> cluster.yaml
-    echo "routeTableId: $(testinfra_public_routetable)" >> cluster.yaml
+    echo -e "vpc:\n  id: $(testinfra_vpc)" >> cluster.yaml
+    echo -e "routeTableId: $(testinfra_public_routetable)" >> cluster.yaml
     echo -e "workerSecurityGroupIds:\n- $(testinfra_glue_sg)" >> cluster.yaml
   fi
 
@@ -256,6 +257,8 @@ worker:
 # controller configuration
 controller:
   count: $CONTROLLER_COUNT
+  nodeLabels:
+    kube-aws.coreos.com/role: controller
 waitSignal:
   enabled: true
 kubeResourcesAutosave:
@@ -264,11 +267,37 @@ experimental:
   awsNodeLabels:
     enabled: true
   auditLog:
-    enabled: true
+    enabled: true" >> cluster.yaml
+
+  if [ "${NODE_AUTHORIZER}" != "" -o "${TLS_BOOTSTRAP}" != "" ]; then
+    echo -e "
+  tlsBootstrap:
+    enabled: true" >> cluster.yaml
+  fi
+
+  if [ "${NODE_AUTHORIZER}" != "" ]; then
+    echo -e "
+  nodeAuthorizer:
+    enabled: true" >> cluster.yaml
+  fi
+
+
+  if [ "${RBAC}" != "" ]; then
+    echo -e "
+  plugins:
+    rbac:
+      enabled: true" >> cluster.yaml
+  fi
+
+  echo -e "
 addons:
   clusterAutoscaler:
-    enabled: true
+    enabled: true" >> cluster.yaml
+
+  echo -e "
 cloudWatchLogging:
+  enabled: true
+amazonSsmAgent:
   enabled: true
 # etcd configuration
 etcd:

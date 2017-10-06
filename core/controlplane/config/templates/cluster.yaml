@@ -3,26 +3,17 @@
 # name must not conflict with an existing cluster.
 clusterName: {{.ClusterName}}
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].dnsName instead
-#externalDNSName:
-
 # CoreOS release channel to use. Currently supported options: alpha, beta, stable
 # See coreos.com/releases for more information
 #releaseChannel: stable
 
 # The AMI ID of CoreOS.
 # If omitted, the latest AMI for the releaseChannel is used.
+{{if .AmiId -}}
+amiId: "{{.AmiId}}"
+{{else -}}
 #amiId: ""
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.createRecordSet instead
-#createRecordSet:
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.recordSetTTL instead
-#recordSetTTL:
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer.hostedZone.id instead
-#hostedZoneId:
-
+{{- end}}
 # The ID of hosted zone to add the externalDNSName to.
 # Either specify hostedZoneId or hostedZone, but not both
 #hostedZoneId: ""
@@ -143,9 +134,6 @@ availabilityZone: {{.AvailabilityZone}}
 # ARN of the KMS key used to encrypt TLS assets.
 kmsKeyArn: "{{.KMSKeyARN}}"
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.count instead
-#controllerCount: 1
-
 #controller:
 #  # Number of controller nodes to create, for more control use `controller.autoScalingGroup` and do not use this setting
 #  count: 1
@@ -162,7 +150,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    size: 30
 #    # Disk type for controller node (one of standard, io1, or gp2)
 #    type: gp2
-#    # Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controllerRootVolumeType is not io1
+#    # Number of I/O operations per second (IOPS) that the controller node disk supports. Leave blank if controller.rootVolume.type is not io1
 #    iops: 0
 #
 #  # Existing security groups attached to controller nodes which are typically used to
@@ -182,7 +170,7 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  # to follow the recommendation in AWS documentation  http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-iam-role.html
 #  # This is also intended to be used in combination with .experimental.kube2IamSupport. See #297 for more information.
 #  #
-#  # ATTENTION: Consider limiting number of characters in clusterName and managedIamRoleName to avoid the resulting IAM
+#  # ATTENTION: Consider limiting number of characters in clusterName and iam.role.name to avoid the resulting IAM
 #  # role name's length from exceeding the AWS limit: 64
 #  # See https://github.com/kubernetes-incubator/kube-aws/issues/347
 #  # if you omit this block kube-aws would create an IAM Role and a customer managed policy with a random name.
@@ -210,21 +198,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #    # References subnets defined under the top-level `subnets` key by their names
 #    - name: ManagedPublicSubnet1
 #    - name: ManagedPublicSubnet2
-#  # CAUTION: Deprecated and will be removed in v0.9.7. Please use apiEndpoints[].loadBalancer instead
-#  loadBalancer:
-#    # kube-aws creates the ELB for the k8s API endpoint as `Schema=internet-facing` by default and
-#    # only public subnets defined under the top-level `subnets` key are used for the ELB
-#    private: false
-#    # If you like specific public subnets to be used by the internet-facing ELB:
-#    #subnets:
-#    #  - name: ManagedPublicSubnet0
 #
-#    # When explicitly set to true, the ELB for the k8s API endpoint becomes `Schema=internal` rather than default `Schema=internet-facing` one and
-#    # only private subnets defined under the top-level `subnets` key are used for the ELB
-#    private: true
-#    # If you like specific private subnets to be used by the internal ELB:
-#    # subnets:
-#    #   - name: ManagedPrivateSubnet0
+#   # Kubernetes node labels to be added to controller nodes
+#   nodeLabels:
+#     kube-aws.coreos.com/role: controller
 #
 #  # User defined files that will be added to the Controller cluster cloud-init configuration in the "write_files:" section.
 #  customFiles:
@@ -244,21 +221,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.createTimeout instead
-#controllerCreateTimeout: PT15M
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.instanceType instead
-#controllerInstanceType: t2.medium
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.size instead
-#controllerRootVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.type instead
-#controllerRootVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use controller.rootVolume.iops instead
-#controllerRootVolumeIOPS: 0
-
 # Default number of worker nodes per node pool to create, for more control use `worker.nodePools[].count` and/or `worker.autoScalingGroup` and do not use this setting
 #workerCount: 1
 
@@ -274,10 +236,11 @@ worker:
   nodePools:
     - # Name of this node pool. Must be unique among all the node pools in this cluster
       name: nodepool1
+#      # Subnet(s) to which worker nodes in this node pool are deployed
+#      # References subnets defined under the top-level `subnets` key by their names
 #      # If omitted, public subnets are created by kube-aws and used for worker nodes
 #      subnets:
-#      - # References subnets defined under the top-level `subnets` key by their names
-#        name: ManagedPublicSubnet1
+#      - name: ManagedPublicSubnet1
 #
 #      # Existing "glue" security groups attached to worker nodes which are typically used to allow
 #      # access from worker nodes to services running on an existing infrastructure
@@ -368,17 +331,8 @@ worker:
 #        size: 30
 #        # Disk type for worker node (one of standard, io1, or gp2)
 #        type: gp2
-#        # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if workerRootVolumeType is not io1
+#        # Number of I/O operations per second (IOPS) that the worker node disk supports. Leave blank if worker.rootVolume.type is not io1
 #        iops: 0
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.size instead
-#      rootVolumeSize: 30
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.type instead
-#      rootVolumeType: gp2
-#
-#      # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.iops instead
-#      rootVolumeIOPS: 0
 #
 #      # Maximum time to wait for worker creation
 #      createTimeout: PT15M
@@ -465,15 +419,6 @@ worker:
 #            # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #            iops:
 #
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.type instead
-#          #rootVolumeType:
-#
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.size instead
-#          #rootVolumeSize:
-#
-#          # CAUTION: Deprecated and will be removed in v0.9.7. Please use rootVolume.iops instead
-#          #rootVolumeIOPS:
-#
 #        - weightedCapacity: 2
 #          instanceType: c4.xlarge
 #
@@ -523,6 +468,13 @@ worker:
 #      # This is intended to be used in combination with managedIamRoleName. See #297 for more information.
 #      kube2IamSupport:
 #        enabled: true
+#
+#      # Propagate custom CLI options to kubelet
+#      # Provided example overrides default docker image garbage collection limits
+#      # as in https://kubernetes.io/docs/concepts/cluster-administration/kubelet-garbage-collection/
+#      # Anything from https://kubernetes.io/docs/admin/kubelet/ can be used as a value
+#
+#      kubeletOpts: --image-gc-low-threshold=50 --image-gc-high-threshold=65
 #
 #      # Kubernetes node labels to be added to worker nodes
 #      nodeLabels:
@@ -598,9 +550,6 @@ worker:
 ## during a cluster upgrade, due to concerns over data loss.
 ## This situation is being rectified with work towards automated management of etcd clusters
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.count instead
-# etcdCount: 1
-
 #etcd:
 #  # Number of etcd nodes
 #  # (Set to an odd number >= 3 for HA control plane)
@@ -650,8 +599,22 @@ worker:
 #    - sg-1234abcd
 #    - sg-5678efab
 #
-#  # The version of etcd to be used. Set to e.g. "3.1.3" to use etcd3
-#  version: 2
+#  # If you omit this block kube-aws would create an IAM Role and a managed policy for etcd nodes with a random name.
+#  iam:
+#    role:
+#      # If you set managedPolicies here they will be attached to the role in addition to the managed policy.
+#      # CAUTION: if you attach a more restrictive policy in some resources (i.e ec2:* Deny) you can make kube-aws fail.
+#      managedPolicies:
+#      - arn: "arn:aws:iam::aws:policy/AdministratorAccess"
+#      - arn: "arn:aws:iam::YOURACCOUNTID:policy/YOURPOLICYNAME"
+#    # If you set an InstanceProfile kube-aws will NOT create any IAM Role and will use the existing instance profile.
+#    # CAUTION: you must ensure that the IAM role linked to the existing instance profile has enough permissions to ensure etcd nodes to run.
+#    # If you dont know which permissions are required, it is recommended to go ahead with a managed instance profile.
+#    instanceProfile:
+#      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
+#
+#  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
+#  version: 3.2.6
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
@@ -736,43 +699,27 @@ worker:
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.instanceType instead
-# etcdInstanceType: t2.medium
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.size instead
-# etcdRootVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.type instead
-# etcdRootVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.rootVolume.iops instead
-# etcdRootVolumeIOPS: 0
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.ephemeral instead
-# etcdDataVolumeEphemeral: false
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.size instead
-# etcdDataVolumeSize: 30
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.type instead
-# etcdDataVolumeType: gp2
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.iops instead
-# etcdDataVolumeIOPS: 0
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.dataVolume.encrypted instead
-# etcdDataVolumeEncrypted: false
-
-# CAUTION: Deprecated and will be removed in v0.9.7. Please use etcd.tenancy instead
-# etcdTenancy: default
-
 ## Networking config
 
-# ID of existing VPC to create subnet in. Leave blank to create a new VPC
+# CAUTION: Deprecated and will be removed in v0.9.9. Please use vpc.id instead
 # vpcId:
 
-# ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+#vpc:
+#  # ID of existing VPC to create subnet in. Leave blank to create a new VPC
+#  id:
+#  # Exported output's name from another stack
+#  # Only specify either id or idFromStackOutput but not both
+#  #idFromStackOutput: myinfra-Vpc
+
+# CAUTION: Deprecated and will be removed in v0.9.9. Please use internetGateway.id instead
 # internetGatewayId:
+
+#internetGateway:
+#  # ID of existing Internet Gateway to associate subnet with. Leave blank to create a new Internet Gateway
+#  id:
+#  # Exported output's name from another stack
+#  # Only specify either id or idFromStackOutput but not both
+#  #idFromStackOutput: myinfra-igw
 
 # Advanced: ID of existing route table in existing VPC to attach subnet to.
 # Leave blank to use the VPC's main route table.
@@ -974,7 +921,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.6.4_coreos.0
+# kubernetesVersion: v1.7.4_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -1007,32 +954,44 @@ worker:
 
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
+#  repo: gcr.io/google_containers/cluster-autoscaler
+#  tag: v0.6.0
+#  rktPullDocker: false
+
+# Cluster Proportional Autoscaler image repository to use.
+#clusterProportionalAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-proportional-autoscaler-amd64
 #  tag: 1.1.1
+#  rktPullDocker: false
+
+# kube2iam image repository to use.
+#kube2iamImage:
+#  repo: jtblin/kube2iam
+#  tag: 0.7.0
 #  rktPullDocker: false
 
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.1
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.1
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
 #kubeReschedulerImage:
 #  repo: gcr.io/google-containers/rescheduler
-#  tag: v0.3.0
+#  tag: v0.3.1
 #  rktPullDocker: false
 
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
-#  gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.1
+#  repo: gcr.io/google_containers/k8s-dns-sidecar-amd64
+#  tag: 1.14.4
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1041,22 +1000,34 @@ worker:
 #  tag: 1.2
 #  rktPullDocker: false
 
+# Helm image repository to use.
+#helmImage:
+#  repo: quay.io/kube-aws/helm
+#  tag: v2.6.0
+#  rktPullDocker: false
+
+# Tiller (Helm backend) image repository to use.
+#tillerImage:
+#  repo: gcr.io/kubernetes-helm/tiller
+#  tag: v2.6.0
+#  rktPullDocker: false
+
 # Heapster image repository to use.
 #heapsterImage:
 #  repo: gcr.io/google_containers/heapster
-#  tag: v1.3.0
+#  tag: v1.4.1
 #  rktPullDocker: false
 
 # Addon Resizer image repository to use.
 #addonResizerImage:
 #  repo: gcr.io/google_containers/addon-resizer
-#  tag: 1.7
+#  tag: 2.0
 #  rktPullDocker: false
 
 # Kube Dashboard image repository to use.
 #kubeDashboardImage:
 #  repo: gcr.io/google_containers/kubernetes-dashboard-amd64
-#  tag: v1.6.0
+#  tag: v1.6.3
 #  rktPullDocker: false
 
 # Calico Controller image repository to use.
@@ -1137,12 +1108,25 @@ worker:
 # retentionInDays: 7
 # # When enabled, feedback from Journald logs (with an applied filter) will be outputted during kube-aws 'apply | up'.
 # # It is enabled by default - provided cloudWatchLogging is enabled.
-# realtimeFeedback:
-#  enabled: true,
-#  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
+# localStreaming:
+#  enabled: true
+#  filter:  `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`
 #  interval: 60
 
-# When enabled, CloudFormation events will stream to stdout during kube-aws 'apply | up'.
+# When enabled, all nodes will have Amazon SSM Agent installed.
+# It is disabled by default.
+# You might want to set 'managedPolicies' up to run the agents properly. More details: http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-configuring-access-policies.html
+#amazonSsmAgent:
+#  enabled: true
+#  downloadUrl: https://github.com/DailyHotel/amazon-ssm-agent/releases/download/v2.0.805.1/ssm.linux-amd64.tar.gz
+#  sha1sum: a6fff8f9839d5905934e7e3df3123b54020a1f5e
+
+# When enabled, will enable a DNS-masq DaemonSet to make PODs to resolve DNS names via locally running dnsmasq
+# It is disabled by default.
+#kubeDns:
+# nodeLocalResolver: false
+
+# When enabled, CloudFormation events will stream to stdout during kube-aws 'update | up'.
 # It is enabled by default.
 #cloudFormationStreaming: true
 
@@ -1165,6 +1149,8 @@ addons:
 #   # Enable admission controllers
 #   admission:
 #     podSecurityPolicy:
+#       enabled: true
+#     denyEscalatingExec:
 #       enabled: true
 #   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
 #   awsEnvironment:
@@ -1191,9 +1177,12 @@ addons:
 #   # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to
 #   # also enable the rbac plugin in order to limit requests using the bootstrap token to only be able to make
 #   # requests related to certificate provisioning.
-#   # The bootstrap token must be defined in ./credentials/tokens.csv; kube-aws creates this file automatically
-#   # with a randomly generated token when this setting is enabled.
+#   # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
 #   tlsBootstrap:
+#     enabled: true
+#   # Enables the Node authorization + node restriction admission controller (requires Kubernetes 1.7.4+)
+#   # Requires TLS bootstrapping to be enabled as well
+#   nodeAuthorizer:
 #     enabled: true
 #   # This option has not yet been tested with rkt as container runtime
 #   ephemeralImageStorage:
@@ -1202,56 +1191,22 @@ addons:
 #   # This is intended to be used in combination with .controller.managedIamRoleName. See #297 for more information.
 #   kube2IamSupport:
 #     enabled: true
-#   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group
+#   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group, or when
+#   # the instance receives a termination notice (in case of spot instances)
 #   nodeDrainer:
 #     enabled: true
 #     # Maximum time to wait, in minutes, for the node to be completely drained. Must be an integer between 1 and 60.
 #     drainTimeout: 5
-#   # Enable dex  integration - https://github.com/coreos/dex
 #   # Configure OpenID Connect token authenticator plugin in Kubernetes API server.
-#   # Notice: always use "https" for the "url", otherwise the Kubernetes API server will not start correctly.
-#   # Please set selfSignedCa to false if you plan to expose dex service using a LoadBalancer or Ingress with certificates signed by a trusted CA.
-#   dex:
+#   # For using Dex as a custom OIDC provider, please check "contrib/dex/README.md".
+#   # WARNING: always use "https" for "issuerUrl", otherwise the Kubernetes API server will not start correctly.
+#   oidc:
 #     enabled: true
-#     url: "https://dex.example.com"
-#     clientId: "example-app"
-#     username: "email"
-#     groups: "groups"
-#     selfSignedCa: true
+#     issuerUrl: "https://accounts.google.com"
+#     clientId: "kubernetes"
+#     usernameClaim: "email"
+#     groupsClaim: "groups"
 #
-#   # Dex connectors configuration. You can add configuration for the desired connectors suported by dex or
-#   # skip this part if you don't plan to use any of them. Here is an example of GitHub connector.
-#     connectors:
-#     - type: github
-#       id: github
-#       name: GitHub
-#       config:
-#         clientId: "your_client_id"
-#         clientSecret: "your_client_secret"
-#         redirectURI: https://dex.example.com/callback
-#         org: your_organization
-#   # Configure static clients and users
-#     staticClients:
-#     - id: 'example-app'
-#       redirectURIs: 'http://127.0.0.1:5555/callback'
-#       name: 'Example App'
-#       secret: 'ZXhhbXBsZS1hcHAtc2VjcmV0'
-#
-#     staticPasswords:
-#     - email: "admin@example.com"
-#       # bcrypt hash of the string "password". You can use bcrypt-tool from CoreOS to generate the passwords.
-#       hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
-#       username: "admin"
-#       userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
-#
-#   # Kubernetes node labels to be added to controller nodes
-#   nodeLabels:
-#     kube-aws.coreos.com/role: controller
-#   # Kubernetes node taints to be added to controller nodes
-#   taints:
-#     - key: dedicated
-#       value: search
-#       effect: NoSchedule
 #   plugins:
 #     rbac:
 #       enabled: true

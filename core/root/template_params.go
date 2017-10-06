@@ -8,20 +8,29 @@ import (
 	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/cluster"
 )
 
+// TemplateParams is the set of parameters exposed for templating cfn stack template for the root stack
 type TemplateParams struct {
 	cluster clusterImpl
+}
+
+func (p TemplateParams) ExtraCfnResources() map[string]interface{} {
+	return p.cluster.ExtraCfnResources
 }
 
 func (p TemplateParams) ClusterName() string {
 	return p.cluster.controlPlane.ClusterName
 }
 
+func (p TemplateParams) KubeAwsVersion() string {
+	return controlplane.VERSION
+}
+
 func (p TemplateParams) CloudWatchLogging() config.CloudWatchLogging {
 	return p.cluster.controlPlane.CloudWatchLogging
 }
 
-func (p TemplateParams) ClusterS3Uri() string {
-	return p.cluster.controlPlane.ClusterS3Uri
+func (p TemplateParams) KubeDnsMasq() config.KubeDns {
+	return p.cluster.controlPlane.KubeDns
 }
 
 func newTemplateParams(c clusterImpl) TemplateParams {
@@ -67,8 +76,8 @@ func (p controlPlane) CloudWatchLogging() config.CloudWatchLogging {
 	return p.controlPlane.CloudWatchLogging
 }
 
-func (p controlPlane) ClusterS3Uri() string {
-	return p.controlPlane.ClusterS3Uri
+func (p controlPlane) KubeDns() config.KubeDns {
+	return p.controlPlane.KubeDns
 }
 
 type nodePool struct {
@@ -97,15 +106,15 @@ func (p nodePool) CloudWatchLogging() config.CloudWatchLogging {
 	return p.nodePool.CloudWatchLogging
 }
 
-func (p nodePool) ClusterS3Uri() string {
-	return p.nodePool.ClusterS3Uri
+func (p nodePool) KubeDns() config.KubeDns {
+	return p.nodePool.KubeDns
 }
 
 func (p nodePool) NeedToExportIAMroles() bool {
 	return p.nodePool.IAMConfig.InstanceProfile.Arn == ""
 }
 
-func (c TemplateParams) ControlPlane() NestedStack {
+func (c TemplateParams) ControlPlane() controlPlane {
 	return controlPlane{
 		controlPlane: c.cluster.controlPlane,
 	}

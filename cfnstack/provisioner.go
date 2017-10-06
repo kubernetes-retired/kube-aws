@@ -232,7 +232,7 @@ func (c *Destroyer) Destroy() error {
 	return err
 }
 
-func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformation.CloudFormation, stackId string, headStackName string, t time.Time) error {
+func (c *Provisioner) StreamEventsNested(q chan struct{}, f *cloudformation.CloudFormation, stackId string, headStackName string, t time.Time) error {
 	nestedStacks := make(map[string]bool)
 	nestedQuit := make(chan struct{}, 1)
 	var lastSeenEventId string
@@ -248,7 +248,7 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 				&cloudformation.DescribeStackEventsInput{StackName: &stackId},
 				func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
 					for _, e := range page.StackEvents {
-						if (*e.Timestamp).Before(t) {
+						if (e.Timestamp).Before(t) {
 							return false
 						}
 						if *e.EventId == lastSeenEventId {
@@ -263,7 +263,7 @@ func (c *Provisioner) StreamCloudFormationNested(q chan struct{}, f *cloudformat
 				e := events[i]
 				if *e.ResourceType == "AWS::CloudFormation::Stack" && *e.PhysicalResourceId != *e.StackId && !nestedStacks[*e.PhysicalResourceId] {
 					nestedStacks[*e.PhysicalResourceId] = true
-					go c.StreamCloudFormationNested(nestedQuit, f, *e.PhysicalResourceId, headStackName, t)
+					go c.StreamEventsNested(nestedQuit, f, *e.PhysicalResourceId, headStackName, t)
 				}
 				eventPrettyPrint(e, headStackName, t)
 				lastSeenEventId = *e.EventId

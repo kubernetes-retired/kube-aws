@@ -85,7 +85,7 @@ config_etcd_endpoints() {
   echo "${ETCD_ENDPOINTS}"
 }
 
-etcd_version=${ETCD_VERSION:-3.1.6}
+etcd_version=${ETCD_VERSION:-3.2.6}
 etcd_aci_url="https://github.com/coreos/etcd/releases/download/v$etcd_version/etcd-v$etcd_version-linux-amd64.aci"
 
 member_count="${ETCDADM_MEMBER_COUNT:?missing required env}"
@@ -521,7 +521,11 @@ member_restore_from_local_snapshot() {
 }
 
 member_env_file() {
-  echo "${ETCDADM_MEMBER_ENV_FILE:-$(config_state_dir)/$(member_name).env}"
+  local name
+  local env_file
+  name=$(member_name)
+  env_file=$(config_state_dir)/${name}.env
+  echo "${env_file}"
 }
 
 member_set_initial_cluster_state() {

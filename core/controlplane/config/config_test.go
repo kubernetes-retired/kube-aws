@@ -247,7 +247,7 @@ releaseChannel: stable
 
 	invalidConfigs := []string{
 		`
-releaseChannel: non-existant #this release channel will never exist
+releaseChannel: non-existent #this release channel will never exist
 `,
 	}
 
@@ -525,63 +525,42 @@ controller:
 			volumeType: "io1",
 			iops:       2000,
 		},
-		// TODO Remove test cases for deprecated keys in v0.9.7
-		{
-			conf: `
-controllerRootVolumeType: gp2
-`,
-			volumeType: "gp2",
-			iops:       0,
-		},
-		{
-			conf: `
-controllerRootVolumeType: standard
-`,
-			volumeType: "standard",
-			iops:       0,
-		},
-		{
-			conf: `
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 100
-`,
-			volumeType: "io1",
-			iops:       100,
-		},
-		{
-			conf: `
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 2000
-`,
-			volumeType: "io1",
-			iops:       2000,
-		},
 	}
 
 	invalidConfigs := []string{
 		`
 # There's no volume type 'default'
-controllerRootVolumeType: default
+controller:
+  rootVolume:
+    type: default
 `,
 		`
 # IOPS must be zero for volume types != 'io1'
-controllerRootVolumeType: standard
-controllerRootVolumeIOPS: 100
+controller:
+  rootVolume:
+    type: standard
+    iops: 100
 `,
 		`
 # IOPS must be zero for volume types != 'io1'
-controllerRootVolumeType: gp2
-controllerRootVolumeIOPS: 2000
+controller:
+  rootVolume:
+    type: gp2
+    iops: 2000
 `,
 		`
 # IOPS smaller than the minimum (100)
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 99
+controller:
+  rootVolume:
+    type: io1
+    iops: 99
 `,
 		`
 # IOPS greater than the maximum (2000)
-controllerRootVolumeType: io1
-controllerRootVolumeIOPS: 2001
+controller:
+  rootVolume:
+    type: io1
+    iops: 2001
 `,
 	}
 
@@ -825,7 +804,106 @@ tlsBootstrap:
 			)
 		}
 	}
+}
 
+func TestNodeAuthorizerConfig(t *testing.T) {
+	validConfigs := []struct {
+		conf           string
+		nodeAuthorizer NodeAuthorizer
+	}{
+		{
+			conf: `
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeAuthorizer:
+    enabled: false
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
+  plugins:
+    rbac:
+      enabled: true
+`,
+			nodeAuthorizer: NodeAuthorizer{
+				Enabled: true,
+			},
+		},
+	}
+
+	invalidConfigs := []string{
+		`
+# TLS bootstrap + RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+`,
+		`
+# TLS bootstrap + RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: false
+`,
+		`
+# RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
+`,
+		`
+# RBAC must be enabled as well
+experimental:
+  nodeAuthorizer:
+    enabled: true
+  tlsBootstrap:
+    enabled: true
+  plugins:
+    rbac:
+      enabled: false
+`,
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Experimental.NodeAuthorizer, conf.nodeAuthorizer) {
+			t.Errorf(
+				"parsed node authorizer settings %+v does not match config: %s",
+				c.Experimental.NodeAuthorizer,
+				confBody,
+			)
+		}
+	}
+
+	for _, conf := range invalidConfigs {
+		confBody := singleAzConfigYaml + conf
+		_, err := ClusterFromBytes([]byte(confBody))
+		if err == nil {
+			t.Errorf("expected error parsing invalid config: %s", confBody)
+		}
+	}
 }
 
 func TestRktConfig(t *testing.T) {
