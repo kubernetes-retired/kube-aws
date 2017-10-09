@@ -989,14 +989,14 @@ worker:
 
 # kube DNS image repository to use.
 #kubeDnsImage:
-#  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.5
+#  repo: gcr.io/google_containers/k8s-dns-kube-dns-amd64
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.5
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1008,7 +1008,7 @@ worker:
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  repo: gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.5
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1026,7 +1026,7 @@ worker:
 # Tiller (Helm backend) image repository to use.
 #tillerImage:
 #  repo: gcr.io/kubernetes-helm/tiller
-#  tag: v2.6.1
+#  tag: v2.6.2
 #  rktPullDocker: false
 
 # Heapster image repository to use.
