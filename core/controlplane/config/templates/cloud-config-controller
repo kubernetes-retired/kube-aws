@@ -1092,7 +1092,7 @@ write_files:
             containers:
             - name: kube-resources-autosave-dumper
               image: {{.HyperkubeImage.RepoWithTag}}
-              command: ["/bin/bash", "-c" ]
+              command: ["/bin/sh", "-c" ]
               args:
                 - |
                     set -x ;
@@ -1102,8 +1102,8 @@ write_files:
                       TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
                       DUMP_DIR=/kube-resources-autosave/tmp/${TIMESTAMP} ;
                       mkdir -p ${DUMP_DIR} ;
-                      RESOURCES_OUT_NAMESPACE=( namespaces persistentvolumes nodes storageclasses clusterrolebindings clusterroles ) ;
-                      for r in ${RESOURCES_OUT_NAMESPACE[@]};do
+                      RESOURCES_OUT_NAMESPACE="namespaces persistentvolumes nodes storageclasses clusterrolebindings clusterroles";
+                      for r in ${RESOURCES_OUT_NAMESPACE};do
                         echo " Searching for resources: ${r}" ;
                         /kubectl get --export -o=json ${r} | \
                         jq '.items |= ([ .[] |
@@ -1116,14 +1116,14 @@ write_files:
                             .spec.claimRef
                           )])' > ${DUMP_DIR}/${r}.json ;
                       done ;
-                      RESOURCES_IN_NAMESPACE=( componentstatuses configmaps daemonsets deployments endpoints events horizontalpodautoscalers
+                      RESOURCES_IN_NAMESPACE="componentstatuses configmaps daemonsets deployments endpoints events horizontalpodautoscalers
                       ingresses jobs limitranges networkpolicies  persistentvolumeclaims pods podsecuritypolicies podtemplates replicasets
                       replicationcontrollers resourcequotas secrets serviceaccounts services statefulsets thirdpartyresources
-                      poddisruptionbudgets roles rolebindings) ;
+                      poddisruptionbudgets roles rolebindings";
                       for ns in $(jq -r '.items[].metadata.name' < ${DUMP_DIR}/namespaces.json);do
                         echo "Searching in namespace: ${ns}" ;
                         mkdir -p ${DUMP_DIR}/${ns} ;
-                        for r in ${RESOURCES_IN_NAMESPACE[@]};do
+                        for r in ${RESOURCES_IN_NAMESPACE};do
                           echo " Searching for resources: ${r}" ;
                           /kubectl --namespace=${ns} get --export -o=json ${r} | \
                           jq '.items |= ([ .[] |
