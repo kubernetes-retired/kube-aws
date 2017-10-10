@@ -49,7 +49,13 @@
           {{end}}
         ],
         "LoadBalancerNames" : [
-          {{range $i, $ref := .APIEndpoints.ELBRefs -}}
+          {{range $i, $ref := .APIEndpoints.ELBClassicRefs -}}
+          {{- if gt $i 0}},{{end}}
+          {{ $ref }}
+          {{- end}}
+        ],
+        "TargetGroupARNs": [
+          {{range $i, $ref := .APIEndpoints.ELBV2TargetGroupRefs -}}
           {{- if gt $i 0}},{{end}}
           {{ $ref }}
           {{- end}}
@@ -233,16 +239,25 @@
                   "Resource": [ "*" ]
                 },
                 {{end}}
-                {{if .Addons.ClusterAutoscaler.Enabled}}
+                {{if (and .Addons.ClusterAutoscaler.Enabled .Experimental.ClusterAutoscalerSupport.Enabled) }}
                 {
-                "Effect": "Allow",
                   "Action": [
                     "autoscaling:DescribeAutoScalingGroups",
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeTags",
+                    "autoscaling:DescribeTags"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
                     "autoscaling:SetDesiredCapacity",
                     "autoscaling:TerminateInstanceInAutoScalingGroup"
                   ],
+                  "Condition": {
+                    "Null": { "autoscaling:ResourceTag/kubernetes.io/cluster/{{.ClusterName}}": "false" }
+                  },
+                  "Effect": "Allow",
                   "Resource": "*"
                 },
                 {{end}}
@@ -264,7 +279,8 @@
                 {
                   "Action": [
                     "autoscaling:DescribeAutoScalingInstances",
-                    "autoscaling:DescribeLifecycleHooks"
+                    "autoscaling:DescribeLifecycleHooks",
+                    "autoscaling:DescribeAutoScalingGroups"
                   ],
                   "Effect": "Allow",
                   "Resource": "*"
@@ -708,7 +724,7 @@
                     "{{$.ClusterName}}",
                   "'\n",
                   "ETCDCTL_CACERT='",
-                    "/etc/ssl/certs/ca.pem",
+                    "/etc/ssl/certs/etcd-trusted-ca.pem",
                   "'\n",
                   "ETCDCTL_CERT='",
                     "/etc/ssl/certs/etcd-client.pem",
@@ -717,7 +733,7 @@
                     "/etc/ssl/certs/etcd-client-key.pem",
                   "'\n",
                   "ETCDCTL_CA_FILE='",
-                    "/etc/ssl/certs/ca.pem",
+                    "/etc/ssl/certs/etcd-trusted-ca.pem",
                   "'\n",
                   "ETCDCTL_CERT_FILE='",
                     "/etc/ssl/certs/etcd-client.pem",
@@ -886,6 +902,50 @@
       }
     },
     {{ end -}}
+    {{ if .LoadBalancer.NetworkLoadBalancer }}
+    "{{.LoadBalancer.LogicalName}}TargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "HealthCheckIntervalSeconds": "10",
+        "HealthyThresholdCount": "3",
+        "UnhealthyThresholdCount": "3",
+        "Port": "443",
+        "VpcId": {{$.VPCRef}},
+        "Protocol": "TCP"
+      }
+    },
+    "{{.LoadBalancer.LogicalName}}Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {"Ref": "{{.LoadBalancer.LogicalName}}TargetGroup"},
+            "Type": "forward"
+          }
+        ],
+        "LoadBalancerArn": {"Ref": "{{.LoadBalancer.LogicalName}}"},
+        "Port": "443",
+        "Protocol": "TCP"
+      }
+    },
+    "{{.LoadBalancer.LogicalName}}" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties" : {
+        "Type": "network",
+        "Subnets" : [
+          {{range $index, $subnet := .LoadBalancer.Subnets}}
+          {{if gt $index 0}},{{end}}
+          {{$subnet.Ref}}
+          {{end}}
+        ],
+        {{if .LoadBalancer.Private}}
+        "Scheme": "internal"
+        {{else}}
+        "Scheme": "internet-facing"
+        {{end}}
+      }
+    },
+    {{ else }}
     "{{.LoadBalancer.LogicalName}}" : {
       "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties" : {
@@ -927,6 +987,7 @@
         ]
       }
     },
+    {{ end }}
     {{if .LoadBalancer.ManageSecurityGroup -}}
     "{{.LoadBalancer.SecurityGroupLogicalName}}" : {
       "Properties": {
@@ -1020,6 +1081,23 @@
             "ToPort": 22
           },
           {{end -}}
+          {{ if $.KubeClusterSettings.APIEndpointConfigs.HasNetworkLoadBalancers }}
+          {{/* Needed for NLB health checks and to allow worker nodes to contact the API servers. */}}
+          {
+            "CidrIp": "{{.VPCCIDR}}",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+          {{ range $_, $r := $.APIAccessAllowedSourceCIDRsForControllerSG -}}
+          {
+            "CidrIp": "{{$r}}",
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443
+          },
+          {{ end -}}
+          {{ end }}
           {
             "SourceSecurityGroupId" : { "Ref" : "SecurityGroupElbAPIServer" },
             "FromPort": 443,

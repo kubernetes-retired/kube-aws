@@ -58,7 +58,12 @@ etcdEndpoints: "10.0.0.1"
 	mainClusterYaml := `
 region: ap-northeast-1
 availabilityZone: ap-northeast-1a
-externalDNSName: kubeawstest.example.com
+apiEndpoints:
+- name: public
+  dnsName: kubeawstest.example.com
+  loadBalancer:
+    hostedZone:
+      id: hostedzone-xxxx
 sshAuthorizedKeys:
 - mydummysshpublickey
 kmsKeyArn: mykmskeyarn

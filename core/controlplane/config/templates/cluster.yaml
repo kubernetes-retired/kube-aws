@@ -29,7 +29,7 @@ amiId: "{{.AmiId}}"
 # Required if there are 2 or more API endpoints defined in `apiEndpoints`
 #adminAPIEndpointName: versionedPublic
 
-# Kubernetes API endpoints with each one has a DNS name and is with/without a managed/unmanaged ELB, Route 53 record set
+# Kubernetes API endpoints with each one has a DNS name and is with/without a managed/unmanaged load balancer, Route 53 record set
 # CAUTION: `externalDNSName` must be omitted when there are one or more items under `apiEndpoints`
 apiEndpoints:
 - # The unique name of this API endpoint used to identify it inside CloudFormation stacks or
@@ -43,8 +43,8 @@ apiEndpoints:
   # for you.  Otherwise the deployer is responsible for making this name routable
   dnsName: {{.ExternalDNSName}}
 
-  # Configuration for an ELB serving this endpoint
-  # Omit all the settings when you want kube-aws not to provision an ELB for you
+  # Configuration for the load balancer serving this endpoint
+  # Omit all the settings when you want kube-aws not to provision a load balancer for you
   loadBalancer:
     # Specifies an existing load-balancer used for load-balancing controller nodes and serving this endpoint
     # Setting id requires all the other settings excluding `name` to be omitted because reusing an ELB implies that configuring other resources
@@ -52,13 +52,6 @@ apiEndpoints:
     # Also, don't forget to add controller.securityGroupIds to include a glue SG to allow your existing ELB to access controller nodes created by kube-aws
     #id: existing-elb
 
-    # Set to true when you want kube-aws to create a Route53 ALIAS record set for this API load balancer for you
-    # Must be omitted when `id` is specified
-    {{if .HostedZoneID -}}
-    createRecordSet: true
-    {{else -}}
-    createRecordSet: false
-    {{- end}}
     # All the subnets assigned to this load-balancer. Specified only when this load balancer is not reused but managed one
     # Must be omitted when `id` is specified
     #subnets:
@@ -69,11 +62,25 @@ apiEndpoints:
     # Must be omitted when `id` is specified
     #private: false
 
-    # TTL in seconds for the Route53 RecordSet created if createRecordSet is set to true.
+    # Set to 'network' to provision a Network Load Balancer instead of a classic ELB; this will cause
+    # the controller nodes SG to allow inbound traffic from the VPC CIDR to port 443 TCP, see:
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-register-targets.html
+    # Must be omitted when `id` is specified
+    #type: classic
+
+    # TTL in seconds for the Route53 RecordSet created if hostedZone.id is set to a non-nil value.
     #recordSetTTL: 300
 
+    {{if .NoRecordSet -}}
+    recordSetManaged: false
+    {{- end}}
+
     # The Route 53 hosted zone is where the resulting Alias record is created for this endpoint
-    # Must be omitted when `id` is specified
+    #
+    # Omitting hostedZone.id implies you must configure Route 53 hosted zone and record set or your own DNS so that worker nodes
+    # are able to resolve DNS names of this API endpoint.
+    #
+    # Must be omitted when `id` is specified because kube-aws doesn't deal with the existing ELB by design
     {{if .HostedZoneID -}}
     hostedZone:
       # The ID of hosted zone to add the dnsName to.
@@ -116,6 +123,18 @@ apiEndpoints:
 #  #
 #  - name: extra
 #    dnsName: youralias.example.com
+#    loadBalancer:
+#      managed: false
+#
+#  #
+#  # Uncommon configuration #1: Managed, internet-facing API endpoint, without a Route53 record set
+#  #
+#  - name: elbOnly
+#    dnsName: youralias.example.com
+#    loadBalancer:
+#      # Setting this to false allows you to omit hostedZone.id and hence the creation of Route53 record set is skipped
+#      recordSetManaged: false
+#
 
 # Name of the SSH keypair already loaded into the AWS
 # account being used to deploy this cluster.
@@ -221,9 +240,6 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #        [Service]
 #        ExecStart=/bin/rkt run --set-env TAGS=Controller ...
 
-# Default number of worker nodes per node pool to create, for more control use `worker.nodePools[].count` and/or `worker.autoScalingGroup` and do not use this setting
-#workerCount: 1
-
 worker:
 #
 #  # Settings that apply to all worker node pools
@@ -320,6 +336,7 @@ worker:
 #      #
 #
 #      # Number of worker nodes to create for an autoscaling group based pool
+#      # Specify `worker.autoScalingGroup` instead for more control over its min/max/desired capacity.
 #      count: 1
 #
 #      # Instance type for worker nodes
@@ -921,7 +938,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.7.4_coreos.0
+# kubernetesVersion: v1.7.6_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -973,13 +990,13 @@ worker:
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -991,7 +1008,7 @@ worker:
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  repo: gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.4
+#  tag: 1.14.5
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1206,10 +1223,6 @@ addons:
 #     clientId: "kubernetes"
 #     usernameClaim: "email"
 #     groupsClaim: "groups"
-#
-#   plugins:
-#     rbac:
-#       enabled: true
 #
 #   # When set to true this configures the k8s aws provider so that it doesn't modify every node's security group to include an additional ingress rule per an ELB created for a k8s service whose type is "LoadBalancer"
 #   # It requires that the user has setup a rule that allows inbound traffic on kubelet ports
