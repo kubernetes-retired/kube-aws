@@ -631,7 +631,7 @@ worker:
 #      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
-#  version: 3.2.6
+#  version: 3.2.9
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
@@ -938,7 +938,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.7.6_coreos.0
+# kubernetesVersion: v1.7.8_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -954,49 +954,49 @@ worker:
 # Calico Node image repository to use.
 #calicoNodeImage:
 #  repo: quay.io/calico/node
-#  tag: v1.2.0
+#  tag: v2.6.1
 #  rktPullDocker: false
 
 # Calico CNI image repository to use.
 #calicoCniImage:
 #  repo: quay.io/calico/cni
-#  tag: v1.8.3
+#  tag: v1.11.0
 #  rktPullDocker: false
 
-# Calico Policy Controller image repository to use.
-#calicoPolicyControllerImage:
-#  repo: quay.io/calico/kube-policy-controller
-#  tag: v0.6.0
+# Calico Kube Controllers image repository to use.
+#calicoKubeControllersImage:
+#  repo: quay.io/calico/kube-controllers
+#  tag: v1.0.0
 #  rktPullDocker: false
 
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-autoscaler
-#  tag: v0.6.0
+#  tag: v0.6.2
 #  rktPullDocker: false
 
 # Cluster Proportional Autoscaler image repository to use.
 #clusterProportionalAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-proportional-autoscaler-amd64
-#  tag: 1.1.1
+#  tag: 1.1.2
 #  rktPullDocker: false
 
 # kube2iam image repository to use.
 #kube2iamImage:
 #  repo: jtblin/kube2iam
-#  tag: 0.7.0
+#  tag: 0.8.1
 #  rktPullDocker: false
 
 # kube DNS image repository to use.
 #kubeDnsImage:
-#  repo: gcr.io/google_containers/kubedns-amd64
-#  tag: 1.14.5
+#  repo: gcr.io/google_containers/k8s-dns-kube-dns-amd64
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.5
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1008,7 +1008,7 @@ worker:
 # DNS Masq metrics image repository to use.
 #dnsMasqMetricsImage:
 #  repo: gcr.io/google_containers/k8s-dns-sidecar-amd64
-#  tag: 1.14.5
+#  tag: 1.14.6
 #  rktPullDocker: false
 
 # Exec Healthz image repository to use.
@@ -1026,19 +1026,19 @@ worker:
 # Tiller (Helm backend) image repository to use.
 #tillerImage:
 #  repo: gcr.io/kubernetes-helm/tiller
-#  tag: v2.6.0
+#  tag: v2.6.2
 #  rktPullDocker: false
 
 # Heapster image repository to use.
 #heapsterImage:
 #  repo: gcr.io/google_containers/heapster
-#  tag: v1.4.1
+#  tag: v1.4.3
 #  rktPullDocker: false
 
 # Addon Resizer image repository to use.
 #addonResizerImage:
 #  repo: gcr.io/google_containers/addon-resizer
-#  tag: 2.0
+#  tag: 2.1
 #  rktPullDocker: false
 
 # Kube Dashboard image repository to use.
@@ -1050,7 +1050,7 @@ worker:
 # Calico Controller image repository to use.
 #calicoCtlImage:
 #  repo: calico/ctl
-#  tag: v1.2.0
+#  tag: v1.6.1
 #  rktPullDocker: false
 
 # Pause image repository to use.This works only if you are deploying your cluster in "cn-north-1" region.
@@ -1062,7 +1062,7 @@ worker:
 # Flannel image repository to use.This allow pulling flannel image from a docker repo.
 #flannelImage:
 #  repo: quay.io/coreos/flannel
-#  tag: v0.7.1
+#  tag: v0.9.0
 #  rktPullDocker: false
 
 # JournaldCloudWatchLogsImage image repository to use. This sends journald logs to CloudWatch.

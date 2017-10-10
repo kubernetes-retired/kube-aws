@@ -994,7 +994,7 @@ write_files:
       apiVersion: extensions/v1beta1
       kind: Deployment
       metadata:
-        name: calico-policy-controller
+        name: calico-kube-controllers
         namespace: kube-system
         labels:
           k8s-app: calico-policy
@@ -1005,7 +1005,7 @@ write_files:
         replicas: 1
         template:
           metadata:
-            name: calico-policy-controller
+            name: calico-kube-controllers
             namespace: kube-system
             labels:
               k8s-app: calico-policy
@@ -1019,8 +1019,8 @@ write_files:
               operator: "Exists"
             hostNetwork: true
             containers:
-              - name: calico-policy-controller
-                image: {{ .CalicoPolicyControllerImage.RepoWithTag }}
+              - name: calico-kube-controllers
+                image: {{ .CalicoKubeControllersImage.RepoWithTag }}
                 env:
                   - name: ETCD_ENDPOINTS
                     valueFrom:
