@@ -1044,12 +1044,7 @@ worker:
 # Kube Dashboard image repository to use.
 #kubeDashboardImage:
 #  repo: gcr.io/google_containers/kubernetes-dashboard-amd64
-#  tag: v1.7.1
-#  rktPullDocker: false
-
-#kubeDashboardInitImage:
-#  repo: gcr.io/google_containers/kubernetes-dashboard-init-amd64
-#  tag: v1.0.0
+#  tag: v1.6.3
 #  rktPullDocker: false
 
 # Calico Controller image repository to use.
