@@ -1806,6 +1806,9 @@ write_files:
           {{if .Experimental.Oidc.GroupsClaim}}
           - --oidc-groups-claim={{.Experimental.Oidc.GroupsClaim}}
           {{ end -}}
+          {{ if .ManageCertificates}}
+          - --oidc-ca-file=/etc/kubernetes/ssl/ca.pem
+          {{ end -}}
           {{ end -}}
           - --cert-dir=/etc/kubernetes/ssl
           - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
@@ -2738,6 +2741,16 @@ write_files:
   - path: /etc/kubernetes/ssl/etcd-trusted-ca.pem
     encoding: gzip+base64
     content: {{.AssetsConfig.EtcdTrustedCA}}
+
+{{ if .Experimental.Oidc.Enabled }}
+  - path: /etc/kubernetes/ssl/oidc.pem
+    encoding: gzip+base64
+    content: {{.AssetsConfig.OidcCert}}
+
+  - path: /etc/kubernetes/ssl/oidc-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
+    encoding: gzip+base64
+    content: {{.AssetsConfig.OidcKey}}
+{{ end }}
 {{ end }}
 
   # File needed on every node (used by the kube-proxy DaemonSet), including controllers

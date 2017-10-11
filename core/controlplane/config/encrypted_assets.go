@@ -39,6 +39,8 @@ type RawAssetsOnMemory struct {
 	EtcdKey        []byte
 	EtcdClientKey  []byte
 	EtcdTrustedCA  []byte
+	OidcCert       []byte
+	OidcKey        []byte
 
 	// Other assets.
 	AuthTokens        []byte
@@ -62,6 +64,8 @@ type RawAssetsOnDisk struct {
 	EtcdKey        RawCredentialOnDisk
 	EtcdClientKey  RawCredentialOnDisk
 	EtcdTrustedCA  RawCredentialOnDisk
+	OidcCert       RawCredentialOnDisk
+	OidcKey        RawCredentialOnDisk
 
 	// Other assets.
 	AuthTokens        RawCredentialOnDisk
@@ -85,6 +89,8 @@ type EncryptedAssetsOnDisk struct {
 	EtcdKey        EncryptedCredentialOnDisk
 	EtcdClientKey  EncryptedCredentialOnDisk
 	EtcdTrustedCA  EncryptedCredentialOnDisk
+	OidcCert       EncryptedCredentialOnDisk
+	OidcKey        EncryptedCredentialOnDisk
 
 	// Other encrypted assets.
 	AuthTokens        EncryptedCredentialOnDisk
@@ -108,6 +114,8 @@ type CompactAssets struct {
 	EtcdClientKey  string
 	EtcdKey        string
 	EtcdTrustedCA  string
+	OidcCert       string
+	OidcKey        string
 
 	// Encrypted -> gzip -> base64 encoded assets.
 	AuthTokens        string
@@ -206,14 +214,14 @@ func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certific
 	certDuration := time.Duration(c.TLSCertDurationDays) * 24 * time.Hour
 
 	// Generate keys for the various components.
-	keys := make([]*rsa.PrivateKey, 5)
+	keys := make([]*rsa.PrivateKey, 6)
 	var err error
 	for i := range keys {
 		if keys[i], err = tlsutil.NewPrivateKey(); err != nil {
 			return nil, err
 		}
 	}
-	apiServerKey, workerKey, adminKey, etcdKey, etcdClientKey := keys[0], keys[1], keys[2], keys[3], keys[4]
+	apiServerKey, workerKey, adminKey, etcdKey, etcdClientKey, oidcKey := keys[0], keys[1], keys[2], keys[3], keys[4], keys[5]
 
 	//Compute kubernetesServiceIP from serviceCIDR
 	_, serviceNet, err := net.ParseCIDR(c.ServiceCIDR)
@@ -288,6 +296,16 @@ func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certific
 	if err != nil {
 		return nil, err
 	}
+	oidcConfig := tlsutil.ServerCertConfig{
+		CommonName: "oidc",
+		DNSNames:   []string{"oidc"},
+		Duration:   certDuration,
+	}
+
+	oidcCert, err := tlsutil.NewSignedServerCertificate(oidcConfig, oidcKey, caCert, caKey)
+	if err != nil {
+		return nil, err
+	}
 
 	authTokens := ""
 
@@ -303,12 +321,14 @@ func (c *Cluster) NewAssetsOnMemory(caKey *rsa.PrivateKey, caCert *x509.Certific
 		AdminCert:      tlsutil.EncodeCertificatePEM(adminCert),
 		EtcdCert:       tlsutil.EncodeCertificatePEM(etcdCert),
 		EtcdClientCert: tlsutil.EncodeCertificatePEM(etcdClientCert),
+		OidcCert:       tlsutil.EncodeCertificatePEM(oidcCert),
 		CAKey:          tlsutil.EncodePrivateKeyPEM(caKey),
 		APIServerKey:   tlsutil.EncodePrivateKeyPEM(apiServerKey),
 		WorkerKey:      tlsutil.EncodePrivateKeyPEM(workerKey),
 		AdminKey:       tlsutil.EncodePrivateKeyPEM(adminKey),
 		EtcdKey:        tlsutil.EncodePrivateKeyPEM(etcdKey),
 		EtcdClientKey:  tlsutil.EncodePrivateKeyPEM(etcdClientKey),
+		OidcKey:        tlsutil.EncodePrivateKeyPEM(oidcKey),
 
 		AuthTokens:        []byte(authTokens),
 		TLSBootstrapToken: []byte(tlsBootstrapToken),
@@ -352,6 +372,8 @@ func ReadRawAssets(dirname string, manageCertificates bool, caKeyRequiredOnContr
 			{"etcd-client.pem", &r.EtcdClientCert, nil},
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil},
 			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil},
+			{"oidc.pem", &r.OidcCert, nil},
+			{"oidc-key.pem", &r.OidcKey, nil},
 		}...)
 
 		if caKeyRequiredOnController {
@@ -408,6 +430,8 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, caKeyRequiredO
 			{"etcd-client.pem", &r.EtcdClientCert, nil, false},
 			{"etcd-client-key.pem", &r.EtcdClientKey, nil, true},
 			{"etcd-trusted-ca.pem", &r.EtcdTrustedCA, nil, false},
+			{"oidc.pem", &r.OidcCert, nil, false},
+			{"oidc-key.pem", &r.OidcKey, nil, true},
 		}...)
 
 		if caKeyRequiredOnController {
@@ -459,6 +483,8 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 		{"etcd-client.pem", r.EtcdClientCert, true},
 		{"etcd-client-key.pem", r.EtcdClientKey, true},
 		{"etcd-trusted-ca.pem", r.EtcdTrustedCA, true},
+		{"oidc.pem", r.OidcCert, true},
+		{"oidc-key.pem", r.OidcKey, true},
 		{"kubelet-tls-bootstrap-token", r.TLSBootstrapToken, true},
 
 		// Content entirely provided by user, so do not overwrite it if
@@ -560,6 +586,8 @@ func (r *EncryptedAssetsOnDisk) WriteToDir(dirname string) error {
 		{"admin-key.pem", r.AdminKey},
 		{"etcd.pem", r.EtcdCert},
 		{"etcd-key.pem", r.EtcdKey},
+		{"oidc.pem", r.OidcCert},
+		{"oidc-key.pem", r.OidcKey},
 		{"etcd-client.pem", r.EtcdClientCert},
 		{"etcd-client-key.pem", r.EtcdClientKey},
 		{"etcd-trusted-ca.pem", r.EtcdTrustedCA},
@@ -610,6 +638,8 @@ func (r *RawAssetsOnDisk) Compact() (*CompactAssets, error) {
 		EtcdClientKey:  compact(r.EtcdClientKey),
 		EtcdKey:        compact(r.EtcdKey),
 		EtcdTrustedCA:  compact(r.EtcdTrustedCA),
+		OidcCert:       compact(r.OidcCert),
+		OidcKey:        compact(r.OidcKey),
 
 		AuthTokens:        compact(r.AuthTokens),
 		TLSBootstrapToken: compact(r.TLSBootstrapToken),
@@ -654,6 +684,8 @@ func (r *EncryptedAssetsOnDisk) Compact() (*CompactAssets, error) {
 		EtcdClientKey:  compact(r.EtcdClientKey),
 		EtcdKey:        compact(r.EtcdKey),
 		EtcdTrustedCA:  compact(r.EtcdTrustedCA),
+		OidcCert:       compact(r.OidcCert),
+		OidcKey:        compact(r.OidcKey),
 
 		AuthTokens:        compact(r.AuthTokens),
 		TLSBootstrapToken: compact(r.TLSBootstrapToken),
