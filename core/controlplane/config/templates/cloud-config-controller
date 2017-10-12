@@ -755,6 +755,9 @@ write_files:
       done
       {{ end }}
 
+      # Secrets
+      kubectl apply -f "${mfdir}/kubernetes-dashboard-se.yaml"
+
       # Configmaps
       kubectl apply -f "${mfdir}/kube-dns-cm.yaml"
 
@@ -762,9 +765,6 @@ write_files:
       for manifest in {kube-dns,heapster,kube-proxy,kubernetes-dashboard}; do
           kubectl apply -f "${mfdir}/$manifest-sa.yaml"
       done
-
-      # Secrets
-      kubectl apply -f "${mfdir}/kubernetes-dashboard-se.yaml"
 
       # Install tiller by default
       kubectl apply -f "${mfdir}/tiller.yaml"
@@ -802,6 +802,10 @@ write_files:
       for manifest in {kube-admin,system-worker,node,node-proxier,node-extensions,heapster}; do
           kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
       done
+
+      {{ if .KubeDashboardAdminPrivileges }}
+      kubectl apply -f "${mfdir}/cluster-role-bindings/kubernetes-dashboard-admin.yaml"
+      {{- end }}
 
       # Roles and bindings
       for manifest in {pod-nanny,kubernetes-dashboard}; do
@@ -1703,42 +1707,61 @@ write_files:
           apiGroup: rbac.authorization.k8s.io
 {{ end }}
 
-#kubernetes dashboard
-- path: /srv/kubernetes/rbac/roles/kubernetes-dashboard.yaml
-  content: |
-      kind: Role
-      apiVersion: rbac.authorization.k8s.io/v1beta1
-      metadata:
-        name: kubernetes-dashboard-minimal
-        namespace: kube-system
-      rules:
-      - apiGroups: [""]
-        resources: ["secrets"]
-        verbs: ["create", "watch"]
-      - apiGroups: [""]
-        resources: ["secrets"]
-        resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
-        verbs: ["get", "update", "delete"]
-      - apiGroups: [""]
-        resources: ["services"]
-        resourceNames: ["heapster"]
-        verbs: ["proxy"]
-
-- path: /srv/kubernetes/rbac/role-bindings/kubernetes-dashboard.yaml
-  content: |
-      apiVersion: rbac.authorization.k8s.io/v1beta1
-      kind: RoleBinding
-      metadata:
-        name: kubernetes-dashboard-minimal
-        namespace: kube-system
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
+  #kubernetes dashboard
+  - path: /srv/kubernetes/rbac/roles/kubernetes-dashboard.yaml
+    content: |
         kind: Role
-        name: kubernetes-dashboard-minimal
-      subjects:
-      - kind: ServiceAccount
-        name: kubernetes-dashboard
-        namespace: kube-system
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        metadata:
+          name: kubernetes-dashboard-minimal
+          namespace: kube-system
+        rules:
+        - apiGroups: [""]
+          resources: ["secrets"]
+          verbs: ["create", "watch"]
+        - apiGroups: [""]
+          resources: ["secrets"]
+          resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+          verbs: ["get", "update", "delete"]
+        - apiGroups: [""]
+          resources: ["services"]
+          resourceNames: ["heapster"]
+          verbs: ["proxy"]
+
+  - path: /srv/kubernetes/rbac/role-bindings/kubernetes-dashboard.yaml
+    content: |
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        kind: RoleBinding
+        metadata:
+          name: kubernetes-dashboard-minimal
+          namespace: kube-system
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
+          name: kubernetes-dashboard-minimal
+        subjects:
+        - kind: ServiceAccount
+          name: kubernetes-dashboard
+          namespace: kube-system
+
+{{ if .KubeDashboardAdminPrivileges }}
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/kubernetes-dashboard-admin.yaml
+    content: |
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        kind: ClusterRoleBinding
+        metadata:
+          name: kubernetes-dashboard
+          labels:
+            k8s-app: kubernetes-dashboard
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: kubernetes-dashboard
+          namespace: kube-system
+{{ end }}
 
   - path: /srv/kubernetes/manifests/kube-proxy-ds.yaml
     content: |
@@ -2561,17 +2584,7 @@ write_files:
           selector:
             k8s-app: heapster
 
-  - path: /srv/kubernetes/manifests/kubernetes-dashboard-sa.yaml
-    content: |
-        apiVersion: v1
-        kind: ServiceAccount
-        metadata:
-          labels:
-            k8s-app: kubernetes-dashboard
-          name: kubernetes-dashboard
-          namespace: kube-system
-
-- path: /srv/kubernetes/manifests/kubernetes-dashboard-se.yaml
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-se.yaml
     content: |
         apiVersion: v1
         kind: Secret
@@ -2582,7 +2595,17 @@ write_files:
           namespace: kube-system
         type: Opaque
 
-- path: /srv/kubernetes/manifests/kubernetes-dashboard-de.yaml
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-sa.yaml
+    content: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          labels:
+            k8s-app: kubernetes-dashboard
+          name: kubernetes-dashboard
+          namespace: kube-system
+
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-de.yaml
     content: |
         kind: Deployment
         apiVersion: extensions/v1beta1
@@ -2645,7 +2668,7 @@ write_files:
               - key: "CriticalAddonsOnly"
                 operator: "Exists"
 
-- path: /srv/kubernetes/manifests/kubernetes-dashboard-svc.yaml
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-svc.yaml
     content: |
         kind: Service
         apiVersion: v1

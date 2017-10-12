@@ -363,8 +363,9 @@ type KubeClusterSettings struct {
 	// Required by kubelet to locate the kube-apiserver
 	ExternalDNSName string `yaml:"externalDNSName,omitempty"`
 	// Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
-	DNSServiceIP string `yaml:"dnsServiceIP,omitempty"`
-	UseCalico    bool   `yaml:"useCalico,omitempty"`
+	DNSServiceIP                 string `yaml:"dnsServiceIP,omitempty"`
+	UseCalico                    bool   `yaml:"useCalico,omitempty"`
+	KubeDashboardAdminPrivileges bool   `yaml:"kubeDashboardAdminPrivileges,omitempty"`
 }
 
 // Part of configuration which can't be provided via user input but is computed from user input
