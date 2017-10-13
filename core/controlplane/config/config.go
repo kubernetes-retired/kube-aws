@@ -436,7 +436,7 @@ type DeploymentSettings struct {
 	HeapsterImage                      model.Image `yaml:"heapsterImage,omitempty"`
 	AddonResizerImage                  model.Image `yaml:"addonResizerImage,omitempty"`
 	KubeDashboardImage                 model.Image `yaml:"kubeDashboardImage,omitempty"`
-	KubeDashboardInitImage             model.Image `yaml:"kubeDashboardinitImage,omitempty"`
+	KubeDashboardInitImage             model.Image `yaml:"kubeDashboardInitImage,omitempty"`
 	PauseImage                         model.Image `yaml:"pauseImage,omitempty"`
 	FlannelImage                       model.Image `yaml:"flannelImage,omitempty"`
 	JournaldCloudWatchLogsImage        model.Image `yaml:"journaldCloudWatchLogsImage,omitempty"`
