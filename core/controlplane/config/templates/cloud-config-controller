@@ -755,11 +755,14 @@ write_files:
       done
       {{ end }}
 
+      # Secrets
+      kubectl apply -f "${mfdir}/kubernetes-dashboard-se.yaml"
+
       # Configmaps
       kubectl apply -f "${mfdir}/kube-dns-cm.yaml"
 
       # Service Accounts
-      for manifest in {kube-dns,heapster,kube-proxy}; do
+      for manifest in {kube-dns,heapster,kube-proxy,kubernetes-dashboard}; do
           kubectl apply -f "${mfdir}/$manifest-sa.yaml"
       done
 
@@ -772,7 +775,7 @@ write_files:
 {{ end }}
 
       # Deployments
-      for manifest in {kube-dns,kube-dns-autoscaler,kube-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
+      for manifest in {kube-dns,kube-dns-autoscaler,kubernetes-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
           kubectl apply -f "${mfdir}/$manifest-de.yaml"
       done
 
@@ -782,7 +785,7 @@ write_files:
       done
 
       # Services
-      for manifest in {kube-dns,heapster,kube-dashboard}; do
+      for manifest in {kube-dns,heapster,kubernetes-dashboard}; do
           kubectl apply -f "${mfdir}/$manifest-svc.yaml"
       done
 
@@ -800,11 +803,15 @@ write_files:
           kubectl apply -f "${mfdir}/cluster-role-bindings/$manifest.yaml"
       done
 
+      {{ if .KubeDashboardAdminPrivileges }}
+      kubectl apply -f "${mfdir}/cluster-role-bindings/kubernetes-dashboard-admin.yaml"
+      {{- end }}
+
       # Roles and bindings
-      for manifest in {pod-nanny,}; do
+      for manifest in {pod-nanny,kubernetes-dashboard}; do
           kubectl apply -f "${mfdir}/roles/$manifest.yaml"
       done
-      for manifest in {heapster-nanny,}; do
+      for manifest in {heapster-nanny,kubernetes-dashboard}; do
           kubectl apply -f "${mfdir}/role-bindings/$manifest.yaml"
       done
 
@@ -1700,6 +1707,62 @@ write_files:
           apiGroup: rbac.authorization.k8s.io
 {{ end }}
 
+  #kubernetes dashboard
+  - path: /srv/kubernetes/rbac/roles/kubernetes-dashboard.yaml
+    content: |
+        kind: Role
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        metadata:
+          name: kubernetes-dashboard-minimal
+          namespace: kube-system
+        rules:
+        - apiGroups: [""]
+          resources: ["secrets"]
+          verbs: ["create", "watch"]
+        - apiGroups: [""]
+          resources: ["secrets"]
+          resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+          verbs: ["get", "update", "delete"]
+        - apiGroups: [""]
+          resources: ["services"]
+          resourceNames: ["heapster"]
+          verbs: ["proxy"]
+
+  - path: /srv/kubernetes/rbac/role-bindings/kubernetes-dashboard.yaml
+    content: |
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        kind: RoleBinding
+        metadata:
+          name: kubernetes-dashboard-minimal
+          namespace: kube-system
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
+          name: kubernetes-dashboard-minimal
+        subjects:
+        - kind: ServiceAccount
+          name: kubernetes-dashboard
+          namespace: kube-system
+
+{{ if .KubeDashboardAdminPrivileges }}
+  - path: /srv/kubernetes/rbac/cluster-role-bindings/kubernetes-dashboard-admin.yaml
+    content: |
+        apiVersion: rbac.authorization.k8s.io/v1beta1
+        kind: ClusterRoleBinding
+        metadata:
+          name: kubernetes-dashboard
+          labels:
+            k8s-app: kubernetes-dashboard
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+        - kind: ServiceAccount
+          name: kubernetes-dashboard
+          namespace: kube-system
+{{ end }}
+
   - path: /srv/kubernetes/manifests/kube-proxy-ds.yaml
     content: |
         apiVersion: extensions/v1beta1
@@ -2521,19 +2584,39 @@ write_files:
           selector:
             k8s-app: heapster
 
-  - path: /srv/kubernetes/manifests/kube-dashboard-de.yaml
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-se.yaml
     content: |
-        apiVersion: extensions/v1beta1
-        kind: Deployment
+        apiVersion: v1
+        kind: Secret
         metadata:
-          name: kubernetes-dashboard
-          namespace: kube-system
           labels:
             k8s-app: kubernetes-dashboard
-            version: {{ .KubeDashboardImage.Tag }}
-            kubernetes.io/cluster-service: "true"
+          name: kubernetes-dashboard-certs
+          namespace: kube-system
+        type: Opaque
+
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-sa.yaml
+    content: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          labels:
+            k8s-app: kubernetes-dashboard
+          name: kubernetes-dashboard
+          namespace: kube-system
+
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-de.yaml
+    content: |
+        kind: Deployment
+        apiVersion: extensions/v1beta1
+        metadata:
+          labels:
+            k8s-app: kubernetes-dashboard
+          name: kubernetes-dashboard
+          namespace: kube-system
         spec:
           replicas: 1
+          revisionHistoryLimit: 10
           selector:
             matchLabels:
               k8s-app: kubernetes-dashboard
@@ -2541,49 +2624,65 @@ write_files:
             metadata:
               labels:
                 k8s-app: kubernetes-dashboard
-                version: {{ .KubeDashboardImage.Tag }}
-                kubernetes.io/cluster-service: "true"
-              annotations:
-                scheduler.alpha.kubernetes.io/critical-pod: ''
             spec:
-              tolerations:
-              - key: "CriticalAddonsOnly"
-                operator: "Exists"
+              initContainers:
+              - name: kubernetes-dashboard-init
+                image: {{ .KubeDashboardInitImage.RepoWithTag }}
+                volumeMounts:
+                - name: kubernetes-dashboard-certs
+                  mountPath: /certs
               containers:
               - name: kubernetes-dashboard
                 image: {{ .KubeDashboardImage.RepoWithTag }}
-                resources:
-                  limits:
-                    cpu: 100m
-                    memory: 50Mi
-                  requests:
-                    cpu: 100m
-                    memory: 50Mi
                 ports:
                 - containerPort: 9090
+                  protocol: TCP
+                args:
+                  - --tls-key-file=/certs/dashboard.key
+                  - --tls-cert-file=/certs/dashboard.crt
+                volumeMounts:
+                - name: kubernetes-dashboard-certs
+                  mountPath: /certs
+                  readOnly: true
+                - mountPath: /tmp
+                  name: tmp-volume
                 livenessProbe:
                   httpGet:
+                    scheme: HTTPS
                     path: /
-                    port: 9090
+                    port: 8443
                   initialDelaySeconds: 30
                   timeoutSeconds: 30
+              volumes:
+              - name: kubernetes-dashboard-certs
+                secret:
+                  secretName: kubernetes-dashboard-certs
+              - name: tmp-volume
+                emptyDir: {}
+              serviceAccountName: kubernetes-dashboard
+              tolerations:
+              - key: "node.alpha.kubernetes.io/role"
+                operator: "Equal"
+                value: "master"
+                effect: "NoSchedule"
+              - key: "CriticalAddonsOnly"
+                operator: "Exists"
 
-  - path: /srv/kubernetes/manifests/kube-dashboard-svc.yaml
+  - path: /srv/kubernetes/manifests/kubernetes-dashboard-svc.yaml
     content: |
-        apiVersion: v1
         kind: Service
+        apiVersion: v1
         metadata:
-          name: kubernetes-dashboard
-          namespace: kube-system
           labels:
             k8s-app: kubernetes-dashboard
-            kubernetes.io/cluster-service: "true"
+          name: kubernetes-dashboard
+          namespace: kube-system
         spec:
+          ports:
+            - port: 443
+              targetPort: 8443
           selector:
             k8s-app: kubernetes-dashboard
-          ports:
-          - port: 80
-            targetPort: 9090
 
   - path: /srv/kubernetes/manifests/tiller.yaml
     content: |

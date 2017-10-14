@@ -147,7 +147,8 @@ func NewDefaultCluster() *Cluster {
 			TillerImage:                        model.Image{Repo: "gcr.io/kubernetes-helm/tiller", Tag: "v2.6.2", RktPullDocker: false},
 			HeapsterImage:                      model.Image{Repo: "gcr.io/google_containers/heapster", Tag: "v1.4.3", RktPullDocker: false},
 			AddonResizerImage:                  model.Image{Repo: "gcr.io/google_containers/addon-resizer", Tag: "2.1", RktPullDocker: false},
-			KubeDashboardImage:                 model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-amd64", Tag: "v1.6.3", RktPullDocker: false},
+			KubeDashboardImage:                 model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-amd64", Tag: "v1.7.1", RktPullDocker: false},
+			KubeDashboardInitImage:             model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-init-amd64", Tag: "v1.0.0", RktPullDocker: false},
 			PauseImage:                         model.Image{Repo: "gcr.io/google_containers/pause-amd64", Tag: "3.0", RktPullDocker: false},
 			FlannelImage:                       model.Image{Repo: "quay.io/coreos/flannel", Tag: "v0.9.0", RktPullDocker: false},
 			JournaldCloudWatchLogsImage:        model.Image{Repo: "jollinshead/journald-cloudwatch-logs", Tag: "0.1", RktPullDocker: true},
@@ -362,8 +363,9 @@ type KubeClusterSettings struct {
 	// Required by kubelet to locate the kube-apiserver
 	ExternalDNSName string `yaml:"externalDNSName,omitempty"`
 	// Required by kubelet to locate the cluster-internal dns hosted on controller nodes in the base cluster
-	DNSServiceIP string `yaml:"dnsServiceIP,omitempty"`
-	UseCalico    bool   `yaml:"useCalico,omitempty"`
+	DNSServiceIP                 string `yaml:"dnsServiceIP,omitempty"`
+	UseCalico                    bool   `yaml:"useCalico,omitempty"`
+	KubeDashboardAdminPrivileges bool   `yaml:"kubeDashboardAdminPrivileges,omitempty"`
 }
 
 // Part of configuration which can't be provided via user input but is computed from user input
@@ -434,6 +436,7 @@ type DeploymentSettings struct {
 	HeapsterImage                      model.Image `yaml:"heapsterImage,omitempty"`
 	AddonResizerImage                  model.Image `yaml:"addonResizerImage,omitempty"`
 	KubeDashboardImage                 model.Image `yaml:"kubeDashboardImage,omitempty"`
+	KubeDashboardInitImage             model.Image `yaml:"kubeDashboardInitImage,omitempty"`
 	PauseImage                         model.Image `yaml:"pauseImage,omitempty"`
 	FlannelImage                       model.Image `yaml:"flannelImage,omitempty"`
 	JournaldCloudWatchLogsImage        model.Image `yaml:"journaldCloudWatchLogsImage,omitempty"`
