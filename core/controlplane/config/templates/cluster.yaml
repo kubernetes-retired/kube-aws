@@ -1044,8 +1044,12 @@ worker:
 # Kube Dashboard image repository to use.
 #kubeDashboardImage:
 #  repo: gcr.io/google_containers/kubernetes-dashboard-amd64
-#  tag: v1.6.3
+#  tag: v1.7.1
 #  rktPullDocker: false
+
+#kubeDashboardInitImage:
+#  repo: gcr.io/google_containers/kubernetes-dashboard-init-amd64
+#  tag: v1.0.0
 
 # Calico Controller image repository to use.
 #calicoCtlImage:
@@ -1117,6 +1121,12 @@ worker:
 # The autosave process executes on start-up and repeats every 24 hours.
 #kubeResourcesAutosave:
 #  enabled: false
+
+# By default, the kubernetes dashboard has admin privileges and doesn't require authentication.
+# Set to "false" to restrict access using a token or kubeconfig file.
+# Please check https://github.com/kubernetes-incubator/kube-aws/pull/971 for more info
+
+#kubeDashboardAdminPrivileges: true
 
 # When enabled, all nodes will forward journald logs to AWS CloudWatch.
 # It is disabled by default.
