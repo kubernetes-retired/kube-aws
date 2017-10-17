@@ -1286,6 +1286,7 @@ write_files:
 
       systemd-nspawn -i ${DEV_CONTAINER} \
         --bind=${PWD}/_container_build.sh:/build.sh \
+        --bind=${PWD}/git_versions.sh:/git_versions.sh \
         --bind=${PWD}/${WORK_DIR}:/nvidia_installers \
         /bin/bash -x /build.sh ${EMERGE_SOURCES} ${DRIVER_VERSION} || echo "nspawn fails as expected.  Because kernel modules can't install in the container"
 
