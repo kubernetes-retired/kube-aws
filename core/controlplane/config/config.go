@@ -148,7 +148,7 @@ func NewDefaultCluster() *Cluster {
 			HeapsterImage:                      model.Image{Repo: "gcr.io/google_containers/heapster", Tag: "v1.4.3", RktPullDocker: false},
 			AddonResizerImage:                  model.Image{Repo: "gcr.io/google_containers/addon-resizer", Tag: "2.1", RktPullDocker: false},
 			KubeDashboardImage:                 model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-amd64", Tag: "v1.7.1", RktPullDocker: false},
-			KubeDashboardInitImage:             model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-init-amd64", Tag: "v1.0.0", RktPullDocker: false},
+			KubeDashboardInitImage:             model.Image{Repo: "gcr.io/google_containers/kubernetes-dashboard-init-amd64", Tag: "v1.0.1", RktPullDocker: false},
 			PauseImage:                         model.Image{Repo: "gcr.io/google_containers/pause-amd64", Tag: "3.0", RktPullDocker: false},
 			FlannelImage:                       model.Image{Repo: "quay.io/coreos/flannel", Tag: "v0.9.0", RktPullDocker: false},
 			JournaldCloudWatchLogsImage:        model.Image{Repo: "jollinshead/journald-cloudwatch-logs", Tag: "0.1", RktPullDocker: true},

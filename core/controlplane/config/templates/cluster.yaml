@@ -1049,7 +1049,7 @@ worker:
 
 #kubeDashboardInitImage:
 #  repo: gcr.io/google_containers/kubernetes-dashboard-init-amd64
-#  tag: v1.0.0
+#  tag: v1.0.1
 
 # Calico Controller image repository to use.
 #calicoCtlImage:
