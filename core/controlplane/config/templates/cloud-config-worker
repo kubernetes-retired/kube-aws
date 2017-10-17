@@ -1040,7 +1040,7 @@ write_files:
       set -e
       function is_gpu_enabled(){
         local instance_type=$1
-        [[ -n $instance_type ]] && ([[ $instance_type == p2* ]] || [[ $instance_type ==  g2* ]])
+        [[ -n $instance_type ]] && ([[ $instance_type == p2* ]] || [[ $instance_type ==  g2* ]] || [[ $instance_type == g3* ]])
       }
 
       INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
@@ -1099,6 +1099,18 @@ write_files:
       # Create the device node for the nvidia-uvm module
       ACTION=="add" DEVPATH=="/module/nvidia_uvm" SUBSYSTEM=="module" RUN+="/opt/nvidia/current/bin/create-uvm-dev-node.sh"
 
+  - path: /opt/nvidia-build/git_versions.sh
+    owner: root:root
+    permissions: 0755
+    content: |
+      #!/bin/bash
+      set -e
+      source /usr/share/coreos/release
+      OVERLAY_VERSION=`curl -s https://raw.githubusercontent.com/coreos/manifest/v${COREOS_RELEASE_VERSION}/release.xml | grep coreos-overlay | cut -d\" -f 8`
+      PORTAGE_VERSION=`curl -s https://raw.githubusercontent.com/coreos/manifest/v${COREOS_RELEASE_VERSION}/release.xml | grep portage-stable | cut -d\" -f 8`
+      git -C /var/lib/portage/coreos-overlay checkout ${OVERLAY_VERSION}
+      git -C /var/lib/portage/portage-stable checkout ${PORTAGE_VERSION}
+
   - path: /opt/nvidia-build/_container_build.sh
     owner: root:root
     permissions: 0755
@@ -1106,7 +1118,8 @@ write_files:
       #!/bin/sh
 
       # Default: use binary packages instead of building everything from source
-      EMERGE_SOURCE_FLAGS=gK
+      # Default: build everything from source.
+      #EMERGE_SOURCE_FLAGS=gK
       while :; do
         case $1 in
           --emerge-sources)
@@ -1132,6 +1145,7 @@ write_files:
       emerge-gitclone
       . /usr/share/coreos/release
       git -C /var/lib/portage/coreos-overlay checkout build-${COREOS_RELEASE_VERSION%%.*}
+      bash git_versions.sh
       emerge -${EMERGE_SOURCE_FLAGS}q --jobs 4 --load-average 4 coreos-sources
 
       cd /usr/src/linux
@@ -1391,6 +1405,8 @@ write_files:
 
       mkdir -p /etc/ld.so.conf.d/ 2>/dev/null
       echo "/opt/nvidia/current/lib64" > /etc/ld.so.conf.d/nvidia.conf
+      rm /opt/nvidia/current/lib64/libEGL.so.1
+      ln -s /opt/nvidia/current/lib64/libEGL.so.$DRIVER_VERSION /opt/nvidia/current/lib64/libEGL.so.1
       ldconfig
 
   - path: /opt/nvidia-build/util/retry.sh
