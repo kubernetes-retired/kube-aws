@@ -759,7 +759,9 @@ write_files:
       kubectl apply -f "${mfdir}/kubernetes-dashboard-se.yaml"
 
       # Configmaps
-      kubectl apply -f "${mfdir}/kube-dns-cm.yaml"
+      for manifest in {kube-dns,kube-proxy}; do
+        kubectl apply -f "${mfdir}/$manifest-cm.yaml"
+      done
 
       # Service Accounts
       for manifest in {kube-dns,heapster,kube-proxy,kubernetes-dashboard}; do
@@ -1762,6 +1764,21 @@ write_files:
           name: kubernetes-dashboard
           namespace: kube-system
 {{ end }}
+  - path: /srv/kubernetes/manifests/kube-proxy-cm.yaml
+    content: |
+      kind: ConfigMap
+      apiVersion: v1
+      metadata:
+        name: kube-proxy-config
+        namespace: kube-system
+      data:
+        kube-proxy-config.yaml: |
+          apiVersion: componentconfig/v1alpha1
+          kind: KubeProxyConfiguration
+          bindAddress: 0.0.0.0
+          clientConnection:
+            kubeconfig: /etc/kubernetes/kubeconfig/kube-proxy.yaml
+          clusterCIDR: {{.PodCIDR}}
 
   - path: /srv/kubernetes/manifests/kube-proxy-ds.yaml
     content: |
@@ -1799,18 +1816,23 @@ write_files:
                 command:
                 - /hyperkube
                 - proxy
-                - --kubeconfig=/etc/kubernetes/kubeconfig/kube-proxy.yaml
-                - --cluster-cidr={{.PodCIDR}}
+                - --config=/etc/kubernetes/kube-proxy/kube-proxy-config.yaml
                 securityContext:
                   privileged: true
                 volumeMounts:
                 - mountPath: /etc/kubernetes/kubeconfig
                   name: kubeconfig
                   readOnly: true
+                - mountPath: /etc/kubernetes/kube-proxy
+                  name: kube-proxy-config
+                  readOnly: true
               volumes:
               - name: kubeconfig
                 hostPath:
                   path: /etc/kubernetes/kubeconfig
+              - name: kube-proxy-config
+                configMap:
+                  name: kube-proxy-config
 
   - path: /etc/kubernetes/manifests/kube-apiserver.yaml
     content: |
