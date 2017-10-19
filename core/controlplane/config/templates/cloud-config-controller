@@ -55,6 +55,8 @@ coreos:
         {{- end }}
       {{- end }}
 {{- end}}
+    - name: systemd-modules-load.service
+      command: restart
 {{if and (.AmazonSsmAgent.Enabled) (ne .AmazonSsmAgent.DownloadUrl "")}}
     - name: amazon-ssm-agent.service
       command: start
@@ -523,6 +525,13 @@ write_files:
     content: {{$w.GzippedBase64Content}}
   {{- end }}
 {{- end }}
+  - path: /etc/modules-load.d/ip_vs.conf
+    content: |
+      ip_vs
+      ip_vs_rr
+      ip_vs_wrr
+      ip_vs_sh
+      nf_conntrack_ipv4
 {{if and (.AmazonSsmAgent.Enabled) (ne .AmazonSsmAgent.DownloadUrl "")}}
   - path: "/opt/ssm/bin/install-ssm-agent.sh"
     permissions: 0700
