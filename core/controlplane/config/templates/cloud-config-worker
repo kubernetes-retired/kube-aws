@@ -1049,7 +1049,7 @@ write_files:
       set -e
       function is_gpu_enabled(){
         local instance_type=$1
-        [[ -n $instance_type ]] && ([[ $instance_type == p2* ]] || [[ $instance_type ==  g2* ]])
+        [[ -n $instance_type ]] && ([[ $instance_type == p2* ]] || [[ $instance_type == p3* ]] || [[ $instance_type ==  g2* ]] || [[ $instance_type == g3* ]])
       }
 
       INSTANCE_TYPE=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
@@ -1400,6 +1400,8 @@ write_files:
 
       mkdir -p /etc/ld.so.conf.d/ 2>/dev/null
       echo "/opt/nvidia/current/lib64" > /etc/ld.so.conf.d/nvidia.conf
+      rm /opt/nvidia/current/lib64/libEGL.so.1
+      ln -s /opt/nvidia/current/lib64/libEGL.so.$DRIVER_VERSION /opt/nvidia/current/lib64/libEGL.so.1
       ldconfig
 
   - path: /opt/nvidia-build/util/retry.sh
