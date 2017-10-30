@@ -360,7 +360,7 @@ worker:
 #
 #      # (Experimental) GPU Driver installation support
 #      # Currently, only Nvidia driver is supported.
-#      # This setting takes effect only when configured instance type is GPU enabled (p2 or g2).
+#      # This setting takes effect only when configured instance type is GPU enabled (p2, p3, g2, or g3).
 #      # Make sure to choose 'docker' as container runtime when enabled this feature.
 #      # Ensure that automatic Container Linux is disabled(it is disabled by default btw).
 #      # Otherwise the installed driver may stop working when an OS update resulted in an updated kernel

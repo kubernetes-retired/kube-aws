@@ -4232,7 +4232,7 @@ worker:
         enabled: true
         version: ""
 `,
-			expectedErrorMessage: `instance type t2.medium doesn't support GPU. You can enable Nvidia driver intallation support only when use [p2 g2] instance family.`,
+			expectedErrorMessage: `instance type t2.medium doesn't support GPU. You can enable Nvidia driver intallation support only when use [p2 p3 g2 g3] instance family.`,
 		},
 	}
 
