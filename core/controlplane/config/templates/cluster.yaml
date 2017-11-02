@@ -432,7 +432,7 @@ worker:
 #            # Defaults to worker.spotFleet.unitRootVolumeSize * weightedCapacity if omitted
 #            size:
 #            # Number of provisioned IOPS when rootVlumeType is io1
-#            # Must be within the range between 100 and 2000
+#            # Must be within the range between 100 and 20000
 #            # Defaults to worker.spotFleet.unitRootVolumeIOPS * weightedCapacity if omitted
 #            iops:
 #
