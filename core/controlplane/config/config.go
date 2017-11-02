@@ -1310,7 +1310,7 @@ func (c DeploymentSettings) NATGateways() []model.NATGateway {
 
 func (c DefaultWorkerSettings) Validate() error {
 	if c.WorkerRootVolumeType == "io1" {
-		if c.WorkerRootVolumeIOPS < 100 || c.WorkerRootVolumeIOPS > 2000 {
+		if c.WorkerRootVolumeIOPS < 100 || c.WorkerRootVolumeIOPS > 20000 {
 			return fmt.Errorf("invalid workerRootVolumeIOPS: %d", c.WorkerRootVolumeIOPS)
 		}
 	} else {
@@ -1331,7 +1331,7 @@ func (c ControllerSettings) Validate() error {
 	rootVolume := controller.RootVolume
 
 	if rootVolume.Type == "io1" {
-		if rootVolume.IOPS < 100 || rootVolume.IOPS > 2000 {
+		if rootVolume.IOPS < 100 || rootVolume.IOPS > 20000 {
 			return fmt.Errorf("invalid controller.rootVolume.iops: %d", rootVolume.IOPS)
 		}
 	} else {
