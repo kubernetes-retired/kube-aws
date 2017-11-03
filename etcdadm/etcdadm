@@ -803,6 +803,10 @@ member_is_healthy() {
   member_etcdctl endpoint health | grep "is healthy" 1>&2
 }
 
+member_is_leader() {
+  member_etcdctl -w json endpoint status | jq -r '.[].Status.leader == .[].Status.header.member_id' | grep "true" 1>&2
+}
+
 member_etcdctl_v2() {
   ETCDCTL_API=2 etcdctl --endpoints "$(member_client_url)" "${@:1}"
 }
