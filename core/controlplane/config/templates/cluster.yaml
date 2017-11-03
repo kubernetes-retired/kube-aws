@@ -938,7 +938,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.7.8_coreos.1
+# kubernetesVersion: v1.8.2_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
