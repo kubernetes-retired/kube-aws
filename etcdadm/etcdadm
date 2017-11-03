@@ -248,9 +248,9 @@ member_snapshot_relative_path() {
 }
 
 member_save_snapshot() {
-  local snapshot_name
-  snapshot_name=$(member_snapshot_relative_path)
   if member_is_leader; then
+    local snapshot_name
+    snapshot_name=$(member_snapshot_relative_path)
     if cluster_is_healthy; then
       member_etcdctl snapshot save "$snapshot_name"
       member_etcdctl snapshot status "$snapshot_name"
