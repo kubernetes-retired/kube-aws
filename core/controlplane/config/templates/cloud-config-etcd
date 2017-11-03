@@ -154,7 +154,6 @@ coreos:
         RestartSec=5
         EnvironmentFile=-/etc/etcd-environment
         EnvironmentFile=-/var/run/coreos/etcdadm-environment
-        Environment=ETCDADM_MEMBER_ENV_FILE=/var/run/coreos/etcdadm/etcd-member.env
         ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
         ExecStartPre=/usr/bin/mkdir -p /var/run/coreos/etcdadm/snapshots
         ExecStart=/opt/bin/etcdadm reconfigure
@@ -270,6 +269,7 @@ coreos:
 
             [Service]
             EnvironmentFile=-/etc/etcd-environment
+            EnvironmentFile=-/var/run/coreos/etcdadm/etcd-member.env
 
             PermissionsStartOnly=true
             ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
