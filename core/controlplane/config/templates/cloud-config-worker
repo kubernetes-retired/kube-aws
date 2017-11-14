@@ -676,6 +676,8 @@ write_files:
           '
             cfn-init -v -c "aws-environment" --region {{.Region}} --resource {{.LogicalName}} --stack '${{.StackNameEnvVarName}}'
           '
+
+      rkt rm --uuid-file=/var/run/coreos/set-aws-environment.uuid || :
 {{end}}
 
   - path: /opt/bin/cfn-signal
@@ -850,7 +852,8 @@ write_files:
              --tags '"'"'Key=kubernetes.io/cluster/{{.ClusterName}},Value=""'"'"' '"'"'Key=Name,Value="{{.ClusterName}}-{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'
            echo done.'
 
-      rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid
+      rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid || :
+
 {{if .Experimental.LoadBalancer.Enabled}}
   - path: /opt/bin/add-to-load-balancers
     owner: root:root
@@ -880,7 +883,7 @@ write_files:
            done
            echo done.'
 
-      rkt rm --uuid-file=/var/run/coreos/add-to-load-balancers.uuid
+      rkt rm --uuid-file=/var/run/coreos/add-to-load-balancers.uuid || :
 {{end}}
 
 {{if .Experimental.TargetGroup.Enabled}}
@@ -912,7 +915,7 @@ write_files:
            done
            echo done.'
 
-      rkt rm --uuid-file=/var/run/coreos/add-to-target-groups.uuid
+      rkt rm --uuid-file=/var/run/coreos/add-to-target-groups.uuid || :
 {{end}}
 {{end}}
 
