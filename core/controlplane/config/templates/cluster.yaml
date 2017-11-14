@@ -1172,78 +1172,88 @@ addons:
     enabled: false
 
 # Experimental features will change in backward-incompatible ways
-# experimental:
-#   # Enable admission controllers
-#   admission:
-#     podSecurityPolicy:
-#       enabled: true
-#     denyEscalatingExec:
-#       enabled: true
-#     initializers:
-#       enabled: true
-#   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
-#   awsEnvironment:
-#     enabled: true
-#     environment:
-#       CFNSTACK: '{ "Ref" : "AWS::StackId" }'
-#   # Enable audit log for apiserver. Recommended when `rbac` is enabled.
-#   auditLog:
-#     enabled: true
-#     maxage: 30
-#     logpath: /dev/stdout
-#   authentication:
-#     # See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication
-#     # for more information.
-#     webhook:
-#       enabled: true
-#       cacheTTL: 1m0s
-#       configBase64: base64-encoded-webhook-yaml
-#   # Add predefined set of labels to the controller nodes
-#   # The set includes names of launch configurations and autoscaling groups
-#   awsNodeLabels:
-#     enabled: true
-#   # If enabled, instructs the controller manager to automatically issue TLS certificates to worker nodes via
-#   # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to
-#   # also enable the rbac plugin in order to limit requests using the bootstrap token to only be able to make
-#   # requests related to certificate provisioning.
-#   # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
-#   tlsBootstrap:
-#     enabled: true
-#   # Enables the Node authorization + node restriction admission controller (requires Kubernetes 1.7.4+)
-#   # Requires TLS bootstrapping to be enabled as well
-#   nodeAuthorizer:
-#     enabled: true
-#   # This option has not yet been tested with rkt as container runtime
-#   ephemeralImageStorage:
-#     enabled: true
-#   # When enabled it will grant sts:assumeRole permission to the IAM role for controller nodes.
-#   # This is intended to be used in combination with .controller.managedIamRoleName. See #297 for more information.
-#   kube2IamSupport:
-#     enabled: true
-#   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group, or when
-#   # the instance receives a termination notice (in case of spot instances)
-#   nodeDrainer:
-#     enabled: true
-#     # Maximum time to wait, in minutes, for the node to be completely drained. Must be an integer between 1 and 60.
-#     drainTimeout: 5
-#   # Configure OpenID Connect token authenticator plugin in Kubernetes API server.
-#   # For using Dex as a custom OIDC provider, please check "contrib/dex/README.md".
-#   # WARNING: always use "https" for "issuerUrl", otherwise the Kubernetes API server will not start correctly.
-#   oidc:
-#     enabled: true
-#     issuerUrl: "https://accounts.google.com"
-#     clientId: "kubernetes"
-#     usernameClaim: "email"
-#     groupsClaim: "groups"
-#
-#   # When set to true this configures the k8s aws provider so that it doesn't modify every node's security group to include an additional ingress rule per an ELB created for a k8s service whose type is "LoadBalancer"
-#   # It requires that the user has setup a rule that allows inbound traffic on kubelet ports
-#   # from the local VPC subnet so that load balancers can access it.  Ref: https://github.com/kubernetes/kubernetes/issues/26670
-#   disableSecurityGroupIngress: false
-#
-#   # Command line flag passed to the controller-manager. (default 40s)
-#   # This is the amount of time which we allow running Node to be unresponsive before marking it unhealthy.
-#   # Must be N times more than kubelet's nodeStatusUpdateFrequency (default 10s).
+experimental:
+  # Enable admission controllers
+  admission:
+    podSecurityPolicy:
+      enabled: false
+    denyEscalatingExec:
+      enabled: false
+    initializers:
+      enabled: false
+
+  # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
+  awsEnvironment:
+    enabled: false
+    environment:
+      CFNSTACK: '{ "Ref" : "AWS::StackId" }'
+
+  # Enable audit log for apiserver. Recommended when `rbac` is enabled.
+  auditLog:
+    enabled: false
+    maxage: 30
+    logpath: /dev/stdout
+
+  # See https://kubernetes.io/docs/admin/authentication/#webhook-token-authentication for more information
+  authentication:
+    webhook:
+      enabled: false
+      cacheTTL: 1m0s
+      configBase64: base64-encoded-webhook-yaml
+
+  # Add predefined set of labels to the controller nodes
+  # The set includes names of launch configurations and autoscaling groups
+  awsNodeLabels:
+    enabled: false
+
+  # If enabled, instructs the controller manager to automatically issue TLS certificates to worker nodes via
+  # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to
+  # also enable the rbac plugin in order to limit requests using the bootstrap token to only be able to make
+  # requests related to certificate provisioning.
+  # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
+  tlsBootstrap:
+    enabled: false
+
+  # Enables the Node authorization + node restriction admission controller (requires Kubernetes 1.7.4+)
+  # Requires TLS bootstrapping to be enabled as well
+  nodeAuthorizer:
+    enabled: false
+
+  # This option has not yet been tested with rkt as container runtime
+  ephemeralImageStorage:
+    enabled: false
+
+  # When enabled it will grant sts:assumeRole permission to the IAM role for controller nodes.
+  # This is intended to be used in combination with .controller.managedIamRoleName. See #297 for more information.
+  kube2IamSupport:
+    enabled: false
+
+  # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group, or when
+  # the instance receives a termination notice (in case of spot instances)
+  nodeDrainer:
+    enabled: false
+    # Maximum time to wait, in minutes, for the node to be completely drained. Must be an integer between 1 and 60.
+    drainTimeout: 5
+
+  # Configure OpenID Connect token authenticator plugin in Kubernetes API server.
+  # For using Dex as a custom OIDC provider, please check "contrib/dex/README.md".
+  # WARNING: always use "https" for "issuerUrl", otherwise the Kubernetes API server will not start correctly.
+  oidc:
+    enabled: false
+    issuerUrl: "https://accounts.google.com"
+    clientId: "kubernetes"
+    usernameClaim: "email"
+    groupsClaim: "groups"
+
+  # When set to true this configures the k8s aws provider so that it doesn't modify every node's security group
+  # to include an additional ingress rule per an ELB created for a k8s service whose type is "LoadBalancer".
+  # It requires that the user has setup a rule that allows inbound traffic on kubelet ports
+  # from the local VPC subnet so that load balancers can access it.  Ref: https://github.com/kubernetes/kubernetes/issues/26670
+  disableSecurityGroupIngress: false
+
+  # Command line flag passed to the controller-manager. (default 40s)
+  # This is the amount of time which we allow running Node to be unresponsive before marking it unhealthy.
+  # Must be N times more than kubelet's nodeStatusUpdateFrequency (default 10s).
 #   nodeMonitorGracePeriod: "40s"
 
 # AWS Tags for cloudformation stack resources
