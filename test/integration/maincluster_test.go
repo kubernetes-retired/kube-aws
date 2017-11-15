@@ -1213,7 +1213,7 @@ worker:
 				func(c *config.Config, t *testing.T) {
 					expected := controlplane_config.Experimental{
 						Admission: controlplane_config.Admission{
-							'PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
+							PodSecurityPolicy: controlplane_config.PodSecurityPolicy{
 								Enabled: true,
 							},
 							AlwaysPullImages: controlplane_config.AlwaysPullImages{
