@@ -248,15 +248,19 @@ member_snapshot_relative_path() {
 }
 
 member_save_snapshot() {
-  local snapshot_name
-  snapshot_name=$(member_snapshot_relative_path)
-  if cluster_is_healthy; then
-    member_etcdctl snapshot save "$snapshot_name"
-    member_etcdctl snapshot status "$snapshot_name"
-    member_upload_snapshot
-    member_remove_snapshot
+  if member_is_leader; then
+    local snapshot_name
+    snapshot_name=$(member_snapshot_relative_path)
+    if cluster_is_healthy; then
+      member_etcdctl snapshot save "$snapshot_name"
+      member_etcdctl snapshot status "$snapshot_name"
+      member_upload_snapshot
+      member_remove_snapshot
+    else
+      _info 'cluster is not healthy. skipped taking snapshot because the cluster can be unhealthy due to the corrupted etcd data of members, including this member'
+    fi
   else
-    _info 'cluster is not healthy. skipped taking snapshot because the cluster can be unhealthy due to the corrupted etcd data of members, including this member'
+    _info 'this member is not leader. skipped taking snapshot'
   fi
 }
 
@@ -801,6 +805,10 @@ member_etcdctl() {
 
 member_is_healthy() {
   member_etcdctl endpoint health | grep "is healthy" 1>&2
+}
+
+member_is_leader() {
+  member_etcdctl -w json endpoint status | jq -r '.[].Status.leader == .[].Status.header.member_id' | grep "true" 1>&2
 }
 
 member_etcdctl_v2() {
