@@ -3255,7 +3255,7 @@ write_files:
 
       queryserver() {
         echo "Checking to see if workers are communicating with API server."
-        auditlogs | grep -v 127.0.0.1 | awk 'BEGIN {C=1} /kubelet\// && $8 == "200" {C=0} END {exit C}'
+        auditlogs | grep -v 127.0.0.1 | grep kubelet | jq -c 'select(.responseStatus.code == 200)' --exit-status
       }
 
       auditlogs() {
