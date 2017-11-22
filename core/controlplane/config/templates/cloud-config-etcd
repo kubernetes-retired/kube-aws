@@ -269,6 +269,7 @@ coreos:
 
             [Service]
             EnvironmentFile=-/etc/etcd-environment
+            EnvironmentFile=-/var/run/coreos/etcdadm/etcd-member.env
 
             PermissionsStartOnly=true
             ExecStartPre=/usr/bin/systemctl is-active cfn-etcd-environment.service
