@@ -397,7 +397,7 @@ worker:
 #        # IAM role to grant the Spot fleet permission to bid on, launch, and terminate instances on your behalf
 #        # See http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html#spot-fleet-prerequisites
 #        #
-#        # Defaults to "arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-role" assuming you've arrived "Spot Requests" in EC2 Dashboard
+#        # Defaults to "arn:aws:iam::youraccountid:role/aws-ec2-spot-fleet-tagging-role" assuming you've arrived "Spot Requests" in EC2 Dashboard
 #        # hence the role is automatically created for you
 #        iamFleetRoleArn: "arn:aws:iam::youraccountid:role/kube-aws-doesnt-create-this-for-you"
 #
