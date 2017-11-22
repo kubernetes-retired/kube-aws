@@ -411,36 +411,7 @@ coreos:
         Type=oneshot
         ExecStop=/bin/true
         RemainAfterExit=true
-        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment INSTANCE_ID=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/instance-id)"
-        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment SECURITY_GROUPS=\"$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/security-groups | tr '\n' ',')\""
-        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment AUTOSCALINGGROUP=\"$(/usr/bin/docker run --rm --net=host \
-          {{.AWSCliImage.RepoWithTag}} aws \
-          autoscaling describe-auto-scaling-instances \
-          --instance-ids ${INSTANCE_ID} --region {{.Region}} \
-          --query 'AutoScalingInstances[].AutoScalingGroupName' --output text)\""
-        ExecStartPre=/bin/sh -c "/usr/bin/systemctl set-environment \
-          LAUNCHCONFIGURATION=\"$(/usr/bin/docker run --rm --net=host \
-          {{.AWSCliImage.RepoWithTag}} \
-          aws autoscaling describe-auto-scaling-groups \
-          --auto-scaling-group-name $AUTOSCALINGGROUP --region {{.Region}} \
-          --query 'AutoScalingGroups[].LaunchConfigurationName' --output text)\""
-        ExecStartPre=/usr/bin/bash -c "until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done"
-        ExecStart=/bin/sh -c "/usr/bin/curl \
-          --retry 3 \
-          --request PATCH \
-          -H 'Content-Type: application/strategic-merge-patch+json' \
-          -d'{ \
-          \"metadata\": { \
-            \"labels\": { \
-              \"kube-aws.coreos.com/autoscalinggroup\": \"${AUTOSCALINGGROUP}\", \
-              \"kube-aws.coreos.com/launchconfiguration\": \"${LAUNCHCONFIGURATION}\" \
-            }, \
-            \"annotations\": { \
-              \"kube-aws.coreos.com/securitygroups\": \"${SECURITY_GROUPS}\" \
-            } \
-          } \
-          }\"' \
-          http://localhost:8080/api/v1/nodes/$(hostname)"
+        ExecStart=/opt/bin/kube-node-label
 {{end}}
 
 {{if .Experimental.EphemeralImageStorage.Enabled}}
@@ -658,6 +629,48 @@ write_files:
 
       rkt rm --uuid-file=/var/run/coreos/set-aws-environment.uuid || :
 {{end}}
+
+  {{if .Experimental.AwsNodeLabels.Enabled -}}
+  - path: /opt/bin/kube-node-label
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      set -ue
+
+      INSTANCE_ID="$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/instance-id)"
+      SECURITY_GROUPS="$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/security-groups | tr '\n' ',')"
+      AUTOSCALINGGROUP="$(/usr/bin/docker run --rm --net=host \
+                {{.AWSCliImage.RepoWithTag}} aws \
+                autoscaling describe-auto-scaling-instances \
+                --instance-ids ${INSTANCE_ID} --region {{.Region}} \
+                --query 'AutoScalingInstances[].AutoScalingGroupName' --output text)"
+      LAUNCHCONFIGURATION="$(/usr/bin/docker run --rm --net=host \
+                {{.AWSCliImage.RepoWithTag}} \
+                aws autoscaling describe-auto-scaling-groups \
+                --auto-scaling-group-name $AUTOSCALINGGROUP --region {{.Region}} \
+                --query 'AutoScalingGroups[].LaunchConfigurationName' --output text)"
+
+       until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done
+
+       /usr/bin/curl \
+         --retry 5 \
+         --request PATCH \
+         -H 'Content-Type: application/strategic-merge-patch+json' \
+         -d '{
+              "metadata": {
+                "labels": {
+                  "kube-aws.coreos.com/autoscalinggroup": "'${AUTOSCALINGGROUP}'",
+                   "kube-aws.coreos.com/launchconfiguration": "'${LAUNCHCONFIGURATION}'"
+                 },
+                 "annotations": {
+                  "kube-aws.coreos.com/securitygroups": "'${SECURITY_GROUPS}'"
+                }
+              }
+            }' \
+         http://localhost:8080/api/v1/nodes/$(hostname)
+  {{end -}}
+
 {{ if .SharedPersistentVolume }}
   - path: /opt/bin/set-efs-pv
     owner: root:root
