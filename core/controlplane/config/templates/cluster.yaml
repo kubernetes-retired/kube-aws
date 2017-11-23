@@ -972,7 +972,7 @@ worker:
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-autoscaler
-#  tag: v1.0.2
+#  tag: v1.0.3
 #  rktPullDocker: false
 
 # Cluster Proportional Autoscaler image repository to use.

@@ -141,7 +141,7 @@ func NewDefaultCluster() *Cluster {
 			CalicoCniImage:                     model.Image{Repo: "quay.io/calico/cni", Tag: "v1.11.0", RktPullDocker: false},
 			CalicoKubeControllersImage:         model.Image{Repo: "quay.io/calico/kube-controllers", Tag: "v1.0.0", RktPullDocker: false},
 			CalicoCtlImage:                     model.Image{Repo: "quay.io/calico/ctl", Tag: "v1.6.1", RktPullDocker: false},
-			ClusterAutoscalerImage:             model.Image{Repo: "gcr.io/google_containers/cluster-autoscaler", Tag: "v1.0.2", RktPullDocker: false},
+			ClusterAutoscalerImage:             model.Image{Repo: "gcr.io/google_containers/cluster-autoscaler", Tag: "v1.0.3", RktPullDocker: false},
 			ClusterProportionalAutoscalerImage: model.Image{Repo: "gcr.io/google_containers/cluster-proportional-autoscaler-amd64", Tag: "1.1.2", RktPullDocker: false},
 			Kube2IAMImage:                      model.Image{Repo: "jtblin/kube2iam", Tag: "0.8.1", RktPullDocker: false},
 			KubeDnsImage:                       model.Image{Repo: "gcr.io/google_containers/k8s-dns-kube-dns-amd64", Tag: "1.14.6", RktPullDocker: false},
