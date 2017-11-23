@@ -631,7 +631,7 @@ worker:
 #      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
-#  version: 3.2.9
+#  version: 3.2.10
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
@@ -938,7 +938,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.8.2_coreos.0
+# kubernetesVersion: v1.8.4_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
