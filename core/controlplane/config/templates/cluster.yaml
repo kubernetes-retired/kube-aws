@@ -990,13 +990,13 @@ worker:
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/k8s-dns-kube-dns-amd64
-#  tag: 1.14.6
+#  tag: 1.14.7
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.6
+#  tag: 1.14.7
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
