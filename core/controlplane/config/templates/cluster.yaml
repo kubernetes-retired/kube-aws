@@ -631,7 +631,7 @@ worker:
 #      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
-#  version: 3.2.9
+#  version: 3.2.10
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
@@ -938,7 +938,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.8.2_coreos.0
+# kubernetesVersion: v1.8.4_coreos.0
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
@@ -972,7 +972,7 @@ worker:
 # Cluster Autoscaler image repository to use.
 #clusterAutoscalerImage:
 #  repo: gcr.io/google_containers/cluster-autoscaler
-#  tag: v1.0.2
+#  tag: v1.0.3
 #  rktPullDocker: false
 
 # Cluster Proportional Autoscaler image repository to use.
@@ -990,13 +990,13 @@ worker:
 # kube DNS image repository to use.
 #kubeDnsImage:
 #  repo: gcr.io/google_containers/k8s-dns-kube-dns-amd64
-#  tag: 1.14.6
+#  tag: 1.14.7
 #  rktPullDocker: false
 
 # kube DNS Masq image repository to use.
 #kubeDnsMasqImage:
 #  repo: gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64
-#  tag: 1.14.6
+#  tag: 1.14.7
 #  rktPullDocker: false
 
 # kube rescheduler image repository to use.
@@ -1026,7 +1026,7 @@ worker:
 # Tiller (Helm backend) image repository to use.
 #tillerImage:
 #  repo: gcr.io/kubernetes-helm/tiller
-#  tag: v2.6.2
+#  tag: v2.7.2
 #  rktPullDocker: false
 
 # Heapster image repository to use.
