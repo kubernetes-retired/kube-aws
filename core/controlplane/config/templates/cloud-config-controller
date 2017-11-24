@@ -841,7 +841,7 @@ write_files:
       {{- end }}
 
       # API Services
-      for manifest in {metrics-server}; do
+      for manifest in {metrics-server,}; do
           kubectl apply -f "${mfdir}/$manifest-apisvc.yaml"
       done
 
@@ -2687,7 +2687,7 @@ write_files:
               serviceAccountName: metrics-server
               containers:
               - name: metrics-server
-                image: gcr.io/google_containers/metrics-server-amd64:v0.2.0
+                image: {{ .MetricsServerImage.RepoWithTag }}
                 imagePullPolicy: Always
                 command:
                 - /metrics-server
