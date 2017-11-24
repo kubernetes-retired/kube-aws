@@ -822,7 +822,7 @@ write_files:
 {{ end }}
 
       # Deployments
-      for manifest in {kube-dns,kube-dns-autoscaler,kubernetes-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}; do
+      for manifest in {kube-dns,kube-dns-autoscaler,kubernetes-dashboard,{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }},metrics-server}; do
           kubectl apply -f "${mfdir}/$manifest-de.yaml"
       done
 
@@ -832,7 +832,7 @@ write_files:
       done
 
       # Services
-      for manifest in {kube-dns,heapster,kubernetes-dashboard}; do
+      for manifest in {kube-dns,heapster,kubernetes-dashboard,metrics-server}; do
           kubectl apply -f "${mfdir}/$manifest-svc.yaml"
       done
 
