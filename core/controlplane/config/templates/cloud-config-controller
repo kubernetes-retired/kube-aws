@@ -1499,7 +1499,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/node.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:node
         subjects:
@@ -1515,7 +1515,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/node-extensions.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
             name: kube-aws:node-extensions
         rules:
@@ -1558,7 +1558,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kube-admin.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:admin
         subjects:
@@ -1574,7 +1574,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/node-proxier.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:node-proxier
         subjects:
@@ -1595,7 +1595,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/system-worker.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:system-worker
         subjects:
@@ -1616,7 +1616,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/node-extensions.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:node-extensions
         subjects:
@@ -1633,7 +1633,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/heapster.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: heapster
         roleRef:
@@ -1720,7 +1720,7 @@ write_files:
   # the resources of the deployment if necessary.
   - path: /srv/kubernetes/rbac/roles/pod-nanny.yaml
     content: |
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         kind: Role
         metadata:
           name: system:pod-nanny
@@ -1747,7 +1747,7 @@ write_files:
   - path: /srv/kubernetes/rbac/role-bindings/heapster-nanny.yaml
     content: |
         kind: RoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: heapster-nanny
           namespace: kube-system
@@ -1769,7 +1769,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/kubelet-certificate-bootstrap.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:kubelet-certificate-bootstrap
         rules:
@@ -1784,7 +1784,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kubelet-certificate-bootstrap.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:kubelet-certificate-bootstrap
         subjects:
@@ -1800,7 +1800,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-roles/node-bootstrapper.yaml
     content: |
         kind: ClusterRole
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:node-bootstrapper
         rules:
@@ -1817,7 +1817,7 @@ write_files:
   - path: /srv/kubernetes/rbac/cluster-role-bindings/node-bootstrapper.yaml
     content: |
         kind: ClusterRoleBinding
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kube-aws:node-bootstrapper
         subjects:
@@ -1834,7 +1834,7 @@ write_files:
   - path: /srv/kubernetes/rbac/roles/kubernetes-dashboard.yaml
     content: |
         kind: Role
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         metadata:
           name: kubernetes-dashboard-minimal
           namespace: kube-system
@@ -1853,7 +1853,7 @@ write_files:
 
   - path: /srv/kubernetes/rbac/role-bindings/kubernetes-dashboard.yaml
     content: |
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
         metadata:
           name: kubernetes-dashboard-minimal
@@ -1870,7 +1870,7 @@ write_files:
 {{ if .KubeDashboardAdminPrivileges }}
   - path: /srv/kubernetes/rbac/cluster-role-bindings/kubernetes-dashboard-admin.yaml
     content: |
-        apiVersion: rbac.authorization.k8s.io/v1beta1
+        apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRoleBinding
         metadata:
           name: kubernetes-dashboard
@@ -2019,7 +2019,7 @@ write_files:
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
-          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1,rbac.authorization.k8s.io/v1beta1=true{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}{{if .Experimental.Admission.Initializers.Enabled}},admissionregistration.k8s.io/v1alpha1{{end}}
+          - --runtime-config=extensions/v1beta1/networkpolicies=true,batch/v2alpha1=true{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}{{if .Experimental.Admission.Initializers.Enabled}},admissionregistration.k8s.io/v1alpha1{{end}}
           - --cloud-provider=aws
           {{range $f := .APIServerFlags}}
           - --{{$f.Name}}={{$f.Value}}
@@ -3373,7 +3373,7 @@ write_files:
         namespace: kube-system
       ---
 
-      apiVersion: rbac.authorization.k8s.io/v1beta1
+      apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         annotations:
@@ -3393,7 +3393,7 @@ write_files:
         - watch
       ---
 
-      apiVersion: rbac.authorization.k8s.io/v1beta1
+      apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
         name: kube2iam
