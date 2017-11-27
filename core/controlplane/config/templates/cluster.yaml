@@ -164,6 +164,10 @@ kmsKeyArn: "{{.KMSKeyARN}}"
 #  # CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/18975
 #  instanceType: t2.medium
 #
+#  # EC2 instance tags for controller nodes
+#  instanceTags:
+#    instanceRole: controller
+#
 #  rootVolume:
 #    # Disk size (GiB) for controller node
 #    size: 30
@@ -342,6 +346,10 @@ worker:
 #      # Instance type for worker nodes
 #      # CAUTION: Don't use t2.micro or the cluster won't work. See https://github.com/kubernetes/kubernetes/issues/16122
 #      instanceType: t2.medium
+#
+#      # EC2 instance tags for worker nodes
+#      instanceTags:
+#        instanceRole: worker
 #
 #      rootVolume:
 #        # Disk size (GiB) for worker nodes
@@ -576,6 +584,10 @@ worker:
 #
 #  # Instance type for etcd node
 #  instanceType: t2.medium
+#
+#  # EC2 instance tags for etcd nodes
+#  instanceTags:
+#    instanceRole: etcd
 #
 #  rootVolume:
 #    # Root volume size (GiB) for etcd node

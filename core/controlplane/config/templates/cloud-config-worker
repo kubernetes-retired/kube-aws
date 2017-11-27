@@ -881,6 +881,25 @@ write_files:
 
       instance_id=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
+      TAGS=""
+      TAGS="${TAGS}Key=\"kubernetes.io/cluster/{{ .ClusterName }}\",Value=\"owned\" "
+      TAGS="${TAGS}Key=\"kube-aws:node-pool:name\",Value=\"{{.NodePoolName}}\" "
+      TAGS="${TAGS}Key=\"Name\",Value=\"{{.ClusterName}}-{{.StackName}}-kube-aws-worker\" "
+
+      {{if .Autoscaling.ClusterAutoscaler.Enabled -}}
+      TAGS="${TAGS}Key=\"{{.Autoscaling.ClusterAutoscaler.AutoDiscoveryTagKey}}\",Value=\"\" "
+      {{end -}}
+
+      {{range $k, $v := .StackTags -}}
+      TAGS="${TAGS}Key=\"{{$k}}\",Value=\"{{$v}}\" "
+      {{end -}}
+
+      {{range $k, $v := .InstanceTags -}}
+      TAGS="${TAGS}Key=\"{{$k}}\",Value=\"{{$v}}\" "
+      {{end -}}
+
+      echo Tagging this EC2 instance with: "$TAGS"
+
       rkt run \
         --volume=ssl,kind=host,source=/etc/kubernetes/ssl,readOnly=false \
         --mount=volume=ssl,target=/etc/kubernetes/ssl \
@@ -896,7 +915,7 @@ write_files:
            /usr/bin/aws \
              --region {{.Region}} ec2 create-tags \
              --resource $instance_id \
-             --tags '"'"'Key=kubernetes.io/cluster/{{.ClusterName}},Value=""'"'"' '"'"'Key=Name,Value="{{.ClusterName}}-{{.StackName}}-kube-aws-worker"'"'"' '"'"'Key="kube-aws:node-pool:name",Value="{{.NodePoolName}}"'"'"'
+             --tags '"$TAGS"'
            echo done.'
 
       rkt rm --uuid-file=/var/run/coreos/tag-spot-instance.uuid || :
