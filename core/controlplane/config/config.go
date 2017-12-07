@@ -50,6 +50,9 @@ func NewDefaultCluster() *Cluster {
 			Initializers{
 				Enabled: false,
 			},
+			Priority{
+				Enabled: false,
+			},
 		},
 		AuditLog: AuditLog{
 			Enabled: false,
@@ -529,6 +532,7 @@ type Admission struct {
 	AlwaysPullImages   AlwaysPullImages   `yaml:"alwaysPullImages"`
 	DenyEscalatingExec DenyEscalatingExec `yaml:"denyEscalatingExec"`
 	Initializers       Initializers       `yaml:"initializers"`
+	Priority           Priority           `yaml:"priority"`
 }
 
 type AlwaysPullImages struct {
@@ -544,6 +548,10 @@ type DenyEscalatingExec struct {
 }
 
 type Initializers struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type Priority struct {
 	Enabled bool `yaml:"enabled"`
 }
 
