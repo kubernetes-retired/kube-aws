@@ -1,0 +1,740 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Kubernetes Dashboard Access · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-prism/prism.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+        <link rel="stylesheet" href="../styles/site.css">
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="use-an-existing-vpc.html" />
+    
+    
+    <link rel="prev" href="etcd-backup-and-restore.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Home
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../tutorials/quick-start.html">
+            
+                <a href="../tutorials/quick-start.html">
+            
+                    
+                    Quick Start
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../getting-started/">
+            
+                <a href="../getting-started/">
+            
+                    
+                    Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../getting-started/prerequisites.html">
+            
+                <a href="../getting-started/prerequisites.html">
+            
+                    
+                    Prerequisites
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../getting-started/step-1-configure.html">
+            
+                <a href="../getting-started/step-1-configure.html">
+            
+                    
+                    Step 1: Configure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../getting-started/step-2-render.html">
+            
+                <a href="../getting-started/step-2-render.html">
+            
+                    
+                    Step 2: Render
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../getting-started/step-3-launch.html">
+            
+                <a href="../getting-started/step-3-launch.html">
+            
+                    
+                    Step 3: Launch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../getting-started/step-4-update.html">
+            
+                <a href="../getting-started/step-4-update.html">
+            
+                    
+                    Step 4: Update
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.6" data-path="../getting-started/step-5-add-node-pool.html">
+            
+                <a href="../getting-started/step-5-add-node-pool.html">
+            
+                    
+                    Step 5: Add Node Pool
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.7" data-path="../getting-started/step-6-configure-add-ons.html">
+            
+                <a href="../getting-started/step-6-configure-add-ons.html">
+            
+                    
+                    Step 6: Configure Add-ons
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.8" data-path="../getting-started/step-7-destroy.html">
+            
+                <a href="../getting-started/step-7-destroy.html">
+            
+                    
+                    Step 7: Destroy
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../getting-in-touch.html">
+            
+                <a href="../getting-in-touch.html">
+            
+                    
+                    Getting In Touch
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../cli-reference/">
+            
+                <a href="../cli-reference/">
+            
+                    
+                    CLI Reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../cli-reference/aws-credentials.html">
+            
+                <a href="../cli-reference/aws-credentials.html">
+            
+                    
+                    AWS Credentials
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../add-ons/">
+            
+                <a href="../add-ons/">
+            
+                    
+                    Add-ons
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                <a href="../add-ons/cluster-resource-backup-to-s3.html">
+            
+                    
+                    Cluster Resource Backup to AWS S3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                <a href="../add-ons/journald-logging-to-cloudwatch.html">
+            
+                    
+                    Journald Logging to AWS CloudWatch
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../guides/">
+            
+                <a href="../guides/">
+            
+                    
+                    Guides
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="../guides/developer-guide.html">
+            
+                <a href="../guides/developer-guide.html">
+            
+                    
+                    Developer Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../guides/operator-guide.html">
+            
+                <a href="../guides/operator-guide.html">
+            
+                    
+                    Operator Guide
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Advanced Topics
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="cloudformation-updates-in-cli.html">
+            
+                <a href="cloudformation-updates-in-cli.html">
+            
+                    
+                    CloudFormation Updates in CLI
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="etcd-backup-and-restore.html">
+            
+                <a href="etcd-backup-and-restore.html">
+            
+                    
+                    etcd Backup & Restore
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.8.3" data-path="kubernetes-dashboard.html">
+            
+                <a href="kubernetes-dashboard.html">
+            
+                    
+                    Kubernetes Dashboard Access
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.4" data-path="use-an-existing-vpc.html">
+            
+                <a href="use-an-existing-vpc.html">
+            
+                    
+                    Use An Existing VPC
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../troubleshooting/">
+            
+                <a href="../troubleshooting/">
+            
+                    
+                    Troubleshooting
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.9.1" data-path="../troubleshooting/known-limitations.html">
+            
+                <a href="../troubleshooting/known-limitations.html">
+            
+                    
+                    Known Limitations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9.2" data-path="../troubleshooting/common-problems.html">
+            
+                <a href="../troubleshooting/common-problems.html">
+            
+                    
+                    Common Problems
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Kubernetes Dashboard Access</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="kubernetes-dashboard-access-and-authentication">Kubernetes Dashboard Access and Authentication</h1>
+<h2 id="default-setup">Default Setup</h2>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">kubernetesDashboard</span><span class="token punctuation">:</span>
+  <span class="token key atrule">adminPrivileges</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+  <span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+</code></pre>
+<p>In the default setup the Dashboard is configured using the <code>--auto-generate-certificates</code> flag only and has Admin privileges.
+Even if <code>adminPrivileges</code> is set to <code>true</code>, you&apos;ll be prompted to authenticate using <code>kubeconfig</code> or a token.
+In this case you can use the <code>Skip</code> option on login page to access Dashboard.</p>
+<h6 id="access-the-dashboard--using-kubectl-proxy-command">Access the dashboard  using <code>kubectl proxy</code> command:</h6>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+</code></pre>
+<pre class="language-"><code>http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+</code></pre><pre class="language-"><code class="lang-yaml"><span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<pre class="language-"><code>http://localhost:8001/api/v1/namespaces/kube-system/services/http:kubernetes-dashboard:/proxy/
+</code></pre><p><strong>NOTE:</strong></p>
+<ul>
+<li>The shortcut <code>http://localhost:8001/ui</code> is deprecated. Use the full proxy URL <a href="http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/" target="_blank">http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/</a></li>
+<li>It is also possible to access the Dashboard thru the Kubernetes API ELB using a SSL client certificate generated by <code>kube-aws</code> <a href="https://kubeapi.example.com/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy" target="_blank">https://kubeapi.example.com/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy</a></li>
+</ul>
+<h2 id="expose-the-dashboard-using-a-elb-with-self-signed-certificates">Expose the Dashboard using a ELB with self-signed certificates</h2>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">kubernetesDashboard</span><span class="token punctuation">:</span>
+  <span class="token key atrule">adminPrivileges</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+  <span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+</code></pre>
+<p>Ex.</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">run</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> LoadBalancer
+<span class="token comment" spellcheck="true"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
+<span class="token comment" spellcheck="true">#  loadBalancerSourceRanges:</span>
+<span class="token comment" spellcheck="true">#  - x.x.x.x/32</span>
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443</span>
+    <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">8443</span>
+    <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">k8s-app</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+</code></pre>
+<h2 id="expose-the-dashboard-using-a-elb-with-trusted-certificates">Expose the Dashboard using a ELB with trusted certificates</h2>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">kubernetesDashboard</span><span class="token punctuation">:</span>
+  <span class="token key atrule">adminPrivileges</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+  <span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<p>Ex.</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> v1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Service
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
+    <span class="token key atrule">service.beta.kubernetes.io/aws-load-balancer-ssl-cert</span><span class="token punctuation">:</span>
+    <span class="token comment" spellcheck="true">#replace with your certificate ARN</span>
+    arn<span class="token punctuation">:</span>aws<span class="token punctuation">:</span>acm<span class="token punctuation">:</span>us<span class="token punctuation">-</span>east<span class="token punctuation">-</span>1<span class="token punctuation">:</span>XXXXXXXXXX<span class="token punctuation">:</span>certificate/xxxxxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxxxxxxxx
+    <span class="token key atrule">service.beta.kubernetes.io/aws-load-balancer-backend-protocol</span><span class="token punctuation">:</span> http
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+  <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+    <span class="token key atrule">run</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">type</span><span class="token punctuation">:</span> LoadBalancer
+  <span class="token comment" spellcheck="true"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
+  <span class="token comment" spellcheck="true">#  loadBalancerSourceRanges:</span>
+  <span class="token comment" spellcheck="true">#  - x.x.x.x/32</span>
+  <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443</span>
+    <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">9090</span>
+    <span class="token key atrule">protocol</span><span class="token punctuation">:</span> TCP
+  <span class="token key atrule">selector</span><span class="token punctuation">:</span>
+    <span class="token key atrule">k8s-app</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+</code></pre>
+<h2 id="expose-the-dashboard-using-a-ingress-with-trusted-certificates">Expose the Dashboard using a Ingress with trusted certificates</h2>
+<pre class="language-"><code class="lang-yaml">    <span class="token key atrule">kubernetesDashboard</span><span class="token punctuation">:</span>
+      <span class="token key atrule">adminPrivileges</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>
+      <span class="token key atrule">insecureLogin</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+</code></pre>
+<p>Ex.</p>
+<pre class="language-"><code class="lang-yaml"><span class="token key atrule">apiVersion</span><span class="token punctuation">:</span> extensions/v1beta1
+<span class="token key atrule">kind</span><span class="token punctuation">:</span> Ingress
+<span class="token key atrule">metadata</span><span class="token punctuation">:</span>
+  <span class="token key atrule">name</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+  <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
+    <span class="token key atrule">kubernetes.io/ingress.class</span><span class="token punctuation">:</span> nginx
+    <span class="token key atrule">kubernetes.io/tls-acme</span><span class="token punctuation">:</span> <span class="token string">&quot;true&quot;</span>
+    <span class="token key atrule">ingress.kubernetes.io/ssl-redirect</span><span class="token punctuation">:</span> <span class="token string">&quot;true&quot;</span>
+    <span class="token key atrule">ingress.kubernetes.io/use-port-in-redirects</span><span class="token punctuation">:</span> <span class="token string">&quot;true&quot;</span>
+  <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system
+<span class="token key atrule">spec</span><span class="token punctuation">:</span>
+  <span class="token key atrule">tls</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">hosts</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> kubedash.example.com
+    <span class="token key atrule">secretName</span><span class="token punctuation">:</span> kubedash<span class="token punctuation">-</span>tls
+  <span class="token key atrule">rules</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">host</span><span class="token punctuation">:</span> kubedash.example.com
+    <span class="token key atrule">http</span><span class="token punctuation">:</span>
+      <span class="token key atrule">paths</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">path</span><span class="token punctuation">:</span> /
+        <span class="token key atrule">backend</span><span class="token punctuation">:</span>
+          <span class="token key atrule">serviceName</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
+          <span class="token key atrule">servicePort</span><span class="token punctuation">:</span> <span class="token number">9090</span>
+</code></pre>
+<h2 id="authentication-using-a-token">Authentication using a token</h2>
+<p>Ex.</p>
+<p>Create a new ServiceAccount</p>
+<pre class="language-"><code>kubectl create serviceaccount k8sadmin -n kube-system
+</code></pre><p>Create a ClusterRoleBinding with Cluster Admin Privileges</p>
+<pre class="language-"><code>kubectl create clusterrolebinding k8sadmin --clusterrole=cluster-admin --serviceaccount=kube-system:k8sadmin
+</code></pre><p>Get the token</p>
+<pre class="language-"><code>kubectl get secret -n kube-system | grep k8sadmin | cut -d &quot; &quot; -f1 | xargs -n 1 | xargs kubectl get secret  -o &apos;jsonpath={.data.token}&apos; -n kube-system | base64 --decode
+</code></pre>
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="etcd-backup-and-restore.html" class="navigation navigation-prev " aria-label="Previous page: etcd Backup & Restore">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="use-an-existing-vpc.html" class="navigation navigation-next " aria-label="Next page: Use An Existing VPC">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Kubernetes Dashboard Access","level":"1.8.3","depth":2,"next":{"title":"Use An Existing VPC","level":"1.8.4","depth":2,"path":"advanced-topics/use-an-existing-vpc.md","ref":"advanced-topics/use-an-existing-vpc.md","articles":[]},"previous":{"title":"etcd Backup & Restore","level":"1.8.2","depth":2,"path":"advanced-topics/etcd-backup-and-restore.md","ref":"advanced-topics/etcd-backup-and-restore.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"advanced-topics/kubernetes-dashboard.md","mtime":"2017-12-07T14:29:35.598Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2017-12-07T14:52:12.226Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-edit-link/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-github/plugin.js"></script>
+        
+    
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/anchor-js/3.1.1/anchor.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-anchorjs/anchor-style.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
