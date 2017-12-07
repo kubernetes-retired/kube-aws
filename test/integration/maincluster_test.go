@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -87,6 +88,9 @@ func TestMainClusterConfig(t *testing.T) {
 					Enabled: false,
 				},
 				DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
+					Enabled: false,
+				},
+				Priority: controlplane_config.Priority{
 					Enabled: false,
 				},
 			},
@@ -1156,6 +1160,8 @@ experimental:
       enabled: true
     alwaysPullImages:
       enabled: true
+    priority:
+      enabled: true
   auditLog:
     enabled: true
     maxage: 100
@@ -1220,6 +1226,9 @@ worker:
 								Enabled: true,
 							},
 							DenyEscalatingExec: controlplane_config.DenyEscalatingExec{
+								Enabled: true,
+							},
+							Priority: controlplane_config.Priority{
 								Enabled: true,
 							},
 						},
@@ -1292,10 +1301,28 @@ worker:
 					if reflect.DeepEqual(expected, p.Experimental) {
 						t.Errorf("experimental settings shouldn't be inherited to a node pool but it did : toplevel=%v nodepool=%v", expected, p.Experimental)
 					}
+
 				},
 			},
 			assertCluster: []ClusterTester{
 				hasDefaultCluster,
+				func(c root.Cluster, t *testing.T) {
+					cp := c.ControlPlane()
+					controllerUserdataS3Part := cp.UserDataController.Parts[model.USERDATA_S3].Asset.Content
+					if !strings.Contains(controllerUserdataS3Part, `--feature-gates=PodPriority=true`) {
+						t.Error("missing controller feature gate: PodPriority=true")
+					}
+
+					if !strings.Contains(controllerUserdataS3Part, `scheduling.k8s.io/v1alpha1=true`) {
+						t.Error("missing controller runtime config: scheduling.k8s.io/v1alpha1=true")
+					}
+
+					re, _ := regexp.Compile("--admission-control=[a-zA-z,]*,Priority")
+					if len(re.FindString(controllerUserdataS3Part)) == 0 {
+						t.Error("missing controller --admission-control config: Priority")
+					}
+
+				},
 			},
 		},
 		{
