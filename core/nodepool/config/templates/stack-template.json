@@ -144,7 +144,7 @@
           {
             "Key": "kubernetes.io/cluster/{{ .ClusterName }}",
             "PropagateAtLaunch": "true",
-            "Value": "true"
+            "Value": "owned"
           },
           {
             "Key": "kube-aws:node-pool:name",
