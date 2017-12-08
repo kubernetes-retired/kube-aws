@@ -1194,6 +1194,10 @@ addons:
   rescheduler:
     enabled: false
 
+  # Metrics Server (https://github.com/kubernetes-incubator/metrics-server)
+  metricsServer:
+    enabled: false
+
 # Experimental features will change in backward-incompatible ways
 experimental:
   # Enable admission controllers
