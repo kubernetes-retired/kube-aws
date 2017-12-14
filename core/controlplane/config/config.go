@@ -93,6 +93,12 @@ func NewDefaultCluster() *Cluster {
 		TargetGroup: TargetGroup{
 			Enabled: false,
 		},
+		IPVSProxy: IPVSProxy{
+			Enabled:       false,
+			Scheduler:     "rr",
+			SyncPeriod:    "300s",
+			MinSyncPeriod: "60s",
+		},
 		NodeDrainer: model.NodeDrainer{
 			Enabled:      false,
 			DrainTimeout: 5,
@@ -518,6 +524,7 @@ type Experimental struct {
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
+	IPVSProxy                   IPVSProxy                      `yaml:"ipvsProxy"`
 	Oidc                        model.Oidc                     `yaml:"oidc"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                         `yaml:"nodeMonitorGracePeriod"`
@@ -635,6 +642,13 @@ type TargetGroup struct {
 	Enabled          bool     `yaml:"enabled"`
 	Arns             []string `yaml:"arns"`
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
+}
+
+type IPVSProxy struct {
+	Enabled       bool   `yaml:"enabled"`
+	Scheduler     string `yaml:"scheduler"`
+	SyncPeriod    string `yaml:"syncPeriod"`
+	MinSyncPeriod string `yaml:"minSyncPeriod"`
 }
 
 type KubeDns struct {
