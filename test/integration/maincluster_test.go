@@ -122,6 +122,12 @@ func TestMainClusterConfig(t *testing.T) {
 			Kube2IamSupport: controlplane_config.Kube2IamSupport{
 				Enabled: false,
 			},
+			IPVSProxy: controlplane_config.IPVSProxy{
+				Enabled:       false,
+				Scheduler:     "rr",
+				SyncPeriod:    "300s",
+				MinSyncPeriod: "60s",
+			},
 			LoadBalancer: controlplane_config.LoadBalancer{
 				Enabled: false,
 			},
@@ -1183,6 +1189,11 @@ experimental:
   kube2IamSupport:
     enabled: true
   kubeletOpts: '--image-gc-low-threshold 60 --image-gc-high-threshold 70'
+  ipvsProxy:
+    enabled: true
+    scheduler: lc
+    syncPeriod: 900s
+    minSyncPeriod: 120s
   loadBalancer:
     enabled: true
     names:
@@ -1264,6 +1275,12 @@ worker:
 							Enabled: true,
 						},
 						KubeletOpts: "--image-gc-low-threshold 60 --image-gc-high-threshold 70",
+						IPVSProxy: controlplane_config.IPVSProxy{
+							Enabled:       true,
+							Scheduler:     "lc",
+							SyncPeriod:    "900s",
+							MinSyncPeriod: "120s",
+						},
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},

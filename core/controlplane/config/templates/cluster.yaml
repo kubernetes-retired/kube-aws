@@ -1261,6 +1261,14 @@ experimental:
   kube2IamSupport:
     enabled: false
 
+  # Use IPVS kube-proxy mode instead of [default] iptables one (requires Kubernetes 1.8.3+)
+  # This is intended to address performance issues of iptables mode for clusters with big number of nodes and services
+  ipvsProxy:
+    enabled: false
+    scheduler: rr
+    syncPeriod: 300s
+    minSyncPeriod: 60s
+
   # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group, or when
   # the instance receives a termination notice (in case of spot instances)
   nodeDrainer:
