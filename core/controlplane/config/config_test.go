@@ -975,6 +975,67 @@ experimental:
 
 }
 
+func TestRotateCerts(t *testing.T) {
+
+	validConfigs := []struct {
+		conf        string
+		rotateCerts RotateCerts
+	}{
+		{
+			conf: `
+`,
+			rotateCerts: RotateCerts{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubelet:
+  rotateCerts:
+    enabled: false
+`,
+			rotateCerts: RotateCerts{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubelet:
+  rotateCerts:
+    enabled: true
+`,
+			rotateCerts: RotateCerts{
+				Enabled: true,
+			},
+		},
+		{
+			conf: `
+rotateCerts:
+  enabled: true
+`,
+			rotateCerts: RotateCerts{
+				Enabled: false,
+			},
+		},
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Kubelet.RotateCerts, conf.rotateCerts) {
+			t.Errorf(
+				"parsed Rotate Certificates settings %+v does not match config: %s",
+				c.Kubelet.RotateCerts,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestTLSBootstrapConfig(t *testing.T) {
 
 	validConfigs := []struct {
