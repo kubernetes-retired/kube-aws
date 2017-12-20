@@ -93,12 +93,6 @@ func NewDefaultCluster() *Cluster {
 		TargetGroup: TargetGroup{
 			Enabled: false,
 		},
-		IPVSProxy: IPVSProxy{
-			Enabled:       false,
-			Scheduler:     "rr",
-			SyncPeriod:    "300s",
-			MinSyncPeriod: "60s",
-		},
 		NodeDrainer: model.NodeDrainer{
 			Enabled:      false,
 			DrainTimeout: 5,
@@ -110,6 +104,13 @@ func NewDefaultCluster() *Cluster {
 			UsernameClaim: "email",
 			GroupsClaim:   "groups",
 		},
+	}
+
+	ipvsMode := IPVSMode{
+		Enabled:       false,
+		Scheduler:     "rr",
+		SyncPeriod:    "60s",
+		MinSyncPeriod: "10s",
 	}
 
 	return &Cluster{
@@ -136,6 +137,9 @@ func NewDefaultCluster() *Cluster {
 					Filter:   `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
 					interval: 60,
 				},
+			},
+			KubeProxy: KubeProxy{
+				IPVSMode: ipvsMode,
 			},
 			KubeDns: KubeDns{
 				NodeLocalResolver: false,
@@ -429,6 +433,7 @@ type DeploymentSettings struct {
 	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
 	AmazonSsmAgent          `yaml:"amazonSsmAgent,omitempty"`
 	CloudFormationStreaming bool `yaml:"cloudFormationStreaming,omitempty"`
+	KubeProxy               `yaml:"kubeProxy,omitempty"`
 	KubeDns                 `yaml:"kubeDns,omitempty"`
 	KubernetesDashboard     `yaml:"kubernetesDashboard,omitempty"`
 	// Images repository
@@ -524,7 +529,6 @@ type Experimental struct {
 	LoadBalancer                LoadBalancer                   `yaml:"loadBalancer"`
 	TargetGroup                 TargetGroup                    `yaml:"targetGroup"`
 	NodeDrainer                 model.NodeDrainer              `yaml:"nodeDrainer"`
-	IPVSProxy                   IPVSProxy                      `yaml:"ipvsProxy"`
 	Oidc                        model.Oidc                     `yaml:"oidc"`
 	DisableSecurityGroupIngress bool                           `yaml:"disableSecurityGroupIngress"`
 	NodeMonitorGracePeriod      string                         `yaml:"nodeMonitorGracePeriod"`
@@ -644,7 +648,11 @@ type TargetGroup struct {
 	SecurityGroupIds []string `yaml:"securityGroupIds"`
 }
 
-type IPVSProxy struct {
+type KubeProxy struct {
+	IPVSMode IPVSMode `yaml:"ipvsMode"`
+}
+
+type IPVSMode struct {
 	Enabled       bool   `yaml:"enabled"`
 	Scheduler     string `yaml:"scheduler"`
 	SyncPeriod    string `yaml:"syncPeriod"`
