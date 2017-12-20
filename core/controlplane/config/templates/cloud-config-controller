@@ -1918,7 +1918,7 @@ write_files:
           clientConnection:
             kubeconfig: /etc/kubernetes/kubeconfig/kube-proxy.yaml
           clusterCIDR: {{.PodCIDR}}
-          {{if .Experimental.IPVSProxy.Enabled}}
+          {{if .Experimental.IPVSProxy.Enabled -}}
           featureGates: "SupportIPVSProxyMode=true"
           mode: ipvs
           ipvs:
@@ -1967,9 +1967,11 @@ write_files:
                 securityContext:
                   privileged: true
                 volumeMounts:
+                {{if .Experimental.IPVSProxy.Enabled -}}
                 - mountPath: /lib/modules
                   name: lib-modules
                   readOnly: true
+                {{end -}}
                 - mountPath: /etc/kubernetes/kubeconfig
                   name: kubeconfig
                   readOnly: true
@@ -1977,9 +1979,11 @@ write_files:
                   name: kube-proxy-config
                   readOnly: true
               volumes:
+              {{if .Experimental.IPVSProxy.Enabled -}}
               - name: lib-modules
                 hostPath:
                   path: /lib/modules
+              {{end -}}
               - name: kubeconfig
                 hostPath:
                   path: /etc/kubernetes/kubeconfig
