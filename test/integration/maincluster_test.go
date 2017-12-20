@@ -122,12 +122,6 @@ func TestMainClusterConfig(t *testing.T) {
 			Kube2IamSupport: controlplane_config.Kube2IamSupport{
 				Enabled: false,
 			},
-			IPVSProxy: controlplane_config.IPVSProxy{
-				Enabled:       false,
-				Scheduler:     "rr",
-				SyncPeriod:    "300s",
-				MinSyncPeriod: "60s",
-			},
 			LoadBalancer: controlplane_config.LoadBalancer{
 				Enabled: false,
 			},
@@ -522,6 +516,65 @@ apiEndpoints:
 					expected := "0.0.0.0/0"
 					if actual != expected {
 						t.Errorf("unexpected cidr in apiEndpoints[0].loadBalancer.apiAccessAllowedSourceCIDRs[0]. expected = %s, actual = %s", expected, actual)
+					}
+				},
+			},
+		},
+		{
+			context:    "WithKubeProxyIPVSModeDisabledByDefault",
+			configYaml: minimalValidConfigYaml,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.KubeProxy.IPVSMode.Enabled != false {
+						t.Errorf("kube-proxy IPVS mode must be disabled by default")
+					}
+
+					expectedScheduler := "rr"
+					if c.KubeProxy.IPVSMode.Scheduler != expectedScheduler {
+						t.Errorf("IPVS scheduler should be by default set to: %s (actual = %s)", expectedScheduler, c.KubeProxy.IPVSMode.Scheduler)
+					}
+
+					expectedSyncPeriod := "60s"
+					if c.KubeProxy.IPVSMode.SyncPeriod != expectedSyncPeriod {
+						t.Errorf("Sync period should be by default set to: %s (actual = %s)", expectedSyncPeriod, c.KubeProxy.IPVSMode.SyncPeriod)
+					}
+
+					expectedMinSyncPeriod := "10s"
+					if c.KubeProxy.IPVSMode.MinSyncPeriod != expectedMinSyncPeriod {
+						t.Errorf("Minimal sync period should be by default set to: %s (actual = %s)", expectedMinSyncPeriod, c.KubeProxy.IPVSMode.MinSyncPeriod)
+					}
+				},
+			},
+		},
+		{
+			context: "WithKubeProxyIPVSModeEnabled",
+			configYaml: minimalValidConfigYaml + `
+kubeProxy:
+  ipvsMode:
+    enabled: true
+    scheduler: lc
+    syncPeriod: 90s
+    minSyncPeriod: 15s
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.KubeProxy.IPVSMode.Enabled != true {
+						t.Errorf("kube-proxy IPVS mode must be enabled")
+					}
+
+					expectedScheduler := "lc"
+					if c.KubeProxy.IPVSMode.Scheduler != expectedScheduler {
+						t.Errorf("IPVS scheduler should be set to: %s (actual = %s)", expectedScheduler, c.KubeProxy.IPVSMode.Scheduler)
+					}
+
+					expectedSyncPeriod := "90s"
+					if c.KubeProxy.IPVSMode.SyncPeriod != expectedSyncPeriod {
+						t.Errorf("Sync period should be set to: %s (actual = %s)", expectedSyncPeriod, c.KubeProxy.IPVSMode.SyncPeriod)
+					}
+
+					expectedMinSyncPeriod := "15s"
+					if c.KubeProxy.IPVSMode.MinSyncPeriod != expectedMinSyncPeriod {
+						t.Errorf("Minimal sync period should be set to: %s (actual = %s)", expectedMinSyncPeriod, c.KubeProxy.IPVSMode.MinSyncPeriod)
 					}
 				},
 			},
@@ -1189,11 +1242,6 @@ experimental:
   kube2IamSupport:
     enabled: true
   kubeletOpts: '--image-gc-low-threshold 60 --image-gc-high-threshold 70'
-  ipvsProxy:
-    enabled: true
-    scheduler: lc
-    syncPeriod: 900s
-    minSyncPeriod: 120s
   loadBalancer:
     enabled: true
     names:
@@ -1275,12 +1323,6 @@ worker:
 							Enabled: true,
 						},
 						KubeletOpts: "--image-gc-low-threshold 60 --image-gc-high-threshold 70",
-						IPVSProxy: controlplane_config.IPVSProxy{
-							Enabled:       true,
-							Scheduler:     "lc",
-							SyncPeriod:    "900s",
-							MinSyncPeriod: "120s",
-						},
 						LoadBalancer: controlplane_config.LoadBalancer{
 							Enabled:          true,
 							Names:            []string{"manuallymanagedlb"},
