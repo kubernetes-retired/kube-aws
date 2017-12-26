@@ -546,6 +546,9 @@ worker:
 #            Description=Example Custom Service
 #            [Service]
 #            ExecStart=/bin/rkt run --set-env TAGS=Controller ...
+#      # Enable PodPriority (it only makes sense if you enabled priority admission control in experimental section)
+#      featureGates:
+#        PodPriority: true
 
 # Maximum time to wait for worker creation
 #workerCreateTimeout: PT15M
@@ -1213,6 +1216,10 @@ experimental:
     denyEscalatingExec:
       enabled: false
     initializers:
+      enabled: false
+    # Priority enables PodPriority in the API server, scheduler and kubelet. you need to manually add the
+    # featureGate PodPriority:true in the worker
+    priority:
       enabled: false
 
   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
