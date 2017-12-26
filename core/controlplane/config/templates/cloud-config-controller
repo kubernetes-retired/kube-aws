@@ -1914,12 +1914,20 @@ write_files:
         namespace: kube-system
       data:
         kube-proxy-config.yaml: |
-          apiVersion: componentconfig/v1alpha1
+          apiVersion: {{if ge .K8sVer "v1.9"}}kubeproxy.config.k8s.io{{else}}componentconfig{{end}}/v1alpha1
           kind: KubeProxyConfiguration
           bindAddress: 0.0.0.0
           clientConnection:
             kubeconfig: /etc/kubernetes/kubeconfig/kube-proxy.yaml
           clusterCIDR: {{.PodCIDR}}
+          {{if .KubeProxy.IPVSMode.Enabled -}}
+          featureGates: "SupportIPVSProxyMode=true"
+          mode: ipvs
+          ipvs:
+            scheduler: {{.KubeProxy.IPVSMode.Scheduler}}
+            syncPeriod: {{.KubeProxy.IPVSMode.SyncPeriod}}
+            minSyncPeriod: {{.KubeProxy.IPVSMode.MinSyncPeriod}}
+          {{end}}
 
   - path: /srv/kubernetes/manifests/kube-proxy-ds.yaml
     content: |
@@ -1961,6 +1969,11 @@ write_files:
                 securityContext:
                   privileged: true
                 volumeMounts:
+                {{if .KubeProxy.IPVSMode.Enabled -}}
+                - mountPath: /lib/modules
+                  name: lib-modules
+                  readOnly: true
+                {{end -}}
                 - mountPath: /etc/kubernetes/kubeconfig
                   name: kubeconfig
                   readOnly: true
@@ -1968,6 +1981,11 @@ write_files:
                   name: kube-proxy-config
                   readOnly: true
               volumes:
+              {{if .KubeProxy.IPVSMode.Enabled -}}
+              - name: lib-modules
+                hostPath:
+                  path: /lib/modules
+              {{end -}}
               - name: kubeconfig
                 hostPath:
                   path: /etc/kubernetes/kubeconfig

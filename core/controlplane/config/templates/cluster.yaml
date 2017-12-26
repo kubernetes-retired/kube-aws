@@ -1179,6 +1179,19 @@ kubernetesDashboard:
 #kubeDns:
 # nodeLocalResolver: false
 
+kubeProxy:
+  # Use IPVS kube-proxy mode instead of [default] iptables one (requires Kubernetes 1.9.0+ to work reliably)
+  # This is intended to address performance issues of iptables mode for clusters with big number of nodes and services
+  # FIXME For those who use hyperkube version 'v1.9.0' / 'v1.9.0_coreos.0', your image may lack `ipset` utility
+  # FIXME Please see: https://github.com/kubernetes/kubernetes/issues/57321 (next Kubernetes release will have a fix)
+  # FIXME https://github.com/kubernetes/kubernetes/commit/787a55bb67ccd2da14aa6e7f91289c859beecb5f#diff-bf0f8d724d18f700f3c821aa5a74f4cf
+  # FIXME IPVS integration is still green, proceed with care! You may get fixed hyperkube image from 'ivanilves/hyperkube' Docker repo
+  ipvsMode:
+    enabled: false
+    scheduler: rr
+    syncPeriod: 300s
+    minSyncPeriod: 60s
+
 # When enabled, CloudFormation events will stream to stdout during kube-aws 'update | up'.
 # It is enabled by default.
 #cloudFormationStreaming: true
