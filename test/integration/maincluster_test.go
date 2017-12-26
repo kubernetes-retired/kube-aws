@@ -525,6 +525,65 @@ apiEndpoints:
 			},
 		},
 		{
+			context:    "WithKubeProxyIPVSModeDisabledByDefault",
+			configYaml: minimalValidConfigYaml,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.KubeProxy.IPVSMode.Enabled != false {
+						t.Errorf("kube-proxy IPVS mode must be disabled by default")
+					}
+
+					expectedScheduler := "rr"
+					if c.KubeProxy.IPVSMode.Scheduler != expectedScheduler {
+						t.Errorf("IPVS scheduler should be by default set to: %s (actual = %s)", expectedScheduler, c.KubeProxy.IPVSMode.Scheduler)
+					}
+
+					expectedSyncPeriod := "60s"
+					if c.KubeProxy.IPVSMode.SyncPeriod != expectedSyncPeriod {
+						t.Errorf("Sync period should be by default set to: %s (actual = %s)", expectedSyncPeriod, c.KubeProxy.IPVSMode.SyncPeriod)
+					}
+
+					expectedMinSyncPeriod := "10s"
+					if c.KubeProxy.IPVSMode.MinSyncPeriod != expectedMinSyncPeriod {
+						t.Errorf("Minimal sync period should be by default set to: %s (actual = %s)", expectedMinSyncPeriod, c.KubeProxy.IPVSMode.MinSyncPeriod)
+					}
+				},
+			},
+		},
+		{
+			context: "WithKubeProxyIPVSModeEnabled",
+			configYaml: minimalValidConfigYaml + `
+kubeProxy:
+  ipvsMode:
+    enabled: true
+    scheduler: lc
+    syncPeriod: 90s
+    minSyncPeriod: 15s
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					if c.KubeProxy.IPVSMode.Enabled != true {
+						t.Errorf("kube-proxy IPVS mode must be enabled")
+					}
+
+					expectedScheduler := "lc"
+					if c.KubeProxy.IPVSMode.Scheduler != expectedScheduler {
+						t.Errorf("IPVS scheduler should be set to: %s (actual = %s)", expectedScheduler, c.KubeProxy.IPVSMode.Scheduler)
+					}
+
+					expectedSyncPeriod := "90s"
+					if c.KubeProxy.IPVSMode.SyncPeriod != expectedSyncPeriod {
+						t.Errorf("Sync period should be set to: %s (actual = %s)", expectedSyncPeriod, c.KubeProxy.IPVSMode.SyncPeriod)
+					}
+
+					expectedMinSyncPeriod := "15s"
+					if c.KubeProxy.IPVSMode.MinSyncPeriod != expectedMinSyncPeriod {
+						t.Errorf("Minimal sync period should be set to: %s (actual = %s)", expectedMinSyncPeriod, c.KubeProxy.IPVSMode.MinSyncPeriod)
+					}
+				},
+			},
+		},
+		{
 			// See https://github.com/kubernetes-incubator/kube-aws/issues/365
 			context:    "WithClusterNameContainsHyphens",
 			configYaml: kubeAwsSettings.withClusterName("my-cluster").minimumValidClusterYaml(),
