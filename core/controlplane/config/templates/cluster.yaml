@@ -1214,6 +1214,11 @@ addons:
   metricsServer:
     enabled: false
 
+  # When set to true this configures security groups for prometheus between nodes.
+  # This includes the following ports: 10252, 10251, 10250, 9100, and 4194
+  prometheus: 
+    securityGroupsEnabled: false
+
 # Experimental features will change in backward-incompatible ways
 experimental:
   # Enable admission controllers
