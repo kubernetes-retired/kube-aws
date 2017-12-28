@@ -1172,6 +1172,7 @@ write_files:
                 - |
                     set -x ;
                     DUMP_DIR_COMPLETE=/kube-resources-autosave/complete ;
+                    aws configure set s3.signature_version s3v4 ;
                     mkdir -p ${DUMP_DIR_COMPLETE} ;
                     while true; do
                       TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
