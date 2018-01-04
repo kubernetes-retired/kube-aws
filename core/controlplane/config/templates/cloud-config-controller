@@ -292,9 +292,10 @@ coreos:
         {{ if .KubeDns.NodeLocalResolver }}--cluster-dns=${COREOS_PRIVATE_IPV4} \
         {{ else }}--cluster-dns={{.DNSServiceIP}} \
         {{ end }}--cluster-domain=cluster.local \
-        --cloud-provider=aws \{{if .Experimental.Admission.Priority.Enabled}}
+        --cloud-provider=aws \
+        {{if .Experimental.Admission.Priority.Enabled}}
         --feature-gates=PodPriority=true \
-        {{end}}\
+        {{end}}
         $KUBELET_OPTS
         Restart=always
         RestartSec=10
