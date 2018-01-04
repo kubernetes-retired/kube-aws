@@ -646,7 +646,7 @@ worker:
 #      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
-#  version: 3.2.10
+#  version: 3.2.13
 #
 #  snapshot:
 #    # Set to true to periodically take an etcd snapshot
