@@ -295,7 +295,7 @@ coreos:
         --cloud-provider=aws \
         {{if .Experimental.Admission.Priority.Enabled}}
         --feature-gates=PodPriority=true \
-        {{end}}
+        {{end}}\
         $KUBELET_OPTS
         Restart=always
         RestartSec=10
