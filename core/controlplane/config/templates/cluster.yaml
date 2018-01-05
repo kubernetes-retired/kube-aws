@@ -1309,6 +1309,13 @@ experimental:
   # Must be N times more than kubelet's nodeStatusUpdateFrequency (default 10s).
 #   nodeMonitorGracePeriod: "40s"
 
+kubelet:
+  # Tell Kubelet to renew its certificate as its expiration time is approaching
+  # Requires FeatureGate RotateKubeletClientCertificate=true on worker
+  # Also requires Experimental.tlsBootstrap to be enabled
+  RotateCerts:
+    enabled: true
+
 # AWS Tags for cloudformation stack resources
 #stackTags:
 #  Name: "Kubernetes"

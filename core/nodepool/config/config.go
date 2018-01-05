@@ -39,6 +39,7 @@ type ProvidedConfig struct {
 	WorkerNodePoolConfig    `yaml:",inline"`
 	DeploymentSettings      `yaml:",inline"`
 	cfg.Experimental        `yaml:",inline"`
+	cfg.Kubelet             `yaml:",inline"`
 	Plugins                 model.PluginConfigs `yaml:"kubeAwsPlugins,omitempty"`
 	Private                 bool                `yaml:"private,omitempty"`
 	NodePoolName            string              `yaml:"name,omitempty"`
@@ -164,6 +165,7 @@ func (c *ProvidedConfig) Load(main *cfg.Config) error {
 	c.KubeClusterSettings = main.KubeClusterSettings
 	c.Experimental.TLSBootstrap = main.DeploymentSettings.Experimental.TLSBootstrap
 	c.Experimental.NodeDrainer = main.DeploymentSettings.Experimental.NodeDrainer
+	c.Kubelet.RotateCerts = main.DeploymentSettings.Kubelet.RotateCerts
 
 	if c.Experimental.ClusterAutoscalerSupport.Enabled {
 		if !main.Addons.ClusterAutoscaler.Enabled {
