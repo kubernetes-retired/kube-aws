@@ -36,6 +36,11 @@ const (
 )
 
 func NewDefaultCluster() *Cluster {
+	kubelet := Kubelet{
+		RotateCerts: RotateCerts{
+			Enabled: false,
+		},
+	}
 	experimental := Experimental{
 		Admission: Admission{
 			PodSecurityPolicy{
@@ -126,6 +131,7 @@ func NewDefaultCluster() *Cluster {
 			Subnets:            []model.Subnet{},
 			EIPAllocationIDs:   []string{},
 			Experimental:       experimental,
+			Kubelet:            kubelet,
 			ManageCertificates: true,
 			AmazonSsmAgent: AmazonSsmAgent{
 				Enabled:     false,
@@ -431,6 +437,7 @@ type DeploymentSettings struct {
 	SSHAuthorizedKeys       []string          `yaml:"sshAuthorizedKeys,omitempty"`
 	Addons                  model.Addons      `yaml:"addons"`
 	Experimental            Experimental      `yaml:"experimental"`
+	Kubelet                 Kubelet           `yaml:"kubelet"`
 	ManageCertificates      bool              `yaml:"manageCertificates,omitempty"`
 	WaitSignal              WaitSignal        `yaml:"waitSignal"`
 	CloudWatchLogging       `yaml:"cloudWatchLogging,omitempty"`
@@ -515,6 +522,11 @@ type Cluster struct {
 	KubeResourcesAutosave       `yaml:"kubeResourcesAutosave,omitempty"`
 }
 
+// Kubelet options
+type Kubelet struct {
+	RotateCerts RotateCerts `yaml:"rotateCerts"`
+}
+
 type Experimental struct {
 	Admission      Admission      `yaml:"admission"`
 	AuditLog       AuditLog       `yaml:"auditLog"`
@@ -592,6 +604,10 @@ type AwsNodeLabels struct {
 }
 
 type TLSBootstrap struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type RotateCerts struct {
 	Enabled bool `yaml:"enabled"`
 }
 
