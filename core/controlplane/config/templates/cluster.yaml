@@ -9,6 +9,7 @@ clusterName: {{.ClusterName}}
 
 # The AMI ID of CoreOS.
 # If omitted, the latest AMI for the releaseChannel is used.
+# This happens every time 'kube-aws update' is run, potentially replacing all instances with a newer version
 {{if .AmiId -}}
 amiId: "{{.AmiId}}"
 {{else -}}
