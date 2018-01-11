@@ -293,6 +293,9 @@ func (c ProvidedConfig) FeatureGates() model.FeatureGates {
 	if c.Gpu.Nvidia.IsEnabledOn(c.InstanceType) {
 		gates["Accelerators"] = "true"
 	}
+	if c.Kubelet.RotateCerts.Enabled {
+		gates["RotateKubeletClientCertificate"] = "true"
+	}
 	return gates
 }
 
