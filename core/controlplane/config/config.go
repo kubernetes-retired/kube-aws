@@ -413,6 +413,7 @@ type ComputedDeploymentSettings struct {
 // Though it is highly configurable, it's basically users' responsibility to provide `correct` values if they're going beyond the defaults.
 type DeploymentSettings struct {
 	ComputedDeploymentSettings
+	CloudFormation              model.CloudFormation  `yaml:"cloudformation,omitempty"`
 	ClusterName                 string                `yaml:"clusterName,omitempty"`
 	KeyName                     string                `yaml:"keyName,omitempty"`
 	Region                      model.Region          `yaml:",inline"`
