@@ -2489,9 +2489,28 @@ write_files:
                 configMap:
                   name: kube-dns
                   optional: true
+              {{ if .KubeDns.DeployToControllers -}}
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: node-role.kubernetes.io/master
+                        operator: In
+                        values:
+                        - ""
+              tolerations:
+               - key: "CriticalAddonsOnly"
+                 operator: "Exists"
+               - key: "node.alpha.kubernetes.io/role"
+                 operator: "Equal"
+                 value: "master"
+                 effect: "NoSchedule" 
+              {{ else -}}
               tolerations:
               - key: "CriticalAddonsOnly"
                 operator: "Exists"
+              {{ end -}}
               containers:
               - name: kubedns
                 image: {{ .KubeDnsImage.RepoWithTag }}

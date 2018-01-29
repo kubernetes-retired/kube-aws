@@ -1036,6 +1036,56 @@ rotateCerts:
 	}
 }
 
+func TestKubeDns(t *testing.T) {
+
+	validConfigs := []struct {
+		conf    string
+		kubeDns KubeDns
+	}{
+		{
+			conf: `
+`,
+			kubeDns: KubeDns{
+				DeployToControllers: false,
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  deployToControllers: false
+`,
+			kubeDns: KubeDns{
+				DeployToControllers: false,
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  deployToControllers: true
+`,
+			kubeDns: KubeDns{
+				DeployToControllers: true,
+			},
+		},
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.KubeDns, conf.kubeDns) {
+			t.Errorf(
+				"parsed kubeDns settings %+v does not match config: %s",
+				c.KubeDns,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestTLSBootstrapConfig(t *testing.T) {
 
 	validConfigs := []struct {

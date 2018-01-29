@@ -151,7 +151,8 @@ func NewDefaultCluster() *Cluster {
 				IPVSMode: ipvsMode,
 			},
 			KubeDns: KubeDns{
-				NodeLocalResolver: false,
+				NodeLocalResolver:   false,
+				DeployToControllers: false,
 			},
 			KubernetesDashboard: KubernetesDashboard{
 				AdminPrivileges: true,
@@ -684,12 +685,14 @@ type IPVSMode struct {
 }
 
 type KubeDns struct {
-	NodeLocalResolver bool `yaml:"nodeLocalResolver"`
+	NodeLocalResolver   bool `yaml:"nodeLocalResolver"`
+	DeployToControllers bool `yaml:"deployToControllers"`
 }
 
 func (c *KubeDns) MergeIfEmpty(other KubeDns) {
-	if c.NodeLocalResolver == false {
+	if c.NodeLocalResolver == false && c.DeployToControllers == false {
 		c.NodeLocalResolver = other.NodeLocalResolver
+		c.DeployToControllers = other.DeployToControllers
 	}
 }
 
