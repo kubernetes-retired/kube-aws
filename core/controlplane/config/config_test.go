@@ -930,6 +930,7 @@ func TestNodeDrainerConfig(t *testing.T) {
 			nodeDrainer: model.NodeDrainer{
 				Enabled:      false,
 				DrainTimeout: 5,
+				IAMRole:      model.IAMRole{},
 			},
 		},
 		{
@@ -937,10 +938,13 @@ func TestNodeDrainerConfig(t *testing.T) {
 experimental:
   nodeDrainer:
     enabled: true
+    iamRole:
+      arn: arn:aws:iam::0123456789012:role/asg-list-role
 `,
 			nodeDrainer: model.NodeDrainer{
 				Enabled:      true,
 				DrainTimeout: 5,
+				IAMRole:      model.IAMRole{ARN: model.ARN{Arn: "arn:aws:iam::0123456789012:role/asg-list-role"}},
 			},
 		},
 		{
