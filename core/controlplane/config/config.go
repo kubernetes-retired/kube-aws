@@ -104,6 +104,7 @@ func NewDefaultCluster() *Cluster {
 		NodeDrainer: model.NodeDrainer{
 			Enabled:      false,
 			DrainTimeout: 5,
+			IAMRole:      model.IAMRole{},
 		},
 		Oidc: model.Oidc{
 			Enabled:       false,
