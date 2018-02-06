@@ -1220,7 +1220,7 @@ addons:
 
   # When set to true this configures security groups for prometheus between nodes.
   # This includes the following ports: 10252, 10251, 10250, 9100, and 4194
-  prometheus: 
+  prometheus:
     securityGroupsEnabled: false
 
 # Experimental features will change in backward-incompatible ways
@@ -1296,6 +1296,10 @@ experimental:
     enabled: false
     # Maximum time to wait, in minutes, for the node to be completely drained. Must be an integer between 1 and 60.
     drainTimeout: 5
+    # IAM role to assume with kube2iam for the pod in "kube-node-drainer-asg-status-updater" deployment.
+    iamRole:
+      # Empty, inactive by default. Set it to valid ARN "arn: arn:aws:iam::0123456789012:role/roleName" to activate.
+      arn: ""
 
   # Configure OpenID Connect token authenticator plugin in Kubernetes API server.
   # For using Dex as a custom OIDC provider, please check "contrib/dex/README.md".
