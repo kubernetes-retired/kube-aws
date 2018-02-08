@@ -154,6 +154,11 @@ func NewDefaultCluster() *Cluster {
 			KubeDns: KubeDns{
 				NodeLocalResolver:   false,
 				DeployToControllers: false,
+				Autoscaler: KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
 			},
 			KubernetesDashboard: KubernetesDashboard{
 				AdminPrivileges: true,
@@ -686,9 +691,16 @@ type IPVSMode struct {
 	MinSyncPeriod string `yaml:"minSyncPeriod"`
 }
 
+type KubeDnsAutoscaler struct {
+	CoresPerReplica int `yaml:"coresPerReplica"`
+	NodesPerReplica int `yaml:"nodesPerReplica"`
+	Min             int `yaml:"min"`
+}
+
 type KubeDns struct {
-	NodeLocalResolver   bool `yaml:"nodeLocalResolver"`
-	DeployToControllers bool `yaml:"deployToControllers"`
+	NodeLocalResolver   bool              `yaml:"nodeLocalResolver"`
+	DeployToControllers bool              `yaml:"deployToControllers"`
+	Autoscaler          KubeDnsAutoscaler `yaml:"autoscaler"`
 }
 
 func (c *KubeDns) MergeIfEmpty(other KubeDns) {
