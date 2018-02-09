@@ -1064,7 +1064,7 @@ worker:
 #  rktPullDocker: false
 
 # Kube Dashboard image repository to use.
-#kubeDashboardImage:
+#kubernetesDashboardImage:
 #  repo: k8s.gcr.io/kubernetes-dashboard-amd64
 #  tag: v1.8.1
 #  rktPullDocker: false
