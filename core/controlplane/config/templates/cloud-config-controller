@@ -1362,7 +1362,7 @@ write_files:
                   - /bin/sh
                   - -xec
                   - |
-                    metadata() { wget -O - -q http://169.254.169.254/2016-09-02/"$1"; }
+                    metadata() { curl -s -S -f http://169.254.169.254/2016-09-02/"$1"; }
                     asg()      { aws --region="${REGION}" autoscaling "$@"; }
 
                     # Hyperkube binary is not statically linked, so we need to use
@@ -1454,7 +1454,7 @@ write_files:
                   - /bin/sh
                   - -xec
                   - |
-                    metadata() { wget -O - -q http://169.254.169.254/2016-09-02/"$1"; }
+                    metadata() { curl -s -S -f http://169.254.169.254/2016-09-02/"$1"; }
                     asg()      { aws --region="${REGION}" autoscaling "$@"; }
 
                     # Hyperkube binary is not statically linked, so we need to use
