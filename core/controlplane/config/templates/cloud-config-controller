@@ -2380,7 +2380,7 @@ write_files:
                   - --namespace=kube-system
                   - --configmap=kube-dns-autoscaler
                   - --target=Deployment/kube-dns
-                  - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":2}}
+                  - --default-params={"linear":{"coresPerReplica":{{ .KubeDns.Autoscaler.CoresPerReplica }},"nodesPerReplica":{{ .KubeDns.Autoscaler.NodesPerReplica }},"min":{{ .KubeDns.Autoscaler.Min}}}}
                   - --logtostderr=true
                   - --v=2
 
