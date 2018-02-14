@@ -1050,25 +1050,49 @@ func TestKubeDns(t *testing.T) {
 			conf: `
 `,
 			kubeDns: KubeDns{
+				NodeLocalResolver:   false,
 				DeployToControllers: false,
+				Autoscaler: KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
 			},
 		},
 		{
 			conf: `
 kubeDns:
+  nodeLocalResolver: false
   deployToControllers: false
 `,
 			kubeDns: KubeDns{
+				NodeLocalResolver:   false,
 				DeployToControllers: false,
+				Autoscaler: KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
 			},
 		},
 		{
 			conf: `
 kubeDns:
+  nodeLocalResolver: true
   deployToControllers: true
+  autoscaler:
+    coresPerReplica: 5
+    nodesPerReplica: 10
+    min: 15
 `,
 			kubeDns: KubeDns{
+				NodeLocalResolver:   true,
 				DeployToControllers: true,
+				Autoscaler: KubeDnsAutoscaler{
+					CoresPerReplica: 5,
+					NodesPerReplica: 10,
+					Min:             15,
+				},
 			},
 		},
 	}
