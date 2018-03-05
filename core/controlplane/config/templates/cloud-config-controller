@@ -1260,7 +1260,7 @@ write_files:
                 readOnly: false
             - name: kube-resources-autosave-pusher
               image: {{.AWSCliImage.RepoWithTag}}
-              command: ["/bin/bash", "-c" ]
+              command: ["/bin/sh", "-c" ]
               args:
                 - |
                     set -x ;
@@ -1273,7 +1273,7 @@ write_files:
                     done
               livenessProbe:
                 exec:
-                  command: ["/bin/bash", "-c", "(( $(date +%s) - $(stat -c%Y /probe-token) < 25*60*60 ))" ]
+                  command: ["/bin/sh", "-c",  "AGE=$(( $(date +%s) - $(stat -c%Y /probe-token) < 25*60*60 ));  [ $AGE -gt 0 ]" ]
                 initialDelaySeconds: 240
                 periodSeconds: 10
               volumeMounts:
