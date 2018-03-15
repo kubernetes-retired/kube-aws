@@ -2222,6 +2222,9 @@ write_files:
           {{if .Experimental.DisableSecurityGroupIngress}}
           - --cloud-config=/etc/kubernetes/additional-configs/cloud.config
           {{end}}
+          {{ if not .Addons.MetricsServer.Enabled -}}
+          - --horizontal-pod-autoscaler-use-rest-clients=false
+          {{end}}
           resources:
             requests:
               cpu: 200m
@@ -2565,7 +2568,7 @@ write_files:
                - key: "node.alpha.kubernetes.io/role"
                  operator: "Equal"
                  value: "master"
-                 effect: "NoSchedule" 
+                 effect: "NoSchedule"
               {{ else -}}
               tolerations:
               - key: "CriticalAddonsOnly"
