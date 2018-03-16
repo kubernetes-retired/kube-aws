@@ -534,7 +534,7 @@
 <ul>
 <li><strong>Parameter-level update</strong>: Only changes to <code>cluster.yaml</code> and/or TLS assets in <code>credentials/</code> folder are reflected. To enact this type of update. Modifications to CloudFormation or cloud-config userdata templates will not be reflected. In this case, you do not have to re-render:</li>
 </ul>
-<pre class="language-"><code class="lang-sh">kube-aws update --s3-uri s3://<span class="token operator">&lt;</span>your-bucket-name<span class="token operator">&gt;</span>/<span class="token operator">&lt;</span>prefix<span class="token operator">&gt;</span>
+<pre class="language-"><code class="lang-sh">kube-aws update
 </code></pre>
 <ul>
 <li><strong>Full update</strong>: Any change (besides changes made to the etcd cluster- more on that later) will be enacted, including structural changes to CloudFormation and cloudinit templates. This is the type of upgrade that must be run on installing a new version of kube-aws, or more generally when cloudinit or CloudFormation templates are modified:</li>
@@ -542,7 +542,7 @@
 <pre class="language-"><code class="lang-sh">kube-aws render stack
 kube-aws render credentials
 <span class="token function">git</span> <span class="token function">diff</span> <span class="token comment" spellcheck="true"># view changes to rendered assets</span>
-kube-aws update --s3-uri s3://<span class="token operator">&lt;</span>your-bucket-name<span class="token operator">&gt;</span>/<span class="token operator">&lt;</span>prefix<span class="token operator">&gt;</span>
+kube-aws update
 </code></pre>
 <h2 id="certificate-and-access-token-rotation">Certificate and access token rotation</h2>
 <p>The parameter-level update mechanism can be used to rotate in new TLS credentials and access tokens.</p>
@@ -555,7 +555,7 @@ kube-aws update --s3-uri s3://<span class="token operator">&lt;</span>your-bucke
 </code></pre>
 </li>
 <li><p>Execute the update command like:</p>
-<pre class="language-"><code class="lang-sh">kube-aws update --s3-uri s3://<span class="token operator">&lt;</span>your-bucket-name<span class="token operator">&gt;</span>/<span class="token operator">&lt;</span>prefix<span class="token operator">&gt;</span>
+<pre class="language-"><code class="lang-sh">kube-aws update
 </code></pre>
 </li>
 </ul>
@@ -607,7 +607,7 @@ kube-aws update --s3-uri s3://<span class="token operator">&lt;</span>your-bucke
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Step 4: Update","level":"1.3.5","depth":2,"next":{"title":"Step 5: Add Node Pool","level":"1.3.6","depth":2,"path":"getting-started/step-5-add-node-pool.md","ref":"getting-started/step-5-add-node-pool.md","articles":[]},"previous":{"title":"Step 3: Launch","level":"1.3.4","depth":2,"path":"getting-started/step-3-launch.md","ref":"getting-started/step-3-launch.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-4-update.md","mtime":"2018-03-15T13:12:44.994Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-03-15T13:35:09.568Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Step 4: Update","level":"1.3.5","depth":2,"next":{"title":"Step 5: Add Node Pool","level":"1.3.6","depth":2,"path":"getting-started/step-5-add-node-pool.md","ref":"getting-started/step-5-add-node-pool.md","articles":[]},"previous":{"title":"Step 3: Launch","level":"1.3.4","depth":2,"path":"getting-started/step-3-launch.md","ref":"getting-started/step-3-launch.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-4-update.md","mtime":"2018-03-16T14:24:09.201Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-03-16T14:47:20.346Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
