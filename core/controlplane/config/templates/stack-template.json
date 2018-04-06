@@ -1295,7 +1295,37 @@
       },
       "Type": "AWS::EC2::SecurityGroup"
     },
-    "SecurityGroupWorkerIngressFromControllerToFlannel": {
+    {{ if .Kubernetes.Networking.SelfHosting.Typha -}}
+    "SecurityGroupWorkerIngressFromControllerToTypha": {
+      "Properties": {
+        "FromPort": 5473,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 5473
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromWorkerToTypha": {
+      "Properties": {
+        "FromPort": 5473,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 5473
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    {{ end -}}
+   "SecurityGroupWorkerIngressFromControllerToFlannel": {
       "Properties": {
         "FromPort": 8472,
         "GroupId": {
