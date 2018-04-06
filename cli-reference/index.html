@@ -585,6 +585,11 @@
 <td>The AWS region to deploy to</td>
 <td>none</td>
 </tr>
+<tr>
+<td><code>s3-uri</code></td>
+<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy/validate. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Most clusters will need this so it is mandatory. Multiple clusters can use the same S3 bucket.</td>
+<td>none</td>
+</tr>
 </tbody>
 </table>
 <h3 id="init-example"><code>init</code> example</h3>
@@ -596,6 +601,7 @@
   --external-dns-name<span class="token operator">=</span>my-cluster-endpoint.mydomain.com \
   --key-name<span class="token operator">=</span>key-pair-name \
   --kms-key-arn<span class="token operator">=</span><span class="token string">&quot;arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx&quot;</span>
+  --s3-uri<span class="token operator">=</span>s3://my-kube-aws-assets-bucket
 </code></pre>
 <h1 id="render-credentials"><code>render credentials</code></h1>
 <p>Render TLS credentials required for cluster administration and communication between cluster nodes.</p>
@@ -652,11 +658,6 @@
 <td>Log debug information coming from the AWS SDK library</td>
 <td><code>false</code></td>
 </tr>
-<tr>
-<td><code>s3-uri</code></td>
-<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
-<td>none</td>
-</tr>
 </tbody>
 </table>
 <h3 id="validate-example"><code>validate</code> example</h3>
@@ -689,11 +690,6 @@
 <td><code>false</code></td>
 </tr>
 <tr>
-<td><code>s3-uri</code></td>
-<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
-<td>none</td>
-</tr>
-<tr>
 <td><code>skip-wait</code></td>
 <td>Do not wait for the cluster components be ready before the CLI exits</td>
 <td><code>false</code></td>
@@ -723,11 +719,6 @@
 <td><code>pretty-print</code></td>
 <td>Pretty print the resulting CloudFormation</td>
 <td><code>false</code></td>
-</tr>
-<tr>
-<td><code>s3-uri</code></td>
-<td>When your template is bigger than the <a href="http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html" target="_blank">CloudFormation limit of 51,200 bytes</a>, kube-aws needs to upload the template to S3 to perform the deploy. The S3 location expressed as <code>s3://<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>bucket</span><span class="token punctuation">&gt;</span></span>/path/to/dir</code>. Multiple clusters can use the same S3 bucket.</td>
-<td>none</td>
 </tr>
 <tr>
 <td><code>skip-wait</code></td>
@@ -803,7 +794,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"CLI Reference","level":"1.5","depth":1,"next":{"title":"AWS Credentials","level":"1.5.1","depth":2,"path":"cli-reference/aws-credentials.md","ref":"cli-reference/aws-credentials.md","articles":[]},"previous":{"title":"Getting In Touch","level":"1.4","depth":1,"path":"getting-in-touch.md","ref":"getting-in-touch.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"cli-reference/README.md","mtime":"2018-04-06T01:32:07.979Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-04-06T01:53:41.414Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"CLI Reference","level":"1.5","depth":1,"next":{"title":"AWS Credentials","level":"1.5.1","depth":2,"path":"cli-reference/aws-credentials.md","ref":"cli-reference/aws-credentials.md","articles":[]},"previous":{"title":"Getting In Touch","level":"1.4","depth":1,"path":"getting-in-touch.md","ref":"getting-in-touch.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"cli-reference/README.md","mtime":"2018-04-06T01:32:40.109Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-04-06T01:54:46.026Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
