@@ -1249,6 +1249,8 @@ experimental:
       enabled: false
     validatingAdmissionWebhook:
       enabled: false
+    OwnerReferencesPermissionEnforcement:
+      enabled: false
 
   # Used to provide `/etc/environment` env vars with values from arbitrary CloudFormation refs
   awsEnvironment:
