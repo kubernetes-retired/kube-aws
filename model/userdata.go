@@ -5,6 +5,7 @@ import (
 
 	"github.com/coreos/coreos-cloudinit/config/validate"
 	"github.com/kubernetes-incubator/kube-aws/filereader/texttemplate"
+
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 
 	"bytes"
