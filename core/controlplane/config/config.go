@@ -69,6 +69,9 @@ func NewDefaultCluster() *Cluster {
 			OwnerReferencesPermissionEnforcement{
 				Enabled: false,
 			},
+			PersistentVolumeClaimResize{
+				Enabled: false,
+			},
 		},
 		AuditLog: AuditLog{
 			Enabled: false,
@@ -605,6 +608,7 @@ type Admission struct {
 	MutatingAdmissionWebhook             MutatingAdmissionWebhook             `yaml:"mutatingAdmissionWebhook"`
 	ValidatingAdmissionWebhook           ValidatingAdmissionWebhook           `yaml:"validatingAdmissionWebhook"`
 	OwnerReferencesPermissionEnforcement OwnerReferencesPermissionEnforcement `yaml:"ownerReferencesPermissionEnforcement"`
+	PersistentVolumeClaimResize          PersistentVolumeClaimResize          `yaml:"persistentVolumeClaimResize"`
 }
 
 type AlwaysPullImages struct {
@@ -636,6 +640,10 @@ type ValidatingAdmissionWebhook struct {
 }
 
 type OwnerReferencesPermissionEnforcement struct {
+	Enabled bool `yaml:"enabled"`
+}
+
+type PersistentVolumeClaimResize struct {
 	Enabled bool `yaml:"enabled"`
 }
 
