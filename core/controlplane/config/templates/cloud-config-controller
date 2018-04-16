@@ -5061,7 +5061,7 @@ write_files:
                   secretName: kiam-server-tls
             containers:
               - name: kiam
-                image: quay.io/uswitch/kiam:v2.5
+                image: {{.KIAMImage.RepoWithTag}}
                 imagePullPolicy: Always
                 command:
                   - /server
