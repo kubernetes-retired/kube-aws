@@ -30,11 +30,11 @@ const (
 	userDataDir    = "userdata"
 
 	// Experimental SelfHosting feature default images.
-	kubeNetworkingSelfHostingDefaultCalicoNodeImageTag = "v3.0.3"
-	kubeNetworkingSelfHostingDefaultCalicoCniImageTag  = "v2.0.1"
+	kubeNetworkingSelfHostingDefaultCalicoNodeImageTag = "v3.0.6"
+	kubeNetworkingSelfHostingDefaultCalicoCniImageTag  = "v2.0.5"
 	kubeNetworkingSelfHostingDefaultFlannelImageTag    = "v0.9.1"
 	kubeNetworkingSelfHostingDefaultFlannelCniImageTag = "v0.3.0"
-	kubeNetworkingSelfHostingDefaultTyphaImageTag      = "v0.6.2"
+	kubeNetworkingSelfHostingDefaultTyphaImageTag      = "v0.6.4"
 )
 
 func NewDefaultCluster() *Cluster {

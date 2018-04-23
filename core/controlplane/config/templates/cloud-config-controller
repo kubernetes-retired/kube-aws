@@ -1127,21 +1127,6 @@ write_files:
             # as a host-networked pod.
             hostNetwork: true
             serviceAccountName: canal
-            initContainers:
-            - name: wait-for-default-clusterinformation
-              image: {{.HyperkubeImage.RepoWithTag}}
-              command: ["/bin/sh", "-c" ]
-              args:
-                - |
-                    set -x ;
-                    while true; do
-                      if /kubectl get clusterinformation default; then
-                        echo "Calcio clusterinformation default exists, can continue..."
-                        exit 0
-                      fi
-                      echo "Waiting for Calcio clusterinformation default..."
-                      sleep 5
-                    done
             containers:
             - image: {{ .Kubernetes.Networking.SelfHosting.TyphaImage.RepoWithTag }}
               name: typha
