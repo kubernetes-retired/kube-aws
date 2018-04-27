@@ -18,7 +18,6 @@ var (
 
 	updateOpts = struct {
 		awsDebug, prettyPrint, skipWait bool
-		s3URI                           string
 	}{}
 )
 
@@ -29,7 +28,7 @@ func init() {
 	cmdUpdate.Flags().BoolVar(&updateOpts.skipWait, "skip-wait", false, "Don't wait the resources finish")
 }
 
-func runCmdUpdate(cmd *cobra.Command, args []string) error {
+func runCmdUpdate(_ *cobra.Command, _ []string) error {
 	opts := root.NewOptions(updateOpts.prettyPrint, updateOpts.skipWait)
 
 	cluster, err := root.ClusterFromFile(configPath, opts, updateOpts.awsDebug)
