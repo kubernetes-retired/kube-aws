@@ -18,9 +18,7 @@ var (
 	}
 
 	validateOpts = struct {
-		awsDebug bool
-		skipWait bool
-		s3URI    string
+		awsDebug, skipWait bool
 	}{}
 )
 
@@ -34,7 +32,7 @@ func init() {
 	)
 }
 
-func runCmdValidate(cmd *cobra.Command, args []string) error {
+func runCmdValidate(_ *cobra.Command, _ []string) error {
 	opts := root.NewOptions(validateOpts.awsDebug, validateOpts.skipWait)
 
 	cluster, err := root.ClusterFromFile(configPath, opts, validateOpts.awsDebug)
