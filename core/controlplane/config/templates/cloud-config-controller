@@ -771,13 +771,13 @@ write_files:
         --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false \
         --mount volume=awsenv,target=/var/run/coreos \
         --uuid-file-save=/var/run/coreos/cfn-signal.uuid \
-        --set-env=KUBE_AWS_STACK_NAME=$KUBE_AWS_STACK_NAME \
+        --set-env={{.StackNameEnvVarName}}=${{.StackNameEnvVarName}} \
         --net=host \
         --trust-keys-from-https \
-        quay.io/coreos/awscli:master --exec=/bin/bash -- \
+        {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=/bin/bash -- \
           -ec \
           '
-            cfn-signal -e 0 --region us-west-2 --resource Controllers --stack "$KUBE_AWS_STACK_NAME"
+            cfn-signal -e 0 --region {{.Region}} --resource {{.Controller.LogicalName}} --stack "${{.StackNameEnvVarName}}"
           ')
       result_code=$?
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
