@@ -780,15 +780,18 @@ write_files:
             cfn-signal -e 0 --region {{.Region}} --resource {{.Controller.LogicalName}} --stack "${{.StackNameEnvVarName}}"
           ')
       result_code=$?
+      echo $result
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
 
       # Filter out benign failures to signal stack
       if [ $result_code -ne 0 ]; then
-        test_for_already_sent=$(echo "$result" | grep "for resource Controllers already exists.")
-        [ -n "${test_for_already_sent}" ] && exit 0
-        test_for_stack_completed=$(echo "$result" | grep "is in UPDATE_COMPLETE state and cannot be")
-              [ -n "$test_for_stack_completed" ] && exit 0
-              exit 1
+        case $result in
+          *"for resource Controllers already exists"*)     exit 0
+            ;;
+          *"is in UPDATE_COMPLETE state and cannot be"*)   exit 0
+            ;;
+        esac
+        exit 1
       fi
       exit 0
 
