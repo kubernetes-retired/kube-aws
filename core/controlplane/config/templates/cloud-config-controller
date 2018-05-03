@@ -763,24 +763,34 @@ write_files:
     owner: root:root
     permissions: 0700
     content: |
-      #!/bin/bash -e
+      #!/bin/bash
 
-      rkt run \
+      result=$(rkt run \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false \
         --mount volume=awsenv,target=/var/run/coreos \
         --uuid-file-save=/var/run/coreos/cfn-signal.uuid \
-        --set-env={{.StackNameEnvVarName}}=${{.StackNameEnvVarName}} \
+        --set-env=KUBE_AWS_STACK_NAME=$KUBE_AWS_STACK_NAME \
         --net=host \
         --trust-keys-from-https \
-        {{.AWSCliImage.Options}}{{.AWSCliImage.RktRepo}} --exec=/bin/bash -- \
+        quay.io/coreos/awscli:master --exec=/bin/bash -- \
           -ec \
           '
-            cfn-signal -e 0 --region {{.Region}} --resource {{.Controller.LogicalName}} --stack "${{.StackNameEnvVarName}}"
-          '
-
+            cfn-signal -e 0 --region us-west-2 --resource Controllers --stack "$KUBE_AWS_STACK_NAME"
+          ')
+      result_code=$?
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
+
+      # Filter out beneign failures to signal stack
+      if [ $result_code -ne 0 ]; then
+        test_for_already_sent=$(echo "$result" | grep "for resource Controllers already exists.")
+        [ -n "${test_for_already_sent}" ] && exit 0
+        test_for_stack_completed=$(echo "$result" | grep "is in UPDATE_COMPLETE state and cannot be")
+              [ -n "$test_for_stack_completed" ] && exit 0
+              exit 1
+      fi
+      exit 0
 
   - path: /opt/bin/cfn-etcd-environment
     owner: root:root
