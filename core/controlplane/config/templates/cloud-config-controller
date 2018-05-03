@@ -782,7 +782,7 @@ write_files:
       result_code=$?
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
 
-      # Filter out beneign failures to signal stack
+      # Filter out benign failures to signal stack
       if [ $result_code -ne 0 ]; then
         test_for_already_sent=$(echo "$result" | grep "for resource Controllers already exists.")
         [ -n "${test_for_already_sent}" ] && exit 0
