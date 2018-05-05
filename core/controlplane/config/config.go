@@ -1411,7 +1411,7 @@ func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
 		}
 	}
 
-	if err := c.Experimental.Validate(); err != nil {
+	if err := c.Experimental.Validate("controller"); err != nil {
 		return nil, err
 	}
 
@@ -1580,9 +1580,13 @@ func (e EtcdSettings) Validate() error {
 	return nil
 }
 
-func (c Experimental) Validate() error {
+func (c Experimental) Validate(name string) error {
 	if err := c.NodeDrainer.Validate(); err != nil {
 		return err
+	}
+
+	if c.Kube2IamSupport.Enabled && c.KIAMSupport.Enabled {
+		return fmt.Errorf("at '%s', you can enable kube2IamSupport or kiamSupport, but not both", name)
 	}
 
 	return nil

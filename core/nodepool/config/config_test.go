@@ -35,3 +35,19 @@ func TestRotateCerts(t *testing.T) {
 	}
 
 }
+
+func TestKube2IamKiamClash(t *testing.T) {
+	config := `
+name: nodepool1
+kube2IamSupport:
+  enabled: true
+kiamSupport:
+  enabled: true
+`
+
+	controlplane_config, _ := cfg.ConfigFromBytes([]byte(cluster_config))
+	_, err := ClusterFromBytes([]byte(config), controlplane_config)
+	if err == nil {
+		t.Errorf("expected config to cause error as kube2iam and kiam cannot be enabled together %s", config)
+	}
+}

@@ -1364,3 +1364,18 @@ func TestWithTrailingDot(t *testing.T) {
 		}
 	}
 }
+
+func TestKube2IamKiamClash(t *testing.T) {
+	config := `
+experimental:
+  kube2IamSupport:
+    enabled: true
+  kiamSupport:
+    enabled: true
+`
+	confBody := singleAzConfigYaml + config
+	_, err := ClusterFromBytes([]byte(confBody))
+	if err == nil {
+		t.Errorf("expected config to cause error as kube2iam and kiam cannot be enabled together %s", confBody)
+	}
+}
