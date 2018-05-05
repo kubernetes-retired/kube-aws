@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/kubernetes-incubator/kube-aws/model"
@@ -1375,7 +1376,7 @@ experimental:
 `
 	confBody := singleAzConfigYaml + config
 	_, err := ClusterFromBytes([]byte(confBody))
-	if err == nil {
-		t.Errorf("expected config to cause error as kube2iam and kiam cannot be enabled together %s", confBody)
+	if err == nil || !strings.Contains(err.Error(), "not both") {
+		t.Errorf("expected config to cause error as kube2iam and kiam cannot be enabled together: %s\n%s", err, confBody)
 	}
 }
