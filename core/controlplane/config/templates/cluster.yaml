@@ -1311,7 +1311,7 @@ experimental:
   # Enable audit log for apiserver. Recommended when `rbac` is enabled.
   auditLog:
     enabled: false
-    logPath: /dev/stdout
+    logPath: /var/log/kube-apiserver-audit.log
     maxAge: 30
     maxBackup: 1
     maxSize: 100
