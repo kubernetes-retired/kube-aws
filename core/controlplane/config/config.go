@@ -74,9 +74,11 @@ func NewDefaultCluster() *Cluster {
 			},
 		},
 		AuditLog: AuditLog{
-			Enabled: false,
-			MaxAge:  30,
-			LogPath: "/var/log/kube-apiserver-audit.log",
+			Enabled:   false,
+			LogPath:   "/var/log/kube-apiserver-audit.log",
+			MaxAge:    30,
+			MaxBackup: 1,
+			MaxSize:   100,
 		},
 		Authentication: Authentication{
 			Webhook{
@@ -648,9 +650,11 @@ type PersistentVolumeClaimResize struct {
 }
 
 type AuditLog struct {
-	Enabled bool   `yaml:"enabled"`
-	MaxAge  int    `yaml:"maxage"`
-	LogPath string `yaml:"logpath"`
+	Enabled   bool   `yaml:"enabled"`
+	LogPath   string `yaml:"logPath"`
+	MaxAge    int    `yaml:"maxAge"`
+	MaxBackup int    `yaml:"maxBackup"`
+	MaxSize   int    `yaml:"maxSize"`
 }
 
 type Authentication struct {
