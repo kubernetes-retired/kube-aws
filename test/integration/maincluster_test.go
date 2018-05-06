@@ -1344,7 +1344,7 @@ worker:
 							LogPath:   "/var/log/audit.log",
 							MaxAge:    100,
 							MaxBackup: 10,
-							maxSize:   5,
+							MaxSize:   5,
 						},
 						Authentication: controlplane_config.Authentication{
 							Webhook: controlplane_config.Webhook{
