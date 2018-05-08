@@ -273,10 +273,9 @@ coreos:
         After=cfn-etcd-environment.service
         {{ if not .Kubernetes.Networking.SelfHosting.Enabled -}}
         Wants=flanneld.service
-        {{ else -}}
+        {{ end -}}
         Wants=decrypt-assets.service
         After=decrypt-assets.service
-        {{- end }}
 
         [Service]
         # EnvironmentFile=/etc/environment allows the reading of COREOS_PRIVATE_IPV4
