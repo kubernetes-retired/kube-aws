@@ -762,9 +762,9 @@ write_files:
     owner: root:root
     permissions: 0700
     content: |
-      #!/bin/bash -e
+      #!/bin/bash
 
-      rkt run \
+      result=$(rkt run \
         --volume=dns,kind=host,source=/etc/resolv.conf,readOnly=true \
         --mount volume=dns,target=/etc/resolv.conf \
         --volume=awsenv,kind=host,source=/var/run/coreos,readOnly=false \
@@ -777,9 +777,22 @@ write_files:
           -ec \
           '
             cfn-signal -e 0 --region {{.Region}} --resource {{.Controller.LogicalName}} --stack "${{.StackNameEnvVarName}}"
-          '
-
+          ')
+      result_code=$?
+      echo $result
       rkt rm --uuid-file=/var/run/coreos/cfn-signal.uuid || :
+
+      # Filter out benign failures to signal stack
+      if [ $result_code -ne 0 ]; then
+        case $result in
+          *"for resource Controllers already exists"*)     exit 0
+            ;;
+          *"is in UPDATE_COMPLETE state and cannot be"*)   exit 0
+            ;;
+        esac
+        exit 1
+      fi
+      exit 0
 
   - path: /opt/bin/cfn-etcd-environment
     owner: root:root
