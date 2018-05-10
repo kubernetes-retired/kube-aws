@@ -1270,7 +1270,7 @@ experimental:
   ephemeralImageStorage:
     enabled: true
   kiamSupport:
-    enabled: true
+    enabled: false
   kube2IamSupport:
     enabled: true
   gpuSupport:
@@ -1368,7 +1368,7 @@ worker:
 							Filesystem: "xfs",
 						},
 						KIAMSupport: controlplane_config.KIAMSupport{
-							Enabled: true,
+							Enabled: false,
 						},
 						Kube2IamSupport: controlplane_config.Kube2IamSupport{
 							Enabled: true,
@@ -1553,7 +1553,58 @@ worker:
 					if !reflect.DeepEqual(expectedTaints, actualTaints) {
 						t.Errorf("worker node taints didn't match: expected=%v, actual=%v", expectedTaints, actualTaints)
 					}
+				},
+			},
+		},
+		{
+			context: "WithExperimentalFeatureKiam",
+			configYaml: minimalValidConfigYaml + `
+experimental:
+  kiamSupport:
+    enabled: true
+worker:
+  nodePools:
+  - name: pool1
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					expected := controlplane_config.KIAMSupport{
+						Enabled: true,
+					}
 
+					actual := c.Experimental
+
+					if !reflect.DeepEqual(expected, actual.KIAMSupport) {
+						t.Errorf("experimental settings didn't match : expected=%+v actual=%+v", expected, actual)
+					}
+
+					p := c.NodePools[0]
+					if reflect.DeepEqual(expected, p.Experimental.KIAMSupport) {
+						t.Errorf("experimental settings shouldn't be inherited to a node pool but it did : toplevel=%v nodepool=%v", expected, p.Experimental)
+					}
+				},
+			},
+		},
+		{
+			context: "WithExperimentalFeatureKiamForWorkerNodePool",
+			configYaml: minimalValidConfigYaml + `
+worker:
+  nodePools:
+  - name: pool1
+    kiamSupport:
+      enabled: true
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					expected := controlplane_config.Experimental{
+						KIAMSupport: controlplane_config.KIAMSupport{
+							Enabled: true,
+						},
+					}
+					p := c.NodePools[0]
+					if reflect.DeepEqual(expected, p.Experimental) {
+						t.Errorf("experimental settings for node pool didn't match : expected=%v actual=%v", expected, p.Experimental)
+					}
 				},
 			},
 		},

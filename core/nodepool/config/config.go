@@ -304,7 +304,7 @@ func (c ProvidedConfig) WorkerDeploymentSettings() WorkerDeploymentSettings {
 }
 
 func (c ProvidedConfig) ValidateInputs() error {
-	if err := c.DeploymentSettings.ValidateInputs(); err != nil {
+	if err := c.DeploymentSettings.ValidateInputs(c.NodePoolName); err != nil {
 		return err
 	}
 
@@ -329,7 +329,7 @@ func (c ProvidedConfig) validate() error {
 		return err
 	}
 
-	if err := c.DeploymentSettings.Validate(); err != nil {
+	if err := c.DeploymentSettings.Validate(c.NodePoolName); err != nil {
 		return err
 	}
 
@@ -337,7 +337,7 @@ func (c ProvidedConfig) validate() error {
 		return err
 	}
 
-	if err := c.Experimental.Validate(); err != nil {
+	if err := c.Experimental.Validate(c.NodePoolName); err != nil {
 		return err
 	}
 
