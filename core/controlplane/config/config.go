@@ -735,7 +735,22 @@ type LocalStreaming struct {
 }
 
 type Kubernetes struct {
-	Networking Networking `yaml:"networking,omitempty"`
+	Networking        Networking        `yaml:"networking,omitempty"`
+	ControllerManager ControllerManager `yaml:"controllerManager,omitempty"`
+}
+
+type ControllerManager struct {
+	ComputeResources ComputeResources `yaml:"resources,omitempty"`
+}
+
+type ComputeResources struct {
+	Requests ResourceQuota `yaml:"requests,omitempty"`
+	Limits   ResourceQuota `yaml:"limits,omitempty"`
+}
+
+type ResourceQuota struct {
+	Cpu    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
 }
 
 type Networking struct {

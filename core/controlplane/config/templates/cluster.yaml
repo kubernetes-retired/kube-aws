@@ -1097,6 +1097,14 @@ worker:
 #kubernetes:
 #  networking:
 #    selfHosting:
+#  controllerManager:
+#    resources:
+#      requests:
+#        cpu: 200m
+#        memory: 1G
+#      limits:
+#        cpu: 1
+#        memory: 2G
 
 # Configure self-hosted networking within kubernetes, deployed as a k8s daemonset.  Choose either 'canal' (calico+flannel) or 
 # 'flannel' (choose 'canal' if you require calico or kubernetes NetworkPolicy firewalling).
