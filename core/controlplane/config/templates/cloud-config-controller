@@ -3188,8 +3188,9 @@ write_files:
           {{ end }}
           {{if .Experimental.AuditLog.Enabled}}
           - --audit-log-maxage={{.Experimental.AuditLog.MaxAge}}
+          - --audit-log-maxsize={{.Experimental.AuditLog.MaxSize}}
           - --audit-log-path={{.Experimental.AuditLog.LogPath}}
-          - --audit-log-maxbackup=1
+          - --audit-log-maxbackup={{.Experimental.AuditLog.MaxBackup}}
           - --audit-policy-file=/etc/kubernetes/apiserver/audit-policy.yaml
           {{ end }}
           - --authorization-mode={{if .Experimental.NodeAuthorizer.Enabled}}Node,{{end}}RBAC
