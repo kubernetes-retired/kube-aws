@@ -565,9 +565,9 @@ scales in/out your k8s cluster by removing/adding worker nodes according to reso
 </li>
 <li>The second node pool <code>notScaled</code> is scaled manually by YOU, because you had not the autoscaling on it(=missing <code>autoscaling.clusterAutoscaler.enabled</code>)</li>
 </ul>
-<h2 id="kube2iam">kube2iam</h2>
-<p><a href="https://github.com/jtblin/kube2iam" target="_blank">kube2iam</a> is an add-on which provides IAM credentials for target IAM roles to pods running inside a Kubernetes cluster based on annotations.
-To allow kube2iam deployed to worker and controller nodes to assume target roles, you need the following configurations.</p>
+<h2 id="kube2iam--kiam">kube2iam / kiam</h2>
+<p><a href="https://github.com/jtblin/kube2iam" target="_blank">kube2iam</a> and <a href="https://github.com/uswitch/kiam" target="_blank">kiam</a> are add-ons which provides IAM credentials for target IAM roles to pods running inside a Kubernetes cluster based on annotations.
+To allow kube2iam or kiam deployed to worker and controller nodes to assume target roles, you need the following configurations.</p>
 <ol>
 <li><p>IAM roles associated to worker and controller nodes requires an IAM policy:</p>
 <pre class="language-"><code class="lang-json"><span class="token punctuation">{</span>
@@ -576,16 +576,16 @@ To allow kube2iam deployed to worker and controller nodes to assume target roles
  <span class="token property">&quot;Effect&quot;</span><span class="token operator">:</span> <span class="token string">&quot;Allow&quot;</span>
 <span class="token punctuation">}</span>
 </code></pre>
-<p>To add the policy to controller nodes, set <code>experimental.kube2IamSupport.enabled</code> to <code>true</code> in your <code>cluster.yaml</code>.
-For worker nodes, it is <code>worker.nodePools[].kube2IamSupport.enabled</code>.</p>
+<p>To add the policy to controller nodes, set <code>experimental.kube2IamSupport.enabled</code> or <code>experimental.kiamSupport.enabled</code> to <code>true</code> in your <code>cluster.yaml</code> (but not both).
+For worker nodes, it is <code>worker.nodePools[].kube2IamSupport.enabled</code> or <code>worker.nodePools[].kiamSupport.enabled</code>.</p>
 </li>
 <li><p>Target IAM roles needs to change trust relationships to allow kube-aws worker/controller IAM role to assume the target roles.</p>
 <p>As CloudFormation generates unpredictable role names containing random IDs by default, it is recommended to make them predictable at first so that you can easily automate configuring trust relationships afterwards.
 To make worker/controller role names predictable, set <code>controller.managedIamRoleName</code> for controller and <code>worker.nodePools[].managedIamRoleName</code> for worker nodes.
 <code>managedIamRoleName</code>s becomes suffixes of the resulting worker/controller role names. </p>
 <p>Please beware that configuration of target roles&apos; trust relationships are out-of-scope of kube-aws.
-Please see <a href="https://github.com/jtblin/kube2iam#iam-roles" target="_blank">the part of kube2iam doc</a> for more information. Basically,
-you need to point <code>Principal</code> to the ARN of a resulting worker/controller IAM role which would look like <code>arn:aws:iam::<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your</span> <span class="token attr-name">aws</span> <span class="token attr-name">account</span> <span class="token attr-name">id</span><span class="token punctuation">&gt;</span></span>:role/<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>stack-name</span><span class="token punctuation">&gt;</span></span>-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>managed</span> <span class="token attr-name">iam</span> <span class="token attr-name">role</span> <span class="token attr-name">name</span><span class="token punctuation">&gt;</span></span></code>. </p>
+Please see <a href="https://github.com/jtblin/kube2iam#iam-roles" target="_blank">the part of kube2iam doc</a> or <a href="https://github.com/uswitch/kiam/blob/master/docs/IAM.md" target="_blank">the part of the kiam doc</a>for more information.
+Basically, you need to point <code>Principal</code> to the ARN of a resulting worker/controller IAM role which would look like <code>arn:aws:iam::<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>your</span> <span class="token attr-name">aws</span> <span class="token attr-name">account</span> <span class="token attr-name">id</span><span class="token punctuation">&gt;</span></span>:role/<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>stack-name</span><span class="token punctuation">&gt;</span></span>-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>managed</span> <span class="token attr-name">iam</span> <span class="token attr-name">role</span> <span class="token attr-name">name</span><span class="token punctuation">&gt;</span></span></code>. </p>
 </li>
 </ol>
 <p>Finally, an example <code>cluster.yaml</code> usable with kube2iam would look like:</p>
@@ -605,7 +605,7 @@ you need to point <code>Principal</code> to the ARN of a resulting worker/contro
     <span class="token key atrule">kube2IamSupport</span><span class="token punctuation">:</span>
       <span class="token key atrule">enabled</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
 </code></pre>
-<p>See <a href="https://github.com/kubernetes-incubator/kube-aws/issues/253" target="_blank">the relevant GitHub issue</a> for more information.</p>
+<p>See the relevant GitHub issues for <a href="https://github.com/kubernetes-incubator/kube-aws/issues/253" target="_blank">kube2iam</a> and <a href="https://github.com/kubernetes-incubator/kube-aws/issues/1055" target="_blank">kiam</a> or more information.</p>
 <p>You can reference controller and worker IAM Roles in a separate CloudFormation stack that provides roles to assume:</p>
 <pre class="language-"><code class="lang-yaml"><span class="token punctuation">...</span>
 <span class="token key atrule">Parameters</span><span class="token punctuation">:</span>
@@ -677,7 +677,7 @@ you need to point <code>Principal</code> to the ARN of a resulting worker/contro
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Step 6: Configure Add-ons","level":"1.3.7","depth":2,"next":{"title":"Step 7: Destroy","level":"1.3.8","depth":2,"path":"getting-started/step-7-destroy.md","ref":"getting-started/step-7-destroy.md","articles":[]},"previous":{"title":"Step 5: Add Node Pool","level":"1.3.6","depth":2,"path":"getting-started/step-5-add-node-pool.md","ref":"getting-started/step-5-add-node-pool.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-6-configure-add-ons.md","mtime":"2018-05-10T16:59:35.778Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-05-10T17:26:44.457Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Step 6: Configure Add-ons","level":"1.3.7","depth":2,"next":{"title":"Step 7: Destroy","level":"1.3.8","depth":2,"path":"getting-started/step-7-destroy.md","ref":"getting-started/step-7-destroy.md","articles":[]},"previous":{"title":"Step 5: Add Node Pool","level":"1.3.6","depth":2,"path":"getting-started/step-5-add-node-pool.md","ref":"getting-started/step-5-add-node-pool.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"getting-started/step-6-configure-add-ons.md","mtime":"2018-05-10T17:06:50.427Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-05-10T17:33:59.910Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
