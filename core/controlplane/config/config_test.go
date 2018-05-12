@@ -982,6 +982,68 @@ experimental:
 
 }
 
+func TestEncryptionAtRestConfig(t *testing.T) {
+
+	validConfigs := []struct {
+		conf             string
+		encryptionAtRest EncryptionAtRest
+	}{
+		{
+			conf: `
+`,
+			encryptionAtRest: EncryptionAtRest{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubernetes:
+  encryptionAtRest:
+    enabled: false
+`,
+			encryptionAtRest: EncryptionAtRest{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubernetes:
+  encryptionAtRest:
+    enabled: true
+`,
+			encryptionAtRest: EncryptionAtRest{
+				Enabled: true,
+			},
+		},
+		{
+			conf: `
+# Settings for an experimental feature must be under the "experimental" field. Ignored.
+encryptionAtRest:
+  enabled: true
+`,
+			encryptionAtRest: EncryptionAtRest{
+				Enabled: false,
+			},
+		},
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			t.Errorf("failed to parse config %s: %v", confBody, err)
+			continue
+		}
+		if !reflect.DeepEqual(c.Kubernetes.EncryptionAtRest, conf.encryptionAtRest) {
+			t.Errorf(
+				"parsed encryption at rest settings %+v does not match config: %s",
+				c.Kubernetes.EncryptionAtRest,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestRotateCerts(t *testing.T) {
 
 	validConfigs := []struct {
@@ -996,7 +1058,7 @@ func TestRotateCerts(t *testing.T) {
 			},
 		},
 		{
-			conf: `
+			conf: `        
 kubelet:
   rotateCerts:
     enabled: false

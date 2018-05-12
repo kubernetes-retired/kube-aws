@@ -2423,7 +2423,7 @@ write_files:
           -ec \
           'echo decrypting assets
            shopt -s nullglob
-           for encKey in /etc/kubernetes/{ssl,{{ if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken) }}auth{{end}}}/{,kiam/}*.enc; do
+           for encKey in /etc/kubernetes/{ssl,additional-configs,{{ if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken) }}auth{{end}}}/{,kiam/}*.enc; do
              if [ ! -f $encKey ]; then
                echo skipping non-existent file: $encKey 1>&2
                continue
@@ -3223,6 +3223,9 @@ write_files:
           - --oidc-groups-claim={{.Experimental.Oidc.GroupsClaim}}
           {{ end -}}
           {{ end -}}
+          {{if .Kubernetes.EncryptionAtRest.Enabled}}
+          - --experimental-encryption-provider-config /etc/kubernetes/additional-configs/encryption-config.yaml
+          {{end}}
           - --cert-dir=/etc/kubernetes/ssl
           - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
@@ -3262,6 +3265,11 @@ write_files:
           - mountPath: /etc/ssl/certs
             name: ssl-certs-host
             readOnly: true
+          {{if .Kubernetes.EncryptionAtRest.Enabled}}
+          - mountPath: /etc/kubernetes/additional-configs
+            name: auth-additional-configs
+            readOnly: true
+          {{end}}
           {{if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken)}}
           - mountPath: /etc/kubernetes/auth
             name: auth-kubernetes
@@ -3292,6 +3300,11 @@ write_files:
         - hostPath:
             path: /usr/share/ca-certificates
           name: ssl-certs-host
+        {{if .Kubernetes.EncryptionAtRest.Enabled}}
+        - hostPath:
+            path: /etc/kubernetes/additional-configs
+          name: auth-additional-configs
+        {{end}}
         {{if or (.AssetsConfig.HasAuthTokens) ( and .Experimental.TLSBootstrap.Enabled .AssetsConfig.HasTLSBootstrapToken)}}
         - hostPath:
             path: /etc/kubernetes/auth
@@ -4466,6 +4479,11 @@ write_files:
   - path: /etc/kubernetes/ssl/service-account-key.pem{{if .AssetsEncryptionEnabled}}.enc{{end}}
     encoding: gzip+base64
     content: {{.AssetsConfig.ServiceAccountKey}}
+{{ end }}
+
+{{ if .Kubernetes.EncryptionAtRest.Enabled }}
+  - path: /etc/kubernetes/additional-configs/encryption-config.yaml{{if .AssetsEncryptionEnabled}}.enc{{end}}
+    content: {{.AssetsConfig.EncryptionConfig}}
 {{ end }}
 
   # File needed on every node (used by the kube-proxy DaemonSet), including controllers

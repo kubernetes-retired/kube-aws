@@ -195,6 +195,9 @@ func NewDefaultCluster() *Cluster {
 				InsecureLogin:   false,
 			},
 			Kubernetes: Kubernetes{
+				EncryptionAtRest: EncryptionAtRest{
+					Enabled: false,
+				},
 				Networking: Networking{
 					SelfHosting: SelfHosting{
 						Enabled:         false,
@@ -685,6 +688,10 @@ type AwsNodeLabels struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+type EncryptionAtRest struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type TLSBootstrap struct {
 	Enabled bool `yaml:"enabled"`
 }
@@ -741,6 +748,7 @@ type LocalStreaming struct {
 }
 
 type Kubernetes struct {
+	EncryptionAtRest  EncryptionAtRest  `yaml:"encryptionAtRest"`
 	Networking        Networking        `yaml:"networking,omitempty"`
 	ControllerManager ControllerManager `yaml:"controllerManager,omitempty"`
 }

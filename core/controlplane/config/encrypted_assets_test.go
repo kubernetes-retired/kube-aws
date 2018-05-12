@@ -240,9 +240,9 @@ func TestReadOrCreateUnEncryptedCompactAssets(t *testing.T) {
 
 			if !reflect.DeepEqual(created, read) {
 				t.Errorf(`failed to content unencrypted assets.
- 	unencrypted assets must not change after their first creation but they did change:
- 	created = %v
- 	read = %v`, created, read)
+		unencrypted assets must not change after their first creation but they did change:
+		created = %v
+		read = %v`, created, read)
 			}
 		})
 	}
@@ -259,8 +259,8 @@ func TestReadOrCreateUnEncryptedCompactAssets(t *testing.T) {
 	})
 }
 
-func TestRandomTLSBootstrapTokenString(t *testing.T) {
-	randomToken, err := RandomTLSBootstrapTokenString()
+func TestRandomTokenString(t *testing.T) {
+	randomToken, err := RandomTokenString()
 	if err != nil {
 		t.Errorf("failed to generate a Kubelet bootstrap token: %v", err)
 	}
@@ -268,7 +268,7 @@ func TestRandomTLSBootstrapTokenString(t *testing.T) {
 		t.Errorf("random token not expect to contain a comma: %v", randomToken)
 	}
 
-	b, err := base64.URLEncoding.DecodeString(randomToken)
+	b, err := base64.StdEncoding.DecodeString(randomToken)
 	if err != nil {
 		t.Errorf("failed to decode base64 token string: %v", err)
 	}

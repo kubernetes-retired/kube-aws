@@ -1109,7 +1109,14 @@ kiamImage:
 #  tag: "0.1"
 #  rktPullDocker: true
 
-#kubernetes:
+kubernetes:
+  # If enabled, instructs the controller manager to automatically issue TLS certificates to worker nodes via
+  # certificate signing requests (csr) made to the API server using the bootstrap token. It's recommended to
+  # also enable the rbac plugin in order to limit requests using the bootstrap token to only be able to make
+  # requests related to certificate provisioning.
+  # The bootstrap token is automatically generated in ./credentials/kubelet-tls-bootstrap-token.
+  encryptionAtRest:
+    enabled: false
 #  networking:
 #    selfHosting:
 #  controllerManager:
