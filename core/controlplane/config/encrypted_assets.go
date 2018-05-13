@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/netutil"
+	"github.com/kubernetes-incubator/kube-aws/tlscerts"
 	"github.com/kubernetes-incubator/kube-aws/tlsutil"
 )
 
@@ -498,11 +499,17 @@ func ReadRawAssets(dirname string, manageCertificates bool, caKeyRequiredOnContr
 		path := filepath.Join(dirname, file.name)
 		data, err := RawCredentialFileFromPath(path, file.defaultValue)
 		if err != nil {
-			return nil, fmt.Errorf("Error reading credential file %s: %v", path, err)
+			return nil, fmt.Errorf("error reading credential file %s: %v", path, err)
 		}
 		if file.expiryCheck {
-			if err := tlsutil.CheckAllCertsValid(path, data.content); err != nil {
+			certs, err := tlscerts.FromBytes(data.content)
+			if err != nil {
 				return nil, err
+			}
+			for _, cert := range certs {
+				if cert.IsExpired() {
+					return nil, fmt.Errorf("the following certificate in file %s has expired:-\n\n%s", path, cert)
+				}
 			}
 		}
 
@@ -580,21 +587,27 @@ func ReadOrEncryptAssets(dirname string, manageCertificates bool, caKeyRequiredO
 		if file.readEncrypted {
 			data, err := encryptor.EncryptedCredentialFromPath(path, file.defaultValue)
 			if err != nil {
-				return nil, fmt.Errorf("Error encrypting %s: %v", path, err)
+				return nil, fmt.Errorf("error encrypting %s: %v", path, err)
 			}
 
 			*file.data = *data
 			if err := data.Persist(); err != nil {
-				return nil, fmt.Errorf("Error persisting %s: %v", path, err)
+				return nil, fmt.Errorf("error persisting %s: %v", path, err)
 			}
 		} else {
 			raw, err := RawCredentialFileFromPath(path, file.defaultValue)
 			if err != nil {
-				return nil, fmt.Errorf("Error reading credential file %s: %v", path, err)
+				return nil, fmt.Errorf("error reading credential file %s: %v", path, err)
 			}
 			if file.expiryCheck {
-				if err := tlsutil.CheckAllCertsValid(path, raw.content); err != nil {
+				certs, err := tlscerts.FromBytes(raw.content)
+				if err != nil {
 					return nil, err
+				}
+				for _, cert := range certs {
+					if cert.IsExpired() {
+						return nil, fmt.Errorf("the following certificate in file %s has expired:-\n\n%s", path, cert)
+					}
 				}
 			}
 			(*file.data).content = raw.content
