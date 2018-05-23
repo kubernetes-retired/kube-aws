@@ -1109,11 +1109,11 @@ kubernetes:
 #  controllerManager:
 #    resources:
 #      requests:
-#        cpu: 200m
-#        memory: 1G
+#        cpu: 100m
+#        memory: 100M
 #      limits:
-#        cpu: 1
-#        memory: 2G
+#        cpu: 250m
+#        memory: 512M
 
 # Configure self-hosted networking within kubernetes, deployed as a k8s daemonset.  Choose either 'canal' (calico+flannel) or 
 # 'flannel' (choose 'canal' if you require calico or kubernetes NetworkPolicy firewalling).
