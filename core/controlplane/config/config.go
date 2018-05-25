@@ -193,6 +193,7 @@ func NewDefaultCluster() *Cluster {
 			KubernetesDashboard: KubernetesDashboard{
 				AdminPrivileges: true,
 				InsecureLogin:   false,
+				Enabled:         true,
 			},
 			Kubernetes: Kubernetes{
 				EncryptionAtRest: EncryptionAtRest{
@@ -831,6 +832,7 @@ func (c *KubeDns) MergeIfEmpty(other KubeDns) {
 type KubernetesDashboard struct {
 	AdminPrivileges bool `yaml:"adminPrivileges"`
 	InsecureLogin   bool `yaml:"insecureLogin"`
+	Enabled         bool `yaml:"enabled"`
 }
 
 type WaitSignal struct {
