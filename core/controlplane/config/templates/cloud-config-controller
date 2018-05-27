@@ -955,10 +955,6 @@ write_files:
         "${mfdir}/metrics-server-apisvc.yaml"
       {{- end }}
 
-      {{ if .Experimental.NodeDrainer.Enabled }}
-      applyall "${mfdir}"/{kube-node-drainer-ds,kube-node-drainer-asg-status-updater-de}".yaml"
-      {{ end }}
-
       {{ if .KubernetesDashboard.Enabled }}
       # Secrets
       applyall "${mfdir}/kubernetes-dashboard-se.yaml"
@@ -968,7 +964,11 @@ write_files:
       applyall "${mfdir}"/{kube-dns,kube-proxy,heapster-config}"-cm.yaml"
 
       # Service Accounts
-      applyall "${mfdir}"/{kube-dns,heapster,kube-proxy{{ if .KubernetesDashboard.Enabled }},kubernetes-dashboard{{ end }}}"-sa.yaml"
+      applyall \
+        "${mfdir}/heapster-sa.yaml" \
+        "${mfdir}/kube-dns-sa.yaml" \
+        "${mfdir}/kube-proxy-sa.yaml" \
+        {{ if .KubernetesDashboard.Enabled }}"${mfdir}/kubernetes-dashboard-sa.yaml"{{ end }}
 
       # Tiller RBAC rules
       applyall "${mfdir}/tiller-rbac.yaml"
@@ -976,23 +976,28 @@ write_files:
       # Install tiller by default
       applyall "${mfdir}/tiller.yaml"
 
-{{ if .KubeDns.NodeLocalResolver }}
-      # DNS Masq Fix
-      applyall "${mfdir}/dnsmasq-node-ds.yaml"
-{{ end }}
-
       # Deployments
-      applyall "${mfdir}"/{kube-dns,kube-dns-autoscaler {{ if .KubernetesDashboard.Enabled }},kubernetes-dashboard{{ end }},{{ if .Addons.ClusterAutoscaler.Enabled }}cluster-autoscaler,{{ end }}heapster{{ if .KubeResourcesAutosave.Enabled }},kube-resources-autosave{{ end }}}"-de.yaml"
+      applyall \
+        "${mfdir}/heapster-de.yaml" \
+        "${mfdir}/kube-dns-autoscaler-de.yaml" \
+        "${mfdir}/kube-dns-de.yaml" \
+        {{ if .Addons.ClusterAutoscaler.Enabled }}"${mfdir}/cluster-autoscaler-de.yaml"{{ end }} \
+        {{ if .Addons.Rescheduler.Enabled }}"${mfdir}/kube-rescheduler-de.yaml"{{ end }} \
+        {{ if .Experimental.NodeDrainer.Enabled }}"${mfdir}/kube-node-drainer-asg-status-updater-de.yaml"{{ end }} \
+        {{ if .KubeResourcesAutosave.Enabled }}"${mfdir}/kube-resources-autosave-de.yaml"{{ end }} \
+        {{ if .KubernetesDashboard.Enabled }}"${mfdir}/kubernetes-dashboard-de.yaml"{{ end }}
 
       # Daemonsets
-      applyall "${mfdir}"/kube-proxy"-ds.yaml"
+      applyall \
+        "${mfdir}/kube-proxy-ds.yaml" \
+        {{ if .Experimental.NodeDrainer.Enabled }}"${mfdir}/kube-node-drainer-ds.yaml"{{ end }} \
+        {{ if .KubeDns.NodeLocalResolver }}"${mfdir}/dnsmasq-node-ds.yaml"{{ end }}
 
       # Services
-      applyall "${mfdir}"/{kube-dns,heapster{{ if .KubernetesDashboard.Enabled }},kubernetes-dashboard{{ end }}}"-svc.yaml"
-
-      {{- if .Addons.Rescheduler.Enabled }}
-      applyall "${mfdir}/kube-rescheduler-de.yaml"
-      {{- end }}
+      applyall \
+        "${mfdir}/heapster-svc.yaml" \
+        "${mfdir}/kube-dns-svc.yaml" \
+        {{ if .KubernetesDashboard.Enabled }}"${mfdir}/kubernetes-dashboard-svc.yaml"{{ end }}
 
       mfdir=/srv/kubernetes/rbac
 
@@ -1021,7 +1026,7 @@ write_files:
       {{if .Experimental.Kube2IamSupport.Enabled }}
         mfdir=/srv/kubernetes/manifests
         applyall "${mfdir}/kube2iam-rbac.yaml"
-        applyall "${mfdir}/kube2iam-ds.yaml";
+        applyall "${mfdir}/kube2iam-ds.yaml"
       {{ end }}
 
       {{ if .Experimental.GpuSupport.Enabled }}
