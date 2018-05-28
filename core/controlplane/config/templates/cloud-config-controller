@@ -3372,17 +3372,20 @@ write_files:
           command:
           - /hyperkube
           - controller-manager
+          {{/* mandatory flags below */}}
+          - --cloud-provider=aws
+          - --cluster-name={{.ClusterName}}
           - --kubeconfig=/etc/kubernetes/kubeconfig/kube-controller-manager.yaml
           - --leader-elect=true
+          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-private-key-file=/etc/kubernetes/ssl/service-account-key.pem
           - --use-service-account-credentials
+          {{/* optional flags below */}}
           {{ if .Experimental.TLSBootstrap.Enabled }}
           - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
           - --cluster-signing-cert-file=/etc/kubernetes/ssl/worker-ca.pem
           - --cluster-signing-key-file=/etc/kubernetes/ssl/worker-ca-key.pem
           {{ end }}
-          - --root-ca-file=/etc/kubernetes/ssl/ca.pem
-          - --cloud-provider=aws
           {{ if .Experimental.NodeMonitorGracePeriod }}
           - --node-monitor-grace-period={{ .Experimental.NodeMonitorGracePeriod }}
           {{end}}
@@ -3392,6 +3395,8 @@ write_files:
           {{ if .Kubernetes.Networking.SelfHosting.Enabled -}}
           - --allocate-node-cidrs=true
           - --cluster-cidr={{.PodCIDR}}
+          {{/* no need to auto configure cloud routes when using flannel or canal */}}
+          - --configure-cloud-routes=false
           {{- end }}
           {{ if not .Addons.MetricsServer.Enabled -}}
           - --horizontal-pod-autoscaler-use-rest-clients=false
