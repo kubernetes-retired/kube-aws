@@ -277,6 +277,10 @@
           "VolumeType": "{{$.Etcd.DataVolume.Type}}",
           "Tags": [
             {
+              "Key": "Name",
+              "Value": "{{$.ClusterName}}-kube-aws-etcd-{{$etcdIndex}}"
+            },
+            {
               "Key": "kube-aws:etcd:index",
               "Value": "{{$etcdIndex}}"
             },
