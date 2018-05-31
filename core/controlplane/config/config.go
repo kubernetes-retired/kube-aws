@@ -1586,6 +1586,10 @@ func (e EtcdSettings) Validate() error {
 		return fmt.Errorf("invalid etcd settings: %v", err)
 	}
 
+	if err := e.Etcd.Validate(); err != nil {
+		return err
+	}
+
 	if e.Etcd.Version().Is3() {
 		if e.Etcd.DisasterRecovery.Automated && !e.Etcd.Snapshot.Automated {
 			return errors.New("`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated")
