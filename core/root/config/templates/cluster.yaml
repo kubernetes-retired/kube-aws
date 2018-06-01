@@ -1133,11 +1133,11 @@ kubernetes:
 #  controllerManager:
 #    resources:
 #      requests:
-#        cpu: 200m
-#        memory: 1G
+#        cpu: 100m
+#        memory: 100M
 #      limits:
-#        cpu: 1
-#        memory: 2G
+#        cpu: 250m
+#        memory: 512M
 
 # Kubernetes Self-hosted networking daemonsets
 # Choose either 'canal' (calico+flannel) or 'flannel'
