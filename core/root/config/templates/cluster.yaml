@@ -11,6 +11,9 @@ s3URI: {{.S3URI}}
 #releaseChannel: stable
 
 # The AMI ID of CoreOS.
+#
+# To update this to the latest AMI run the following command with the appropriate region and channel then place the resulting ID here
+#   REGION=eu-west-1 && CHANNEL=stable && curl -s https://coreos.com/dist/aws/aws-$CHANNEL.json | jq -r ".\"$REGION\".hvm"
 amiId: "{{.AmiId}}"
 
 # Container Linux has automatic updates https://coreos.com/os/docs/latest/update-strategies.html. This can be a risk in certain situations and this is why is disabled by default and you can enable it by setting this param to false.
