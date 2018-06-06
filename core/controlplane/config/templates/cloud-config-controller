@@ -1501,6 +1501,16 @@ write_files:
             annotations:
               scheduler.alpha.kubernetes.io/critical-pod: ''
           spec:
+            # Ensure that canal-node only targets nodes and not masters
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: kubernetes.io/role
+                      operator: In
+                      values:
+                        - node
             hostNetwork: true
             serviceAccountName: canal
             tolerations:
@@ -2007,12 +2017,14 @@ write_files:
             nodeSelector:
               beta.kubernetes.io/arch: amd64
             tolerations:
-            - key: node-role.kubernetes.io/master
-              operator: Exists
-              effect: NoSchedule
-            - key: node.alpha.kubernetes.io/role
-              value: "master"
-              effect: NoSchedule
+              # Tolerate this effect so the pods will be schedulable at all times
+              - effect: NoSchedule
+                operator: Exists
+              # Mark the pod as a critical add-on for rescheduling.
+              - key: CriticalAddonsOnly
+                operator: Exists
+              - effect: NoExecute
+                operator: Exists
             serviceAccountName: flannel
             # Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force
             # deletion": https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods.
@@ -4765,7 +4777,7 @@ write_files:
           kubectl patch node "${node}" -p "{\"spec\":{\"podCIDR\":\"${podcidr}\"}}" && return 0
           log "Patch failed, wait 20s and retry"
           sleep 20
-          $((tries += 1))
+          tries=$((tries += 1))
         done
       }
 
@@ -4781,7 +4793,7 @@ write_files:
           kubectl get node $node -o jsonpath='{.spec.podCIDR}' && return 0
           log "Failed to read node ${node}, sleep and try again"
           sleep 20
-          $((tries += 1))
+          tries=$((tries += 1))
         done
         return 1
       }
@@ -4795,7 +4807,7 @@ write_files:
           ready=$(kubectl get nodes | awk "(\$1 == \"${node}\" && \$2 == \"Ready\"){print}") && break
           log "Failed to list nodes, sleep and try again"
           sleep 20
-          $((tries += 1))
+          tries=$((tries += 1))
         done
         [[ -n "$ready" ]]
       }
