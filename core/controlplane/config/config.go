@@ -166,6 +166,7 @@ func NewDefaultCluster() *Cluster {
 			ClusterName:        "kubernetes",
 			VPCCIDR:            "10.0.0.0/16",
 			ReleaseChannel:     "stable",
+			KubeAWSVersion:     "UNKNOWN",
 			K8sVer:             k8sVer,
 			ContainerRuntime:   "docker",
 			Subnets:            []model.Subnet{},
@@ -186,6 +187,10 @@ func NewDefaultCluster() *Cluster {
 					Filter:   `{ $.priority = "CRIT" || $.priority = "WARNING" && $.transport = "journal" && $.systemdUnit = "init.scope" }`,
 					interval: 60,
 				},
+			},
+			HostOS: HostOS{
+				BashPrompt: model.NewDefaultBashPrompt(),
+				MOTDBanner: model.NewDefaultMOTDBanner(),
 			},
 			KubeProxy: KubeProxy{
 				IPVSMode: ipvsMode,
@@ -493,9 +498,10 @@ type DeploymentSettings struct {
 	DeprecatedInternetGatewayID           string                `yaml:"internetGatewayId,omitempty"`
 	InternetGateway                       model.InternetGateway `yaml:"internetGateway,omitempty"`
 	// Required for validations like e.g. if instance cidr is contained in vpc cidr
-	VPCCIDR                   string            `yaml:"vpcCIDR,omitempty"`
-	InstanceCIDR              string            `yaml:"instanceCIDR,omitempty"`
-	K8sVer                    string            `yaml:"kubernetesVersion,omitempty"`
+	VPCCIDR                   string `yaml:"vpcCIDR,omitempty"`
+	InstanceCIDR              string `yaml:"instanceCIDR,omitempty"`
+	K8sVer                    string `yaml:"kubernetesVersion,omitempty"`
+	KubeAWSVersion            string
 	ContainerRuntime          string            `yaml:"containerRuntime,omitempty"`
 	KMSKeyARN                 string            `yaml:"kmsKeyArn,omitempty"`
 	StackTags                 map[string]string `yaml:"stackTags,omitempty"`
@@ -517,9 +523,8 @@ type DeploymentSettings struct {
 	KubeSystemNamespaceLabels map[string]string `yaml:"kubeSystemNamespaceLabels,omitempty"`
 	KubernetesDashboard       `yaml:"kubernetesDashboard,omitempty"`
 	// Images repository
-	HyperkubeImage model.Image `yaml:"hyperkubeImage,omitempty"`
-	AWSCliImage    model.Image `yaml:"awsCliImage,omitempty"`
-
+	HyperkubeImage                     model.Image `yaml:"hyperkubeImage,omitempty"`
+	AWSCliImage                        model.Image `yaml:"awsCliImage,omitempty"`
 	CalicoNodeImage                    model.Image `yaml:"calicoNodeImage,omitempty"`
 	CalicoCniImage                     model.Image `yaml:"calicoCniImage,omitempty"`
 	CalicoCtlImage                     model.Image `yaml:"calicoCtlImage,omitempty"`
@@ -543,6 +548,7 @@ type DeploymentSettings struct {
 	FlannelImage                       model.Image `yaml:"flannelImage,omitempty"`
 	JournaldCloudWatchLogsImage        model.Image `yaml:"journaldCloudWatchLogsImage,omitempty"`
 	Kubernetes                         Kubernetes  `yaml:"kubernetes,omitempty"`
+	HostOS                             HostOS      `yaml:"hostOS,omitempty"`
 }
 
 // Part of configuration which is specific to worker nodes
@@ -795,6 +801,11 @@ type SelfHosting struct {
 	FlannelImage    model.Image `yaml:"flannelImage"`
 	FlannelCniImage model.Image `yaml:"flannelCniImage"`
 	TyphaImage      model.Image `yaml:"typhaImage"`
+}
+
+type HostOS struct {
+	BashPrompt model.BashPrompt `yaml:"bashPrompt,omitempty"`
+	MOTDBanner model.MOTDBanner `yaml:"motdBanner,omitempty"`
 }
 
 func (c *LocalStreaming) Interval() int64 {
