@@ -207,7 +207,8 @@
                     { "Ref": "CloudWatchLogGroupARN" },
                     { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
                   ]
-                },{{ end }}
+                },
+                {{ end }}
                 {{ if .UserDataController.Parts.s3 }}
 		            {
                   "Effect": "Allow",
@@ -217,19 +218,6 @@
                   "Resource": "arn:{{.Region.Partition}}:s3:::{{ .UserDataController.Parts.s3.Asset.S3Prefix }}*"
 		            },
                 {{ end }}
-                {{if .CloudWatchLogging.Enabled}}
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents",
-                    "logs:DescribeLogStreams"
-                  ],
-                  "Resource": [
-                    { "Ref": "CloudWatchLogGroupARN" },
-                    { "Fn::Join" : [ "", [{ "Ref": "CloudWatchLogGroupARN" }, ":log-stream:*"]] }
-                  ]
-                },{{ end }}
                 {{if .WaitSignal.Enabled}}
                 {
                   "Action": "cloudformation:SignalResource",
