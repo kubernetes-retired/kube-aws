@@ -11,7 +11,7 @@ import (
 var (
 	cmdUp = &cobra.Command{
 		Use:          "up",
-		Short:        "Create a new Kubernetes cluster",
+		Short:        "DEPRECATED: Create a new Kubernetes cluster",
 		Long:         ``,
 		RunE:         runCmdUp,
 		SilenceUsage: true,
@@ -31,6 +31,9 @@ func init() {
 }
 
 func runCmdUp(_ *cobra.Command, _ []string) error {
+	logger.Warnf("WARNING! kube-aws 'up' command is deprecated and will be removed in future versions")
+	logger.Warnf("Please use 'apply' to create your cluster")
+
 	opts := root.NewOptions(upOpts.prettyPrint, upOpts.skipWait)
 
 	cluster, err := root.ClusterFromFile(configPath, opts, upOpts.awsDebug)
@@ -50,7 +53,7 @@ func runCmdUp(_ *cobra.Command, _ []string) error {
 	}
 
 	logger.Info("Creating AWS resources. Please wait. It may take a few minutes.")
-	if err := cluster.Create(); err != nil {
+	if err := cluster.LegacyCreate(); err != nil {
 		return fmt.Errorf("error creating cluster: %v", err)
 	}
 
@@ -63,7 +66,6 @@ func runCmdUp(_ *cobra.Command, _ []string) error {
 		`Success! Your AWS resources have been created:
 %s
 The containers that power your cluster are now being downloaded.
-
 You should be able to access the Kubernetes API once the containers finish downloading.
 `
 	logger.Infof(successMsg, info)

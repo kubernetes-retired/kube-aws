@@ -4,17 +4,18 @@ import (
 	"fmt"
 
 	"bufio"
+	"os"
+	"strings"
+
 	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var (
 	cmdUpdate = &cobra.Command{
 		Use:          "update",
-		Short:        "Update an existing Kubernetes cluster",
+		Short:        "DEPRECATED: Update an existing Kubernetes cluster",
 		Long:         ``,
 		RunE:         runCmdUpdate,
 		SilenceUsage: true,
@@ -37,6 +38,9 @@ func init() {
 }
 
 func runCmdUpdate(_ *cobra.Command, _ []string) error {
+	logger.Warnf("WARNING! kube-aws 'update' command is deprecated and will be removed in future versions")
+	logger.Warnf("Please use 'apply' to update your cluster")
+
 	if !updateOpts.force && !updateConfirmation() {
 		logger.Info("Operation cancelled")
 		return nil
@@ -55,7 +59,7 @@ func runCmdUpdate(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	report, err := cluster.Update(targets)
+	report, err := cluster.LegacyUpdate(targets)
 	if err != nil {
 		return fmt.Errorf("error updating cluster: %v", err)
 	}

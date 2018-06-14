@@ -107,12 +107,13 @@ func (c clusterImpl) EstimateCost() ([]string, error) {
 }
 
 type Cluster interface {
+	Apply(OperationTargets) error
 	Assets() (cfnstack.Assets, error)
-	Create() error
+	LegacyCreate() error
 	Export() error
 	EstimateCost() ([]string, error)
 	Info() (*Info, error)
-	Update(OperationTargets) (string, error)
+	LegacyUpdate(OperationTargets) (string, error)
 	ValidateStack(...OperationTargets) (string, error)
 	ValidateTemplates() error
 	ControlPlane() *controlplane.Cluster
@@ -253,8 +254,13 @@ func (c clusterImpl) operationTargetsFromUserInput(opts []OperationTargets) Oper
 	return targets
 }
 
-func (c clusterImpl) Create() error {
+// remove with legacy up command
+func (c clusterImpl) LegacyCreate() error {
 	cfSvc := cloudformation.New(c.session)
+	return c.create(cfSvc)
+}
+
+func (c clusterImpl) create(cfSvc *cloudformation.CloudFormation) error {
 
 	assets, err := c.generateAssets(c.allOperationTargets())
 	if err != nil {
@@ -468,23 +474,40 @@ func (c clusterImpl) tags() map[string]string {
 	return c.controlPlane.Cluster.StackTags
 }
 
-func (c clusterImpl) Update(targets OperationTargets) (string, error) {
+func (c clusterImpl) Apply(targets OperationTargets) error {
 	cfSvc := cloudformation.New(c.session)
 
 	exists, err := cfnstack.StackExists(cfSvc, c.controlPlane.ClusterName)
 	if err != nil {
-		logger.Errorf("please check your AWS Credentials/Permissions")
-		return "", fmt.Errorf("can't lookup AWS CloudFormation stacks")
-	}
-	if !exists {
-		logger.Errorf("you can only 'update' clusters with a matching cloudformation stack")
-		return "", fmt.Errorf("missing cluster root stack %s", c.controlPlane.ClusterName)
+		logger.Errorf("please check your AWS credentials/permissions")
+		return fmt.Errorf("can't lookup AWS CloudFormation stacks: %s", err)
 	}
 
-	exists, err = cfnstack.NestedStackExists(cfSvc, c.controlPlane.ClusterName, naming.FromStackToCfnResource(c.etcd.Etcd.LogicalName()))
+	if exists {
+		report, err := c.update(cfSvc, targets)
+		if err != nil {
+			return fmt.Errorf("error updating cluster: %v", err)
+		}
+		if report != "" {
+			logger.Infof("Update stack: %s\n", report)
+		}
+		return nil
+	}
+	return c.create(cfSvc)
+}
+
+// remove with legacy up command
+func (c clusterImpl) LegacyUpdate(targets OperationTargets) (string, error) {
+	cfSvc := cloudformation.New(c.session)
+	return c.update(cfSvc, targets)
+}
+
+func (c clusterImpl) update(cfSvc *cloudformation.CloudFormation, targets OperationTargets) (string, error) {
+
+	exists, err := cfnstack.NestedStackExists(cfSvc, c.controlPlane.ClusterName, naming.FromStackToCfnResource(c.etcd.Etcd.LogicalName()))
 	if err != nil {
-		logger.Errorf("please check your AWS Credentials/Permissions")
-		return "", fmt.Errorf("can't lookup AWS CloudFormation stacks")
+		logger.Errorf("please check your AWS credentials/permissions")
+		return "", fmt.Errorf("can't lookup AWS CloudFormation stacks: %s", err)
 	}
 	// fail fast if it looks like we are trying to update a legacy cluster.
 	if !exists {
