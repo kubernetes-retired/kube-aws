@@ -5473,6 +5473,9 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.KIAMAgentCert}}
 
+{{end}}
+
+
   # Without the namespace annotation the pod will be unable to assume any roles
   - path: /srv/kubernetes/manifests/kube-system-ns.yaml
     content: |
@@ -5486,6 +5489,8 @@ write_files:
 	{{- range $key, $value := .KubeSystemNamespaceLabels }}
           {{ $key }}: {{ $value }}
 	{{- end }}
+
+{{if .Experimental.KIAMSupport.Enabled }}
 
   - path: /srv/kubernetes/manifests/kiam-all.yaml
     content: |
