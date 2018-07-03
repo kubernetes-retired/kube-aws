@@ -971,8 +971,10 @@ write_files:
         --from-file=$kiam_tls_dir/agent-key.pem --dry-run -o yaml | kubectl apply -n kube-system -f -
 
       mfdir=/srv/kubernetes/manifests
-      applyall "${mfdir}/kube-system-ns.yaml" "${mfdir}/kiam-all.yaml"
+      applyall "${mfdir}/kiam-all.yaml"
       {{ end }}
+
+      applyall "/srv/kubernetes/manifests/kube-system-ns.yaml"
 
       # See https://github.com/kubernetes-incubator/kube-aws/issues/1039#issuecomment-348978375
       if ks get apiservice v1beta1.metrics.k8s.io && ! ps ax | grep '[h]yperkube proxy'; then
@@ -5480,6 +5482,9 @@ write_files:
     encoding: gzip+base64
     content: {{.AssetsConfig.KIAMAgentCert}}
 
+{{end}}
+
+
   # Without the namespace annotation the pod will be unable to assume any roles
   - path: /srv/kubernetes/manifests/kube-system-ns.yaml
     content: |
@@ -5493,6 +5498,8 @@ write_files:
 	{{- range $key, $value := .KubeSystemNamespaceLabels }}
           {{ $key }}: {{ $value }}
 	{{- end }}
+
+{{if .Experimental.KIAMSupport.Enabled }}
 
   - path: /srv/kubernetes/manifests/kiam-all.yaml
     content: |
