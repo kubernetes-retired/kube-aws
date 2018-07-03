@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	k8sVer = "v1.9.3"
+	k8sVer = "v1.10.4"
 
 	credentialsDir = "credentials"
 	userDataDir    = "userdata"

@@ -1,6 +1,6 @@
 FROM golang:1.8.3
 
-ARG KUBERNETES_VERSION=${KUBERNETES_VERSION:-v1.9.3}
+ARG KUBERNETES_VERSION=${KUBERNETES_VERSION:-v1.10.4}
 
 RUN apt-get update && \
     apt-get install -y rsync && \

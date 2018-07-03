@@ -511,7 +511,9 @@ coreos:
         {{- if .Kubelet.KubeReservedResources }}
         --kube-reserved={{ .Kubelet.KubeReservedResources }} \
         {{- end }}
+        {{if checkVersion "<1.10" .K8sVer -}}
         --require-kubeconfig \
+        {{end -}}
         $KUBELET_OPTS
         Restart=always
         RestartSec=10

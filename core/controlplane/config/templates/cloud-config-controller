@@ -413,7 +413,9 @@ coreos:
         {{ end -}}
         ExecStart=/usr/lib/coreos/kubelet-wrapper \
         --kubeconfig=/etc/kubernetes/kubeconfig/controller.yaml \
+        {{if checkVersion "<1.10" .K8sVer -}}
         --require-kubeconfig \
+        {{end -}}
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
         {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
         --cni-bin-dir=/opt/cni/bin \
@@ -3215,7 +3217,12 @@ write_files:
             kubeconfig: /etc/kubernetes/kubeconfig/kube-proxy.yaml
           clusterCIDR: {{.PodCIDR}}
           {{if .KubeProxy.IPVSMode.Enabled -}}
+          {{if checkVersion ">=1.10" .K8sVer -}}
+          featureGates:
+            SupportIPVSProxyMode: true
+          {{else -}}
           featureGates: "SupportIPVSProxyMode=true"
+          {{end -}}
           mode: ipvs
           ipvs:
             scheduler: {{.KubeProxy.IPVSMode.Scheduler}}
