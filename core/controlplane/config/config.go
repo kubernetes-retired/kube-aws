@@ -123,6 +123,7 @@ func NewDefaultCluster() *Cluster {
 		KIAMSupport: KIAMSupport{
 			Enabled:         false,
 			Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.7", RktPullDocker: false},
+			SessionDuration: "15m",
 			ServerAddresses: KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 		},
 		Kube2IamSupport: Kube2IamSupport{
@@ -727,6 +728,7 @@ type EphemeralImageStorage struct {
 type KIAMSupport struct {
 	Enabled         bool                `yaml:"enabled"`
 	Image           model.Image         `yaml:"image,omitempty"`
+	SessionDuration string              `yaml:"sessionDuration,omitempty"`
 	ServerAddresses KIAMServerAddresses `yaml:"serverAddresses,omitempty"`
 }
 

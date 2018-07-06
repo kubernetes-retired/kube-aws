@@ -139,6 +139,7 @@ func TestMainClusterConfig(t *testing.T) {
 			KIAMSupport: controlplane_config.KIAMSupport{
 				Enabled:         false,
 				Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.7", RktPullDocker: false},
+				SessionDuration: "15m",
 				ServerAddresses: controlplane_config.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 			},
 			Kube2IamSupport: controlplane_config.Kube2IamSupport{
@@ -1378,6 +1379,7 @@ worker:
 						KIAMSupport: controlplane_config.KIAMSupport{
 							Enabled:         false,
 							Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.7", RktPullDocker: false},
+							SessionDuration: "15m",
 							ServerAddresses: controlplane_config.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 						},
 						Kube2IamSupport: controlplane_config.Kube2IamSupport{
@@ -1575,6 +1577,7 @@ experimental:
     image:
       repo: quay.io/uswitch/kiam
       tag: v2.6
+    sessionDuration: 30m	
     serverAddresses:
       serverAddress: localhost
       agentAddress: kiam-server
@@ -1587,6 +1590,7 @@ worker:
 					expected := controlplane_config.KIAMSupport{
 						Enabled:         true,
 						Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.6", RktPullDocker: false},
+						SessionDuration: "30m",
 						ServerAddresses: controlplane_config.KIAMServerAddresses{ServerAddress: "localhost", AgentAddress: "kiam-server"},
 					}
 
@@ -1618,6 +1622,7 @@ worker:
 						KIAMSupport: controlplane_config.KIAMSupport{
 							Enabled:         true,
 							Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.7", RktPullDocker: false},
+							SessionDuration: "15m",
 							ServerAddresses: controlplane_config.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 						},
 					}
