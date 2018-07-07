@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 )
 
 const calldepth = 3
@@ -88,7 +89,7 @@ func Debugf(format string, v ...interface{}) {
 func Log(l *log.Logger, color string, v ...interface{}) {
 	msg := fmt.Sprint(v...)
 	if Color {
-		msg = color + msg + ColorNC
+		msg = colorizeMessage(color, msg)
 	}
 	l.Output(calldepth, msg)
 }
@@ -96,7 +97,15 @@ func Log(l *log.Logger, color string, v ...interface{}) {
 func Logf(l *log.Logger, color, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	if Color {
-		msg = color + msg + ColorNC
+		msg = colorizeMessage(color, msg)
 	}
 	l.Output(calldepth, msg)
+}
+
+func colorizeMessage(color, s string) string {
+	whitespace := regexp.MustCompile(`\s*$`)
+	trimmed := whitespace.ReplaceAllString(s, "")
+	trailing := whitespace.FindString(s)
+
+	return color + trimmed + ColorNC + trailing
 }
