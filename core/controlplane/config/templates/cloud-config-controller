@@ -5556,6 +5556,7 @@ write_files:
                   - --sync=1m
                   - --prometheus-listen-addr=0.0.0.0:9620
                   - --prometheus-sync-interval=5s
+                  - --session-duration={{.Experimental.KIAMSupport.SessionDuration}}
                 volumeMounts:
                   - mountPath: /etc/ssl/certs
                     name: ssl-certs

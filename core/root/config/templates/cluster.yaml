@@ -1451,6 +1451,7 @@ experimental:
       repo: quay.io/uswitch/kiam
       tag: v2.7
       rktPullDocker: false
+    sessionDuration: 15m  
     serverAddresses:
       serverAddress: localhost:443
       agentAddress: kiam-server:443
