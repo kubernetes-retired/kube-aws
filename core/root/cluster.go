@@ -504,17 +504,18 @@ func (c clusterImpl) LegacyUpdate(targets OperationTargets) (string, error) {
 
 func (c clusterImpl) update(cfSvc *cloudformation.CloudFormation, targets OperationTargets) (string, error) {
 
+	// Look at existing state of cloud formation and stacks to determine if we need to take special measures in migrating our etcd
+	// clusters from the control plane stack to their own Etcd stack.
 	exists, err := cfnstack.NestedStackExists(cfSvc, c.controlPlane.ClusterName, naming.FromStackToCfnResource(c.etcd.Etcd.LogicalName()))
 	if err != nil {
 		logger.Errorf("please check your AWS credentials/permissions")
 		return "", fmt.Errorf("can't lookup AWS CloudFormation stacks: %s", err)
 	}
-	// fail fast if it looks like we are trying to update a legacy cluster.
 	if !exists {
-		logger.Errorf("the %s stack must exist in order to be able to update your cluster.", naming.FromStackToCfnResource(c.etcd.Etcd.LogicalName()))
-		logger.Error("we're sorry, but kube-aws can not presently upgrade your cluster to the new release with a separate ETCD Cloudformation stack.")
-		logger.Error("please consider backing up, destroying and recreating to upgrade.")
-		return "", fmt.Errorf("update not supported for clusters without a separate etcd cloudformation stack")
+		if !c.controlPlane.Kubernetes.Networking.SelfHosting.Enabled {
+			return "", fmt.Errorf("sorry, you can only update an existing legacy cluster with Kubernetes.Networking.SelfHosting enabled")
+		}
+		logger.Warnf("your cluster does not have a separate etcd stack, this update will spin up a new etcd cluster and attempt to import your existing state.")
 	}
 
 	assets, err := c.generateAssets(c.operationTargetsFromUserInput([]OperationTargets{targets}))
