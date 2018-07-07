@@ -53,7 +53,7 @@ The command varies among AWS regions.
 For the us-east-1 region:
 
 ```sh
-$ aws s3api --region=<your-region> create-bucket --bucket <your-bucket-name>
+$ aws s3api --region=us-east-1 create-bucket --bucket <your-bucket-name>
 {
     "Location": "/<your-bucket-name>"
 }
