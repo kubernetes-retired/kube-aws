@@ -168,6 +168,12 @@ func NewCluster(cfg *config.Cluster, opts config.StackTemplateOptions, plugins [
 	c.StackConfig.Etcd.CustomSystemdUnits = append(c.StackConfig.Etcd.CustomSystemdUnits, extraEtcd.SystemdUnits...)
 	c.StackConfig.Etcd.CustomFiles = append(c.StackConfig.Etcd.CustomFiles, extraEtcd.Files...)
 	c.StackConfig.Etcd.IAMConfig.Policy.Statements = append(c.StackConfig.Etcd.IAMConfig.Policy.Statements, extraEtcd.IAMPolicyStatements...)
+	if !c.StackConfig.Kubernetes.Networking.SelfHosting.Enabled {
+		fmt.Printf("\nWARNING: You will not be able to upgrade your cluster to future kube-aws releases (0.11+) without changing your cluster network settings.\nPlease consider updating your cluster with Kubernetes.Networking.SelfHosting enabled to allow updates (the networking update does incure some minor cluster downtime/disruption as it rolls out so please do read the docs in the default cluster.yaml)\n\n")
+	}
+	if err = c.lookupMissingEtcdSubnetCIDRs(); err != nil {
+		return nil, fmt.Errorf("Failed to lookup subnets: %v", err)
+	}
 
 	c.assets, err = c.buildAssets()
 
@@ -379,5 +385,35 @@ func (c *ClusterRef) validateControllerRootVolume(ec2Svc ec2Service) error {
 		}
 	}
 
+	return nil
+}
+
+// helper function goes and gets missing etcd subnet cidrs so that we can reference them in the etcd security group.
+func (c *ClusterRef) lookupMissingEtcdSubnetCIDRs() error {
+	if c.ProvidedEC2Interrogator == nil {
+		c.ProvidedEC2Interrogator = ec2.New(c.session)
+	}
+
+	for idx, subnet := range c.Etcd.Subnets {
+		if subnet.InstanceCIDR != "" {
+			// subnet already has a cidr
+			continue
+		}
+		if subnet.ID == "" {
+			continue
+		}
+		dsi := &ec2.DescribeSubnetsInput{
+			SubnetIds: []*string{
+				aws.String(subnet.ID),
+			},
+		}
+		result, err := c.ProvidedEC2Interrogator.DescribeSubnets(dsi)
+		if err != nil {
+			return fmt.Errorf("Can't lookup ec2 subnets: %v", err)
+		}
+		if result != nil {
+			c.Etcd.Subnets[idx].InstanceCIDR = *result.Subnets[0].CidrBlock
+		}
+	}
 	return nil
 }

@@ -1593,6 +1593,14 @@
             "ToPort": 22
           },
           {{end -}}
+          {{ range $_, $etcdSubnet := .Etcd.Subnets -}}
+          {
+            "CidrIp": "{{ $etcdSubnet.InstanceCIDR }}",
+            "FromPort": 2379,
+            "IpProtocol": "tcp",
+            "ToPort": 2379
+          },
+          {{ end -}}
           {
             "CidrIp": "0.0.0.0/0",
             "FromPort": 3,
