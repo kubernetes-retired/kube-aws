@@ -1,11 +1,12 @@
 package model
 
 type Addons struct {
-	Rescheduler       Rescheduler              `yaml:"rescheduler"`
-	ClusterAutoscaler ClusterAutoscalerSupport `yaml:"clusterAutoscaler,omitempty"`
-	MetricsServer     MetricsServer            `yaml:"metricsServer,omitempty"`
-	Prometheus        Prometheus               `yaml:"prometheus"`
-	UnknownKeys       `yaml:",inline"`
+	Rescheduler         Rescheduler              `yaml:"rescheduler"`
+	ClusterAutoscaler   ClusterAutoscalerSupport `yaml:"clusterAutoscaler,omitempty"`
+	MetricsServer       MetricsServer            `yaml:"metricsServer,omitempty"`
+	Prometheus          Prometheus               `yaml:"prometheus"`
+	APIServerAggregator APIServerAggregator      `yaml:"apiserverAggregator"`
+	UnknownKeys         `yaml:",inline"`
 }
 
 type ClusterAutoscalerSupport struct {
@@ -26,4 +27,8 @@ type MetricsServer struct {
 type Prometheus struct {
 	SecurityGroupsEnabled bool `yaml:"securityGroupsEnabled"`
 	UnknownKeys           `yaml:",inline"`
+}
+
+type APIServerAggregator struct {
+	Enabled bool `yaml:"enabled"`
 }
