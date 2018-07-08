@@ -1561,10 +1561,8 @@ write_files:
                 requiredDuringSchedulingIgnoredDuringExecution:
                   nodeSelectorTerms:
                   - matchExpressions:
-                    - key: kubernetes.io/role
-                      operator: In
-                      values:
-                        - node
+                    - key: node-role.kubernetes.io/master
+                      operator: DoesNotExist
             hostNetwork: true
             serviceAccountName: canal
             tolerations:
@@ -5687,8 +5685,13 @@ write_files:
               key: CriticalAddonsOnly
             hostNetwork: true
             dnsPolicy: ClusterFirstWithHostNet
-            nodeSelector:
-              kubernetes.io/role: node
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: node-role.kubernetes.io/master
+                      operator: DoesNotExist
             volumes:
               - name: ssl-certs
                 hostPath:
