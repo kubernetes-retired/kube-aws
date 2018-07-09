@@ -1503,10 +1503,10 @@ func TestInvalidKubernetesVersion(t *testing.T) {
 kubernetesVersion: v1.x.3
 `,
 		`
-kubernetesVersion: v1.10.4yes
+kubernetesVersion: v1.10.5yes
 `,
 		`
-kubernetesVersion: $v1.10.4
+kubernetesVersion: $v1.10.5
 `}
 
 	for _, testCase := range testCases {
@@ -1522,7 +1522,7 @@ kubernetesVersion: $v1.10.4
 func TestValidKubernetesVersion(t *testing.T) {
 	testCases := []string{
 		`
-kubernetesVersion: v1.10.4
+kubernetesVersion: v1.10.5
 `,
 		`
 kubernetesVersion: v1.7.2
@@ -1557,7 +1557,7 @@ kubernetesVersion: v1.8.12
 func TestApiServerLeaseEndpointReconcilerEnabled(t *testing.T) {
 	testCases := []string{
 		`
-kubernetesVersion: v1.10.4
+kubernetesVersion: v1.10.5
 `,
 		`
 kubernetesVersion: v1.10.2
