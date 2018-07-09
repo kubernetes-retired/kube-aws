@@ -364,13 +364,14 @@ coreos:
         EnvironmentFile=-/etc/etcd-environment
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
         Environment=KUBELET_IMAGE_URL={{ .HyperkubeImage.RktRepoWithoutTag }}
-        Environment="RKT_RUN_ARGS=--volume dns,kind=host,source=/etc/resolv.conf {{.HyperkubeImage.Options}}\
+        Environment="RKT_RUN_ARGS={{.HyperkubeImage.Options}}\
+        --volume dns,kind=host,source=/etc/resolv.conf \
+        --mount volume=dns,target=/etc/resolv.conf \
         {{ if not .Kubernetes.Networking.SelfHosting.Enabled -}}
         --set-env=ETCD_CA_CERT_FILE=/etc/kubernetes/ssl/etcd-trusted-ca.pem \
         --set-env=ETCD_CERT_FILE=/etc/kubernetes/ssl/etcd-client.pem \
         --set-env=ETCD_KEY_FILE=/etc/kubernetes/ssl/etcd-client-key.pem \
         {{ end -}}
-        --mount volume=dns,target=/etc/resolv.conf \
         {{ if eq .ContainerRuntime "rkt" -}}
         --volume rkt,kind=host,source=/opt/bin/host-rkt \
         --mount volume=rkt,target=/usr/bin/rkt \
@@ -381,6 +382,12 @@ coreos:
         {{ end -}}
         --volume var-lib-cni,kind=host,source=/var/lib/cni \
         --mount volume=var-lib-cni,target=/var/lib/cni \
+        {{ if .Kubernetes.Networking.SelfHosting.Enabled -}}
+        --volume var-run-calico,kind=host,source=/var/run/calico \
+        --mount volume=var-run-calico,target=/var/run/calico \
+        --volume var-lib-calico,kind=host,source=/var/lib/calico \
+        --mount volume=var-lib-calico,target=/var/lib/calico \
+        {{ end -}}
         --volume var-log,kind=host,source=/var/log \
         --mount volume=var-log,target=/var/log \
         --volume cni-bin,kind=host,source=/opt/cni/bin \
@@ -402,6 +409,10 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/cni/net.d
+        {{ if .Kubernetes.Networking.SelfHosting.Enabled -}}
+        ExecStartPre=/usr/bin/mkdir -p /var/run/calico
+        ExecStartPre=/usr/bin/mkdir -p /var/lib/calico
+        {{ end -}}
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /srv/kubernetes/manifests  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
         {{ if not .Kubernetes.Networking.SelfHosting.Enabled -}}
         {{ if .UseCalico -}}
@@ -1135,12 +1146,7 @@ write_files:
 
   - path: /srv/kubernetes/manifests/canal.yaml
     content: |
-      # Canal Version v3.0.3
-      # https://docs.projectcalico.org/v3.0/releases#v3.0.3
-      # This manifest includes the following component versions:
-      #   calico/node:v3.0.3
-      #   calico/cni:v2.0.1
-      #   coreos/flannel:
+      # Based on https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/canal/canal.yaml
 
       # This ConfigMap can be used to configure a self-hosted Canal installation.
       kind: ConfigMap
@@ -1449,6 +1455,9 @@ write_files:
                   - mountPath: /var/run/calico
                     name: var-run-calico
                     readOnly: false
+                  - mountPath: /var/lib/calico
+                    name: var-lib-calico
+                    readOnly: false
               # This container installs the Calico CNI binaries
               # and CNI network config file on each node.
               - name: install-cni
@@ -1477,7 +1486,7 @@ write_files:
               # This container runs flannel using the kube-subnet-mgr backend
               # for allocating subnets.
               - name: flannel
-                image: {{ .FlannelImage.RepoWithTag }}
+                image: {{ .Kubernetes.Networking.SelfHosting.FlannelImage.RepoWithTag }}
                 command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
                 securityContext:
                   privileged: true
@@ -1513,6 +1522,9 @@ write_files:
               - name: var-run-calico
                 hostPath:
                   path: /var/run/calico
+              - name: var-lib-calico
+                hostPath:
+                  path: /var/lib/calico
               # Used to install CNI.
               - name: cni-bin-dir
                 hostPath:
@@ -1669,6 +1681,9 @@ write_files:
                   - mountPath: /var/run/calico
                     name: var-run-calico
                     readOnly: false
+                  - mountPath: /var/lib/calico
+                    name: var-lib-calico
+                    readOnly: false
               # This container installs the Calico CNI binaries
               # and CNI network config file on each node.
               - name: install-cni
@@ -1697,7 +1712,7 @@ write_files:
               # This container runs flannel using the kube-subnet-mgr backend
               # for allocating subnets.
               - name: flannel
-                image: {{ .FlannelImage.RepoWithTag }}
+                image: {{ .Kubernetes.Networking.SelfHosting.FlannelImage.RepoWithTag }}
                 command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
                 securityContext:
                   privileged: true
@@ -1733,6 +1748,9 @@ write_files:
               - name: var-run-calico
                 hostPath:
                   path: /var/run/calico
+              - name: var-lib-calico
+                hostPath:
+                  path: /var/lib/calico
               # Used to install CNI.
               - name: cni-bin-dir
                 hostPath:
@@ -1846,6 +1864,36 @@ write_files:
           plural: networkpolicies
           singular: networkpolicy
 
+      ---
+
+      apiVersion: apiextensions.k8s.io/v1beta1
+      kind: CustomResourceDefinition
+      metadata:
+        name: globalnetworksets.crd.projectcalico.org
+      spec:
+        scope: Cluster
+        group: crd.projectcalico.org
+        version: v1
+        names:
+          kind: GlobalNetworkSet
+          plural: globalnetworksets
+          singular: globalnetworkset
+
+      ---
+
+      apiVersion: apiextensions.k8s.io/v1beta1
+      kind: CustomResourceDefinition
+      metadata:
+        name: hostendpoints.crd.projectcalico.org
+      spec:
+        scope: Cluster
+        group: crd.projectcalico.org
+        version: v1
+        names:
+          kind: HostEndpoint
+          plural: hostendpoints
+          singular: hostendpoint
+
   - path: /srv/kubernetes/rbac/network-daemonsets.yaml
     content: |
       apiVersion: v1
@@ -1907,7 +1955,15 @@ write_files:
             - list
             - update
             - watch
+        # remove when Calico < 3.1 is not supported any more
         - apiGroups: ["extensions"]
+          resources:
+            - networkpolicies
+          verbs:
+            - get
+            - list
+            - watch
+        - apiGroups: ["networking.k8s.io"]
           resources:
             - networkpolicies
           verbs:
@@ -1925,6 +1981,8 @@ write_files:
             - globalnetworkpolicies
             - networkpolicies
             - clusterinformations
+            - hostendpoints
+            - globalnetworksets
           verbs:
             - create
             - get
@@ -2119,7 +2177,7 @@ write_files:
                 - mountPath: /host/etc/cni/net.d
                   name: cni-net-dir
             - name: flannel
-              image: {{ .FlannelImage.RepoWithTag }}
+              image: {{ .Kubernetes.Networking.SelfHosting.FlannelImage.RepoWithTag }}
               command:
               - /opt/bin/flanneld
               args:
@@ -2298,6 +2356,9 @@ write_files:
                   - mountPath: /var/run/calico
                     name: var-run-calico
                     readOnly: false
+                  - mountPath: /var/lib/calico
+                    name: var-lib-calico
+                    readOnly: false
                   - mountPath: /calico-secrets
                     name: etcd-certs
                   - mountPath: /etc/resolv.conf
@@ -2310,6 +2371,9 @@ write_files:
               - name: var-run-calico
                 hostPath:
                   path: /var/run/calico
+              - name: var-lib-calico
+                hostPath:
+                  path: /var/lib/calico
               - name: cni-bin-dir
                 hostPath:
                   path: /opt/cni/bin
