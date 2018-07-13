@@ -2677,7 +2677,7 @@ write_files:
                   - mountPath: /workdir
                     name: workdir
               containers:
-                - name: main
+                - name: kube-node-drainer-asg-status-updater
                   image: {{.AWSCliImage.RepoWithTag}}
                   env:
                   - name: NODE_NAME
@@ -2769,7 +2769,7 @@ write_files:
                   - mountPath: /workdir
                     name: workdir
               containers:
-                - name: main
+                - name: kube-node-drainer
                   image: {{.AWSCliImage.RepoWithTag}}
                   env:
                   - name: NODE_NAME
