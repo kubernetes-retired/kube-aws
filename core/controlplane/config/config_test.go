@@ -1121,16 +1121,16 @@ func TestKubeletReserved(t *testing.T) {
 		{
 			conf: `
 kubelet:
-  kubeReserved: "cpu=100m,memory=100Mi,storage=1Gi"
-  systemReserved: "cpu=200m,memory=200Mi,storage=2Gi"
+  kubeReserved: "cpu=100m,memory=100Mi,ephemeral-storage=1Gi"
+  systemReserved: "cpu=200m,memory=200Mi,ephemeral-storage=2Gi"
 `,
-			kubeReserved:   "cpu=100m,memory=100Mi,storage=1Gi",
-			systemReserved: "cpu=200m,memory=200Mi,storage=2Gi",
+			kubeReserved:   "cpu=100m,memory=100Mi,ephemeral-storage=1Gi",
+			systemReserved: "cpu=200m,memory=200Mi,ephemeral-storage=2Gi",
 		},
 		{
 			conf: `
-kubeReserved: "cpu=100m,memory=100Mi,storage=1Gi"
-systemReserved: "cpu=200m,memory=200Mi,storage=2Gi"
+kubeReserved: "cpu=100m,memory=100Mi,ephemeral-storage=1Gi"
+systemReserved: "cpu=200m,memory=200Mi,ephemeral-storage=2Gi"
 `,
 			kubeReserved:   "",
 			systemReserved: "",
