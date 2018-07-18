@@ -1877,7 +1877,6 @@
     },
     {{end}}
     {{end}}
-    {{if not .Kubernetes.Networking.SelfHosting.Enabled }}
     {{range $index, $etcdInstance := $.EtcdNodes}}
     {{if $etcdInstance.EIPManaged}}
     "{{$etcdInstance.EIPLogicalName}}": {
@@ -1892,7 +1891,6 @@
       "Value": {{$etcdInstance.NetworkInterfacePrivateIPRef}},
       "Export": { "Name" : {"Fn::Sub": "${AWS::StackName}-{{$etcdInstance.NetworkInterfacePrivateIPLogicalName}}" }}
     },
-    {{end}}
     {{end}}
     {{end}}
     {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
