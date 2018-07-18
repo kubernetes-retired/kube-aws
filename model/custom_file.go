@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/kubernetes-incubator/kube-aws/filereader/texttemplate"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 )
@@ -56,7 +57,7 @@ func (c CustomFile) customFileHasTemplate() bool {
 func (c CustomFile) renderTemplate(ctx interface{}) (string, error) {
 	var buf strings.Builder
 
-	tmpl, err := template.New("").Parse(c.Template)
+	tmpl, err := texttemplate.Parse("template", c.Template, template.FuncMap{})
 	if err != nil {
 		return "", fmt.Errorf("failed to parse CustomFile template %s: %v", c.Path, err)
 	}
