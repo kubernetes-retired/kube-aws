@@ -471,7 +471,12 @@ func (c clusterImpl) stackName() string {
 }
 
 func (c clusterImpl) tags() map[string]string {
-	return c.controlPlane.Cluster.StackTags
+	cptags := c.controlPlane.Cluster.StackTags
+	if len(cptags) == 0 {
+		cptags = make(map[string]string, 1)
+	}
+	cptags["kube-aws:version"] = controlplane.VERSION
+	return cptags
 }
 
 func (c clusterImpl) Apply(targets OperationTargets) error {
