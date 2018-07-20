@@ -1244,7 +1244,7 @@ kubernetes:
 # It is enabled by default.
 #waitSignal:
 #  enabled: true
-#   maxBatchSize: 1
+#  maxBatchSize: 1
 
 # Autosaves all Kubernetes resources (in .json format) to a bucket 's3:.../<your-cluster-name>/backup/*'.
 # The autosave process executes on start-up and repeats every 24 hours.
