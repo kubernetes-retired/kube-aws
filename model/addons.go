@@ -10,7 +10,8 @@ type Addons struct {
 }
 
 type ClusterAutoscalerSupport struct {
-	Enabled     bool `yaml:"enabled"`
+	Enabled     bool              `yaml:"enabled"`
+	Options     map[string]string `yaml:"options"`
 	UnknownKeys `yaml:",inline"`
 }
 

@@ -108,6 +108,7 @@ func NewDefaultCluster() *Cluster {
 		},
 		ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 			Enabled: true,
+			Options: map[string]string{},
 		},
 		TLSBootstrap: TLSBootstrap{
 			Enabled: false,
