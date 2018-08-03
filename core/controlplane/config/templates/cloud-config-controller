@@ -4526,6 +4526,9 @@ write_files:
                     - --skip-nodes-with-system-pods=false
                     - --expander=least-waste
                     - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,kubernetes.io/cluster/{{.ClusterName}}
+                    {{- range $flag, $value := .Addons.ClusterAutoscaler.Options }}
+                    - --{{ $flag }}={{ $value }}
+                    {{- end }}
                   env:
                     - name: AWS_REGION
                       value: {{.Region}}

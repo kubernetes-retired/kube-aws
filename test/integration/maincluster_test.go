@@ -127,6 +127,7 @@ func TestMainClusterConfig(t *testing.T) {
 			},
 			ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 				Enabled: true,
+				Options: map[string]string{},
 			},
 			TLSBootstrap: controlplane_config.TLSBootstrap{
 				Enabled: false,
@@ -432,6 +433,9 @@ addons:
     enabled: true
   clusterAutoscaler:
     enabled: true
+    options:
+      v: 5
+      test: present
   metricsServer:
     enabled: true
 worker:
@@ -448,6 +452,7 @@ worker:
 						},
 						ClusterAutoscaler: model.ClusterAutoscalerSupport{
 							Enabled: true,
+							Options: map[string]string{"v": "5", "test": "present"},
 						},
 						MetricsServer: model.MetricsServer{
 							Enabled: true,
@@ -1370,6 +1375,7 @@ worker:
 						},
 						ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 							Enabled: true,
+							Options: map[string]string{},
 						},
 						TLSBootstrap: controlplane_config.TLSBootstrap{
 							Enabled: true,
@@ -1520,6 +1526,7 @@ worker:
 						},
 						ClusterAutoscalerSupport: model.ClusterAutoscalerSupport{
 							Enabled: true,
+							Options: map[string]string{},
 						},
 						TLSBootstrap: controlplane_config.TLSBootstrap{
 							Enabled: false,

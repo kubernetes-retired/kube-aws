@@ -1351,6 +1351,13 @@ addons:
   # If you want to run CA on worker nodes, turn on `worker.nodePools[].clusterAutoscalerSupport.enabled` for the node pool.
   clusterAutoscaler:
     enabled: false
+    # Options below can be used to inject custom settings for the autoscaler.
+    # Sensible defaults are already configured in the controller-cloud-config but if you wish to override them simply
+    # add them here and they'll take precedence.
+    #options:
+    #  flag-name: value
+    #  v: 5 
+    #  expander: least-waste
 
   # When enabled, Kubernetes rescheduler is deployed to the cluster controller(s)
   # This feature is experimental currently so may not be production ready
