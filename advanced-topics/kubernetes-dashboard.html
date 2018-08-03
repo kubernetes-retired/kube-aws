@@ -584,9 +584,9 @@ You can override these by changing the values as necessary.</p>
   <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">type</span><span class="token punctuation">:</span> LoadBalancer
-<span class="token comment" spellcheck="true"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
-<span class="token comment" spellcheck="true">#  loadBalancerSourceRanges:</span>
-<span class="token comment" spellcheck="true">#  - x.x.x.x/32</span>
+<span class="token comment"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
+<span class="token comment">#  loadBalancerSourceRanges:</span>
+<span class="token comment">#  - x.x.x.x/32</span>
   <span class="token key atrule">ports</span><span class="token punctuation">:</span>
   <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443</span>
     <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">8443</span>
@@ -605,7 +605,7 @@ You can override these by changing the values as necessary.</p>
 <span class="token key atrule">metadata</span><span class="token punctuation">:</span>
   <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
     <span class="token key atrule">service.beta.kubernetes.io/aws-load-balancer-ssl-cert</span><span class="token punctuation">:</span>
-    <span class="token comment" spellcheck="true">#replace with your certificate ARN</span>
+    <span class="token comment">#replace with your certificate ARN</span>
     arn<span class="token punctuation">:</span>aws<span class="token punctuation">:</span>acm<span class="token punctuation">:</span>us<span class="token punctuation">-</span>east<span class="token punctuation">-</span>1<span class="token punctuation">:</span>XXXXXXXXXX<span class="token punctuation">:</span>certificate/xxxxxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxx<span class="token punctuation">-</span>xxxxxxxxxx
     <span class="token key atrule">service.beta.kubernetes.io/aws-load-balancer-backend-protocol</span><span class="token punctuation">:</span> http
   <span class="token key atrule">name</span><span class="token punctuation">:</span> kubernetes<span class="token punctuation">-</span>dashboard
@@ -614,9 +614,9 @@ You can override these by changing the values as necessary.</p>
   <span class="token key atrule">namespace</span><span class="token punctuation">:</span> kube<span class="token punctuation">-</span>system
 <span class="token key atrule">spec</span><span class="token punctuation">:</span>
   <span class="token key atrule">type</span><span class="token punctuation">:</span> LoadBalancer
-  <span class="token comment" spellcheck="true"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
-  <span class="token comment" spellcheck="true">#  loadBalancerSourceRanges:</span>
-  <span class="token comment" spellcheck="true">#  - x.x.x.x/32</span>
+  <span class="token comment"># uncomment if you want to restrict the access to allowed IP&apos;s</span>
+  <span class="token comment">#  loadBalancerSourceRanges:</span>
+  <span class="token comment">#  - x.x.x.x/32</span>
   <span class="token key atrule">ports</span><span class="token punctuation">:</span>
   <span class="token punctuation">-</span> <span class="token key atrule">port</span><span class="token punctuation">:</span> <span class="token number">443</span>
     <span class="token key atrule">targetPort</span><span class="token punctuation">:</span> <span class="token number">9090</span>
@@ -705,7 +705,7 @@ You can override these by changing the values as necessary.</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Kubernetes Dashboard Access","level":"1.8.3","depth":2,"next":{"title":"Use An Existing VPC","level":"1.8.4","depth":2,"path":"advanced-topics/use-an-existing-vpc.md","ref":"advanced-topics/use-an-existing-vpc.md","articles":[]},"previous":{"title":"etcd Backup & Restore","level":"1.8.2","depth":2,"path":"advanced-topics/etcd-backup-and-restore.md","ref":"advanced-topics/etcd-backup-and-restore.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"advanced-topics/kubernetes-dashboard.md","mtime":"2018-07-20T06:00:48.670Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-07-20T06:41:09.025Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Kubernetes Dashboard Access","level":"1.8.3","depth":2,"next":{"title":"Use An Existing VPC","level":"1.8.4","depth":2,"path":"advanced-topics/use-an-existing-vpc.md","ref":"advanced-topics/use-an-existing-vpc.md","articles":[]},"previous":{"title":"etcd Backup & Restore","level":"1.8.2","depth":2,"path":"advanced-topics/etcd-backup-and-restore.md","ref":"advanced-topics/etcd-backup-and-restore.md","articles":[]},"dir":"ltr"},"config":{"plugins":["edit-link","prism","-highlight","github","anchorjs"],"root":"docs","styles":{"website":"styles/site.css"},"pluginsConfig":{"prism":{},"github":{"url":"https://github.com/kubernetes-incubator/kube-aws"},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"fontsettings":{"theme":"white","family":"sans","size":2},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"edit-link":{"label":"Edit This Page","base":"https://github.com/kubernetes-incubator/kube-aws/edit/master/docs"},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false},"anchorjs":{}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"links":{"sidebar":{}},"gitbook":"*"},"file":{"path":"advanced-topics/kubernetes-dashboard.md","mtime":"2018-08-03T01:42:28.344Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-08-03T02:21:04.034Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
