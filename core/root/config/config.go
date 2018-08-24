@@ -34,9 +34,10 @@ type UnmarshalledConfig struct {
 }
 
 type Worker struct {
-	APIEndpointName   string                     `yaml:"apiEndpointName,omitempty"`
-	NodePools         []*nodepool.ProvidedConfig `yaml:"nodePools,omitempty"`
-	model.UnknownKeys `yaml:",inline"`
+	APIEndpointName         string                     `yaml:"apiEndpointName,omitempty"`
+	NodePools               []*nodepool.ProvidedConfig `yaml:"nodePools,omitempty"`
+	model.UnknownKeys       `yaml:",inline"`
+	NodePoolRollingStrategy string `yaml:"nodePoolRollingStrategy,omitempty"`
 }
 
 type Config struct {
@@ -108,7 +109,6 @@ func ConfigFromBytes(data []byte, plugins []*pluginmodel.Plugin) (*Config, error
 		if err := np.Taints.Validate(); err != nil {
 			return nil, fmt.Errorf("invalid taints for node pool at index %d: %v", i, err)
 		}
-
 		if np.APIEndpointName == "" {
 			if c.Worker.APIEndpointName == "" {
 				if len(cpConfig.APIEndpoints) > 1 {
@@ -117,6 +117,14 @@ func ConfigFromBytes(data []byte, plugins []*pluginmodel.Plugin) (*Config, error
 				np.APIEndpointName = cpConfig.APIEndpoints.GetDefault().Name
 			} else {
 				np.APIEndpointName = c.Worker.APIEndpointName
+			}
+		}
+
+		if np.NodePoolRollingStrategy != "Parallel" && np.NodePoolRollingStrategy != "Sequential" {
+			if c.Worker.NodePoolRollingStrategy != "" && (c.Worker.NodePoolRollingStrategy == "Sequential" || c.Worker.NodePoolRollingStrategy == "Parallel") {
+				np.NodePoolRollingStrategy = c.Worker.NodePoolRollingStrategy
+			} else {
+				np.NodePoolRollingStrategy = "Parallel"
 			}
 		}
 

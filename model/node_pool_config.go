@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+
 	"github.com/kubernetes-incubator/kube-aws/logger"
 )
 
@@ -16,12 +17,13 @@ type NodePoolConfig struct {
 	CustomSettings            map[string]interface{} `yaml:"customSettings,omitempty"`
 	VolumeMounts              []VolumeMount          `yaml:"volumeMounts,omitempty"`
 	Raid0Mounts               []Raid0Mount           `yaml:"raid0Mounts,omitempty"`
-	UnknownKeys               `yaml:",inline"`
 	NodeSettings              `yaml:",inline"`
 	NodeStatusUpdateFrequency string              `yaml:"nodeStatusUpdateFrequency"`
 	CustomFiles               []CustomFile        `yaml:"customFiles,omitempty"`
 	CustomSystemdUnits        []CustomSystemdUnit `yaml:"customSystemdUnits,omitempty"`
 	Gpu                       Gpu                 `yaml:"gpu"`
+	NodePoolRollingStrategy   string              `yaml:"nodePoolRollingStrategy,omitempty"`
+	UnknownKeys               `yaml:",inline"`
 }
 
 type ClusterAutoscaler struct {
