@@ -16,6 +16,7 @@ type IAMConfig struct {
 type IAMRole struct {
 	ARN             `yaml:",inline"`
 	Name            string             `yaml:"name,omitempty"`
+	UseStrict       bool               `yaml:"useStrict,omitempty"`
 	ManagedPolicies []IAMManagedPolicy `yaml:"managedPolicies,omitempty"`
 }
 

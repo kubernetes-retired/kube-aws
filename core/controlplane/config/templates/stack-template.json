@@ -37,7 +37,7 @@
           {{range $k, $v := $.Controller.InstanceTags -}}
           {
             "Key": "{{$k}}",
-            "PropagateAtLaunch": "true",
+            "PropagateAtLaunch": "true" ,
             "Value": "{{$v}}"
           },
           {{end -}}
@@ -212,12 +212,18 @@
     {{ if not .Controller.IAMConfig.InstanceProfile.Arn }}
     "IAMInstanceProfileController": {
       "Properties": {
-        "Path": "/",
+		"Path": "/",
+		{{ if and (.Controller.IAMConfig.Role.UseStrict) (.Controller.IAMConfig.Role.Name) }}
+		"Roles": [
+			"{{.Controller.IAMConfig.Role.Name}}"
+		]
+		{{ else }}
         "Roles": [
-          {
-            "Ref": "IAMRoleController"
-          }
-        ]
+			{
+				"Ref": "IAMRoleController"
+			}
+		]
+		{{ end }}
       },
       "Type": "AWS::IAM::InstanceProfile"
     },
@@ -444,7 +450,7 @@
           "Version": "2012-10-17"
         },
         "Path": "/",
-        {{if .Controller.IAMConfig.Role.Name }}
+        {{if and (.Controller.IAMConfig.Role.Name) (not .Controller.IAMConfig.Role.UseStrict) }}
         "RoleName":  {"Fn::Join": ["-", ["{{$.ClusterName}}", {"Ref": "AWS::Region"}, "{{.Controller.IAMConfig.Role.Name}}"]]},
         {{end}}
         "ManagedPolicyArns": [
