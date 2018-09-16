@@ -5733,6 +5733,8 @@ write_files:
         namespace: kube-system
         name: kiam-agent
       spec:
+        updateStrategy:
+          type: RollingUpdate
         template:
           metadata:
             annotations:
