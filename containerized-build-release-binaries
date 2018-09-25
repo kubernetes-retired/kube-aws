@@ -6,7 +6,7 @@ KUBERNETES_MOUNT_DIR="/go/src/github.com/kubernetes-incubator/kube-aws"
 
 docker run --rm -i \
     -v "${COREOS_KUBERNETES_ROOT}:${KUBERNETES_MOUNT_DIR}:z" -w ${KUBERNETES_MOUNT_DIR} \
-    --entrypoint /bin/bash golang:1.8.3  <<EOF
+    --entrypoint /bin/bash golang:1.10.0  <<EOF
 #!/bin/bash
 set -euo pipefail
 ./build-release-binaries
