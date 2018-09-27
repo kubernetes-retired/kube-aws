@@ -35,9 +35,9 @@ func (p TemplateParams) KubeDnsMasq() config.KubeDns {
 	return p.cluster.controlPlane.KubeDns
 }
 
-func newTemplateParams(c clusterImpl) TemplateParams {
+func newTemplateParams(c *clusterImpl) TemplateParams {
 	return TemplateParams{
-		cluster: c,
+		cluster: *c,
 	}
 }
 

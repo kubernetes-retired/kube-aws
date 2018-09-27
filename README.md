@@ -11,6 +11,7 @@
 ## Features
 
 * Create, update and destroy Kubernetes clusters on AWS
+* Review changes before applying
 * Highly available and scalable Kubernetes clusters backed by multi-AZ deployment and Node Pools
 * Deployment to an existing VPC
 * Powered by various AWS services including CloudFormation, KMS, Auto Scaling, Spot Fleet, EC2, ELB, S3, etc.
@@ -71,10 +72,10 @@ $ kube-aws validate
 Launch:
 
 ```
-$ kube-aws up 
+$ kube-aws apply
 
 # Or export your cloudformation stack and dependent assets into the `exported/` directory
-$ kube-aws up --export
+$ kube-aws apply --export
 
 # Access the cluster
 $ KUBECONFIG=kubeconfig kubectl get nodes --show-labels
@@ -83,9 +84,14 @@ $ KUBECONFIG=kubeconfig kubectl get nodes --show-labels
 Update:
 
 ```
+# Modify your cluster.yaml
 $ $EDITOR cluster.yaml
+
+# Reviews changes to cfn stacks and EC2 userdata
+$ kube-aws diff --context 3 --color
+
 # Update all the cfn stacks including the one for control-plane and the ones for worker node pools
-$ kube-aws update 
+$ kube-aws apply
 ```
 
 Destroy:

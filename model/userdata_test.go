@@ -21,11 +21,13 @@ func mkTmpl(t, b string) string {
 }
 
 var (
-	mkInstance      = func(b string) string { return mkTmpl(USERDATA_INSTANCE, b) }
-	mkS3            = func(b string) string { return mkTmpl(USERDATA_S3, b) }
-	tS3             = mkS3(s3Body)
-	tInstance       = mkInstance("INSTANCE BODY")
-	instanceOnlyOpt = []UserDataOption{UserDataPartsOpt(PartDesc{USERDATA_INSTANCE, validateNone})}
+	mkInstance       = func(b string) string { return mkTmpl(USERDATA_INSTANCE, b) }
+	mkInstanceScript = func(b string) string { return mkTmpl(USERDATA_INSTANCE_SCRIPT, b) }
+	mkS3             = func(b string) string { return mkTmpl(USERDATA_S3, b) }
+	tS3              = mkS3(s3Body)
+	tInstance        = mkInstance("INSTANCE BODY")
+	tInstanceScript  = mkInstanceScript("INSTANCE SCRIPT BODY")
+	instanceOnlyOpt  = []UserDataOption{UserDataPartsOpt(PartDesc{USERDATA_INSTANCE, validateNone})}
 )
 
 type Expectation func(assert *assert.Assertions, ud UserData, err error)
@@ -37,12 +39,12 @@ func TestUserDataNew(t *testing.T) {
 		opts     []UserDataOption
 		exp      Expectation
 	}{
-		{"simple", tS3 + tInstance, nil,
+		{"simple", tS3 + tInstance + tInstanceScript, nil,
 			func(a *assert.Assertions, ud UserData, err error) {
 				a.NoError(err)
 				a.NotEmpty(ud)
 
-				a.Len(ud.Parts, 2)
+				a.Len(ud.Parts, 3)
 				if a.Contains(ud.Parts, USERDATA_S3) {
 					udata, _ := ud.Parts[USERDATA_S3]
 					content, err := udata.Template()
@@ -55,6 +57,13 @@ func TestUserDataNew(t *testing.T) {
 					content, err := udata.Template()
 					a.NoError(err)
 					a.Equal(content, "INSTANCE BODY")
+				}
+
+				if a.Contains(ud.Parts, USERDATA_INSTANCE_SCRIPT) {
+					udata, _ := ud.Parts[USERDATA_INSTANCE_SCRIPT]
+					content, err := udata.Template()
+					a.NoError(err)
+					a.Equal(content, "INSTANCE SCRIPT BODY")
 				}
 			},
 		},

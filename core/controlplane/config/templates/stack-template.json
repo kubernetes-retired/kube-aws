@@ -611,7 +611,7 @@
     {{end -}}
     {{end -}}
     {{end -}}
-    "{{.Controller.LogicalName}}LC": {
+    "{{.Controller.LaunchConfigurationLogicalName}}": {
       "Properties": {
         "BlockDeviceMappings": [
           {
