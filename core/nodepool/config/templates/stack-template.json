@@ -111,7 +111,7 @@
         "HealthCheckGracePeriod": 600,
         "HealthCheckType": "EC2",
         "LaunchConfigurationName": {
-          "Ref": "{{.LogicalName}}LC"
+          "Ref": "{{.LaunchConfigurationLogicalName}}"
         },
         "MaxSize": "{{.MaxCount}}",
         "MetricsCollection": [
@@ -217,7 +217,7 @@
       "Type" : "AWS::AutoScaling::LifecycleHook"
     },
     {{end}}
-    "{{.LogicalName}}LC": {
+    "{{.LaunchConfigurationLogicalName}}": {
       "Properties": {
         "BlockDeviceMappings": [
           {

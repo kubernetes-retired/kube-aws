@@ -21,6 +21,8 @@ type UserDataValidateFunc func(content []byte) error
 const (
 	USERDATA_S3       = "s3"
 	USERDATA_INSTANCE = "instance"
+
+	USERDATA_INSTANCE_SCRIPT = "instance-script"
 )
 
 // UserData represents userdata which might be split across multiple storage types
@@ -41,7 +43,10 @@ type PartDesc struct {
 }
 
 var (
-	defaultParts = []PartDesc{{USERDATA_INSTANCE, validateNone}, {USERDATA_S3, validateCoreosCloudInit}}
+	defaultParts = []PartDesc{
+		{USERDATA_INSTANCE, validateNone},
+		{USERDATA_INSTANCE_SCRIPT, validateNone},
+		{USERDATA_S3, validateCoreosCloudInit}}
 )
 
 type userDataOpt struct {

@@ -25,3 +25,11 @@ ignored = ["github.com/kubernetes-incubator/kube-aws/hack*"]
 [[constraint]]
   name = "github.com/go-yaml/yaml"
   version = "v2.2.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/aryann/difflib"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mgutz/ansi"

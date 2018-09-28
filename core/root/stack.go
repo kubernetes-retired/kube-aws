@@ -2,63 +2,88 @@ package root
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"text/template"
-
-	controlplane "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
-	etcd "github.com/kubernetes-incubator/kube-aws/core/etcd/config"
-	network "github.com/kubernetes-incubator/kube-aws/core/network/config"
-	nodepool "github.com/kubernetes-incubator/kube-aws/core/nodepool/config"
-	"github.com/kubernetes-incubator/kube-aws/core/root/config"
-	"github.com/kubernetes-incubator/kube-aws/core/root/defaults"
-	"github.com/kubernetes-incubator/kube-aws/filegen"
-	"github.com/kubernetes-incubator/kube-aws/plugin/pluginmodel"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"io/ioutil"
+	"strings"
 )
 
-func RenderStack(configPath string) error {
-
-	cluster, err := controlplane.ClusterFromFile(configPath)
+func getStackTemplate(cfnSvc *cloudformation.CloudFormation, stackName string) (string, error) {
+	byRootStackName := &cloudformation.GetTemplateInput{StackName: aws.String(stackName)}
+	output, err := cfnSvc.GetTemplate(byRootStackName)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("failed to get current root stack template: %v", err)
 	}
-	clusterConfig, err := cluster.Config([]*pluginmodel.Plugin{})
-	if err != nil {
-		return err
-	}
-	kubeconfig, err := generateKubeconfig(clusterConfig)
-	if err != nil {
-		return err
-	}
-
-	if err := filegen.Render(
-		filegen.File(filepath.Join(defaults.AssetsDir, ".gitignore"), []byte("*"), 0644),
-		filegen.File(defaults.ControllerTmplFile, controlplane.CloudConfigController, 0644),
-		filegen.File(defaults.WorkerTmplFile, nodepool.CloudConfigWorker, 0644),
-		filegen.File(defaults.EtcdTmplFile, etcd.CloudConfigEtcd, 0644),
-		filegen.File(defaults.ControlPlaneStackTemplateTmplFile, controlplane.StackTemplateTemplate, 0644),
-		filegen.File(defaults.NetworkStackTemplateTmplFile, network.StackTemplateTemplate, 0644),
-		filegen.File(defaults.EtcdStackTemplateTmplFile, etcd.StackTemplateTemplate, 0644),
-		filegen.File(defaults.NodePoolStackTemplateTmplFile, nodepool.StackTemplateTemplate, 0644),
-		filegen.File(defaults.RootStackTemplateTmplFile, config.StackTemplateTemplate, 0644),
-		filegen.File("kubeconfig", kubeconfig, 0600),
-	); err != nil {
-		return err
-	}
-
-	return nil
+	return aws.StringValue(output.TemplateBody), nil
 }
 
-func generateKubeconfig(clusterConfig *controlplane.Config) ([]byte, error) {
-
-	tmpl, err := template.New("kubeconfig.yaml").Parse(string(controlplane.KubeConfigTemplate))
+func getNestedStackName(cfnSvc *cloudformation.CloudFormation, stackName string, nestedStackLogicalName string) (string, error) {
+	byRootStackName := &cloudformation.DescribeStackResourceInput{StackName: aws.String(stackName), LogicalResourceId: aws.String(nestedStackLogicalName)}
+	output, err := cfnSvc.DescribeStackResource(byRootStackName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse default kubeconfig template: %v", err)
+		return "", fmt.Errorf("failed to get current root stack template: %v", err)
 	}
+	return aws.StringValue(output.StackResourceDetail.PhysicalResourceId), nil
+}
 
-	var kubeconfig bytes.Buffer
-	if err := tmpl.Execute(&kubeconfig, clusterConfig); err != nil {
-		return nil, fmt.Errorf("failed to render kubeconfig: %v", err)
+func getInstanceScriptUserdata(cfnSvc *cloudformation.CloudFormation, stackJson string, nestedStackLogicalName string) (string, error) {
+	dest := map[string]interface{}{}
+	err := json.Unmarshal([]byte(stackJson), &dest)
+	if err != nil {
+		return "", err
 	}
-	return kubeconfig.Bytes(), nil
+	res := dest["Resources"].(map[string]interface{})
+	lc := res[nestedStackLogicalName].(map[string]interface{})
+	props := lc["Properties"].(map[string]interface{})
+	ud := props["UserData"].(map[string]interface{})
+	fnBase64 := ud["Fn::Base64"].(map[string]interface{})
+	fnJoin := fnBase64["Fn::Join"].([]interface{})
+	joinedItems := fnJoin[1].([]interface{})
+	instanceScript := joinedItems[3].(string)
+	return instanceScript, nil
+}
+
+func getInstanceUserdataJson(cfnSvc *cloudformation.CloudFormation, stackJson string, nestedStackLogicalName string) (string, error) {
+	dest := map[string]interface{}{}
+	err := json.Unmarshal([]byte(stackJson), &dest)
+	if err != nil {
+		return "", err
+	}
+	res := dest["Resources"].(map[string]interface{})
+	lc := res[nestedStackLogicalName].(map[string]interface{})
+	props := lc["Properties"].(map[string]interface{})
+	ud := props["UserData"].(map[string]interface{})
+	buf := new(bytes.Buffer)
+	encoder := json.NewEncoder(buf)
+	// Avoid diffs like this:
+	// -           "Fn::Sub": "echo 'KUBE_AWS_STACK_NAME=${AWS::StackName}' \u003e\u003e/var/run/coreos/etcd-node.env"
+	// +           "Fn::Sub": "echo 'KUBE_AWS_STACK_NAME=${AWS::StackName}' >>/var/run/coreos/etcd-node.env"
+	encoder.SetEscapeHTML(false)
+	err = encoder.Encode(ud)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func getS3Userdata(cfnSvc *cloudformation.CloudFormation, s3Svc *s3.S3, instanceUserdata string) (string, error) {
+	a := strings.Split(instanceUserdata, " cp ")
+	b := strings.Split(a[1], " ")[0]
+	s3uri := b
+	tokens := strings.SplitN(strings.Split(s3uri, "s3://")[1], "/", 2)
+	bucket := tokens[0]
+	key := tokens[1]
+	out, err := s3Svc.GetObject(&s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(key)})
+	if err != nil {
+		return "", err
+	}
+	bytes, err := ioutil.ReadAll(out.Body)
+	if err != nil {
+		return "", err
+	}
+	out.Body.Close()
+	return string(bytes), nil
 }

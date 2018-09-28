@@ -44,6 +44,10 @@ func (c Controller) LogicalName() string {
 	return "Controllers"
 }
 
+func (c Controller) LaunchConfigurationLogicalName() string {
+	return c.LogicalName() + "LC"
+}
+
 func (c Controller) SecurityGroupRefs() []string {
 	refs := []string{}
 
