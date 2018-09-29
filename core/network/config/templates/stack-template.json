@@ -379,6 +379,64 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
+    {{ if .Kubernetes.Networking.AmazonVPC.Enabled }}
+    "SecurityGroupWorkerToWorker": {
+      "Properties": {
+        "FromPort": "0",
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": "65535"
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerToController": {
+      "Properties": {
+        "FromPort": "0",
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": "65535"
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupControllerToWorker": {
+      "Properties": {
+        "FromPort": "0",
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": "65535"
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupControllerToController": {
+      "Properties": {
+        "FromPort": "0",
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": "65535"
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    {{ end }}
     {{if .Addons.Prometheus.SecurityGroupsEnabled}}
     "SecurityGroupWorkerIngressFromWorkerToControllerKubelet": {
       "Properties": {

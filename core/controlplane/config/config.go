@@ -218,6 +218,9 @@ func NewDefaultCluster() *Cluster {
 					Enabled: false,
 				},
 				Networking: Networking{
+					AmazonVPC: AmazonVPC{
+						Enabled: false,
+					},
 					SelfHosting: SelfHosting{
 						Type:            "canal",
 						Typha:           false,
@@ -787,7 +790,12 @@ type ResourceQuota struct {
 }
 
 type Networking struct {
+	AmazonVPC   AmazonVPC   `yaml:"amazonVPC"`
 	SelfHosting SelfHosting `yaml:"selfHosting"`
+}
+
+type AmazonVPC struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type SelfHosting struct {
