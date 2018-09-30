@@ -296,14 +296,6 @@ coreos:
         Environment="RKT_RUN_ARGS={{.HyperkubeImage.Options}}\
         --volume dns,kind=host,source=/etc/resolv.conf \
         --mount volume=dns,target=/etc/resolv.conf \
-        {{ if eq .ContainerRuntime "rkt" -}}
-        --volume rkt,kind=host,source=/opt/bin/host-rkt \
-        --mount volume=rkt,target=/usr/bin/rkt \
-        --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
-        --mount volume=var-lib-rkt,target=/var/lib/rkt \
-        --volume stage,kind=host,source=/tmp \
-        --mount volume=stage,target=/tmp \
-        {{ end -}}
         --volume var-lib-cni,kind=host,source=/var/lib/cni \
         --mount volume=var-lib-cni,target=/var/lib/cni \
         --volume var-run-calico,kind=host,source=/var/run/calico \
@@ -335,8 +327,6 @@ coreos:
         --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
-        --rkt-path=/usr/bin/rkt \
-        --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
         --node-labels=node-role.kubernetes.io/master="",kubernetes.io/role=master,service-cidr={{ .ServiceCIDR | toLabel }}{{if .NodeLabels.Enabled}},{{.NodeLabels.String}}{{end}} \
         --register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
@@ -364,36 +354,6 @@ coreos:
     - name: rpc-statd.service
       command: start
       enable: true
-
-{{ if eq .ContainerRuntime "rkt" }}
-    - name: rkt-api.service
-      enable: true
-      content: |
-        [Unit]
-        Before=kubelet.service
-        [Service]
-        ExecStart=/usr/bin/rkt api-service
-        Restart=always
-        RestartSec=10
-        [Install]
-        RequiredBy=kubelet.service
-
-    - name: load-rkt-stage1.service
-      enable: true
-      content: |
-        [Unit]
-        Description=Load rkt stage1 images
-        Documentation=http://github.com/coreos/rkt
-        Requires=network-online.target
-        After=network-online.target
-        Before=rkt-api.service
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        ExecStart=/usr/bin/rkt fetch /usr/lib/rkt/stage1-images/stage1-coreos.aci /usr/lib/rkt/stage1-images/stage1-fly.aci  --insecure-options=image
-        [Install]
-        RequiredBy=rkt-api.service
-{{ end }}
 
     - name: install-kube-system.service
       command: start
@@ -514,8 +474,6 @@ coreos:
         What=/dev/{{.Experimental.EphemeralImageStorage.Disk}}
 {{if eq .ContainerRuntime "docker"}}
         Where=/var/lib/docker
-{{else if eq .ContainerRuntime "rkt"}}
-        Where=/var/lib/rkt
 {{end}}
         Type={{.Experimental.EphemeralImageStorage.Filesystem}}
 {{end}}
@@ -868,6 +826,13 @@ write_files:
         sleep 3
       done
 
+      # Service Accounts
+      applyall \
+        "${mfdir}/heapster-sa.yaml" \
+        "${mfdir}/{{ .KubeDns.Provider }}-sa.yaml" \
+        "${mfdir}/kube-proxy-sa.yaml" \
+        {{ if .KubernetesDashboard.Enabled }}"${mfdir}/kubernetes-dashboard-sa.yaml"{{ end }}
+
       {{if .Experimental.KIAMSupport.Enabled }}
       kiam_tls_dir=/etc/kubernetes/ssl/kiam
       vols="${vols} -v $kiam_tls_dir:$kiam_tls_dir"
@@ -936,13 +901,6 @@ write_files:
       applyall \
         "${mfdir}"/{kube-proxy,heapster-config}"-cm.yaml" \
         "${mfdir}/{{ .KubeDns.Provider }}-cm.yaml"
-
-      # Service Accounts
-      applyall \
-        "${mfdir}/heapster-sa.yaml" \
-        "${mfdir}/{{ .KubeDns.Provider }}-sa.yaml" \
-        "${mfdir}/kube-proxy-sa.yaml" \
-        {{ if .KubernetesDashboard.Enabled }}"${mfdir}/kubernetes-dashboard-sa.yaml"{{ end }}
 
       {{ if eq .KubeDns.Provider "coredns" -}}
       applyall \
@@ -1665,7 +1623,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico Felix Configuration
       kind: CustomResourceDefinition
       metadata:
         name: felixconfigurations.crd.projectcalico.org
@@ -1681,7 +1638,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico BGP Configuration
       kind: CustomResourceDefinition
       metadata:
         name: bgpconfigurations.crd.projectcalico.org
@@ -1697,7 +1653,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico IP Pools
       kind: CustomResourceDefinition
       metadata:
         name: ippools.crd.projectcalico.org
@@ -1713,7 +1668,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico Cluster Information
       kind: CustomResourceDefinition
       metadata:
         name: clusterinformations.crd.projectcalico.org
@@ -1729,7 +1683,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico Global Network Policies
       kind: CustomResourceDefinition
       metadata:
         name: globalnetworkpolicies.crd.projectcalico.org
@@ -1745,7 +1698,6 @@ write_files:
       ---
 
       apiVersion: apiextensions.k8s.io/v1beta1
-      description: Calico Network Policies
       kind: CustomResourceDefinition
       metadata:
         name: networkpolicies.crd.projectcalico.org
@@ -2948,8 +2900,6 @@ write_files:
           namespace: kube-system
           labels:
             k8s-app: kube-proxy
-          annotations:
-            rkt.alpha.kubernetes.io/stage1-name-override: coreos.com/rkt/stage1-fly
         spec:
           updateStrategy:
             type: RollingUpdate

@@ -348,8 +348,6 @@ coreos:
         --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
-        --rkt-path=/usr/bin/rkt \
-        --rkt-stage1-image=coreos.com/rkt/stage1-coreos \
         --node-labels=kubernetes.io/role=node,node-role.kubernetes.io/node="",node-role.kubernetes.io/{{ toLabel .NodePoolName }}=""{{if .NodeLabels.Enabled}},{{.NodeLabels.String}}{{end}} \
         --register-node=true \
         {{if .Taints}}--register-with-taints={{.Taints.String}}\
@@ -392,36 +390,6 @@ coreos:
     - name: rpc-statd.service
       command: start
       enable: true
-
-{{ if eq .ContainerRuntime "rkt" }}
-    - name: rkt-api.service
-      enable: true
-      content: |
-        [Unit]
-        Before=kubelet.service
-        [Service]
-        ExecStart=/usr/bin/rkt api-service
-        Restart=always
-        RestartSec=10
-        [Install]
-        RequiredBy=kubelet.service
-
-    - name: load-rkt-stage1.service
-      enable: true
-      content: |
-        [Unit]
-        Description=Load rkt stage1 images
-        Documentation=http://github.com/coreos/rkt
-        Requires=network-online.target
-        After=network-online.target
-        Before=rkt-api.service
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        ExecStart=/usr/bin/rkt fetch /usr/lib/rkt/stage1-images/stage1-coreos.aci /usr/lib/rkt/stage1-images/stage1-fly.aci  --insecure-options=image
-        [Install]
-        RequiredBy=rkt-api.service
-{{ end }}
 
 {{if .AwsEnvironment.Enabled}}
     - name: set-aws-environment.service
@@ -563,8 +531,6 @@ coreos:
         What=/dev/{{.Experimental.EphemeralImageStorage.Disk}}
 {{if eq .ContainerRuntime "docker"}}
         Where=/var/lib/docker
-{{else if eq .ContainerRuntime "rkt"}}
-        Where=/var/lib/rkt
 {{end}}
         Type={{.Experimental.EphemeralImageStorage.Filesystem}}
 {{end}}

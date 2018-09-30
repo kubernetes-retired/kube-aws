@@ -1023,7 +1023,7 @@ worker:
 # and pulling from quay or dockerhub is slow and you get many timeouts.
 
 # Version of hyperkube image to use. This is the tag for the hyperkube image repository.
-# kubernetesVersion: v1.10.5
+# kubernetesVersion: v1.11.3
 
 # Hyperkube image repository to use.
 # hyperkubeImage:
