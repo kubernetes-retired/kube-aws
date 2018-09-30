@@ -458,7 +458,7 @@ spec:
 					}
 
 					// A kube-aws plugin can activate feature gates
-					if !strings.Contains(workerUserdataS3Part, `--feature-gates="Accelerators=true"`) {
+					if !strings.Contains(workerUserdataS3Part, `--feature-gates=\"Accelerators=true\"`) {
 						t.Error("missing worker feature gate: Accelerators=true")
 					}
 

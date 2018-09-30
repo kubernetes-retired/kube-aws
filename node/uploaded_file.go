@@ -9,36 +9,36 @@ import (
 
 type UploadedFile struct {
 	Path    string
-	Content uploadedFileContent
+	Content UploadedFileContent
 }
 
-type uploadedFileContent struct {
+type UploadedFileContent struct {
 	bytes []byte
 }
 
-func NewUploadedFileContent(bytes []byte) uploadedFileContent {
-	return uploadedFileContent{
+func NewUploadedFileContent(bytes []byte) UploadedFileContent {
+	return UploadedFileContent{
 		bytes: bytes,
 	}
 }
 
-func (c uploadedFileContent) ToBase64() uploadedFileContent {
+func (c UploadedFileContent) ToBase64() UploadedFileContent {
 	bytes := []byte(base64.StdEncoding.EncodeToString(c.bytes))
-	return uploadedFileContent{
+	return UploadedFileContent{
 		bytes: bytes,
 	}
 }
 
-func (c uploadedFileContent) ToGzip() uploadedFileContent {
+func (c UploadedFileContent) ToGzip() UploadedFileContent {
 	bytes, err := gzipcompressor.BytesToBytes(c.bytes)
 	if err != nil {
 		panic(fmt.Errorf("Unexpected error in ToGzip: %v", err))
 	}
-	return uploadedFileContent{
+	return UploadedFileContent{
 		bytes: bytes,
 	}
 }
 
-func (c uploadedFileContent) String() string {
+func (c UploadedFileContent) String() string {
 	return string(c.bytes)
 }

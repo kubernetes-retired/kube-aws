@@ -346,6 +346,7 @@ coreos:
         {{- end }}
         {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
         --node-ip=$$(curl http://169.254.169.254/latest/meta-data/local-ipv4) \
+        --max-pods=$$(/opt/bin/aws-k8s-cni-max-pods) \
         {{- end }}
         $KUBELET_OPTS \
         "
@@ -4848,7 +4849,13 @@ write_files:
         namespace: kube-system
 {{end}}
 
-{{if .Kubernetes.Networking.AmazonVPC.Enabled }}
+{{if .Kubernetes.Networking.AmazonVPC.Enabled}}
+  - path: /opt/bin/aws-k8s-cni-max-pods
+    owner: root:root
+    permissions: 0755
+    encoding: gzip+base64
+    content: {{.Kubernetes.Networking.AmazonVPC.MaxPodsScript.ToGzip.ToBase64}}
+
   - path: /srv/kubernetes/manifests/aws-k8s-cni.yaml
     content: |
       ---
@@ -4922,16 +4929,16 @@ write_files:
             - operator: Exists
           # required to avoid pod creation errors like the below:
           #  NetworkPlugin cni failed to set up pod "heapster-5ccb7ff4b-cdq24_kube-system" network: failed to find plugin "loopback" in path [/opt/cni/bin]
-          initContainers:
-          - name: hyperkube
-            image: {{ .HyperkubeImage.RepoWithTag }}
-            command:
-            - /bin/sh
-            - -c
-            - "cp /opt/cni/bin/* /host/opt/cni/bin/"
-            volumeMounts:
-            - mountPath: /host/opt/cni/bin
-              name: cni-bin-dir
+            initContainers:
+            - name: hyperkube
+              image: {{ .HyperkubeImage.RepoWithTag }}
+              command:
+              - /bin/sh
+              - -c
+              - "cp /opt/cni/bin/* /host/opt/cni/bin/"
+              volumeMounts:
+              - mountPath: /host/opt/cni/bin
+                name: cni-bin-dir
             containers:
             - image: 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon-k8s-cni:1.2.0
               imagePullPolicy: Always
@@ -5201,7 +5208,6 @@ write_files:
                   - --prometheus-listen-addr=0.0.0.0:9620
                   - --prometheus-sync-interval=5s
                   - --session-duration={{.Experimental.KIAMSupport.SessionDuration}}
-                  {{if .Kubernetes.Networking.AmazonVPC.Enabled }}- --host-interface=!eni0{{ end }}
                 volumeMounts:
                   - mountPath: /etc/ssl/certs
                     name: ssl-certs
@@ -5362,6 +5368,7 @@ write_files:
                   - --server-address={{.Experimental.KIAMSupport.ServerAddresses.AgentAddress}}
                   - --prometheus-listen-addr=0.0.0.0:9620
                   - --prometheus-sync-interval=5s
+                  {{if .Kubernetes.Networking.AmazonVPC.Enabled }}- --host-interface=!eni0{{ end }}
                 env:
                   - name: HOST_IP
                     valueFrom:
