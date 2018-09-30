@@ -33,7 +33,19 @@
   revision = "e206f873d14a916d3d26c40ab667bca123f365a3"
 
 [[projects]]
-  digest = "1:7c16652299686ea6c477751db35d74bf41ccdc0940ca3fac86679fe837e469cc"
+  digest = "1:1b3e209c6b74487487359841024dcf0509282f32c892e5a475ba0d2cf7a67014"
+  name = "github.com/aws/amazon-vpc-cni-k8s"
+  packages = [
+    "pkg/awsutils",
+    "pkg/ec2metadata",
+    "pkg/ec2wrapper",
+  ]
+  pruneopts = ""
+  revision = "8d6101d72fe34159487688e662c0a91cdc6f08cf"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:c983cbc78a187ca90daf7ef00de2fee1f8991698dbdc6de3734abb1849a14e84"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -46,14 +58,21 @@
     "aws/credentials/ec2rolecreds",
     "aws/credentials/endpointcreds",
     "aws/credentials/stscreds",
+    "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
     "aws/endpoints",
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/sdkuri",
+    "internal/shareddefaults",
     "private/protocol",
     "private/protocol/ec2query",
+    "private/protocol/eventstream",
+    "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
     "private/protocol/jsonrpc",
     "private/protocol/query",
@@ -72,8 +91,24 @@
     "service/sts",
   ]
   pruneopts = ""
-  revision = "e0cdae7a65ba3a5e66a0af747a7b3967ddac099c"
-  version = "v1.8.30"
+  revision = "a8ff9e4804fc89c994b731b1c057640ab2aecff3"
+  version = "v1.15.45"
+
+[[projects]]
+  branch = "master"
+  digest = "1:c0bec5f9b98d0bc872ff5e834fac186b807b656683bd29cb82fb207a1513fabb"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  pruneopts = ""
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
+  digest = "1:9897221091d9b3ca7d1a8d350bd8ce709118b5134d68f6315b2010736d3e9378"
+  name = "github.com/cihub/seelog"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d2c6e5aa9fbfdd1c624e140287063c7730654115"
+  version = "v2.6"
 
 [[projects]]
   digest = "1:d67d2cf6384e448151f03df3d603d88cf15ef2a1e0eb78ba464c8b15a2d0e6b1"
@@ -103,11 +138,12 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:4f058e70dd54497119d11e7d937f27935aa72cbddc4c2e33941bb16e7dd2bae3"
+  digest = "1:cd5bab9c9e23ffa6858eaa79dc827fd84bc24bc00b0cfb0b14036e393da2b1fa"
   name = "github.com/go-ini/ini"
   packages = ["."]
   pruneopts = ""
-  revision = "afbc45e87f3ba324c532d12c71918ef52e0fb194"
+  revision = "5cf292cae48347c2490ac1a58fe36735fb78df7e"
+  version = "v1.38.2"
 
 [[projects]]
   digest = "1:f0620375dd1f6251d9973b5f2596228cc8042e887cd7f827e4220bc1ce8c30e2"
@@ -155,11 +191,11 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:c4239c01bae2646fbc5d0120deb86b8cabc40d01bde261b9cea497fb6f8542ad"
+  digest = "1:6f49eae0c1e5dab1dafafee34b207aeb7a42303105960944828c2079b92fc88e"
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   pruneopts = ""
-  revision = "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d"
+  revision = "0b12d6b5"
 
 [[projects]]
   digest = "1:c3eb5a6f6968c79d1ddf1fcac37d682c29850373185b41cb996b8a4628711c22"
@@ -184,6 +220,14 @@
   pruneopts = ""
   revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
   version = "v0.0.4"
+
+[[projects]]
+  digest = "1:63722a4b1e1717be7b98fc686e0b30d5e7f734b9e93d7dee86293b6deab7ea28"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = ""
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -214,12 +258,61 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = ""
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   digest = "1:256484dbbcd271f9ecebc6795b2df8cad4c458dd0f5fd82a8c2fa0c29f233411"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   pruneopts = ""
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:4142d94383572e74b42352273652c62afec5b23f325222ed09198f46009022d1"
+  name = "github.com/prometheus/client_golang"
+  packages = ["prometheus"]
+  pruneopts = ""
+  revision = "c5b7fccd204277076155f10851dad72b76a49317"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:185cf55b1f44a1bf243558901c3f06efa5c64ba62cfdcbb1bf7bbe8c3fb68561"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = ""
+  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f477ef7b65d94fb17574fc6548cef0c99a69c1634ea3b6da248b63a61ebe0498"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = ""
+  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+
+[[projects]]
+  branch = "master"
+  digest = "1:5a57ea878c9a40657ebe7916eca6bea7c76808f5acb68fd42ea5e204dd35f6f7"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/util",
+    "nfs",
+    "xfs",
+  ]
+  pruneopts = ""
+  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
   digest = "1:6b55df4b0517a459af9d3879c99330af4367adcf45f3d0d37ded80a6272ae057"
@@ -388,6 +481,7 @@
     "github.com/Masterminds/semver",
     "github.com/Masterminds/sprig",
     "github.com/aryann/difflib",
+    "github.com/aws/amazon-vpc-cni-k8s/pkg/awsutils",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/aws/credentials/stscreds",
