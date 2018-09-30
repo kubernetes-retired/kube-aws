@@ -953,7 +953,7 @@ write_files:
 
       {{ if .KubernetesDashboard.Enabled }}
       applyall "${rbac}/roles/kubernetes-dashboard.yaml"
-      {{- end }}}
+      {{- end }}
 
       applyall "${rbac}/role-bindings/heapster-nanny.yaml"
 
