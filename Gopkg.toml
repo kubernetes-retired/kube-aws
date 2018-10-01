@@ -33,3 +33,7 @@ ignored = ["github.com/kubernetes-incubator/kube-aws/hack*"]
 [[constraint]]
   branch = "master"
   name = "github.com/mgutz/ansi"
+
+[[constraint]]
+  version = "v1.2.0"
+  name = "github.com/aws/amazon-vpc-cni-k8s"

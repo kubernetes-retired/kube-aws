@@ -1433,7 +1433,7 @@ experimental:
     enabled: false
     image: 
       repo: quay.io/uswitch/kiam
-      tag: v2.7
+      tag: v2.8
       rktPullDocker: false
     sessionDuration: 15m  
     serverAddresses:

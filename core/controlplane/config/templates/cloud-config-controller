@@ -317,7 +317,7 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /var/run/calico
         ExecStartPre=/usr/bin/mkdir -p /var/lib/calico
         ExecStartPre=/bin/sh -ec "find /etc/kubernetes/manifests /srv/kubernetes/manifests  -maxdepth 1 -type f | xargs --no-run-if-empty sed -i 's|#ETCD_ENDPOINTS#|${ETCD_ENDPOINTS}|'"
-        ExecStart=/usr/lib/coreos/kubelet-wrapper \
+        ExecStart=/bin/sh -c "exec /usr/lib/coreos/kubelet-wrapper \
         --kubeconfig=/etc/kubernetes/kubeconfig/controller.yaml \
         {{if checkVersion "<1.10" .K8sVer -}}
         --require-kubeconfig \
@@ -327,7 +327,7 @@ coreos:
         --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
-        --node-labels=node-role.kubernetes.io/master="",kubernetes.io/role=master,service-cidr={{ .ServiceCIDR | toLabel }}{{if .NodeLabels.Enabled}},{{.NodeLabels.String}}{{end}} \
+        --node-labels=node-role.kubernetes.io/master=\"\",kubernetes.io/role=master,service-cidr={{ .ServiceCIDR | toLabel }}{{if .NodeLabels.Enabled}},{{.NodeLabels.String}}{{end}} \
         --register-with-taints=node.alpha.kubernetes.io/role=master:NoSchedule \
         --allow-privileged=true \
         --pod-manifest-path=/etc/kubernetes/manifests \
@@ -344,7 +344,12 @@ coreos:
         {{- if .Kubelet.KubeReservedResources }}
         --kube-reserved={{ .Kubelet.KubeReservedResources }} \
         {{- end }}
-        $KUBELET_OPTS
+        {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
+        --node-ip=$$(curl http://169.254.169.254/latest/meta-data/local-ipv4) \
+        --max-pods=$$(/opt/bin/aws-k8s-cni-max-pods) \
+        {{- end }}
+        $KUBELET_OPTS \
+        "
         Restart=always
         RestartSec=10
 
@@ -873,7 +878,9 @@ write_files:
       rbac=/srv/kubernetes/rbac
 
       applyall "${rbac}/network-daemonsets.yaml"
-      {{- if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
+      {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
+      applyall "${mfdir}/aws-k8s-cni.yaml"
+      {{- else if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
       ensuredelete "${mfdir}/flannel.yaml"
       applyall "${mfdir}/canal.yaml"
       {{- else }}
@@ -946,7 +953,7 @@ write_files:
 
       {{ if .KubernetesDashboard.Enabled }}
       applyall "${rbac}/roles/kubernetes-dashboard.yaml"
-      {{- end }}}
+      {{- end }}
 
       applyall "${rbac}/role-bindings/heapster-nanny.yaml"
 
@@ -3172,8 +3179,10 @@ write_files:
           {{ if .Experimental.DisableSecurityGroupIngress }}
           - --cloud-config=/etc/kubernetes/additional-configs/cloud.config
           {{ end }}
+          {{ if not .Kubernetes.Networking.AmazonVPC.Enabled -}}
           - --allocate-node-cidrs=true
           - --cluster-cidr={{.PodCIDR}}
+          {{ end -}}
           - --configure-cloud-routes=false {{/* no need to auto configure cloud routes when using flannel or canal */}}
           - --service-cluster-ip-range={{.ServiceCIDR}} {{/* removes the service CIDR range from the cluster CIDR if it intersects */}}
           {{ if not .Addons.MetricsServer.Enabled -}}
@@ -4772,7 +4781,9 @@ write_files:
                   - "--auto-discover-default-role"
                   - "--iptables=true"
                   - "--host-ip=$(HOST_IP)"
-           {{- if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
+           {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
+                  - "--host-interface=!eni0"
+           {{- else if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
                   - "--host-interface=cali+"
            {{- else }}
                   - "--host-interface=cni0"
@@ -4836,6 +4847,158 @@ write_files:
       - kind: ServiceAccount
         name: kube2iam
         namespace: kube-system
+{{end}}
+
+{{if .Kubernetes.Networking.AmazonVPC.Enabled}}
+  - path: /opt/bin/aws-k8s-cni-max-pods
+    owner: root:root
+    permissions: 0755
+    encoding: gzip+base64
+    content: {{.Kubernetes.Networking.AmazonVPC.MaxPodsScript.ToGzip.ToBase64}}
+
+  - path: /srv/kubernetes/manifests/aws-k8s-cni.yaml
+    content: |
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      # kubernetes versions before 1.8.0 should use rbac.authorization.k8s.io/v1beta1
+      kind: ClusterRole
+      metadata:
+        name: aws-node
+      rules:
+      - apiGroups:
+        - crd.k8s.amazonaws.com
+        resources:
+        - "*"
+        - namespaces
+        verbs:
+        - "*"
+      - apiGroups: [""]
+        resources:
+        - pods
+        - nodes
+        - namespaces
+        verbs: ["list", "watch", "get"]
+      - apiGroups: ["extensions"]
+        resources:
+        - daemonsets
+        verbs: ["list", "watch"]
+      ---
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: aws-node
+        namespace: kube-system
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      # kubernetes versions before 1.8.0 should use rbac.authorization.k8s.io/v1beta1
+      kind: ClusterRoleBinding
+      metadata:
+        name: aws-node
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: aws-node
+      subjects:
+      - kind: ServiceAccount
+        name: aws-node
+        namespace: kube-system
+      ---
+      kind: DaemonSet
+      apiVersion: extensions/v1beta1
+      metadata:
+        name: aws-node
+        namespace: kube-system
+        labels:
+          k8s-app: aws-node
+      spec:
+        updateStrategy:
+          type: RollingUpdate
+        selector:
+          matchLabels:
+            k8s-app: aws-node
+        template:
+          metadata:
+            labels:
+              k8s-app: aws-node
+            annotations:
+              scheduler.alpha.kubernetes.io/critical-pod: ''
+          spec:
+            serviceAccountName: aws-node
+            hostNetwork: true
+            tolerations:
+            - operator: Exists
+          # required to avoid pod creation errors like the below:
+          #  NetworkPlugin cni failed to set up pod "heapster-5ccb7ff4b-cdq24_kube-system" network: failed to find plugin "loopback" in path [/opt/cni/bin]
+            initContainers:
+            - name: hyperkube
+              image: {{ .HyperkubeImage.RepoWithTag }}
+              command:
+              - /bin/sh
+              - -c
+              - "cp /opt/cni/bin/* /host/opt/cni/bin/"
+              volumeMounts:
+              - mountPath: /host/opt/cni/bin
+                name: cni-bin-dir
+            containers:
+            - image: 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon-k8s-cni:1.2.0
+              imagePullPolicy: Always
+              ports:
+              - containerPort: 60000
+                name: metrics
+              name: aws-node
+              env:
+                - name: AWS_VPC_K8S_CNI_LOGLEVEL
+                  value: DEBUG
+                - name: MY_NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+              resources:
+                requests:
+                  cpu: 10m
+              securityContext:
+                privileged: true
+              volumeMounts:
+              - mountPath: /host/opt/cni/bin
+                name: cni-bin-dir
+              - mountPath: /host/etc/cni/net.d
+                name: cni-net-dir
+              - mountPath: /host/var/log
+                name: log-dir
+              - mountPath: /var/run/docker.sock
+                name: dockersock
+            volumes:
+            - name: cni-bin-dir
+              hostPath:
+                path: /opt/cni/bin
+            - name: cni-net-dir
+              hostPath:
+                # changed from /etc/cni/net.d to /etc/kubernetes/cni/net.d to accomodate kube-aws' setup
+                # original: https://github.com/aws/amazon-vpc-cni-k8s/blob/a91e807c8d752a13f8047f54fa78fcd3a37dfc20/config/v1.1/aws-k8s-cni.yaml#L92
+                path: /etc/kubernetes/cni/net.d
+            - name: log-dir
+              hostPath:
+                path: /var/log
+            - name: dockersock
+              hostPath:
+                path: /var/run/docker.sock
+      ---
+      apiVersion: apiextensions.k8s.io/v1beta1
+      kind: CustomResourceDefinition
+      metadata:
+        name: eniconfigs.crd.k8s.amazonaws.com
+      spec:
+        scope: Cluster
+        group: crd.k8s.amazonaws.com
+        version: v1alpha1
+        names:
+          plural: eniconfigs
+          singular: eniconfig
+          kind: ENIConfig
 {{end}}
 
 {{if .Experimental.GpuSupport.Enabled }}
@@ -5190,7 +5353,9 @@ write_files:
                   - /agent
                 args:
                   - --iptables
-           {{- if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
+           {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
+                  - --host-interface=!eni0
+           {{- else if eq .Kubernetes.Networking.SelfHosting.Type "canal" }}
                   - --host-interface=cali+
            {{- else}}
                   - --host-interface=cni0
@@ -5203,6 +5368,7 @@ write_files:
                   - --server-address={{.Experimental.KIAMSupport.ServerAddresses.AgentAddress}}
                   - --prometheus-listen-addr=0.0.0.0:9620
                   - --prometheus-sync-interval=5s
+                  {{if .Kubernetes.Networking.AmazonVPC.Enabled }}- --host-interface=!eni0{{ end }}
                 env:
                   - name: HOST_IP
                     valueFrom:

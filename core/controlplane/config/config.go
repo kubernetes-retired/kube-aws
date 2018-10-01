@@ -123,7 +123,7 @@ func NewDefaultCluster() *Cluster {
 		},
 		KIAMSupport: KIAMSupport{
 			Enabled:         false,
-			Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.7", RktPullDocker: false},
+			Image:           model.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.8", RktPullDocker: false},
 			SessionDuration: "15m",
 			ServerAddresses: KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 		},
@@ -218,6 +218,9 @@ func NewDefaultCluster() *Cluster {
 					Enabled: false,
 				},
 				Networking: Networking{
+					AmazonVPC: AmazonVPC{
+						Enabled: false,
+					},
 					SelfHosting: SelfHosting{
 						Type:            "canal",
 						Typha:           false,
@@ -787,6 +790,7 @@ type ResourceQuota struct {
 }
 
 type Networking struct {
+	AmazonVPC   AmazonVPC   `yaml:"amazonVPC"`
 	SelfHosting SelfHosting `yaml:"selfHosting"`
 }
 
