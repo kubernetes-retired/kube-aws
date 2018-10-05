@@ -1164,12 +1164,16 @@ write_files:
                 httpGet:
                   path: /liveness
                   port: 9098
+                  scheme: HTTP
+                  host: 127.0.0.1
                 periodSeconds: 30
                 initialDelaySeconds: 30
               readinessProbe:
                 httpGet:
                   path: /readiness
                   port: 9098
+                  scheme: HTTP
+                  host: 127.0.0.1
                 periodSeconds: 10
 {{- end }}
       # Canal Daemonset targetting masters/controllers
@@ -1236,14 +1240,6 @@ write_files:
                 volumeMounts:
                 - mountPath: /etc/kubernetes/cni/net.d
                   name: cni-net-dir
-              - name: net-migration
-                image: {{.HyperkubeImage.RepoWithTag}}
-                command:
-                - /bin/touch
-                - /etc/kubernetes/cni/net.d/net-migration
-                volumeMounts:
-                - mountPath: /etc/kubernetes/cni/net.d
-                  name: cni-net-dir
             containers:
               # Runs calico/node container on each Kubernetes node.  This
               # container programs network policy and routes on each
@@ -1299,6 +1295,8 @@ write_files:
                   httpGet:
                     path: /liveness
                     port: 9099
+                    scheme: HTTP
+                    host: 127.0.0.1
                   periodSeconds: 10
                   initialDelaySeconds: 10
                   failureThreshold: 6
@@ -1306,6 +1304,8 @@ write_files:
                   httpGet:
                     path: /readiness
                     port: 9099
+                    scheme: HTTP
+                    host: 127.0.0.1
                   periodSeconds: 10
                 volumeMounts:
                   - mountPath: /lib/modules
@@ -1459,14 +1459,6 @@ write_files:
                 volumeMounts:
                 - mountPath: /etc/kubernetes/cni/net.d
                   name: cni-net-dir
-              - name: net-migration
-                image: {{.HyperkubeImage.RepoWithTag}}
-                command:
-                - /bin/touch
-                - /etc/kubernetes/cni/net.d/net-migration
-                volumeMounts:
-                - mountPath: /etc/kubernetes/cni/net.d
-                  name: cni-net-dir
             containers:
               # Runs calico/node container on each Kubernetes node.  This
               # container programs network policy and routes on each
@@ -1525,6 +1517,8 @@ write_files:
                   httpGet:
                     path: /liveness
                     port: 9099
+                    scheme: HTTP
+                    host: 127.0.0.1
                   periodSeconds: 10
                   initialDelaySeconds: 10
                   failureThreshold: 6
@@ -1532,6 +1526,8 @@ write_files:
                   httpGet:
                     path: /readiness
                     port: 9099
+                    scheme: HTTP
+                    host: 127.0.0.1
                   periodSeconds: 10
                 volumeMounts:
                   - mountPath: /lib/modules
@@ -1773,6 +1769,7 @@ write_files:
         - apiGroups: [""]
           resources:
             - namespaces
+            - serviceaccounts
           verbs:
             - get
             - list
@@ -2000,14 +1997,6 @@ write_files:
                 - -rf
                 - /etc/kubernetes/cni/net.d/10-calico.conflist
                 - /etc/kubernetes/cni/net.d/10-calico.conf
-                volumeMounts:
-                - mountPath: /etc/kubernetes/cni/net.d
-                  name: cni-net-dir
-              - name: net-migration
-                image: {{.HyperkubeImage.RepoWithTag}}
-                command:
-                - /bin/touch
-                - /etc/kubernetes/cni/net.d/net-migration
                 volumeMounts:
                 - mountPath: /etc/kubernetes/cni/net.d
                   name: cni-net-dir
