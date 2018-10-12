@@ -926,6 +926,7 @@ write_files:
         "${mfdir}/heapster-de.yaml" \
         "${mfdir}/kube-dns-autoscaler-de.yaml" \
         "${mfdir}/{{ .KubeDns.Provider }}-de.yaml" \
+        "${mfdir}/kube-dns-pdb.yaml" \
         {{ if .Addons.ClusterAutoscaler.Enabled }}"${mfdir}/cluster-autoscaler-de.yaml"{{ end }} \
         {{ if .Addons.Rescheduler.Enabled }}"${mfdir}/kube-rescheduler-de.yaml"{{ end }} \
         {{ if .Experimental.NodeDrainer.Enabled }}"${mfdir}/kube-node-drainer-asg-status-updater-de.yaml"{{ end }} \
@@ -3871,6 +3872,19 @@ write_files:
           - name: dns-tcp
             port: 53
             protocol: TCP
+
+  - path: /srv/kubernetes/manifests/kube-dns-pdb.yaml
+    content: |
+      apiVersion: policy/v1beta1
+      kind: PodDisruptionBudget
+      metadata:
+        name: kube-dns
+        namespace: kube-system
+      spec:
+        minAvailable: 80%
+        selector:
+          matchLabels:
+            k8s-app: kube-dns
 
   - path: /srv/kubernetes/manifests/heapster-sa.yaml
     content: |
