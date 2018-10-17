@@ -958,6 +958,7 @@ func (c Cluster) Config(extra ...[]*pluginmodel.Plugin) (*Config, error) {
 		KubeAwsPlugins:   pluginMap,
 		APIServerFlags:   pluginmodel.APIServerFlags{},
 		APIServerVolumes: pluginmodel.APIServerVolumes{},
+		ControllerFlags:  pluginmodel.ControllerFlags{},
 	}
 
 	if c.AmiId == "" {
@@ -1093,6 +1094,7 @@ type Config struct {
 
 	APIServerVolumes pluginmodel.APIServerVolumes
 	APIServerFlags   pluginmodel.APIServerFlags
+	ControllerFlags  pluginmodel.ControllerFlags
 }
 
 func (c Cluster) StackNameEnvFileName() string {

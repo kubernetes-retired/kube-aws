@@ -144,7 +144,8 @@ type HelmRelease struct {
 }
 
 type Kubernetes struct {
-	APIServer KubernetesAPIServer `yaml:"apiserver,omitempty"`
+	APIServer         KubernetesAPIServer         `yaml:"apiserver,omitempty"`
+	ControllerManager KubernetesControllerManager `yaml:"controller-manager,omitempty"`
 	// Manifests is a list of manifests to be installed to the cluster.
 	// Note that the list is sorted by their names by kube-aws so that it won't result in unnecessarily node replacements.
 	Manifests KubernetesManifests `yaml:"manifests,omitempty"`
@@ -168,10 +169,10 @@ type KubernetesAPIServer struct {
 	Volumes APIServerVolumes `yaml:"volumes,omitempty"`
 }
 
-type APIServerFlags []APIServerFlag
+type APIServerFlags []CommandLineFlag
 
-type APIServerFlag struct {
-	// Name is the name of a command-line flag passed to the k8s apiserver.
+type CommandLineFlag struct {
+	// Name is the name of a command-line flag passed to the k8s apiserver and controller-manager.
 	// For example, a name 	is "oidc-issuer-url" for the flag `--oidc-issuer-url`.
 	Name string `yaml:"name,omitempty"`
 	// Value is a golang text template resulting to the value of a command-line flag passed to the k8s apiserver
@@ -187,6 +188,12 @@ type APIServerVolume struct {
 	Path     string `yaml:"path,omitempty"`
 	ReadOnly bool   `yaml:"readOnly,omitempty"`
 }
+
+type KubernetesControllerManager struct {
+	Flags ControllerFlags `yaml:"flags,omitempty"`
+}
+
+type ControllerFlags []CommandLineFlag
 
 type KubernetesManifests []KubernetesManifest
 
