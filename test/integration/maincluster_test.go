@@ -1504,9 +1504,9 @@ worker:
 						t.Error("missing controller runtime config: scheduling.k8s.io/v1alpha1=true")
 					}
 
-					re, _ := regexp.Compile("--admission-control=[a-zA-z,]*,Priority")
+					re, _ := regexp.Compile("--enable-admission-plugins=[a-zA-z,]*,Priority")
 					if len(re.FindString(controllerUserdataS3Part)) == 0 {
-						t.Error("missing controller --admission-control config: Priority")
+						t.Error("missing controller --enable-admission-plugins config: Priority")
 					}
 
 				},
