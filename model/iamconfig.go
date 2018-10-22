@@ -14,10 +14,11 @@ type IAMConfig struct {
 }
 
 type IAMRole struct {
-	ARN             `yaml:",inline"`
-	Name            string             `yaml:"name,omitempty"`
-	UseStrict       bool               `yaml:"useStrict,omitempty"`
-	ManagedPolicies []IAMManagedPolicy `yaml:"managedPolicies,omitempty"`
+	ARN              `yaml:",inline"`
+	Name             string             `yaml:"name,omitempty"`
+	StrictName       bool               `yaml:"strictName,omitempty"`
+	ManageExternally bool               `yaml:"manageExternally,omitempty"`
+	ManagedPolicies  []IAMManagedPolicy `yaml:"managedPolicies,omitempty"`
 }
 
 type IAMManagedPolicy struct {
