@@ -1833,7 +1833,7 @@ waitSignal:
 			context: "WithNodePoolWithWaitSignalDisabled",
 			configYaml: minimalValidConfigYaml + `
 worker:
-  nodePools:F
+  nodePools:
   - name: pool1
     waitSignal:
       enabled: false
