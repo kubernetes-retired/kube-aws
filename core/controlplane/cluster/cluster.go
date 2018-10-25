@@ -163,6 +163,7 @@ func NewCluster(cfgRef *config.Cluster, opts config.StackTemplateOptions, plugin
 		return nil, fmt.Errorf("failed to load controller node extras from plugins: %v", err)
 	}
 	c.StackConfig.Config.APIServerFlags = append(c.StackConfig.Config.APIServerFlags, extraController.APIServerFlags...)
+	c.StackConfig.Config.ControllerFlags = append(c.StackConfig.Config.ControllerFlags, extraController.ControllerFlags...)
 	c.StackConfig.Config.APIServerVolumes = append(c.StackConfig.Config.APIServerVolumes, extraController.APIServerVolumes...)
 	c.StackConfig.Controller.CustomSystemdUnits = append(c.StackConfig.Controller.CustomSystemdUnits, extraController.SystemdUnits...)
 	c.StackConfig.Controller.CustomFiles = append(c.StackConfig.Controller.CustomFiles, extraController.Files...)

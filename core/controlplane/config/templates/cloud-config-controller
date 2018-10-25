@@ -3177,6 +3177,9 @@ write_files:
           {{ if not .Addons.MetricsServer.Enabled -}}
           - --horizontal-pod-autoscaler-use-rest-clients=false
           {{end}}
+          {{range $f := .ControllerFlags -}}
+          - --{{$f.Name}}={{$f.Value}}
+          {{ end -}}
           resources:
             requests:
               cpu: {{ if .Kubernetes.ControllerManager.ComputeResources.Requests.Cpu }}{{ .Kubernetes.ControllerManager.ComputeResources.Requests.Cpu }}{{ else }}100m{{ end }}

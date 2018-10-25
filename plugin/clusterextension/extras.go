@@ -63,6 +63,7 @@ type worker struct {
 type controller struct {
 	APIServerFlags      pluginmodel.APIServerFlags
 	APIServerVolumes    pluginmodel.APIServerVolumes
+	ControllerFlags     pluginmodel.ControllerFlags
 	Files               []model.CustomFile
 	SystemdUnits        []model.CustomSystemdUnit
 	IAMPolicyStatements []model.IAMPolicyStatement
@@ -208,6 +209,7 @@ func (e ClusterExtension) EtcdStack() (*stack, error) {
 func (e ClusterExtension) Controller() (*controller, error) {
 	apiServerFlags := pluginmodel.APIServerFlags{}
 	apiServerVolumes := pluginmodel.APIServerVolumes{}
+	controllerFlags := pluginmodel.ControllerFlags{}
 	systemdUnits := []model.CustomSystemdUnit{}
 	files := []model.CustomFile{}
 	iamStatements := model.IAMPolicyStatements{}
@@ -226,11 +228,22 @@ func (e ClusterExtension) Controller() (*controller, error) {
 					if err != nil {
 						return nil, fmt.Errorf("failed to load apisersver flags: %v", err)
 					}
-					newFlag := pluginmodel.APIServerFlag{
+					newFlag := pluginmodel.CommandLineFlag{
 						Name:  f.Name,
 						Value: v,
 					}
 					apiServerFlags = append(apiServerFlags, newFlag)
+				}
+				for _, f := range p.Spec.Kubernetes.ControllerManager.Flags {
+					v, err := render.StringFrom(f.Value)
+					if err != nil {
+						return nil, fmt.Errorf("failed to load controller-manager flags: %v", err)
+					}
+					newFlag := pluginmodel.CommandLineFlag{
+						Name:  f.Name,
+						Value: v,
+					}
+					controllerFlags = append(controllerFlags, newFlag)
 				}
 			}
 
@@ -271,6 +284,7 @@ func (e ClusterExtension) Controller() (*controller, error) {
 	return &controller{
 		APIServerFlags:      apiServerFlags,
 		APIServerVolumes:    apiServerVolumes,
+		ControllerFlags:     controllerFlags,
 		Files:               files,
 		SystemdUnits:        systemdUnits,
 		IAMPolicyStatements: iamStatements,
