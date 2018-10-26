@@ -1744,38 +1744,57 @@ worker:
 			},
 		},
 		{
-			context:    "WithControllerIAMDefaultUseStrict",
+			context:    "WithControllerIAMDefaultManageExternally",
 			configYaml: minimalValidConfigYaml,
 			assertConfig: []ConfigTester{
 				func(c *config.Config, t *testing.T) {
 					expectedValue := false
 
-					if c.Controller.IAMConfig.Role.UseStrict != expectedValue {
-						t.Errorf("controller's iam.role.useStrict didn't match : expected=%v actual=%v", expectedValue, c.Controller.IAMConfig.Role.UseStrict)
+					if c.Controller.IAMConfig.Role.ManageExternally != expectedValue {
+						t.Errorf("controller's iam.role.manageExternally didn't match : expected=%v actual=%v", expectedValue, c.Controller.IAMConfig.Role.ManageExternally)
 					}
 				},
 			},
 		},
 		{
-			context: "WithControllerIAMEnabledUseStrict",
+			context: "WithControllerIAMEnabledManageExternally",
 			configYaml: minimalValidConfigYaml + `
 controller:
   iam:
    role:
      name: myrole1
-     useStrict: true
+     manageExternally: true
 `,
 			assertConfig: []ConfigTester{
 				func(c *config.Config, t *testing.T) {
-					expectedUseStrict := true
+					expectedManageExternally := true
 					expectedRoleName := "myrole1"
 
 					if expectedRoleName != c.Controller.IAMConfig.Role.Name {
 						t.Errorf("controller's iam.role.name didn't match : expected=%v actual=%v", expectedRoleName, c.Controller.IAMConfig.Role.Name)
 					}
 
-					if expectedUseStrict != c.Controller.IAMConfig.Role.UseStrict {
-						t.Errorf("controller's iam.role.useStrict didn't matchg : expected=%v actual=%v", expectedUseStrict, c.Controller.IAMConfig.Role.UseStrict)
+					if expectedManageExternally != c.Controller.IAMConfig.Role.ManageExternally {
+						t.Errorf("controller's iam.role.manageExternally didn't match : expected=%v actual=%v", expectedManageExternally, c.Controller.IAMConfig.Role.ManageExternally)
+					}
+				},
+			},
+		},
+		{
+			context: "WithControllerIAMEnabledStrictName",
+			configYaml: minimalValidConfigYaml + `
+controller:
+  iam:
+   role:
+     name: myrole1
+     strictName: true
+`,
+			assertConfig: []ConfigTester{
+				func(c *config.Config, t *testing.T) {
+					expectedRoleName := "myrole1"
+
+					if expectedRoleName != c.Controller.IAMConfig.Role.Name {
+						t.Errorf("controller's iam.role.name didn't match : expected=%v actual=%v", expectedRoleName, c.Controller.IAMConfig.Role.Name)
 					}
 				},
 			},

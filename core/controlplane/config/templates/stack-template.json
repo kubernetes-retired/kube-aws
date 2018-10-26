@@ -213,7 +213,7 @@
     "IAMInstanceProfileController": {
       "Properties": {
 		"Path": "/",
-		{{ if and (.Controller.IAMConfig.Role.UseStrict) (.Controller.IAMConfig.Role.Name) }}
+		{{ if and (.Controller.IAMConfig.Role.ManageExternally) (.Controller.IAMConfig.Role.Name) }}
 		"Roles": [
 			"{{.Controller.IAMConfig.Role.Name}}"
 		]
@@ -232,7 +232,7 @@
       "Properties" : {
         "Description" : "Policy for managing kube-aws k8s controllers",
 				"Path" : "/",
-				{{ if and (.Controller.IAMConfig.Role.UseStrict) (.Controller.IAMConfig.Role.Name) }}
+				{{ if and (.Controller.IAMConfig.Role.ManageExternally) (.Controller.IAMConfig.Role.Name) }}
 				"Roles" : [
            "{{.Controller.IAMConfig.Role.Name}}"
 				],
@@ -478,9 +478,13 @@
           "Version": "2012-10-17"
         },
         "Path": "/",
-        {{if and (.Controller.IAMConfig.Role.Name) (not .Controller.IAMConfig.Role.UseStrict) }}
-        "RoleName":  {"Fn::Join": ["-", ["{{$.ClusterName}}", {"Ref": "AWS::Region"}, "{{.Controller.IAMConfig.Role.Name}}"]]},
-        {{end}}
+        {{ if and (.Controller.IAMConfig.Role.Name) (not .Controller.IAMConfig.Role.ManageExternally) -}}
+        "RoleName":  {{if .Controller.IAMConfig.Role.StrictName -}}
+        "{{ .Controller.IAMConfig.Role.Name }}",
+        {{ else -}}
+        {"Fn::Join": ["-", ["{{ $.ClusterName }}", {"Ref": "AWS::Region"}, "{{ .Controller.IAMConfig.Role.Name }}"]]},
+        {{ end -}}
+        {{ end -}}
         "ManagedPolicyArns": [
           {{range $policyIndex, $policyArn := .Controller.IAMConfig.Role.ManagedPolicies }}
             "{{$policyArn.Arn}}",
