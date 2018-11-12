@@ -8,7 +8,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/pkg/api"
 )
 
-// NewSessionFromRegion creaes an AWS session from AWS region and a debug flag
+// NewSessionFromRegion creates an AWS session from AWS region and a debug flag
 func NewSessionFromRegion(region api.Region, debug bool) (*session.Session, error) {
 	awsConfig := aws.NewConfig().
 		WithRegion(region.String()).
