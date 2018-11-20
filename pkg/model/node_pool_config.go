@@ -126,11 +126,11 @@ func (c NodePoolConfig) Validate() error {
 	}
 
 	if len(c.WorkerNodePool.IAMConfig.Role.Name) > 0 {
-		if e := cfnresource.ValidateStableRoleNameLength(c.ClusterName, c.WorkerNodePool.IAMConfig.Role.Name, c.Region.String()); e != nil {
+		if e := cfnresource.ValidateStableRoleNameLength(c.ClusterName, c.WorkerNodePool.IAMConfig.Role.Name, c.Region.String(), c.WorkerNodePool.IAMConfig.Role.StrictName); e != nil {
 			return e
 		}
 	} else {
-		if e := cfnresource.ValidateUnstableRoleNameLength(c.ClusterName, c.NestedStackName(), c.WorkerNodePool.IAMConfig.Role.Name, c.Region.String()); e != nil {
+		if e := cfnresource.ValidateUnstableRoleNameLength(c.ClusterName, c.NestedStackName(), c.WorkerNodePool.IAMConfig.Role.Name, c.Region.String(), c.WorkerNodePool.IAMConfig.Role.StrictName); e != nil {
 			return e
 		}
 	}

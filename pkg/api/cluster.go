@@ -3,15 +3,16 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net"
+	"regexp"
+	"sort"
+	"strings"
+
 	"github.com/Masterminds/semver"
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/naming"
 	"github.com/kubernetes-incubator/kube-aws/netutil"
-	"net"
-	"regexp"
-	"sort"
-	"strings"
 )
 
 const (
@@ -756,11 +757,11 @@ func (c Cluster) validate(cpStackName string) error {
 	}
 
 	if len(c.Controller.IAMConfig.Role.Name) > 0 {
-		if e := cfnresource.ValidateStableRoleNameLength(c.ClusterName, c.Controller.IAMConfig.Role.Name, c.Region.String()); e != nil {
+		if e := cfnresource.ValidateStableRoleNameLength(c.ClusterName, c.Controller.IAMConfig.Role.Name, c.Region.String(), c.Controller.IAMConfig.Role.StrictName); e != nil {
 			return e
 		}
 	} else {
-		if e := cfnresource.ValidateUnstableRoleNameLength(c.ClusterName, naming.FromStackToCfnResource(cpStackName), c.Controller.IAMConfig.Role.Name, c.Region.String()); e != nil {
+		if e := cfnresource.ValidateUnstableRoleNameLength(c.ClusterName, naming.FromStackToCfnResource(cpStackName), c.Controller.IAMConfig.Role.Name, c.Region.String(), c.Controller.IAMConfig.Role.StrictName); e != nil {
 			return e
 		}
 	}
