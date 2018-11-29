@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"errors"
+
 	"github.com/kubernetes-incubator/kube-aws/logger"
+	"github.com/kubernetes-incubator/kube-aws/naming"
 )
 
 type WorkerNodePool struct {
@@ -95,6 +97,11 @@ func (c WorkerNodePool) LogicalName() string {
 
 func (c WorkerNodePool) LaunchConfigurationLogicalName() string {
 	return c.LogicalName() + "LC"
+}
+
+// NodePoolLogicalName returns a sanitized name of this pool which is usable as a valid cloudformation nested stack name
+func (c WorkerNodePool) NodePoolLogicalName() string {
+	return naming.FromStackToCfnResource(c.NodePoolName)
 }
 
 func (c WorkerNodePool) validate(experimentalGpuSupportEnabled bool) error {
