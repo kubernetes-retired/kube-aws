@@ -37,7 +37,7 @@ First run `init` using the information from the pre-requisites section. For exam
   --hosted-zone-id=ZBN159WIK8JJD \
   --external-dns-name=quick-start-k8s.mycompany.com \
   --key-name=ec2-key-pair-name \
-  --kms-key-arn="arn:aws:kms:us-west-1:123456789012:key/c4f79cb0-f9fb-434a-ac3c-47c5697d51e6"
+  --kms-key-arn="arn:aws:kms:us-west-1:123456789012:key/c4f79cb0-f9fb-434a-ac3c-47c5697d51e6" \
   --s3-uri=s3://kube-aws-assets/
 ```
 

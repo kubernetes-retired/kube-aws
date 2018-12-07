@@ -38,13 +38,15 @@ Generate `cluster.yaml`:
 ```
 $ mkdir my-cluster
 $ cd my-cluster
-$ kube-aws init --cluster-name=my-cluster \
---s3-uri=s3://examplebucket/mydir \
---external-dns-name=<my-cluster-endpoint> \
+$ kube-aws init \
+--cluster-name=my-cluster \
 --region=us-west-1 \
 --availability-zone=us-west-1c \
+--hosted-zone-id=<my-hosted-zone> \
+--external-dns-name=<my-cluster-endpoint> \
 --key-name=<key-pair-name> \
---kms-key-arn="arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx"
+--kms-key-arn="arn:aws:kms:us-west-1:xxxxxxxxxx:key/xxxxxxxxxxxxxxxxxxx" \
+--s3-uri=s3://examplebucket/mydir
 ```
 
 Here `us-west-1c` is used for parameter `--availability-zone`, but supported availability zone varies among AWS accounts.
