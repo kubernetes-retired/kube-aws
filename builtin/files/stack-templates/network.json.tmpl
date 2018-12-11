@@ -1,8 +1,14 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "kube-aws network stack for {{.ClusterName}}",
+  {{ if .CloudWatchLogging.Enabled -}}
   "Parameters": {
+    "CloudWatchLogGroupARN": {
+      "Type": "String",
+      "Description": "CloudWatch LogGroup to send journald logs to"
+    }
   },
+  {{ end -}}
   "Resources": {
     {{range $i, $apiEndpoint := $.APIEndpoints -}}
     {{if .LoadBalancer.ManageELB -}}
@@ -846,7 +852,7 @@
 
     {{ range $i, $nodepool := .WorkerNodePools }}
     {{ with $nodepool }}
-    ,"{{.NodePoolName}}IAMManagedPolicyWorker" : {
+    ,"{{.NodePoolLogicalName}}IAMManagedPolicyWorker" : {
       "Type" : "AWS::IAM::ManagedPolicy",
       "Properties" : {
         "Description" : "Policy for managing kube-aws k8s Node Pool {{.NodePoolName}} ",
@@ -1041,7 +1047,7 @@
         }
       }
     },
-    "{{.NodePoolName}}IAMRoleWorker": {
+    "{{.NodePoolLogicalName}}IAMRoleWorker": {
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Statement": [
@@ -1067,7 +1073,7 @@
           {{range $policyIndex, $policyArn := .IAMConfig.Role.ManagedPolicies }}
             "{{$policyArn.Arn}}",
           {{end}}
-          {"Ref": "{{.NodePoolName}}IAMManagedPolicyWorker"}
+          {"Ref": "{{.NodePoolLogicalName}}IAMManagedPolicyWorker"}
         ]
       },
       "Type": "AWS::IAM::Role"
@@ -1122,15 +1128,15 @@
     {{end}}
     {{end}}
     {{range $i, $nodepool := $.NodePools}}
-    "{{.NodePoolName}}IAMRoleWorker": {
+    "{{.NodePoolLogicalName}}IAMRoleWorker": {
       "Description": "The IAM role for {{.NodePoolName}}",
-      "Value": { "Ref": "{{.NodePoolName}}IAMRoleWorker" },
-      "Export": { "Name" : {"Fn::Sub": "${AWS::StackName}-{{.NodePoolName}}IAMRoleWorker" }}
+      "Value": { "Ref": "{{.NodePoolLogicalName}}IAMRoleWorker" },
+      "Export": { "Name" : {"Fn::Sub": "${AWS::StackName}-{{.NodePoolLogicalName}}IAMRoleWorker" }}
     },
-    "{{.NodePoolName}}IAMRoleWorkerArn": {
+    "{{.NodePoolLogicalName}}IAMRoleWorkerArn": {
       "Description": "The IAM role for {{.NodePoolName}}",
-      "Value": { "Fn::GetAtt": ["{{.NodePoolName}}IAMRoleWorker", "Arn"] },
-      "Export": { "Name" : {"Fn::Sub": "${AWS::StackName}-{{.NodePoolName}}IAMRoleWorkerArn" }}
+      "Value": { "Fn::GetAtt": ["{{.NodePoolLogicalName}}IAMRoleWorker", "Arn"] },
+      "Export": { "Name" : {"Fn::Sub": "${AWS::StackName}-{{.NodePoolLogicalName}}IAMRoleWorkerArn" }}
     },
     {{end}}
     "EtcdSecurityGroup" : {
