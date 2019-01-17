@@ -1844,7 +1844,7 @@ write_files:
         - apiGroups: [""]
           resources:
             - namespaces
-             - serviceaccounts
+            - serviceaccounts
           verbs:
             - get
             - list
