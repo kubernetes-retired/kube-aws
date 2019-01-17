@@ -6,6 +6,7 @@
 kubernetesDashboard:
   adminPrivileges: true
   insecureLogin: false
+  allowSkipLogin: false # Only set to true when using dashboard image version v1.10.1+
   enabled: true
   replicas: 1
   resources:
@@ -60,6 +61,7 @@ You can override these by changing the values as necessary.
 kubernetesDashboard:
   adminPrivileges: false
   insecureLogin: false
+  allowSkipLogin: false # Only set to true when using dashboard image version v1.10.1+
 ```
 
 Ex.
@@ -91,6 +93,7 @@ spec:
 kubernetesDashboard:
   adminPrivileges: false
   insecureLogin: true
+  allowSkipLogin: false # Only set to true when using dashboard image version v1.10.1+
 ```
 
 Ex.
@@ -127,6 +130,7 @@ spec:
     kubernetesDashboard:
       adminPrivileges: false
       insecureLogin: true
+      allowSkipLogin: false # Only set to true when using dashboard image version v1.10.1+
 ```
 Ex.
 
