@@ -3,6 +3,7 @@ package integration
 import (
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -458,7 +459,7 @@ spec:
 					}
 
 					// A kube-aws plugin can activate feature gates
-					if !strings.Contains(workerUserdataS3Part, `--feature-gates="Accelerators=true"`) {
+					if match, _ := regexp.MatchString(`--feature-gates=.*Accelerators=true`, workerUserdataS3Part); !match {
 						t.Error("missing worker feature gate: Accelerators=true")
 					}
 

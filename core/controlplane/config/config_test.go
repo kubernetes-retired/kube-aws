@@ -235,6 +235,28 @@ apiEndpoints:
 `,
 }
 
+var featureGates = `
+controller:
+  featureGates:
+    feature1: "true"
+    feature2: "false"
+`
+
+func TestFeatureFlags(t *testing.T) {
+	var c *Cluster
+	var err error
+	if c, err = ClusterFromBytes([]byte(singleAzConfigYaml + featureGates)); err != nil {
+		t.Errorf("Incorrect config for controller feature gates: %s\n%s", err, featureGates)
+	}
+	if c.ControllerFeatureGates().Enabled() != true {
+		t.Errorf("Incorrect config for controller feature gates: %s\n%s", err, featureGates)
+	}
+	if !(c.ControllerFeatureGates()["feature1"] == "true" &&
+		c.ControllerFeatureGates()["feature2"] == "false") {
+		t.Errorf("Incorrect config for controller feature gates: %s\n%s", err, featureGates)
+	}
+}
+
 func TestNetworkValidation(t *testing.T) {
 	for _, networkConfig := range goodNetworkingConfigs {
 		configBody := singleAzConfigYaml + networkConfig

@@ -1317,7 +1317,7 @@ experimental:
     validatingAdmissionWebhook:
       enabled: true
     persistentVolumeClaimResize:
-      enabled: true
+      enabled: false
   auditLog:
     enabled: true
     logPath: "/var/log/audit.log"
@@ -1402,7 +1402,7 @@ worker:
 								Enabled: true,
 							},
 							PersistentVolumeClaimResize: controlplane_config.PersistentVolumeClaimResize{
-								Enabled: true,
+								Enabled: false,
 							},
 						},
 						AuditLog: controlplane_config.AuditLog{
@@ -1496,7 +1496,7 @@ worker:
 				func(c root.Cluster, t *testing.T) {
 					cp := c.ControlPlane()
 					controllerUserdataS3Part := cp.UserDataController.Parts[model.USERDATA_S3].Asset.Content
-					if !strings.Contains(controllerUserdataS3Part, `--feature-gates=PodPriority=true`) {
+					if match, _ := regexp.MatchString(`--feature-gates=.*ExpandPersistentVolumes=false`, controllerUserdataS3Part); !match {
 						t.Error("missing controller feature gate: PodPriority=true")
 					}
 

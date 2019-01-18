@@ -357,6 +357,20 @@ func (c *Cluster) Load() error {
 	return nil
 }
 
+func (c *Cluster) ControllerFeatureGates() model.FeatureGates {
+	gates := c.Controller.NodeSettings.FeatureGates
+	//From kube 1.11 PodPriority and ExpandPersistentVolumes have become enabled by default,
+	//so making sure it is not enabled if user has explicitly set them to false
+	//https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#changelog-since-v1110
+	if !c.Experimental.Admission.Priority.Enabled {
+		gates["PodPriority"] = "false"
+	}
+	if !c.Experimental.Admission.PersistentVolumeClaimResize.Enabled {
+		gates["ExpandPersistentVolumes"] = "false"
+	}
+	return gates
+}
+
 func (c *Cluster) ConsumeDeprecatedKeys() {
 	// TODO Remove in v0.9.9-rc.1
 	if c.DeprecatedVPCID != "" {
