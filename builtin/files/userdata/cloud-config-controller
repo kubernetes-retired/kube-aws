@@ -365,8 +365,8 @@ coreos:
         {{ else }}--cluster-dns={{.DNSServiceIP}} \
         {{ end }}--cluster-domain=cluster.local \
         --cloud-provider=aws \
-        {{if or (.Experimental.Admission.Priority.Enabled) (.Experimental.Admission.PersistentVolumeClaimResize.Enabled) -}}
-        --feature-gates=PodPriority={{.Experimental.Admission.Priority.Enabled}},ExpandPersistentVolumes={{.Experimental.Admission.PersistentVolumeClaimResize.Enabled}} \
+        {{if .ControllerFeatureGates.Enabled -}}
+        --feature-gates={{.ControllerFeatureGates.String}} \
         {{end -}}\
         {{- if .Kubelet.SystemReservedResources }}
         --system-reserved={{ .Kubelet.SystemReservedResources }} \
@@ -3122,9 +3122,9 @@ write_files:
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/service-account-key.pem
           - --runtime-config=extensions/v1beta1/networkpolicies=true{{if .Experimental.Admission.PodSecurityPolicy.Enabled}},extensions/v1beta1/podsecuritypolicy=true{{ end }}{{if .Experimental.Admission.Initializers.Enabled}},admissionregistration.k8s.io/v1alpha1{{end}}{{if .Experimental.Admission.Priority.Enabled}},scheduling.k8s.io/v1alpha1=true{{end}}
-         {{if or (.Experimental.Admission.Priority.Enabled) (.Experimental.Admission.PersistentVolumeClaimResize.Enabled)}}
-          - --feature-gates=PodPriority={{.Experimental.Admission.Priority.Enabled}},ExpandPersistentVolumes={{.Experimental.Admission.PersistentVolumeClaimResize.Enabled}}
-         {{end}}
+          {{- if .ControllerFeatureGates.Enabled }}
+          - --feature-gates={{.ControllerFeatureGates.String}}
+          {{- end }}
           - --cloud-provider=aws
           {{ if .Addons.APIServerAggregator.Enabled -}}
           - --requestheader-client-ca-file=/etc/kubernetes/ssl/ca.pem
@@ -3277,6 +3277,9 @@ write_files:
           {{range $f := .ControllerFlags -}}
           - --{{$f.Name}}={{$f.Value}}
           {{ end -}}
+          {{ if .ControllerFeatureGates.Enabled -}}
+          - --feature-gates={{.ControllerFeatureGates.String}}
+          {{ end -}}
           resources:
             requests:
               cpu: {{ if .Kubernetes.ControllerManager.ComputeResources.Requests.Cpu }}{{ .Kubernetes.ControllerManager.ComputeResources.Requests.Cpu }}{{ else }}100m{{ end }}
@@ -3342,9 +3345,9 @@ write_files:
           - scheduler
           - --kubeconfig=/etc/kubernetes/kubeconfig/kube-scheduler.yaml
           - --leader-elect=true
-         {{if or (.Experimental.Admission.Priority.Enabled) (.Experimental.Admission.PersistentVolumeClaimResize.Enabled)}}
-          - --feature-gates=PodPriority={{.Experimental.Admission.Priority.Enabled}},ExpandPersistentVolumes={{.Experimental.Admission.PersistentVolumeClaimResize.Enabled}}
-         {{end}}
+          {{- if .ControllerFeatureGates.Enabled }}
+          - --feature-gates={{.ControllerFeatureGates.String}}
+          {{- end }}
           resources:
             requests:
               cpu: 100m

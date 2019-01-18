@@ -888,6 +888,20 @@ func (c *Cluster) AvailabilityZones() []string {
 	return result
 }
 
+func (c *Cluster) ControllerFeatureGates() FeatureGates {
+	gates := c.Controller.NodeSettings.FeatureGates
+	//From kube 1.11 PodPriority and ExpandPersistentVolumes have become enabled by default,
+	//so making sure it is not enabled if user has explicitly set them to false
+	//https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#changelog-since-v1110
+	if !c.Experimental.Admission.Priority.Enabled {
+		gates["PodPriority"] = "false"
+	}
+	if !c.Experimental.Admission.PersistentVolumeClaimResize.Enabled {
+		gates["ExpandPersistentVolumes"] = "false"
+	}
+	return gates
+}
+
 /*
 Validates the an existing VPC and it's existing subnets do not conflict with this
 cluster configuration
