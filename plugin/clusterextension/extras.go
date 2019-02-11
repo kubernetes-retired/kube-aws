@@ -52,6 +52,32 @@ func (e ClusterExtension) RootStack() (*stack, error) {
 	}, nil
 }
 
+func (e ClusterExtension) NetworkStack() (*stack, error) {
+	resources := map[string]interface{}{}
+
+	for _, p := range e.plugins {
+		if enabled, pc := p.EnabledIn(e.configs); enabled {
+			values := pluginutil.MergeValues(p.Spec.Values, pc.Values)
+
+			render := plugincontents.TemplateRendererFor(p, values)
+
+			{
+				m, err := render.MapFromContents(p.Spec.CloudFormation.Stacks.Network.Resources.Append.Contents)
+				if err != nil {
+					return nil, fmt.Errorf("failed to load additional resources for network stack: %v", err)
+				}
+				for k, v := range m {
+					resources[k] = v
+				}
+			}
+		}
+	}
+
+	return &stack{
+		Resources: resources,
+	}, nil
+}
+
 type worker struct {
 	Files               []model.CustomFile
 	SystemdUnits        []model.CustomSystemdUnit
