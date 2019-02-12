@@ -734,6 +734,8 @@ worker:
 #      arn: "arn:aws:iam::YOURACCOUNTID:instance-profile/INSTANCEPROFILENAME"
 #
 #  # The version of etcd to be used. Set to e.g. "3.2.1" to use etcd3
+#  # CAUTION: Increasing etcd version will permanently change the state of etcd and a cloud formation rollback, will not succeed due to etcd 
+#  being unable to downgrade. 
 #  version: 3.2.13
 #
 #  snapshot:
