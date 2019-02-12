@@ -464,10 +464,28 @@ worker:
 #        maxBatchSize: 1
 #
 #      # Auto Scaling Group definition for workers. If only `workerCount` is specified, min and max will be the set to that value and `rollingUpdateMinInstancesInService` will be one less.
+#      # NOTE: Starting kube-aws 0.13, this creates a LaunchTemplate instead of a LaunchConfiguration. This makes new autoscaling options possible
 #      autoScalingGroup:
 #        minSize: 1
 #        maxSize: 3
 #        rollingUpdateMinInstancesInService: 2
+#
+#        # Configure mixedInstances for autoscalinggroups
+#        # See https://aws.amazon.com/blogs/aws/new-ec2-auto-scaling-groups-with-multiple-instance-types-purchase-options/
+#        # and https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-autoscaling-autoscalinggroup-instancesdistribution.html for valid values
+#        # NOTE: mixedInstances and full cluster autoscaler support is being worked on at the moment see: https://github.com/kubernetes/autoscaler/pull/1473
+#        mixedInstances:
+#          enabled: false
+#          onDemandAllocationStrategy: prioritized
+#          onDemandBaseCapacity: 0
+#          onDemandPercentageAboveBaseCapacity: 0
+#          spotAllocationStrategy: lowest-price
+#          spotInstancePools: 2
+#          # Omit spotMaxPrice for default behaviour: max price = on-demand price
+#          spotMaxPrice: 2
+#          instanceTypes:
+#          - t2.medium
+#          - t3.medium
 #
 #      #
 #      # Spot fleet config for worker nodes
