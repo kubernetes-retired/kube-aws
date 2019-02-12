@@ -90,6 +90,7 @@ type CloudFormation struct {
 
 type Stacks struct {
 	Root         Stack `yaml:"root,omitempty"`
+	Network      Stack `yaml:"network,omitempty"`
 	ControlPlane Stack `yaml:"controlPlane,omitempty"`
 	Etcd         Stack `yaml:"etcd,omitempty"`
 	NodePool     Stack `yaml:"nodePool,omitempty"`

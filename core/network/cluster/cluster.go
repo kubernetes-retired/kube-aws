@@ -12,6 +12,7 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/naming"
+	"github.com/kubernetes-incubator/kube-aws/plugin/clusterextension"
 	"github.com/kubernetes-incubator/kube-aws/plugin/pluginmodel"
 )
 
@@ -128,6 +129,14 @@ func NewCluster(cfgRef *config.Cluster, opts config.StackTemplateOptions, plugin
 		ClusterRef:  clusterRef,
 		StackConfig: stackConfig,
 	}
+
+	extras := clusterextension.NewExtrasFromPlugins(plugins, c.PluginConfigs)
+
+	extraStack, err := extras.NetworkStack()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load network stack extras from plugins: %v", err)
+	}
+	c.StackConfig.ExtraCfnResources = extraStack.Resources
 
 	c.assets, err = c.buildAssets()
 
