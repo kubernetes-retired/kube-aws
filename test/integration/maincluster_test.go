@@ -1642,7 +1642,7 @@ experimental:
     image:
       repo: quay.io/uswitch/kiam
       tag: v2.6
-    sessionDuration: 30m	
+    sessionDuration: 30m
     serverAddresses:
       serverAddress: localhost
       agentAddress: kiam-server
