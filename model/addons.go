@@ -10,9 +10,10 @@ type Addons struct {
 }
 
 type ClusterAutoscalerSupport struct {
-	Enabled     bool              `yaml:"enabled"`
-	Options     map[string]string `yaml:"options"`
-	UnknownKeys `yaml:",inline"`
+	Enabled          bool              `yaml:"enabled"`
+	ComputeResources ComputeResources  `yaml:"resources,omitempty"`
+	Options          map[string]string `yaml:"options"`
+	UnknownKeys      `yaml:",inline"`
 }
 
 type Rescheduler struct {
@@ -32,4 +33,14 @@ type Prometheus struct {
 
 type APIServerAggregator struct {
 	Enabled bool `yaml:"enabled"`
+}
+
+type ComputeResources struct {
+	Limits   ResourceQuota `yaml:"limits,omitempty"`
+	Requests ResourceQuota `yaml:"requests,omitempty"`
+}
+
+type ResourceQuota struct {
+	Cpu    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
 }
