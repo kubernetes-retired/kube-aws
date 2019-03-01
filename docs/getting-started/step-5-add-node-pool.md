@@ -53,10 +53,10 @@ worker:
       - name: managedPublicSubnetIn1c
 ```
 
-Launch the secondary node pool by running `kube-aws update`:
+Launch the secondary node pool by running `kube-aws apply`:
 
 ```
-$ kube-aws update
+$ kube-aws apply
 ```
 
 Beware that you have to associate only 1 AZ to a node pool or cluster-autoscaler may end up failing to reliably add nodes on demand due to the fact
@@ -94,7 +94,7 @@ However, we'd greatly appreciate your feedbacks because they do accelerate impro
 
 ### Known Limitations
 
-* Running `kube-aws update` to increase or decrease `targetCapacity` of a spot fleet results in a complete replacement of the Spot Fleet hence some downtime. [This is due to how CloudFormation works for updating a Spot Fleet](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520)
+* Running `kube-aws apply` to increase or decrease `targetCapacity` of a spot fleet results in a complete replacement of the Spot Fleet hence some downtime. [This is due to how CloudFormation works for updating a Spot Fleet](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-spotfleet.html#d0e60520)
    * It is recommended to temporarily bring up an another, spare node pool to maintain the whole cluster capacity at a certain level while replacing the spot fleet.
 
 ### Pre-requisites

@@ -1,6 +1,6 @@
 # CloudFormation Streaming
 
-CloudFormation stack events can be streamed to the console (stdout) during a `kube-aws up` or `kube-aws update` operation.
+CloudFormation stack events can be streamed to the console (stdout) during a `kube-aws apply` operation.
 
 The format of the messages are:
 ```

@@ -95,7 +95,7 @@ func runCmdRenderStack(_ *cobra.Command, _ []string) error {
 Next steps:
 1. (Optional) Validate your changes to %s with "kube-aws validate"
 2. (Optional) Further customize the cluster by modifying templates in ./stack-templates or cloud-configs in ./userdata.
-3. Start the cluster with "kube-aws up".
+3. Start the cluster with "kube-aws apply".
 `
 
 	logger.Infof(successMsg, configPath)

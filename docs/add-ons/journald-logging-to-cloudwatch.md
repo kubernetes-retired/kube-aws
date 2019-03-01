@@ -24,9 +24,9 @@ journaldCloudWatchLogsImage:
   rktPullDocker: true
 ```
 
-## kube-aws up/update feedback
+## kube-aws apply feedback
 
-During kube-aws up/update, filtered Journald logs can be printed to stdout. This may assist debugging.
+During kube-aws apply, filtered Journald logs can be printed to stdout. This may assist debugging.
 The format of the messages are:
 ```
 TimePassed   NodeName: "LogMessage"

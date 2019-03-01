@@ -7,10 +7,10 @@ This is the [third step of running Kubernetes on AWS](README.md). We're ready to
 Now for the exciting part, creating your cluster:
 
 ```sh
-$ kube-aws up
+$ kube-aws apply
 ```
 
-**NOTE**: It can take some time after `kube-aws up` completes before the cluster is available. When the cluster is first being launched, it must download all container images for the cluster components (Kubernetes, dns, heapster, etc). Depending on the speed of your connection, it can take a few minutes before the Kubernetes api-server is available.
+**NOTE**: It can take some time after `kube-aws apply` completes before the cluster is available. When the cluster is first being launched, it must download all container images for the cluster components (Kubernetes, dns, heapster, etc). Depending on the speed of your connection, it can take a few minutes before the Kubernetes api-server is available.
 
 ## Configure DNS
 
@@ -56,7 +56,7 @@ ip-10-0-0-xx.us-west-1.compute.internal    Ready,SchedulingDisabled   5m
 If you want to share, audit or back up your stack, use the export flag:
 
 ```sh
-$ kube-aws up --export
+$ kube-aws apply --export
 ```
 
 Once you have successfully launched your cluster, you are ready to [update your cluster][getting-started-step-4].

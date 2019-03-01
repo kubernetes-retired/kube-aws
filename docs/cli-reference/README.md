@@ -87,9 +87,10 @@ Validate cluster assets prior to deployment.
 $ kube-aws validate
 ```
 
-# `up`
+# `kube-aws apply`
 
-Deploy a new Kubernetes cluster.
+
+Deploy or Update an existing Kubernetes cluster that was created by kube-aws.
 
 | Flag | Description | Default |
 | -- | -- | -- |
@@ -98,26 +99,10 @@ Deploy a new Kubernetes cluster.
 | `pretty-print` | Pretty print the resulting CloudFormation | `false` |
 | `skip-wait` | Do not wait for the cluster components be ready before the CLI exits | `false` |
 
-### `up` example
+### `apply` example
 
 ```bash
-$ kube-aws up 
-```
-
-# `update`
-
-Update an existing Kubernetes cluster that was created by kube-aws.
-
-| Flag | Description | Default |
-| -- | -- | -- |
-| `aws-debug` | Log debug information coming from the AWS SDK library | `false` |
-| `pretty-print` | Pretty print the resulting CloudFormation | `false` |
-| `skip-wait` | Do not wait for the cluster components be ready before the CLI exits | `false` |
-
-### `update` example
-
-```bash
-$ kube-aws update
+$ kube-aws apply
 ```
 
 # `destroy`
