@@ -2,14 +2,15 @@ package model
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/kubernetes-incubator/kube-aws/builtin"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/pkg/api"
 	"github.com/kubernetes-incubator/kube-aws/provisioner"
-	"path/filepath"
-	"strings"
-	"unicode/utf8"
 )
 
 const (
@@ -28,9 +29,10 @@ type Config struct {
 	// This is used to simplify templating of the control-plane stack template.
 	EtcdNodes []EtcdNode
 
-	APIServerVolumes api.APIServerVolumes
-	APIServerFlags   api.CommandLineFlags
-	ControllerFlags  api.CommandLineFlags
+	APIServerVolumes   api.APIServerVolumes
+	APIServerFlags     api.CommandLineFlags
+	ControllerFlags    api.CommandLineFlags
+	KubeSchedulerFlags api.CommandLineFlags
 
 	KubernetesManifestFiles []*provisioner.RemoteFile
 	HelmReleaseFilesets     []api.HelmReleaseFileset

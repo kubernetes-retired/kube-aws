@@ -11,11 +11,12 @@ type Worker struct {
 
 // Kubelet options
 type Kubelet struct {
-	RotateCerts             RotateCerts            `yaml:"rotateCerts"`
-	SystemReservedResources string                 `yaml:"systemReserved"`
-	KubeReservedResources   string                 `yaml:"kubeReserved"`
-	Kubeconfig              string                 `yaml:"kubeconfig"`
-	Mounts                  []ContainerVolumeMount `yaml:"mounts"`
+	RotateCerts             RotateCerts            `yaml:"rotateCerts,omitempty"`
+	SystemReservedResources string                 `yaml:"systemReserved,omitempty"`
+	KubeReservedResources   string                 `yaml:"kubeReserved,omitempty"`
+	Kubeconfig              string                 `yaml:"kubeconfig,omitempty"`
+	Mounts                  []ContainerVolumeMount `yaml:"mounts,omitempty"`
+	Flags                   CommandLineFlags       `yaml:"flags,omitempty"`
 }
 
 type Experimental struct {
@@ -229,7 +230,9 @@ type TargetGroup struct {
 }
 
 type KubeProxy struct {
-	IPVSMode IPVSMode `yaml:"ipvsMode"`
+	IPVSMode         IPVSMode               `yaml:"ipvsMode"`
+	ComputeResources ComputeResources       `yaml:"resources,omitempty"`
+	Config           map[string]interface{} `yaml:"config,omitempty"`
 }
 
 type IPVSMode struct {

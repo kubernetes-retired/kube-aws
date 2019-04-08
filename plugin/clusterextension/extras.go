@@ -83,6 +83,9 @@ type controller struct {
 	APIServerFlags      api.CommandLineFlags
 	APIServerVolumes    api.APIServerVolumes
 	ControllerFlags     api.CommandLineFlags
+	KubeProxyConfig     map[string]interface{}
+	KubeSchedulerFlags  api.CommandLineFlags
+	KubeletFlags        api.CommandLineFlags
 	CfnInitConfigSets   map[string]interface{}
 	Files               []api.CustomFile
 	SystemdUnits        []api.CustomSystemdUnit
@@ -281,6 +284,10 @@ func (e ClusterExtension) Controller(clusterConfig interface{}) (*controller, er
 	apiServerFlags := api.CommandLineFlags{}
 	apiServerVolumes := api.APIServerVolumes{}
 	controllerFlags := api.CommandLineFlags{}
+	kubeProxyConfig := map[string]interface{}{}
+	kubeletFlags := api.CommandLineFlags{}
+	kubeSchedulerFlags := api.CommandLineFlags{}
+
 	systemdUnits := []api.CustomSystemdUnit{}
 	files := []api.CustomFile{}
 	iamStatements := api.IAMPolicyStatements{}
@@ -320,6 +327,31 @@ func (e ClusterExtension) Controller(clusterConfig interface{}) (*controller, er
 						Value: v,
 					}
 					controllerFlags = append(controllerFlags, newFlag)
+				}
+				for key, value := range p.Spec.Cluster.Kubernetes.KubeProxy.Config {
+					kubeProxyConfig[key] = value
+				}
+				for _, f := range p.Spec.Cluster.Kubernetes.KubeScheduler.Flags {
+					v, err := render.String(f.Value)
+					if err != nil {
+						return nil, fmt.Errorf("failed to load Kube Scheduler flags: %v", err)
+					}
+					newFlag := api.CommandLineFlag{
+						Name:  f.Name,
+						Value: v,
+					}
+					kubeSchedulerFlags = append(kubeSchedulerFlags, newFlag)
+				}
+				for _, f := range p.Spec.Cluster.Kubernetes.Kubelet.Flags {
+					v, err := render.String(f.Value)
+					if err != nil {
+						return nil, fmt.Errorf("failed to load kubelet flags: %v", err)
+					}
+					newFlag := api.CommandLineFlag{
+						Name:  f.Name,
+						Value: v,
+					}
+					kubeletFlags = append(kubeletFlags, newFlag)
 				}
 			}
 
@@ -468,6 +500,9 @@ func (e ClusterExtension) Controller(clusterConfig interface{}) (*controller, er
 		ArchivedFiles:           archivedFiles,
 		APIServerFlags:          apiServerFlags,
 		ControllerFlags:         controllerFlags,
+		KubeSchedulerFlags:      kubeSchedulerFlags,
+		KubeProxyConfig:         kubeProxyConfig,
+		KubeletFlags:            kubeletFlags,
 		APIServerVolumes:        apiServerVolumes,
 		Files:                   files,
 		SystemdUnits:            systemdUnits,

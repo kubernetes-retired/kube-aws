@@ -16,10 +16,11 @@ func Compile(cfgRef *api.Cluster, opts api.ClusterOptions) (*Config, error) {
 	c.SetDefaults()
 
 	config := Config{
-		Cluster:          c,
-		APIServerFlags:   api.CommandLineFlags{},
-		APIServerVolumes: api.APIServerVolumes{},
-		ControllerFlags:  api.CommandLineFlags{},
+		Cluster:            c,
+		APIServerFlags:     api.CommandLineFlags{},
+		APIServerVolumes:   api.APIServerVolumes{},
+		ControllerFlags:    api.CommandLineFlags{},
+		KubeSchedulerFlags: api.CommandLineFlags{},
 	}
 
 	if c.AmiId == "" {

@@ -21,8 +21,7 @@ type NodePoolConfig struct {
 	// APIEndpoint is the k8s api endpoint to which worker nodes in this node pool communicate
 	APIEndpoint     APIEndpoint
 	api.UnknownKeys `yaml:",inline"`
-
-	AMI string
+	AMI             string
 }
 
 type MainClusterSettings struct {

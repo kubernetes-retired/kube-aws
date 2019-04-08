@@ -82,6 +82,9 @@ func NewControlPlaneStack(conf *Config, opts api.StackTemplateOptions, extras cl
 			conf.Kubelet.Mounts = append(conf.Kubelet.Mounts, extraController.KubeletVolumeMounts...)
 			conf.APIServerFlags = append(conf.APIServerFlags, extraController.APIServerFlags...)
 			conf.ControllerFlags = append(conf.ControllerFlags, extraController.ControllerFlags...)
+			conf.KubeSchedulerFlags = append(conf.KubeSchedulerFlags, extraController.KubeSchedulerFlags...)
+			conf.KubeProxy.Config = extraController.KubeProxyConfig
+			conf.Kubelet.Flags = append(conf.Kubelet.Flags, extraController.KubeletFlags...)
 			conf.APIServerVolumes = append(conf.APIServerVolumes, extraController.APIServerVolumes...)
 			conf.Controller.CustomSystemdUnits = append(conf.Controller.CustomSystemdUnits, extraController.SystemdUnits...)
 			conf.Controller.CustomFiles = append(conf.Controller.CustomFiles, extraController.Files...)
@@ -192,6 +195,7 @@ func NewEtcdStack(conf *Config, opts api.StackTemplateOptions, extras clusterext
 }
 
 func NewWorkerStack(conf *Config, npconf *NodePoolConfig, opts api.StackTemplateOptions, extras clusterextension.ClusterExtension, assetsConfig *credential.CompactAssets) (*Stack, error) {
+
 	return newStack(
 		npconf.StackName(),
 		conf,
@@ -219,6 +223,8 @@ func NewWorkerStack(conf *Config, npconf *NodePoolConfig, opts api.StackTemplate
 			if len(npconf.Kubelet.Kubeconfig) == 0 {
 				npconf.Kubelet.Kubeconfig = extraWorker.Kubeconfig
 			}
+
+			npconf.Kubelet.Flags = conf.Kubelet.Flags
 			npconf.Kubelet.Mounts = append(conf.Kubelet.Mounts, extraWorker.KubeletVolumeMounts...)
 			npconf.CustomSystemdUnits = append(npconf.CustomSystemdUnits, extraWorker.SystemdUnits...)
 			npconf.CustomFiles = append(npconf.CustomFiles, extraWorker.Files...)

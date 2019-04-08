@@ -143,6 +143,21 @@ spec:
                 }
               }
     kubernetes:
+      controllerManager:
+        flags:
+          - name: "secure-port"
+            value: "11257"
+      kubelet:
+        flags:
+          - name: "healthz-bind-address"
+            value: "0.0.0.0"
+      kubeScheduler:
+        flags:
+          - name: "secure-port"
+            value: "11259"
+      kubeProxy:
+        config:
+          metricsBindAddress: "0.0.0.0"
       apiserver:
         flags:
         - name: "oidc-issuer-url"
@@ -491,6 +506,31 @@ spec:
 					// A kube-aws plugin can add flags to apiserver
 					if !strings.Contains(controllerUserdataS3Part, `--oidc-issuer-url=https://login.example.com/`) {
 						t.Errorf("missing apiserver flag: --oidc-issuer-url=https://login.example.com/")
+					}
+
+					// A kube-aws plugin can add flags to the kube-controllermanager
+					if !strings.Contains(controllerUserdataS3Part, `--secure-port=11259`) {
+						t.Errorf("missing kube-controllermanager flag: --secure-port=11259")
+					}
+
+					// A kube-aws plugin can add flags to the kubescheduler
+					if !strings.Contains(controllerUserdataS3Part, `- --secure-port=11259`) {
+						t.Errorf("missing kubescheduler flag: --secure-port=11259")
+					}
+
+					// A kube-aws plugin can add flags to the kubelet in the controller
+					if !strings.Contains(controllerUserdataS3Part, `--healthz-bind-address=0.0.0.0`) {
+						t.Errorf("missing kubelet flag: --healthz-bind-address=0.0.0.0")
+					}
+
+					// A kube-aws plugin can add flags to the kubelet in the workers
+					if !strings.Contains(workerUserdataS3Part, `--healthz-bind-address=0.0.0.0`) {
+						t.Errorf("missing kubelet flag: --healthz-bind-address=0.0.0.0")
+					}
+
+					// A kube-aws plugin can add flags to the kubeproxy
+					if !strings.Contains(controllerUserdataS3Part, `metricsBindAddress: 0.0.0.0`) {
+						t.Errorf("missing kubeproxy config item: metricsBindAddress: 0.0.0.0")
 					}
 				},
 			},
