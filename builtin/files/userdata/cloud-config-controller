@@ -310,6 +310,7 @@ coreos:
         # EnvironmentFile=/etc/environment allows the reading of COREOS_PRIVATE_IPV4
         EnvironmentFile=/etc/environment
         EnvironmentFile=-/etc/etcd-environment
+        EnvironmentFile=-/etc/default/kubelet
         Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
         Environment=KUBELET_IMAGE_URL={{ .HyperkubeImage.RktRepoWithoutTag }}
         Environment="RKT_RUN_ARGS={{.HyperkubeImage.Options}}\
