@@ -11,7 +11,6 @@ type Worker struct {
 
 // Kubelet options
 type Kubelet struct {
-	RotateCerts             RotateCerts            `yaml:"rotateCerts,omitempty"`
 	SystemReservedResources string                 `yaml:"systemReserved,omitempty"`
 	KubeReservedResources   string                 `yaml:"kubeReserved,omitempty"`
 	Kubeconfig              string                 `yaml:"kubeconfig,omitempty"`
@@ -28,8 +27,6 @@ type Experimental struct {
 	// When cluster-autoscaler support is enabled, not only controller nodes but this node pool is also given
 	// a node label and IAM permissions to run cluster-autoscaler
 	ClusterAutoscalerSupport    ClusterAutoscalerSupport `yaml:"clusterAutoscalerSupport"`
-	TLSBootstrap                TLSBootstrap             `yaml:"tlsBootstrap"`
-	NodeAuthorizer              NodeAuthorizer           `yaml:"nodeAuthorizer"`
 	EphemeralImageStorage       EphemeralImageStorage    `yaml:"ephemeralImageStorage"`
 	KIAMSupport                 KIAMSupport              `yaml:"kiamSupport,omitempty"`
 	Kube2IamSupport             Kube2IamSupport          `yaml:"kube2IamSupport,omitempty"`
@@ -57,42 +54,16 @@ func (c Experimental) Validate(name string) error {
 }
 
 type Admission struct {
-	PodSecurityPolicy                    PodSecurityPolicy                    `yaml:"podSecurityPolicy"`
 	AlwaysPullImages                     AlwaysPullImages                     `yaml:"alwaysPullImages"`
-	DenyEscalatingExec                   DenyEscalatingExec                   `yaml:"denyEscalatingExec"`
 	Initializers                         Initializers                         `yaml:"initializers"`
-	Priority                             Priority                             `yaml:"priority"`
-	MutatingAdmissionWebhook             MutatingAdmissionWebhook             `yaml:"mutatingAdmissionWebhook"`
-	ValidatingAdmissionWebhook           ValidatingAdmissionWebhook           `yaml:"validatingAdmissionWebhook"`
 	OwnerReferencesPermissionEnforcement OwnerReferencesPermissionEnforcement `yaml:"ownerReferencesPermissionEnforcement"`
-	PersistentVolumeClaimResize          PersistentVolumeClaimResize          `yaml:"persistentVolumeClaimResize"`
 }
 
 type AlwaysPullImages struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-type PodSecurityPolicy struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type DenyEscalatingExec struct {
-	Enabled bool `yaml:"enabled"`
-}
-
 type Initializers struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type Priority struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type MutatingAdmissionWebhook struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type ValidatingAdmissionWebhook struct {
 	Enabled bool `yaml:"enabled"`
 }
 
@@ -132,18 +103,6 @@ type AwsNodeLabels struct {
 }
 
 type EncryptionAtRest struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type TLSBootstrap struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type RotateCerts struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type NodeAuthorizer struct {
 	Enabled bool `yaml:"enabled"`
 }
 
