@@ -6,6 +6,7 @@ TAG=$(git describe --exact-match --abbrev=0 --tags "${COMMIT}" 2> /dev/null || t
 BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | sed -e 's/[^a-zA-Z0-9+=._:/-]*//g' || true)
 OUTPUT_PATH=${OUTPUT_PATH:-"bin/kube-aws"}
 VERSION=""
+ETCD_VERSION="v3.2.26"
 KUBERNETES_VERSION="v1.14.1"
 
 if [ -z "$TAG" ]; then
@@ -42,4 +43,4 @@ fi
 if [[ ! "${BUILD_GOARCH:-}" == "" ]];then
   export GOARCH=$BUILD_GOARCH
 fi
-go build -ldflags "-X github.com/kubernetes-incubator/kube-aws/pkg/model.VERSION=${VERSION} -X github.com/kubernetes-incubator/kube-aws/pkg/api.KUBERNETES_VERSION=${KUBERNETES_VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./
+go build -ldflags "-X github.com/kubernetes-incubator/kube-aws/pkg/model.VERSION=${VERSION} -X github.com/kubernetes-incubator/kube-aws/pkg/api.KUBERNETES_VERSION=${KUBERNETES_VERSION} -X github.com/kubernetes-incubator/kube-aws/pkg/api.ETCD_VERSION=${ETCD_VERSION}" -a -tags netgo -installsuffix netgo -o "$OUTPUT_PATH" ./
