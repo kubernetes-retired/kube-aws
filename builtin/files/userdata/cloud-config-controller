@@ -3366,11 +3366,7 @@ write_files:
           - --secure-port=443
           - --enable-bootstrap-token-auth=true
           - --token-auth-file=/etc/kubernetes/auth/tokens.csv
-          {{if .Etcd.Version.Is3}}
           - --storage-backend=etcd3
-          {{else}}
-          - --storage-backend=etcd2
-          {{end}}
           - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
           {{if .Experimental.AuditLog.Enabled}}
           - --audit-log-maxage={{.Experimental.AuditLog.MaxAge}}
