@@ -118,11 +118,7 @@ func TestMainClusterConfig(t *testing.T) {
 			KIAMSupport: api.KIAMSupport{
 				Enabled:         false,
 				Image:           api.Image{Repo: "quay.io/uswitch/kiam", Tag: "v3.2", RktPullDocker: false},
-<<<<<<< HEAD
-				SessionDuration: "15m",
-=======
 				SessionDuration: "30m",
->>>>>>> master
 				ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 			},
 			Kube2IamSupport: api.Kube2IamSupport{
