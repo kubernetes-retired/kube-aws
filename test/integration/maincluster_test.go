@@ -118,7 +118,11 @@ func TestMainClusterConfig(t *testing.T) {
 			KIAMSupport: api.KIAMSupport{
 				Enabled:         false,
 				Image:           api.Image{Repo: "quay.io/uswitch/kiam", Tag: "v3.2", RktPullDocker: false},
+<<<<<<< HEAD
 				SessionDuration: "15m",
+=======
+				SessionDuration: "30m",
+>>>>>>> master
 				ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 			},
 			Kube2IamSupport: api.Kube2IamSupport{
@@ -1383,7 +1387,7 @@ worker:
 						KIAMSupport: api.KIAMSupport{
 							Enabled:         false,
 							Image:           api.Image{Repo: "quay.io/uswitch/kiam", Tag: "v3.2", RktPullDocker: false},
-							SessionDuration: "15m",
+							SessionDuration: "30m",
 							ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 						},
 						Kube2IamSupport: api.Kube2IamSupport{
@@ -1556,8 +1560,8 @@ experimental:
       tag: v2.6
     sessionDuration: 30m	
     serverAddresses:
-      serverAddress: localhost
-      agentAddress: kiam-server
+      serverAddress: localhost:443
+      agentAddress: kiam-server:443
 worker:
   nodePools:
   - name: pool1
@@ -1568,7 +1572,7 @@ worker:
 						Enabled:         true,
 						Image:           api.Image{Repo: "quay.io/uswitch/kiam", Tag: "v2.6", RktPullDocker: false},
 						SessionDuration: "30m",
-						ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost", AgentAddress: "kiam-server"},
+						ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 					}
 
 					actual := c.Experimental
@@ -1599,7 +1603,7 @@ worker:
 						KIAMSupport: api.KIAMSupport{
 							Enabled:         true,
 							Image:           api.Image{Repo: "quay.io/uswitch/kiam", Tag: "v3.2", RktPullDocker: false},
-							SessionDuration: "15m",
+							SessionDuration: "30m",
 							ServerAddresses: api.KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 						},
 					}
@@ -3767,30 +3771,6 @@ etcd:
     automated: true
 `,
 			expectedErrorMessage: "`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated",
-		},
-		{
-			context: "WithEtcdAutomatedDisasterRecoveryDoesntSupportEtcd2",
-			configYaml: minimalValidConfigYaml + `
-etcd:
-  version: 2
-  snapshot:
-    automated: true
-  disasterRecovery:
-    automated: false
-`,
-			expectedErrorMessage: "`etcd.snapshot.automated` is set to true for enabling automated snapshot. However the feature is available only for etcd version 3",
-		},
-		{
-			context: "WithEtcdAutomatedSnapshotDoesntSupportEtcd2",
-			configYaml: minimalValidConfigYaml + `
-etcd:
-  version: 2
-  snapshot:
-    automated: false
-  disasterRecovery:
-    automated: true
-`,
-			expectedErrorMessage: "`etcd.disasterRecovery.automated` is set to true for enabling automated disaster recovery. However the feature is available only for etcd version 3",
 		},
 		{
 			context: "WithInvalidNodeDrainTimeout",

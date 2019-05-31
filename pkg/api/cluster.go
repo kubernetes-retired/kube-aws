@@ -76,7 +76,7 @@ func NewDefaultCluster() *Cluster {
 		KIAMSupport: KIAMSupport{
 			Enabled:         false,
 			Image:           Image{Repo: "quay.io/uswitch/kiam", Tag: "v3.2", RktPullDocker: false},
-			SessionDuration: "15m",
+			SessionDuration: "30m",
 			ServerAddresses: KIAMServerAddresses{ServerAddress: "localhost:443", AgentAddress: "kiam-server:443"},
 		},
 		Kube2IamSupport: Kube2IamSupport{
@@ -839,17 +839,8 @@ func (e EtcdSettings) Validate() error {
 		return err
 	}
 
-	if e.Etcd.Version().Is3() {
-		if e.Etcd.DisasterRecovery.Automated && !e.Etcd.Snapshot.Automated {
-			return errors.New("`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated")
-		}
-	} else {
-		if e.Etcd.DisasterRecovery.Automated {
-			return errors.New("`etcd.disasterRecovery.automated` is set to true for enabling automated disaster recovery. However the feature is available only for etcd version 3")
-		}
-		if e.Etcd.Snapshot.Automated {
-			return errors.New("`etcd.snapshot.automated` is set to true for enabling automated snapshot. However the feature is available only for etcd version 3")
-		}
+	if e.Etcd.DisasterRecovery.Automated && !e.Etcd.Snapshot.Automated {
+		return errors.New("`etcd.disasterRecovery.automated` is set to true but `etcd.snapshot.automated` is not - automated disaster recovery requires snapshot to be also automated")
 	}
 
 	return nil
