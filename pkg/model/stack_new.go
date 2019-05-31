@@ -108,6 +108,7 @@ func NewControlPlaneStack(conf *Config, opts api.StackTemplateOptions, extras cl
 				conf.StackTags = make(map[string]string, 1)
 			}
 			conf.StackTags["kube-aws:version"] = VERSION
+			conf.StackTags["kube-aws:kubernetes_version"] = conf.K8sVer
 
 			stack.archivedFiles = extraController.ArchivedFiles
 			stack.CfnInitConfigSets = extraController.CfnInitConfigSets
@@ -262,6 +263,7 @@ func NewWorkerStack(conf *Config, npconf *NodePoolConfig, opts api.StackTemplate
 				npconf.StackTags = make(map[string]string, 1)
 			}
 			npconf.StackTags["kube-aws:version"] = VERSION
+			conf.StackTags["kube-aws:kubernetes_version"] = conf.K8sVer
 
 			for k, v := range extraWorker.NodeLabels {
 				npconf.NodeSettings.NodeLabels[k] = v
