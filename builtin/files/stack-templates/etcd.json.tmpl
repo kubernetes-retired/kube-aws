@@ -334,6 +334,11 @@
             "Value": "owned"
           },
           {
+            "Key": "kube-aws:etcd_version",
+            "PropagateAtLaunch": "true",
+            "Value": "{{ $.Etcd.Version }}"
+          },
+          {
             "Key": "Name",
             "PropagateAtLaunch": "true",
             "Value": "{{$.ClusterName}}-{{$.StackName}}-kube-aws-etcd-{{$etcdIndex}}"
