@@ -75,7 +75,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: node.kubernetes.io/role
+              - key: kubernetes.io/role
                 operator: In
                 values:
                 - "master"
