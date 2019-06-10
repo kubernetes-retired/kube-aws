@@ -150,7 +150,7 @@ coreos:
         [Service]
         Type=oneshot
         RemainAfterExit=yes
-        ExecStart=/bin/bash -c "echo -e \"{{.HostOS.MOTDBanner.EtcdColour.On}}Etcd Server{{.HostOS.MOTDBanner.EtcdColour.Off}} v{{.Etcd.Version}}\" >>/etc/motd"
+        ExecStart=/bin/bash -c "echo -e \"{{.HostOS.MOTDBanner.EtcdColour.On}}Etcd Server{{.HostOS.MOTDBanner.EtcdColour.Off}} {{.Etcd.Version}}\" >>/etc/motd"
 
         [Install]
         WantedBy=multi-user.target
