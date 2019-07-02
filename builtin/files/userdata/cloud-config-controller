@@ -1449,6 +1449,13 @@ write_files:
                 #  value: "true"
                 #- name: TYPHA_PROMETHEUSMETRICSPORT
                 #  value: "9093"
+              resources:
+                requests:
+                  cpu: {{ .Kubernetes.Networking.SelfHosting.TyphaResources.Requests.Cpu }}
+                  memory: {{ .Kubernetes.Networking.SelfHosting.TyphaResources.Requests.Memory }}
+                limits:
+                  cpu: {{ .Kubernetes.Networking.SelfHosting.TyphaResources.Limits.Cpu }}
+                  memory: {{ .Kubernetes.Networking.SelfHosting.TyphaResources.Limits.Memory }}
               livenessProbe:
                 httpGet:
                   path: /liveness
