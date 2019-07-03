@@ -204,8 +204,18 @@ func NewDefaultCluster() *Cluster {
 						Enabled: false,
 					},
 					SelfHosting: SelfHosting{
-						Type:            "canal",
-						Typha:           false,
+						Type:  "canal",
+						Typha: false,
+						TyphaResources: ComputeResources{
+							Requests: ResourceQuota{
+								Cpu:    "100m",
+								Memory: "100Mi",
+							},
+							Limits: ResourceQuota{
+								Cpu:    "250",
+								Memory: "200Mi",
+							},
+						},
 						CalicoNodeImage: Image{Repo: "quay.io/calico/node", Tag: kubeNetworkingSelfHostingDefaultCalicoNodeImageTag, RktPullDocker: false},
 						CalicoCniImage:  Image{Repo: "quay.io/calico/cni", Tag: kubeNetworkingSelfHostingDefaultCalicoCniImageTag, RktPullDocker: false},
 						FlannelImage:    Image{Repo: "quay.io/coreos/flannel", Tag: kubeNetworkingSelfHostingDefaultFlannelImageTag, RktPullDocker: false},
