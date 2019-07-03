@@ -1196,6 +1196,13 @@ kubernetes:
     selfHosting:
       type: canal      # either "canal" or "flannel"
       typha: false     # enable for type 'canal' for 50+ node clusters
+#      typhaResources:  # control k8s resources assigned to Typha pods 
+#        requests:
+#          cpu: "100m"
+#          memory: "100Mi"
+#        limits:
+#          cpu: "250m"
+#          memory: "200Mi"
 #      calicoNodeImage:
 #        repo: quay.io/calico/node
 #        tag: v3.1.3
