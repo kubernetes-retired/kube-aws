@@ -1493,9 +1493,9 @@ write_files:
           matchLabels:
             k8s-app: canal-master
         updateStrategy:
-          type: RollingUpdate
           rollingUpdate:
-            maxUnavailable: 1
+            maxUnavailable: 100%
+          type: RollingUpdate
         template:
           metadata:
             labels:
@@ -1717,7 +1717,7 @@ write_files:
         updateStrategy:
           type: RollingUpdate
           rollingUpdate:
-            maxUnavailable: 1
+            maxUnavailable: 100%
         template:
           metadata:
             labels:
@@ -2363,6 +2363,8 @@ write_files:
           app: flannel
       spec:
         updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
           type: RollingUpdate
         template:
           metadata:
@@ -2750,6 +2752,8 @@ write_files:
             k8s-app: kube-node-drainer-ds
         spec:
           updateStrategy:
+            rollingUpdate:
+              maxUnavailable: 100%
             type: RollingUpdate
           template:
             metadata:
@@ -3300,6 +3304,8 @@ write_files:
             k8s-app: kube-proxy
         spec:
           updateStrategy:
+            rollingUpdate:
+              maxUnavailable: 100%
             type: RollingUpdate
           template:
             metadata:
@@ -3895,6 +3901,8 @@ write_files:
             k8s-app: dnsmasq-node
         spec:
           updateStrategy:
+            rollingUpdate:
+              maxUnavailable: 100%
             type: RollingUpdate
           template:
             metadata:
@@ -5078,6 +5086,8 @@ write_files:
           scheduler.alpha.kubernetes.io/critical-pod: ''
       spec:
         updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
           type: RollingUpdate
         template:
           metadata:
@@ -5337,6 +5347,10 @@ write_files:
         annotations:
           scheduler.alpha.kubernetes.io/critical-pod: ''
       spec:
+        updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
+          type: RollingUpdate
         template:
           metadata:
             labels:
@@ -5397,6 +5411,10 @@ write_files:
           k8s-app: nvidia-gpu-device-plugin
           addonmanager.kubernetes.io/mode: Reconcile
       spec:
+        updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
+          type: RollingUpdate
         template:
           metadata:
             labels:
@@ -5484,6 +5502,8 @@ write_files:
         name: kiam-server
       spec:
         updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
           type: RollingUpdate
         template:
           metadata:
@@ -5666,6 +5686,8 @@ write_files:
         name: kiam-agent
       spec:
         updateStrategy:
+          rollingUpdate:
+            maxUnavailable: 100%
           type: RollingUpdate
         template:
           metadata:
