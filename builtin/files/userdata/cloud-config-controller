@@ -5616,7 +5616,7 @@ write_files:
           app: kiam
           role: server
         ports:
-        - name: grpclb
+        - name: grpc
           port: 443
           targetPort: 443
           protocol: TCP
