@@ -4049,14 +4049,15 @@ write_files:
                 {{- if .KubeDns.AntiAffinityAvailabilityZone }}
                 podAntiAffinity:
                   preferredDuringSchedulingIgnoredDuringExecution:
-                    podAffinityTerm:
+                  - podAffinityTerm:
                       labelSelector:
-                      - matchExpressions:
+                        matchExpressions:
                         - key: k8s-app
                           operator: In
                           values:
-                            - "kube-dns"
+                          - "kube-dns"
                       topologyKey: "failure-domain.beta.kubernetes.io/zone"
+                    weight: 1
                 {{- end }}
               tolerations:
                - key: "CriticalAddonsOnly"
@@ -4294,7 +4295,7 @@ write_files:
           annotations:
             prometheus.io/port: "9153"
             prometheus.io/scrape: "true"
-          {{- end }}         
+          {{- end }}
           labels:
             k8s-app: kube-dns
             kubernetes.io/cluster-service: "true"
@@ -5841,7 +5842,7 @@ write_files:
         local return_code=0
 
         while [ "$tries" -lt "$retries" ]; do
-          result_text=$(docker run --rm -i --net=host -v /tmp:/tmp:rw -v /etc/kubernetes:/etc/kubernetes:ro  -v /etc/resolv.conf:/etc/resolv.conf:ro $hyperkube_image /kubectl "$@")
+          result_text=$(docker run --rm -i --net=host -v /tmp:/tmp:rw -v /etc/kubernetes:/etc/kubernetes:ro  -v /etc/resolv.conf:/etc/resolv.conf:ro $hyperkube_image /kubectl --kubeconfig=/etc/kubernetes/kubeconfig/admin.yaml "$@")
           return_code=$?
           if [ "$return_code" -eq "0" ]; then
             echo "${result_text}"
@@ -5931,7 +5932,7 @@ write_files:
 
         sleep 10
       done
-  
+
   - path: /opt/bin/handle-cluster-cidr-changes
     permissions: 0755
     content: |
@@ -6266,7 +6267,7 @@ write_files:
         disable: "kube-controller-manager"
       EOT
       )"
-          
+
         log "Creating disable service configmap kubw-system/kube-aws-migration-disable-${controller}"
         echo "${request}" | kubectl -n kube-system create -f - || return 1
         return 0
