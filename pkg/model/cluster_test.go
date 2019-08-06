@@ -1119,9 +1119,11 @@ func TestKubeDns(t *testing.T) {
 			conf: `
 `,
 			kubeDns: api.KubeDns{
-				Provider:            "coredns",
-				NodeLocalResolver:   false,
-				DeployToControllers: false,
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
 				Autoscaler: api.KubeDnsAutoscaler{
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,
@@ -1136,9 +1138,49 @@ kubeDns:
   deployToControllers: false
 `,
 			kubeDns: api.KubeDns{
-				Provider:            "coredns",
-				NodeLocalResolver:   false,
-				DeployToControllers: false,
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  deployToControllers: false
+  antiAffinityAvailabilityZone: true
+`,
+			kubeDns: api.KubeDns{
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: true,
+				TTL:                          30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  deployToControllers: true
+  antiAffinityAvailabilityZone: true
+`,
+			kubeDns: api.KubeDns{
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          true,
+				AntiAffinityAvailabilityZone: true,
+				TTL:                          30,
 				Autoscaler: api.KubeDnsAutoscaler{
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,
@@ -1157,9 +1199,11 @@ kubeDns:
     min: 15
 `,
 			kubeDns: api.KubeDns{
-				Provider:            "coredns",
-				NodeLocalResolver:   true,
-				DeployToControllers: true,
+				Provider:                     "coredns",
+				NodeLocalResolver:            true,
+				DeployToControllers:          true,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
 				Autoscaler: api.KubeDnsAutoscaler{
 					CoresPerReplica: 5,
 					NodesPerReplica: 10,
@@ -1173,9 +1217,30 @@ kubeDns:
   provider: coredns
 `,
 			kubeDns: api.KubeDns{
-				Provider:            "coredns",
-				NodeLocalResolver:   false,
-				DeployToControllers: false,
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  provider: coredns
+  ttl: 5
+`,
+			kubeDns: api.KubeDns{
+				Provider:                     "coredns",
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          5,
 				Autoscaler: api.KubeDnsAutoscaler{
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,

@@ -5,10 +5,12 @@ import (
 	"fmt"
 
 	"bytes"
+	"text/template"
+
 	"github.com/kubernetes-incubator/kube-aws/filereader/texttemplate"
+	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/pkg/api"
 	"github.com/kubernetes-incubator/kube-aws/provisioner"
-	"text/template"
 )
 
 type data struct {
@@ -17,6 +19,7 @@ type data struct {
 }
 
 func RenderStringFromTemplateWithValues(expr string, values interface{}, config interface{}) (string, error) {
+	logger.Debugf("plugincontents.RenderStringFromTemplateWithValues: %s", expr)
 	t, err := texttemplate.Parse("template", expr, template.FuncMap{})
 	data := data{
 		Values: values,
@@ -54,6 +57,7 @@ func (r *TemplateRenderer) File(f provisioner.RemoteFileSpec) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to render template: %v", err)
 	}
+	logger.Debugf("TemplateRenderer.File: string is %s", str)
 	if f.Type == "credential" {
 		return str, nil
 	}
