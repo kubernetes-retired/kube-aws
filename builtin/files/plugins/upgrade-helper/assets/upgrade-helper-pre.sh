@@ -18,10 +18,11 @@ retries=5
 hyperkube_image="{{ .Config.HyperkubeImage.RepoWithTag }}"
 my_kubernetes_version="{{ .Config.HyperkubeImage.Tag }}"
 myhostname=$(hostname -f)
-disable_webhooks="{{ if .Values.disableWebhooks }}true{{else}}false{{end}}"
+disable_webhooks="{{ .Values.disableWebhooks }}"
+webhooks_save_path="/srv/kubernetes"
 
 kubectl() {
-    /usr/bin/docker run -i --rm -v /etc/kubernetes:/etc/kubernetes:ro --net=host ${hyperkube_image} /hyperkube kubectl --kubeconfig=/etc/kubernetes/kubeconfig/admin.yaml "$@"
+    /usr/bin/docker run -i --rm -v /etc/kubernetes:/etc/kubernetes:ro -v ${webhooks_save_path}:${webhooks_save_path}:rw --net=host ${hyperkube_image} /hyperkube kubectl --kubeconfig=/etc/kubernetes/kubeconfig/admin.yaml "$@"
 }
 
 kubectl_with_retries() {
@@ -103,12 +104,14 @@ node_running() {
   return 1
 }
 
-wait_stopped() {
+wait_stopped_or_timeout() {
   local controllers=$1
   log ""
   log "WAITING FOR ALL MATCHED CONTROLLERS TO STOP:-"
   log "${controllers}"
   log ""
+  local max_wait=300
+  local wait=0
 
   local test=1
   while [ "$test" -eq "1" ]; do
@@ -121,8 +124,15 @@ wait_stopped() {
     done
 
     if [ "$test" -eq "1" ]; then
+      if [[ "${wait}" -ge "${max_wait}" ]]; then
+        log "Wait for controllers timed out after ${wait} seconds."
+        break
+      fi
       log "Controllers still active, waiting 5 seconds..."
+      wait=$[$wait+5]
       sleep 5
+    else
+      log "All target controllers are now inactive."
     fi
   done
 }
@@ -131,27 +141,23 @@ save_webhooks() {
   local type=$1
   local file=$2
 
-  echo "Storing and removing all ${type} webhooks to ${file}"
-  if [[ -s $file ]]; then
-    echo "$file already saved"
+  echo "Storing and removing all ${type} webhooks"
+  if [[ -s "${file}.index" ]]; then
+    echo "${file}.index already saved"
   else
-    kubectl get ${type}webhookconfigurations -o yaml --export >$file
-    if list_not_empty $file; then
-      echo "deleting $type webhooks..."
-      ensuredelete $file
+    local hooks=$(kubectl get ${type}webhookconfigurations -o custom-columns=NAME:.metadata.name --no-headers)
+    local count=$(echo "${hooks}" | wc -w | sed -e 's/ //g')
+    echo "Found ${count} ${type} webhooks..."
+    if [[ -n "${hooks}" ]]; then
+      echo -n "${hooks}" >${file}.index
+      for h in ${hooks}; do
+        echo "backing up ${type} webhook ${h}..."
+        kubectl get ${type}webhookconfiguration ${h} -o yaml --export >${file}.${type}.${h}.yaml
+        echo "deleting $type webhook ${h}..."
+        ensuredelete ${file}.${type}.${h}.yaml
+      done
     fi
   fi
-}
-
-list_not_empty() {
-  local file=$1
-  if ! [[ -s $file ]]; then
-    return 1
-  fi
-  if cat $file | grep -se 'items: \[\]'; then
-    return 1
-  fi
-  return 0
 }
 
 ensuredelete() {
@@ -173,8 +179,9 @@ done
 # Disable all mutating and validating webhooks because they can interfere with the stack migration)
 if [[ "${disable_webhooks}" == "true" ]]; then
   echo "Storing and removing all validating and mutating webhooks..."
-  save_webhooks validating /srv/kubernetes/validating_webhooks.yaml
-  save_webhooks mutating /srv/kubernetes/mutating_webhooks.yaml
+  mkdir -p ${webhooks_save_path}
+  save_webhooks validating ${webhooks_save_path}/validating_webhooks
+  save_webhooks mutating ${webhooks_save_path}/mutating_webhooks
 fi
 
 log ""
@@ -209,6 +216,6 @@ if [[ -n "${found}" ]]; then
     log ""
     log "WAITING FOR FOUND CONTROLLERS TO STOP..."
     log ""
-    wait_stopped "${found}"
+    wait_stopped_or_timeout "${found}"
 fi
 exit 0
