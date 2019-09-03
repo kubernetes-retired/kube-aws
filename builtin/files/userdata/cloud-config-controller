@@ -4141,6 +4141,10 @@ write_files:
                 k8s-app: kube-dns
               annotations:
                 scheduler.alpha.kubernetes.io/critical-pod: ''
+              {{- if eq .KubeDns.Provider "coredns" }}
+                prometheus.io/port: "9153"
+                prometheus.io/scrape: "true"
+              {{- end }}
             spec:
               priorityClassName: system-cluster-critical
               volumes:
@@ -4291,11 +4295,6 @@ write_files:
         metadata:
           name: kube-dns
           namespace: kube-system
-          {{- if eq .KubeDns.Provider "coredns" }}
-          annotations:
-            prometheus.io/port: "9153"
-            prometheus.io/scrape: "true"
-          {{- end }}
           labels:
             k8s-app: kube-dns
             kubernetes.io/cluster-service: "true"
