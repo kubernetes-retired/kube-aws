@@ -165,6 +165,16 @@ func NewDefaultCluster() *Cluster {
 					NodesPerReplica: 16,
 					Min:             2,
 				},
+				DnsDeploymentResources: ComputeResources{
+					Requests: ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
 			},
 			KubeSystemNamespaceLabels: make(map[string]string),
 			KubernetesDashboard: KubernetesDashboard{

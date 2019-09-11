@@ -4207,10 +4207,11 @@ write_files:
                 imagePullPolicy: IfNotPresent
                 resources:
                   limits:
-                    memory: 170Mi
+                    cpu: {{ .KubeDns.DnsDeploymentResources.Limits.Cpu }}
+                    memory: {{ .KubeDns.DnsDeploymentResources.Limits.Memory }}
                   requests:
-                    cpu: 100m
-                    memory: 70Mi
+                    cpu: {{ .KubeDns.DnsDeploymentResources.Requests.Cpu }}
+                    memory: {{ .KubeDns.DnsDeploymentResources.Requests.Memory }}
                 args: [ "-conf", "/etc/coredns/Corefile" ]
                 volumeMounts:
                 - name: config-volume
@@ -4310,10 +4311,11 @@ write_files:
                 image: {{ .KubeDnsImage.RepoWithTag }}
                 resources:
                   limits:
-                    memory: 170Mi
+                    cpu: {{ .KubeDns.DnsDeploymentResources.Limits.Cpu }}
+                    memory: {{ .KubeDns.DnsDeploymentResources.Limits.Memory }}
                   requests:
-                    cpu: 100m
-                    memory: 70Mi
+                    cpu: {{ .KubeDns.DnsDeploymentResources.Requests.Cpu }}
+                    memory: {{ .KubeDns.DnsDeploymentResources.Requests.Memory }}
                 livenessProbe:
                   httpGet:
                     path: /healthcheck/kubedns

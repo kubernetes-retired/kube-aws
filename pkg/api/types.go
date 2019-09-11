@@ -197,6 +197,7 @@ type KubeDns struct {
 	AntiAffinityAvailabilityZone bool              `yaml:"antiAffinityAvailabilityZone"`
 	TTL                          int               `yaml:"ttl"`
 	Autoscaler                   KubeDnsAutoscaler `yaml:"autoscaler"`
+	DnsDeploymentResources       ComputeResources  `yaml:"dnsDeploymentResources,omitempty"`
 }
 
 func (c *KubeDns) MergeIfEmpty(other KubeDns) {
