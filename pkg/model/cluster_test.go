@@ -1129,6 +1129,16 @@ func TestKubeDns(t *testing.T) {
 					NodesPerReplica: 16,
 					Min:             2,
 				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
 			},
 		},
 		{
@@ -1148,6 +1158,16 @@ kubeDns:
 					NodesPerReplica: 16,
 					Min:             2,
 				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
 			},
 		},
 		{
@@ -1167,6 +1187,16 @@ kubeDns:
 					NodesPerReplica: 16,
 					Min:             2,
 				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
 			},
 		},
 		{
@@ -1185,6 +1215,16 @@ kubeDns:
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,
 					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
 				},
 			},
 		},
@@ -1209,6 +1249,16 @@ kubeDns:
 					NodesPerReplica: 10,
 					Min:             15,
 				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
 			},
 		},
 		{
@@ -1226,6 +1276,50 @@ kubeDns:
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,
 					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  provider: coredns
+  dnsDeploymentResources:
+    requests:
+      cpu: "250m"
+      memory: "250Mi"
+    limits:
+      cpu: "500m"
+      memory: "250Mi"
+`,
+			kubeDns: api.KubeDns{
+				Provider:            "coredns",
+				NodeLocalResolver:   false,
+				DeployToControllers: false,
+				TTL:                 30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "250Mi",
+						Cpu:    "250m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "250Mi",
+						Cpu:    "500m",
+					},
 				},
 			},
 		},
@@ -1245,6 +1339,16 @@ kubeDns:
 					CoresPerReplica: 256,
 					NodesPerReplica: 16,
 					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
 				},
 			},
 		},
