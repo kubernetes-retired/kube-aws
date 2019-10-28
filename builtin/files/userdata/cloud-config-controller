@@ -4106,6 +4106,8 @@ write_files:
               labels:
                 k8s-app: kube-dns
               annotations:
+                prometheus.io/port: "9153"
+                prometheus.io/scrape: "true"
                 seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
             spec:
               priorityClassName: system-node-critical
@@ -4200,11 +4202,6 @@ write_files:
           labels:
             k8s-app: kube-dns
             kubernetes.io/cluster-service: "true"
-          {{- if eq .KubeDns.Provider "coredns" }}
-          annotations:
-            prometheus.io/port: "9153"
-            prometheus.io/scrape: "true"
-          {{- end }}
         spec:
           # replicas: not specified here:
           # 1. In order to make Addon Manager do not reconcile this replicas parameter.
