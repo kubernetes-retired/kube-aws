@@ -327,7 +327,7 @@ Kube-aws supports "spreading" a cluster across any number of Availability Zones 
 
 __A word of caution about EBS and Persistent Volumes__: Any pods deployed to a Multi-AZ cluster must mount EBS volumes via [Persistent Volume Claims](http://kubernetes.io/docs/user-guide/persistent-volumes/#persistentvolumeclaims). Specifying the ID of the EBS volume directly in the pod spec will not work consistently if nodes are spread across multiple zones.
 
-Read more about Kubernetes Multi-AZ cluster support [here](http://kubernetes.io/docs/admin/multiple-zones/).
+Read more about Kubernetes Multi-AZ cluster support [here](https://kubernetes.io/docs/setup/best-practices/multiple-zones/).
 
 #### A common pitfall when deploying multi-AZ clusters in combination with cluster-autoscaler
 
@@ -340,7 +340,7 @@ Read more about Kubernetes Multi-AZ cluster support [here](http://kubernetes.io/
 A common pitfall in deploying cluster-autoscaler to a multi-AZ cluster is that you have to instruct an Auto Scaling Group not to spread over multiple availability zones or cluster-autoscaler results in instability while scaling out the nodes i.e. it takes unnecessary much time to finally bring up a node in the insufficient zone.
 
 > The autoscaling group should span 1 availability zone for the cluster autoscaler to work. If you want to distribute workloads evenly across zones, set up multiple ASGs, with a cluster autoscaler for each ASG. At the time of writing this, cluster autoscaler is unaware of availability zones and although autoscaling groups can contain instances in multiple availability zones when configured so, the cluster autoscaler can't reliably add nodes to desired zones. That's because AWS AutoScaling determines which zone to add nodes which is out of the control of the cluster autoscaler. For more information, see https://github.com/kubernetes/contrib/pull/1552#discussion_r75533090.
-> https://github.com/kubernetes/contrib/tree/master/cluster-autoscaler/cloudprovider/aws#deployment-specification
+> https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#deployment-specification
 
 Please read the following guides carefully and select the appropriate deployment according to your requirement regarding auto-scaling.
 

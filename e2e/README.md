@@ -4,7 +4,7 @@ This directory contains a set of tools to run end-to-end testing for kube-aws.
 It is composed of:
 
 * Cluster creation using `kube-aws`
-* [Kubernetes Conformance Tests](https://github.com/kubernetes/kubernetes/blob/master/docs/devel/e2e-tests.md#conformance-tests)
+* [Kubernetes Conformance Tests](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-testing/e2e-tests.md#conformance-tests)
 
 To run e2e tests, you should have set all he required env vars.
 For convenience, creating `.envrc` used by `direnv` like as follows would be good.

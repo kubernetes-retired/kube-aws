@@ -63,7 +63,7 @@ Beware that you have to associate only 1 AZ to a node pool or cluster-autoscaler
 that what cluster-autoscaler does is to increase/decrease the desired capacity hence it has no way to selectively add node(s) in a desired AZ.
 
 Also note that deployment of cluster-autoscaler is currently out of scope of this documentation.
-Please read [cluster-autoscaler's documentation](https://github.com/kubernetes/contrib/blob/master/cluster-autoscaler/cloudprovider/aws/README.md) for instructions on it.
+Please read [cluster-autoscaler's documentation](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/README.md#deployment-specification) for instructions on it.
 
 ## Customizing min/max size of the auto scaling group
 
@@ -81,7 +81,7 @@ worker:
       rollingUpdateMinInstancesInService: 2
 ```
 
-See [the detailed comments in `cluster.yaml`](https://github.com/kubernetes-incubator/kube-aws/blob/master/core/controlplane/config/templates/cluster.yaml) for further information.
+See [the detailed comments in `cluster.yaml.tmpl`](https://github.com/kubernetes-incubator/kube-aws/blob/master/builtin/files/cluster.yaml.tmpl) for further information.
 
 ## Deploying a node pool powered by Spot Fleet
 
@@ -141,7 +141,7 @@ This configuration would normally result in Spot Fleet to bring up 3 instances t
 This is achieved by the `diversified` strategy of Spot Fleet.
 Please read [the AWS documentation describing Spot Fleet Allocation Strategy](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet.html#spot-fleet-allocation-strategy) for more details.
 
-Please also see [the detailed comments in `cluster.yaml`](https://github.com/kubernetes-incubator/kube-aws/blob/master/core/controlplane/config/templates/cluster.yaml) and [the GitHub issue summarizing the initial implementation](https://github.com/kubernetes-incubator/kube-aws/issues/112) of this feature for further information.
+Please also see [the detailed comments in `cluster.yaml.tmpl`](https://github.com/kubernetes-incubator/kube-aws/blob/master/builtin/files/cluster.yaml.tmpl) and [the GitHub issue summarizing the initial implementation](https://github.com/kubernetes-incubator/kube-aws/issues/112) of this feature for further information.
 
 You can optionally [configure various Kubernetes add-ons][getting-started-step-6] according to your requirements.
 When you are done with your cluster, [destroy your cluster][getting-started-step-7]
