@@ -42,7 +42,7 @@ Examples are provided in `contrib/dex/elb` directory.
 
 2. Ingress
 
-An example that works with [nginx-controller](https://github.com/nginxinc/kubernetes-ingress/tree/master/nginx-controller) + [kube-lego](https://github.com/jetstack/kube-lego)  is provided in `contrib/dex/ingress`. 
+An example that works with [nginx-ingress](https://github.com/nginxinc/kubernetes-ingress/tree/master/cmd/nginx-ingress) + [kube-lego](https://github.com/jetstack/kube-lego)  is provided in `contrib/dex/ingress`. 
 
 
 ## Configure `kubectl` for token authentication
