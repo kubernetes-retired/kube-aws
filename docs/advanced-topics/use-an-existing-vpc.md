@@ -10,7 +10,7 @@ Please note that you don't need to care about modifications if you've instructed
 * Adding one or more subnet\(s\) to an existing VPC specified by the `vpcId`
 * Associating one or more subnet\(s\) to an existing route table specified by the `routeTableId`
 
-See [`cluster.yaml`](https://github.com/kubernetes-incubator/kube-aws/blob/master/core/controlplane/config/templates/cluster.yaml) for more details.
+See [`cluster.yaml.tmpl`](https://github.com/kubernetes-incubator/kube-aws/blob/master/builtin/files/cluster.yaml.tmpl) for more details.
 
 All the other configurations for existing AWS resources must be done properly by users before kube-aws is run.
 
