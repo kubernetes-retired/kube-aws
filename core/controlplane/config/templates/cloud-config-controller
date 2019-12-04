@@ -2906,6 +2906,7 @@ write_files:
           apiVersion: {{if checkVersion ">=1.9" .K8sVer}}kubeproxy.config.k8s.io{{else}}componentconfig{{end}}/v1alpha1
           kind: KubeProxyConfiguration
           bindAddress: 0.0.0.0
+          metricsBindAddress: 0.0.0.0:10249
           clientConnection:
             kubeconfig: /etc/kubernetes/kubeconfig/kube-proxy.yaml
           clusterCIDR: {{.PodCIDR}}
