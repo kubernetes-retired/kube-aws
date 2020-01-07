@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   namespace: kube-system
@@ -8,6 +8,10 @@ spec:
     rollingUpdate:
       maxUnavailable: 100%
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: kiam
+      role: agent
   template:
     metadata:
       annotations:
