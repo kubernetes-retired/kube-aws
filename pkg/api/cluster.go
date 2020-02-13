@@ -199,7 +199,7 @@ func NewDefaultCluster() *Cluster {
 								Memory: "100Mi",
 							},
 							Limits: ResourceQuota{
-								Cpu:    "250",
+								Cpu:    "250m",
 								Memory: "200Mi",
 							},
 						},
