@@ -1455,6 +1455,12 @@ experimental:
   # from the local VPC subnet so that load balancers can access it.  Ref: https://github.com/kubernetes/kubernetes/issues/26670
   disableSecurityGroupIngress: false
 
+  # When set to true will skip the IOPs performance check done when mounting Etcd volumes.
+  # It only makes sense if you have reserved IOPs for your etcd volumes.
+  # This check is by default quite slow because it depends on cloudwatch which usually has some delay for start providing metrics.
+  # The other check 'io-enabled' is still performed
+  skipIOPerformanceEtcdVolumeCheck: false
+
   # Command line flag passed to the controller-manager. (default 40s)
   # This is the amount of time which we allow running Node to be unresponsive before marking it unhealthy.
   # Must be N times more than kubelet's nodeStatusUpdateFrequency (default 10s).

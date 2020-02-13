@@ -103,6 +103,7 @@ func NewDefaultCluster() *Cluster {
 			UsernameClaim: "email",
 			GroupsClaim:   "groups",
 		},
+		SkipIOPerformanceEtcdVolumeCheck: false,
 	}
 
 	ipvsMode := IPVSMode{

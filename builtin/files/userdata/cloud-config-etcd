@@ -650,12 +650,21 @@ write_files:
 
       done
 
+      {{- if .Experimental.SkipIOPerformanceEtcdVolumeCheck }}
+      # Wait until the volume attachment completes
+      until [ "$volume_status" = passed ]; do
+        sleep 3
+        describe_volume_status_result=$(aws ec2 describe-volume-status --volume-id $attached_vol_id)
+        volume_status=$(echo "$describe_volume_status_result" |  jq -r '([] + .VolumeStatuses)[0].VolumeStatus.Details | .[] |select(.Name=="io-enabled") | .Status')
+      done
+      {{- else }}
       # Wait until the volume attachment completes
       until [ "$volume_status" = ok ]; do
         sleep 3
         describe_volume_status_result=$(aws ec2 describe-volume-status --volume-id $attached_vol_id)
         volume_status=$(echo "$describe_volume_status_result" | jq -r "([] + .VolumeStatuses)[0].VolumeStatus.Status")
       done
+      {{- end }}
 
       cat ${state_prefix}.json \
         | jq -r "([] + .Tags)[] | select(.Key == \"$name_tag_key\").Value" \

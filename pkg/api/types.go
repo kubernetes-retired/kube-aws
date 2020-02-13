@@ -17,21 +17,22 @@ type Kubelet struct {
 }
 
 type Experimental struct {
-	Admission                   Admission             `yaml:"admission"`
-	AuditLog                    AuditLog              `yaml:"auditLog"`
-	Authentication              Authentication        `yaml:"authentication"`
-	AwsEnvironment              AwsEnvironment        `yaml:"awsEnvironment"`
-	AwsNodeLabels               AwsNodeLabels         `yaml:"awsNodeLabels"`
-	EphemeralImageStorage       EphemeralImageStorage `yaml:"ephemeralImageStorage"`
-	GpuSupport                  GpuSupport            `yaml:"gpuSupport,omitempty"`
-	KubeletOpts                 string                `yaml:"kubeletOpts,omitempty"`
-	LoadBalancer                LoadBalancer          `yaml:"loadBalancer"`
-	TargetGroup                 TargetGroup           `yaml:"targetGroup"`
-	NodeDrainer                 NodeDrainer           `yaml:"nodeDrainer"`
-	Oidc                        Oidc                  `yaml:"oidc"`
-	DisableSecurityGroupIngress bool                  `yaml:"disableSecurityGroupIngress"`
-	NodeMonitorGracePeriod      string                `yaml:"nodeMonitorGracePeriod"`
-	UnknownKeys                 `yaml:",inline"`
+	Admission                        Admission             `yaml:"admission"`
+	AuditLog                         AuditLog              `yaml:"auditLog"`
+	Authentication                   Authentication        `yaml:"authentication"`
+	AwsEnvironment                   AwsEnvironment        `yaml:"awsEnvironment"`
+	AwsNodeLabels                    AwsNodeLabels         `yaml:"awsNodeLabels"`
+	EphemeralImageStorage            EphemeralImageStorage `yaml:"ephemeralImageStorage"`
+	GpuSupport                       GpuSupport            `yaml:"gpuSupport,omitempty"`
+	KubeletOpts                      string                `yaml:"kubeletOpts,omitempty"`
+	LoadBalancer                     LoadBalancer          `yaml:"loadBalancer"`
+	TargetGroup                      TargetGroup           `yaml:"targetGroup"`
+	NodeDrainer                      NodeDrainer           `yaml:"nodeDrainer"`
+	Oidc                             Oidc                  `yaml:"oidc"`
+	DisableSecurityGroupIngress      bool                  `yaml:"disableSecurityGroupIngress"`
+	NodeMonitorGracePeriod           string                `yaml:"nodeMonitorGracePeriod"`
+	SkipIOPerformanceEtcdVolumeCheck bool                  `yaml:"skipIOPerformanceEtcdVolumeCheck"`
+	UnknownKeys                      `yaml:",inline"`
 }
 
 func (c Experimental) Validate(name string) error {
