@@ -1726,6 +1726,7 @@ write_files:
                   path: /etc/kubernetes/cni/net.d
               # Used to create per-pod Unix Domain Sockets
               - name: policysync
+                hostPath:
                   type: DirectoryOrCreate
                   path: /var/run/nodeagent
 
