@@ -3615,7 +3615,7 @@ write_files:
           {{ end -}}
           - --configure-cloud-routes=false {{/* no need to auto configure cloud routes when using flannel or canal */}}
           - --service-cluster-ip-range={{.ServiceCIDR}} {{/* removes the service CIDR range from the cluster CIDR if it intersects */}}
-          {{ if not .Addons.MetricsServer.Enabled -}}
+          {{ if and (not .Addons.MetricsServer.Enabled) (not .Kubernetes.PodAutoscalerUseRestClient.Enabled) -}}
           - --horizontal-pod-autoscaler-use-rest-clients=false
           {{end}}
           {{range $f := .ControllerFlags -}}

@@ -1178,6 +1178,10 @@ kubernetes:
   encryptionAtRest:
     enabled: false
 
+  # Tells Kubernetes to enable the autoscaler rest client (not using heapster) without the requirement to use metrics-server.
+  podAutoscalerUseRestClient:
+    enabled: false
+
 #  controllerManager:
 #   resources:
 #     requests:

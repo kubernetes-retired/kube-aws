@@ -109,6 +109,10 @@ type EncryptionAtRest struct {
 	Enabled bool `yaml:"enabled"`
 }
 
+type PodAutoscalerUseRestClient struct {
+	Enabled bool `yaml:"enabled"`
+}
+
 type EphemeralImageStorage struct {
 	Enabled    bool   `yaml:"enabled"`
 	Disk       string `yaml:"disk"`
