@@ -48,7 +48,7 @@
         "Tags" : [
           {
             "Key": "kubernetes.io/cluster/{{$.ClusterName}}",
-            "Value": "true"
+            "Value": "owned"
           }{{range $k, $v := $.ControlPlane.Tags}},
           {
             "Key":"{{$k}}",
@@ -96,7 +96,7 @@
         "Tags" : [
           {
             "Key": "kubernetes.io/cluster/{{$.ClusterName}}",
-            "Value": "true"
+            "Value": "owned"
           }{{range $k, $v := $p.Tags}},
           {
             "Key":"{{$k}}",

@@ -83,7 +83,7 @@ spec:
                   {
                     "Key": "k8s.io/cluster-autoscaler/enabled",
                     "PropagateAtLaunch": "true",
-                    "Value": ""
+                    "Value": "true"
                   }
                 ]
               }
