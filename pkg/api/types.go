@@ -118,6 +118,7 @@ type EphemeralImageStorage struct {
 type KIAMSupport struct {
 	Enabled         bool                `yaml:"enabled"`
 	Image           Image               `yaml:"image,omitempty"`
+	PortName        string              `yaml:"portName,omitempty"`
 	SessionDuration string              `yaml:"sessionDuration,omitempty"`
 	ServerAddresses KIAMServerAddresses `yaml:"serverAddresses,omitempty"`
 	ServerResources ComputeResources    `yaml:"serverResources,omitempty"`
