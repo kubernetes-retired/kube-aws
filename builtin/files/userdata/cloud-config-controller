@@ -4445,7 +4445,8 @@ write_files:
           selector:
             k8s-app: metrics-server
           ports:
-          - port: 443
+          - name: https
+            port: 443
             protocol: TCP
             targetPort: 443
 
@@ -4569,7 +4570,8 @@ write_files:
             - port: 9090
               targetPort: 9090
             {{ else }}
-            - port: 443
+            - name: https
+              port: 443
               targetPort: 8443
             {{ end }}
           selector:
@@ -5642,7 +5644,7 @@ write_files:
           app: kiam
           role: server
         ports:
-        - name: grpclb
+        - name:  {{ if .Experimental.KIAMSupport.PortName }}{{ .Experimental.KIAMSupport.PortName }}{{ else }}grpclb{{ end }}
           port: 443
           targetPort: 443
           protocol: TCP
