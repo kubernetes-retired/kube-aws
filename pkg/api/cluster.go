@@ -465,7 +465,7 @@ type DeploymentSettings struct {
 	CloudFormation                        CloudFormation  `yaml:"cloudformation,omitempty"`
 	ClusterName                           string          `yaml:"clusterName,omitempty"`
 	S3URI                                 string          `yaml:"s3URI,omitempty"`
-	DisableContainerLinuxAutomaticUpdates string          `yaml:"disableContainerLinuxAutomaticUpdates,omitempty"`
+	DisableContainerLinuxAutomaticUpdates bool            `yaml:"disableContainerLinuxAutomaticUpdates,omitempty"`
 	KeyName                               string          `yaml:"keyName,omitempty"`
 	Region                                Region          `yaml:",inline"`
 	AvailabilityZone                      string          `yaml:"availabilityZone,omitempty"`
