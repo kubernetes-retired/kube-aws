@@ -1339,6 +1339,9 @@ write_files:
         net-conf.json: |
           {
             "Network": "{{ .PodCIDR }}",
+            {{ if gt .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen 0 -}}
+            "SubnetLen": "{{ .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen }}",
+            {{- end }}
             "Backend": {
               "Type": "vxlan"
             }
@@ -2348,6 +2351,9 @@ write_files:
         net-conf.json: |
           {
             "Network": "{{ .PodCIDR }}",
+             {{ if gt .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen 0 -}}
+            "SubnetLen": "{{ .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen }}",
+            {{- end }}
             "Backend": {
               "Type": "vxlan"
             }

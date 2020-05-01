@@ -242,6 +242,7 @@ func NewDefaultCluster() *Cluster {
 						FlannelImage:    Image{Repo: "quay.io/coreos/flannel", Tag: kubeNetworkingSelfHostingDefaultFlannelImageTag, RktPullDocker: false},
 						FlannelCniImage: Image{Repo: "quay.io/coreos/flannel-cni", Tag: kubeNetworkingSelfHostingDefaultFlannelCniImageTag, RktPullDocker: false},
 						TyphaImage:      Image{Repo: "quay.io/calico/typha", Tag: kubeNetworkingSelfHostingDefaultTyphaImageTag, RktPullDocker: false},
+						FlannelConfig:   FlannelConfig{SubnetLen: int32(0)},
 					},
 				},
 			},
