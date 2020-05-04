@@ -14,4 +14,9 @@ type SelfHosting struct {
 	FlannelImage    Image            `yaml:"flannelImage"`
 	FlannelCniImage Image            `yaml:"flannelCniImage"`
 	TyphaImage      Image            `yaml:"typhaImage"`
+	FlannelConfig   FlannelConfig    `yaml:"flannelConfig"`
+}
+
+type FlannelConfig struct {
+	SubnetLen int32 `yaml:"subnetLen"`
 }

@@ -1218,6 +1218,14 @@ kubernetes:
 #      typhaImage:
 #        repo: quay.io/calico/typha
 #        tag: v3.9.1
+#      # By default, flannel assigns a /24 per node for pod's ips, this is effectively limiting your cluster size
+#      # to 255 nodes since each lease will be preserved for 24h.
+#      # If you have a bigger cluster you may want to tune this number to assign an smaller block per node.
+#      # Be aware that network should be able to accomodate at least 4 subnets, and networks smaller than /28
+#      # will make flannel panic and exit.
+#      # Ref: https://github.com/coreos/flannel/blob/62a1314e51047e25606b4e4e30bd23d7a8d746bc/subnet/config.go#L69
+#      flannelConfig:
+#        subnetLen: 24
 
 # Create MountTargets to subnets managed by kube-aws for a pre-existing Elastic File System (Amazon EFS),
 # and then mount to every node.
