@@ -17,7 +17,7 @@ import (
 	"github.com/go-yaml/yaml"
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
-	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
+	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/model"
