@@ -49,7 +49,7 @@ func init() {
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.CommonName, "cn", "kube-ca", "FQDN for CN in the self-generate CA certificate")
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.CaCertPath, "ca-cert-path", "./credentials/ca.pem", "path to pem-encoded CA x509 certificate")
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.AdminKeyPath, "admin-key-path", "", "path to pem-encoded CA RSA key")
-	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.ApiServerAggregatorKeyPath, "", "", "path to pem-encoded apiserver aggregator RSA key")
+	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.ApiServerAggregatorKeyPath, "apiserver-aggregator-key-path", "", "path to pem-encoded apiserver aggregator RSA key")
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.ApiServerKeyPath, "apiserver-key-path", "", "path to pem-encoded apiserver RSA key")
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.EtcdClientKeyPath, "etcd-client-key-path", "", "path to pem-encoded etcd client RSA key")
 	cmdRenderCredentials.Flags().StringVar(&renderCredentialsOpts.EtcdKeyPath, "etcd-key-path", "", "path to pem-encoded etcd RSA key")
