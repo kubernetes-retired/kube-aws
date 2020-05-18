@@ -1340,7 +1340,7 @@ write_files:
           {
             "Network": "{{ .PodCIDR }}",
             {{ if gt .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen 0 -}}
-            "SubnetLen": "{{ .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen }}",
+            "SubnetLen": "{{ int (.Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen ) }}",
             {{- end }}
             "Backend": {
               "Type": "vxlan"
@@ -2352,7 +2352,7 @@ write_files:
           {
             "Network": "{{ .PodCIDR }}",
              {{ if gt .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen 0 -}}
-            "SubnetLen": "{{ .Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen }}",
+            "SubnetLen": "{{ int (.Kubernetes.Networking.SelfHosting.FlannelConfig.SubnetLen) }}",
             {{- end }}
             "Backend": {
               "Type": "vxlan"
