@@ -8,7 +8,7 @@ s3URI: {{.S3URI}}
 
 # CoreOS release channel to use. Currently supported options: alpha, beta, stable
 # See coreos.com/releases for more information
-#releaseChannel: stable
+releaseChannel: stable
 
 # The AMI ID of Flatcar.
 #

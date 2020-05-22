@@ -3,9 +3,11 @@ package amiregistry
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/kubernetes-incubator/kube-aws/model"
 )
 
-func GetAMI(region, channel string) (string, error) {
+func GetAMI(region string, channel model.ReleaseChannel) (string, error) {
 
 	amis, err := GetAMIData(channel)
 
@@ -27,7 +29,7 @@ func GetAMI(region, channel string) (string, error) {
 	return "", fmt.Errorf("could not find \"hvm\" image for region \"%s\" in flatcar channel \"%s\"", region, channel)
 }
 
-func GetAMIData(channel string) ([]map[string]string, error) {
+func GetAMIData(channel model.ReleaseChannel) ([]map[string]string, error) {
 	url := fmt.Sprintf("https://%s.release.flatcar-linux.net/amd64-usr/current/flatcar_production_ami_all.json", channel)
 	r, err := newHttp().Get(url)
 	if err != nil {
