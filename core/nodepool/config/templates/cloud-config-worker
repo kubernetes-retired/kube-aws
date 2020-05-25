@@ -1258,10 +1258,10 @@ write_files:
       echo "Keeping container around after build: ${KEEP_CONTAINER}"
       echo "Additional flags: ${EMERGE_SOURCES}"
 
-      # If we are on CoreOS by default build for the current CoreOS version
-      if [[ -f /etc/lsb-release && -f /etc/coreos/update.conf ]]; then
+      # If we are on flatcar by default build for the current flatcar version
+      if [[ -f /etc/lsb-release && -f /etc/flatcar/update.conf ]]; then
           source /etc/lsb-release
-          source /etc/coreos/update.conf
+          source /etc/flatcar/update.conf
 
           COREOS_TRACK_DEFAULT=$GROUP
           COREOS_VERSION_DEFAULT=$DISTRIB_RELEASE

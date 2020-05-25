@@ -4,18 +4,17 @@ import "errors"
 
 const (
 	stable = "stable"
-	beta = "beta"
-	alpha = "alpha"
-	edge = "edge"
+	beta   = "beta"
+	alpha  = "alpha"
+	edge   = "edge"
 )
 
 type ReleaseChannel string
 
 func (ch ReleaseChannel) IsValid() error {
-    switch ch {
-    case stable, beta, alpha, edge:
-        return nil
-    }
-    return errors.New("Invalid Release Channel")
+	switch ch {
+	case stable, beta, alpha, edge:
+		return nil
+	}
+	return errors.New("Invalid Release Channel")
 }
-

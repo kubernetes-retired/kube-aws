@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/logger"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,7 @@ func runCmdAmi(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read cluster config: %v", err)
 	}
-	
+
 	region := cluster.ControlPlane().Region.Name
 	channel := string(cluster.ControlPlane().ReleaseChannel)
 
@@ -41,13 +41,12 @@ func runCmdAmi(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("Impossible to retrieve FlatCar AMI for region %s, channel %s", region, channel)
 	}
 
-
 	if cluster.ControlPlane().AmiId == amiID {
 		logger.Infof("AmiID up to date")
 		return nil
 	}
 
-	successMsg :=`
+	successMsg := `
 The Flatcar AmiId for region %s and release channel %s is different than the one in cluster definition.
 
 Cluster.yaml:
