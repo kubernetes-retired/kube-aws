@@ -99,10 +99,12 @@ metadata:
 spec:
   ports:
     {{ if .Values.tls.enabled -}}
-    - port: 443
+    - name: https
+      port: 443
       targetPort: 8443
     {{ else -}}
-    - port: 9090
+    - name: http
+      port: 9090
       targetPort: 9090
     {{- end }}
   selector:

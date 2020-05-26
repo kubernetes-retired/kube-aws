@@ -9,7 +9,7 @@ spec:
     app: kiam
     role: server
   ports:
-  - name: grpclb
+  - name: {{ .Values.server.portName }}
     port: 443
     targetPort: 443
     protocol: TCP
