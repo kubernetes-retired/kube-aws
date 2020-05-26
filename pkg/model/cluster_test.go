@@ -1059,6 +1059,73 @@ encryptionAtRest:
 	}
 }
 
+func TestPodAutoscalerUseRestClientConfig(t *testing.T) {
+	validConfigs := []struct {
+		conf                       string
+		podAutoscalerUseRestClient api.PodAutoscalerUseRestClient
+	}{
+		{
+			conf: `
+`,
+			podAutoscalerUseRestClient: api.PodAutoscalerUseRestClient{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubernetes:
+  podAutoscalerUseRestClient:
+    enabled: false
+`,
+			podAutoscalerUseRestClient: api.PodAutoscalerUseRestClient{
+				Enabled: false,
+			},
+		},
+		{
+			conf: `
+kubernetes:
+  podAutoscalerUseRestClient:
+    enabled: true
+`,
+			podAutoscalerUseRestClient: api.PodAutoscalerUseRestClient{
+				Enabled: true,
+			},
+		},
+		{
+			conf: `
+# Settings for an experimental feature must be under the "experimental" field. Ignored.
+podAutoscalerUseRestClient:
+  enabled: true
+`,
+			podAutoscalerUseRestClient: api.PodAutoscalerUseRestClient{
+				Enabled: false,
+			},
+		},
+	}
+
+	for _, conf := range validConfigs {
+		confBody := singleAzConfigYaml + conf.conf
+		c, err := ClusterFromBytes([]byte(confBody))
+		if err != nil {
+			y, err2 := json.MarshalIndent(c, "", "  ")
+			if err2 != nil {
+				t.Errorf("%v", err2)
+				t.FailNow()
+			}
+			t.Logf("%s", string(y))
+			t.Errorf("failed to parse config: %v:\n%s", err, confBody)
+			continue
+		}
+		if !reflect.DeepEqual(c.Kubernetes.PodAutoscalerUseRestClient, conf.podAutoscalerUseRestClient) {
+			t.Errorf(
+				"parsed encryption at rest settings %+v does not match config: %s",
+				c.Kubernetes.PodAutoscalerUseRestClient,
+				confBody,
+			)
+		}
+	}
+}
+
 func TestKubeletReserved(t *testing.T) {
 
 	validConfigs := []struct {
