@@ -18,3 +18,7 @@ func (ch ReleaseChannel) IsValid() error {
 	}
 	return errors.New("Invalid Release Channel")
 }
+
+func DefaultReleaseChannel() ReleaseChannel {
+	return ReleaseChannel(stable)
+}

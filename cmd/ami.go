@@ -6,7 +6,6 @@ import (
 	"github.com/kubernetes-incubator/kube-aws/core/root"
 	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/logger"
-	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/spf13/cobra"
 )
 
@@ -35,8 +34,7 @@ func runCmdAmi(_ *cobra.Command, _ []string) error {
 	region := cluster.ControlPlane().Region.Name
 	channel := string(cluster.ControlPlane().ReleaseChannel)
 
-	releaseChannel := model.ReleaseChannel(channel)
-	amiID, err := amiregistry.GetAMI(region, releaseChannel)
+	amiID, err := amiregistry.GetAMI(region, cluster.ControlPlane().ReleaseChannel)
 	if err != nil {
 		return fmt.Errorf("Impossible to retrieve FlatCar AMI for region %s, channel %s", region, channel)
 	}

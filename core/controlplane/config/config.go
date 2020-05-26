@@ -174,6 +174,7 @@ func NewDefaultCluster() *Cluster {
 			K8sVer:             k8sVer,
 			ContainerRuntime:   "docker",
 			Subnets:            []model.Subnet{},
+			ReleaseChannel:     model.DefaultReleaseChannel(),
 			EIPAllocationIDs:   []string{},
 			Experimental:       experimental,
 			Kubelet:            kubelet,

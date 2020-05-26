@@ -515,7 +515,7 @@ releaseChannel: non-existent #this release channel will never exist
 			t.Errorf("failed to parse config %s: %v", confBody, err)
 			continue
 		}
-		if c.ReleaseChannel != conf.channel {
+		if string(c.ReleaseChannel) != conf.channel {
 			t.Errorf(
 				"parsed release channel %s does not match config: %s",
 				c.ReleaseChannel,
