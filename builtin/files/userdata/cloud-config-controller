@@ -3340,7 +3340,8 @@ write_files:
           {{- else }}
           - --apiserver-count={{if .MinControllerCount}}{{ .MinControllerCount }}{{else}}{{ .Controller.Count }}{{end}}
           {{- end }}
-          - --enable-admission-plugins=ExtendedResourceToleration,NodeRestriction,PodSecurityPolicy{{if .Experimental.Admission.AlwaysPullImages.Enabled}},AlwaysPullImages{{ end }}{{if .Experimental.Admission.Initializers.Enabled}},Initializers{{end}}{{ if .Experimental.Admission.EventRateLimit.Enabled }},EventRateLimit{{end}}
+          
+          - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota,ExtendedResourceToleration,NodeRestriction,PodSecurityPolicy{{if .Experimental.Admission.AlwaysPullImages.Enabled}},AlwaysPullImages{{ end }}{{ if .Experimental.Admission.EventRateLimit.Enabled }},EventRateLimit{{end}}
           {{ if .Experimental.Admission.EventRateLimit.Enabled -}}
           - --admission-control-config-file=/etc/kubernetes/auth/admission-control-config.yaml
           {{ end -}}

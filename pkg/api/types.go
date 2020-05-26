@@ -61,16 +61,11 @@ func (c Experimental) Validate(name string) error {
 
 type Admission struct {
 	AlwaysPullImages                     AlwaysPullImages                     `yaml:"alwaysPullImages"`
-	Initializers                         Initializers                         `yaml:"initializers"`
 	OwnerReferencesPermissionEnforcement OwnerReferencesPermissionEnforcement `yaml:"ownerReferencesPermissionEnforcement"`
 	EventRateLimit                       EventRateLimit                       `yaml:"eventRateLimit"`
 }
 
 type AlwaysPullImages struct {
-	Enabled bool `yaml:"enabled"`
-}
-
-type Initializers struct {
 	Enabled bool `yaml:"enabled"`
 }
 
