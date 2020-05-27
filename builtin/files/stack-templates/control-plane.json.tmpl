@@ -211,20 +211,22 @@
           }
         ],
         "SecurityGroupIngress": [
+          {{ if .OpenICMP -}}
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": -1,
+            "IpProtocol": "icmp",
+            "ToPort": -1
+          },
+          {{end -}}
           {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
           {
             "CidrIp": "{{$r}}",
             "FromPort": 22,
             "IpProtocol": "tcp",
             "ToPort": 22
-          },
-          {{end -}}
-          {
-            "CidrIp": "0.0.0.0/0",
-            "FromPort": -1,
-            "IpProtocol": "icmp",
-            "ToPort": -1
           }
+          {{end -}}
         ],
         "Tags": [
           {

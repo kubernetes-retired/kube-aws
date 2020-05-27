@@ -562,6 +562,7 @@ type Cluster struct {
 	CustomApiServerSettings     CustomApiServerSettings `yaml:"customApiServerSettings,omitempty"`
 	CustomSettings              map[string]interface{}  `yaml:"customSettings,omitempty"`
 	KubeResourcesAutosave       `yaml:"kubeResourcesAutosave,omitempty"`
+	OpenICMP                    bool `yaml:"openICMP,omitempty"`
 }
 
 type WaitSignal struct {
