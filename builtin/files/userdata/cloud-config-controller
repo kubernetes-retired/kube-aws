@@ -3339,8 +3339,8 @@ write_files:
           - --endpoint-reconciler-type=lease
           {{- else }}
           - --apiserver-count={{if .MinControllerCount}}{{ .MinControllerCount }}{{else}}{{ .Controller.Count }}{{end}}
-          {{- end }}
-          - --enable-admission-plugins=ExtendedResourceToleration,NodeRestriction,PodSecurityPolicy{{if .Experimental.Admission.AlwaysPullImages.Enabled}},AlwaysPullImages{{ end }}{{if .Experimental.Admission.Initializers.Enabled}},Initializers{{end}}{{ if .Experimental.Admission.EventRateLimit.Enabled }},EventRateLimit{{end}}
+          {{- end }}        
+          - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota,ExtendedResourceToleration,NodeRestriction,PodSecurityPolicy{{if .Experimental.Admission.AlwaysPullImages.Enabled}},AlwaysPullImages{{ end }}{{ if .Experimental.Admission.EventRateLimit.Enabled }},EventRateLimit{{end}}
           {{ if .Experimental.Admission.EventRateLimit.Enabled -}}
           - --admission-control-config-file=/etc/kubernetes/auth/admission-control-config.yaml
           {{ end -}}
@@ -3392,7 +3392,7 @@ write_files:
           - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
           - --client-ca-file=/etc/kubernetes/ssl/ca.pem
           - --service-account-key-file=/etc/kubernetes/ssl/service-account-key.pem
-          - --runtime-config=networking.k8s.io/v1/networkpolicies=true,policy/v1beta1/podsecuritypolicy=true{{if .Experimental.Admission.Initializers.Enabled}},admissionregistration.k8s.io/v1alpha1{{end}}
+          - --runtime-config=networking.k8s.io/v1/networkpolicies=true,policy/v1beta1/podsecuritypolicy=true
           {{- if .ControllerFeatureGates.Enabled }}
           - --feature-gates={{.ControllerFeatureGates.String}}
           {{- end }}

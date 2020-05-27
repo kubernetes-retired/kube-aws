@@ -44,9 +44,6 @@ func NewDefaultCluster() *Cluster {
 			AlwaysPullImages{
 				Enabled: false,
 			},
-			Initializers{
-				Enabled: false,
-			},
 			OwnerReferencesPermissionEnforcement{
 				Enabled: false,
 			},
