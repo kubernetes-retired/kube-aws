@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/kubernetes-incubator/kube-aws/core/root/config"
-	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/filegen"
+	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/logger"
+	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +21,8 @@ var (
 		SilenceUsage: true,
 	}
 
-	initOpts = config.InitialConfig{}
+	initOpts       = config.InitialConfig{}
+	releaseChannel = ""
 )
 
 const (
@@ -37,7 +39,8 @@ func init() {
 	cmdInit.Flags().StringVar(&initOpts.AvailabilityZone, "availability-zone", "", "The AWS availability-zone to deploy to")
 	cmdInit.Flags().StringVar(&initOpts.KeyName, "key-name", "", "The AWS key-pair for ssh access to nodes")
 	cmdInit.Flags().StringVar(&initOpts.KMSKeyARN, "kms-key-arn", "", "The ARN of the AWS KMS key for encrypting TLS assets")
-	cmdInit.Flags().StringVar(&initOpts.AmiId, "ami-id", "", "The AMI ID of CoreOS. Last CoreOS Stable Channel selected by default if empty")
+	cmdInit.Flags().StringVar(&initOpts.AmiId, "ami-id", "", "The AMI ID of Flatcar. Last Flatcar Stable Channel selected by default if empty")
+	cmdInit.Flags().StringVar(&releaseChannel, "release-channel", defaultReleaseChannel, "Flatcar release channel for AMI")
 	cmdInit.Flags().BoolVar(&initOpts.NoRecordSet, "no-record-set", false, "Instruct kube-aws to not manage Route53 record sets for your K8S API endpoints")
 }
 
@@ -55,11 +58,13 @@ func runCmdInit(_ *cobra.Command, _ []string) error {
 
 	if initOpts.AmiId == "" {
 		amiID, err := amiregistry.GetAMI(initOpts.Region.Name, defaultReleaseChannel)
-		initOpts.AmiId = amiID
 		if err != nil {
-			return fmt.Errorf("cannot retrieve CoreOS AMI for region %s, channel %s", initOpts.Region.Name, defaultReleaseChannel)
+			return fmt.Errorf("cannot retrieve Flatcar AMI for region %s, channel %s", initOpts.Region.Name, defaultReleaseChannel)
 		}
+		initOpts.AmiId = amiID
 	}
+
+	initOpts.ReleaseChannel = model.ReleaseChannel(defaultReleaseChannel)
 
 	if !initOpts.NoRecordSet && initOpts.HostedZoneID == "" {
 		return errors.New("missing required flags: either --hosted-zone-id or --no-record-set is required")

@@ -29,6 +29,7 @@ func defaultConfigValues(t *testing.T, configYaml string) string {
 	defaultYaml := `
 externalDNSName: test.staging.core-os.net
 keyName: test-key-name
+releaseChannel: stable
 s3URI: s3://mybucket/mydir
 region: us-west-1
 clusterName: test-cluster-name

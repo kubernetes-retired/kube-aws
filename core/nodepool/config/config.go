@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	cfg "github.com/kubernetes-incubator/kube-aws/core/controlplane/config"
-	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
+	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/model"
 	"github.com/kubernetes-incubator/kube-aws/model/derived"

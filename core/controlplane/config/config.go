@@ -17,7 +17,7 @@ import (
 	"github.com/go-yaml/yaml"
 	"github.com/kubernetes-incubator/kube-aws/cfnresource"
 	"github.com/kubernetes-incubator/kube-aws/cfnstack"
-	"github.com/kubernetes-incubator/kube-aws/coreos/amiregistry"
+	"github.com/kubernetes-incubator/kube-aws/flatcar/amiregistry"
 	"github.com/kubernetes-incubator/kube-aws/gzipcompressor"
 	"github.com/kubernetes-incubator/kube-aws/logger"
 	"github.com/kubernetes-incubator/kube-aws/model"
@@ -170,11 +170,11 @@ func NewDefaultCluster() *Cluster {
 		DeploymentSettings: DeploymentSettings{
 			ClusterName:        "kubernetes",
 			VPCCIDR:            "10.0.0.0/16",
-			ReleaseChannel:     "stable",
 			KubeAWSVersion:     "UNKNOWN",
 			K8sVer:             k8sVer,
 			ContainerRuntime:   "docker",
 			Subnets:            []model.Subnet{},
+			ReleaseChannel:     model.DefaultReleaseChannel(),
 			EIPAllocationIDs:   []string{},
 			Experimental:       experimental,
 			Kubelet:            kubelet,
@@ -513,7 +513,7 @@ type DeploymentSettings struct {
 	KeyName                               string                `yaml:"keyName,omitempty"`
 	Region                                model.Region          `yaml:",inline"`
 	AvailabilityZone                      string                `yaml:"availabilityZone,omitempty"`
-	ReleaseChannel                        string                `yaml:"releaseChannel,omitempty"`
+	ReleaseChannel                        model.ReleaseChannel  `yaml:"releaseChannel,omitempty"`
 	AmiId                                 string                `yaml:"amiId,omitempty"`
 	DeprecatedVPCID                       string                `yaml:"vpcId,omitempty"`
 	VPC                                   model.VPC             `yaml:"vpc,omitempty"`
@@ -920,12 +920,6 @@ const (
 	vpcLogicalName             = "VPC"
 	internetGatewayLogicalName = "InternetGateway"
 )
-
-var supportedReleaseChannels = map[string]bool{
-	"alpha":  true,
-	"beta":   true,
-	"stable": true,
-}
 
 func (c DeploymentSettings) ApiServerLeaseEndpointReconciler() (bool, error) {
 	constraint, err := semver.NewConstraint(">= 1.9")
@@ -1391,11 +1385,9 @@ type DeploymentValidationResult struct {
 }
 
 func (c DeploymentSettings) Validate() (*DeploymentValidationResult, error) {
-	releaseChannelSupported := supportedReleaseChannels[c.ReleaseChannel]
-	if !releaseChannelSupported {
+	if err := c.ReleaseChannel.IsValid(); err != nil {
 		return nil, fmt.Errorf("releaseChannel %s is not supported", c.ReleaseChannel)
 	}
-
 	if c.KeyName == "" && len(c.SSHAuthorizedKeys) == 0 {
 		return nil, errors.New("Either keyName or sshAuthorizedKeys must be set")
 	}

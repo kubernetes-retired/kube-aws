@@ -24,6 +24,7 @@ type InitialConfig struct {
 	KeyName          string
 	NoRecordSet      bool
 	Region           model.Region
+	ReleaseChannel   model.ReleaseChannel
 	S3URI            string
 }
 
