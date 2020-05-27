@@ -8,6 +8,7 @@ spec:
       tag: v3.2
       sessionDuration: 30m
       server:
+        portName: grpclb
         address: localhost:443
         resources:
           requests:
