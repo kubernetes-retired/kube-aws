@@ -5,7 +5,7 @@ printf 'Checking existence of the `tparse` command that is used for prettifying 
 if ! which tparse 1>/dev/null; then
   echo not found. installing...
   go get -u github.com/mfridman/tparse
-  echo 'Installed `packr`.'
+  echo 'Installed `tparse`.'
 else
   echo found. Skipped installation.
 fi
