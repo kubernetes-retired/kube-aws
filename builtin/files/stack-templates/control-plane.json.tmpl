@@ -219,7 +219,8 @@
             "ToPort": -1
           },
           {{end -}}
-          {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {{ range $i, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {{if gt $i 0}},{{end}}
           {
             "CidrIp": "{{$r}}",
             "FromPort": 22,
