@@ -275,6 +275,34 @@
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
     {{ end -}}
+    "SecurityGroupWorkerIngressFromControllerToCalicoBGP": {
+      "Properties": {
+        "FromPort": 179,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 179
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromWorkerToCalicoBGP": {
+      "Properties": {
+        "FromPort": 179,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 179
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
    "SecurityGroupWorkerIngressFromControllerToFlannel": {
       "Properties": {
         "FromPort": 8472,

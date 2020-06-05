@@ -1861,7 +1861,7 @@ write_files:
             securityContext:
               fsGroup: 65534
             containers:
-            - image: calico/typha:v3.13.3
+            - image: {{ .Kubernetes.Networking.SelfHosting.TyphaImage.RepoWithTag }}
               name: calico-typha
               ports:
               - containerPort: 5473
@@ -1969,7 +1969,7 @@ write_files:
               # It can be deleted if this is a fresh installation, or if you have already
               # upgraded to use calico-ipam.
               - name: upgrade-ipam
-                image: calico/cni:v3.13.3
+                image: {{ .Kubernetes.Networking.SelfHosting.CalicoCniImage.RepoWithTag }}
                 command: ["/opt/cni/bin/calico-ipam", "-upgrade"]
                 env:
                   - name: KUBERNETES_NODE_NAME
@@ -1991,7 +1991,7 @@ write_files:
               # This container installs the CNI binaries
               # and CNI network config file on each node.
               - name: install-cni
-                image: calico/cni:v3.13.3
+                image: {{ .Kubernetes.Networking.SelfHosting.CalicoCniImage.RepoWithTag }}
                 command: ["/install-cni.sh"]
                 env:
                   - name: CNI_NET_DIR
@@ -2040,7 +2040,7 @@ write_files:
               # container programs network policy and routes on each
               # host.
               - name: calico-node
-                image: calico/node:v3.13.3
+                image: {{ .Kubernetes.Networking.SelfHosting.CalicoNodeImage.RepoWithTag }}
                 env:
                   # Use Kubernetes API as the backing datastore.
                   - name: DATASTORE_TYPE
