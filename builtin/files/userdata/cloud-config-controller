@@ -2281,7 +2281,6 @@ write_files:
   - path: /srv/kubernetes/manifests/canal.yaml
     content: |
       # Based on https://docs.projectcalico.org/v3.1/getting-started/kubernetes/installation/hosted/canal/canal.yaml
-
       # This ConfigMap can be used to configure a self-hosted Canal installation.
       kind: ConfigMap
       apiVersion: v1
