@@ -790,11 +790,11 @@ func (c Cluster) validate(cpStackName string) error {
 		}
 	}
 
-	if c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "flannel" {
-		return fmt.Errorf("networkingdaemonsets - style must be either 'canal' or 'flannel'")
+	if c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "flannel"  && c.Kubernetes.Networking.SelfHosting.Type != "calico" {
+		return fmt.Errorf("networkingdaemonsets - style must be either 'canal' or 'flannel' or 'calico'")
 	}
-	if c.Kubernetes.Networking.SelfHosting.Typha && c.Kubernetes.Networking.SelfHosting.Type != "canal" {
-		return fmt.Errorf("networkingdaemonsets - you can only enable typha when deploying type 'canal'")
+	if c.Kubernetes.Networking.SelfHosting.Typha && c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "calico" {
+		return fmt.Errorf("networkingdaemonsets - you can only enable typha when deploying type 'canal' or 'calico'")
 	}
 
 	return nil
