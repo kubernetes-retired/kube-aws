@@ -194,31 +194,27 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "SecurityGroupControllerIngressFromControllerToBGP": {
+    "SecurityGroupControllerIngressFromControllerToController": {
       "Properties": {
-        "FromPort": 179,
         "GroupId": {
           "Ref": "SecurityGroupController"
         },
-        "IpProtocol": "tcp",
+        "IpProtocol": "-1",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupController"
-        },
-        "ToPort": 179
+        }
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "SecurityGroupControllerIngressFromWorkerToBGP": {
+    "SecurityGroupControllerIngressFromWorkerToControllelr": {
       "Properties": {
-        "FromPort": 179,
         "GroupId": {
           "Ref": "SecurityGroupController"
         },
-        "IpProtocol": "tcp",
+        "IpProtocol": "-1",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupWorker"
-        },
-        "ToPort": 179
+        }
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
@@ -387,31 +383,27 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "SecurityGroupWorkerIngressFromControllerToBGP": {
+    "SecurityGroupWorkerIngressFromControllerToWorker": {
       "Properties": {
-        "FromPort": 179,
         "GroupId": {
           "Ref": "SecurityGroupWorker"
         },
-        "IpProtocol": "tcp",
+        "IpProtocol": "-1",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupController"
-        },
-        "ToPort": 179
+        }
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
-    "SecurityGroupWorkerIngressFromWorkerToBGP": {
+    "SecurityGroupWorkerIngressFromWorkerToWorker": {
       "Properties": {
-        "FromPort": 179,
         "GroupId": {
           "Ref": "SecurityGroupWorker"
         },
-        "IpProtocol": "tcp",
+        "IpProtocol": "-1",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupWorker"
-        },
-        "ToPort": 179
+        }
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
