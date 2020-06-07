@@ -387,6 +387,11 @@ coreos:
         --node-labels=node.kubernetes.io/role="master",service-cidr={{ .ServiceCIDR | toLabel }}{{if .NodeLabels.Enabled}},{{.NodeLabels.String}}{{end}} \
         --register-with-taints=node.kubernetes.io/role=master:NoSchedule \
         --config=/etc/kubernetes/config/kubelet.yaml \
+        {{- if .Experimental.CloudControllerManager.Enabled }}
+        --cloud-provider=external \
+        {{- else }}
+        --cloud-provider=aws \
+        {{- end }}
         {{- if .Kubernetes.Networking.AmazonVPC.Enabled }}
         --node-ip=$$(curl http://169.254.169.254/latest/meta-data/local-ipv4) \
         --max-pods=$$(/opt/bin/aws-k8s-cni-max-pods) \
@@ -464,6 +469,24 @@ coreos:
         {{end -}}
         ExecStart=/opt/bin/cfn-signal
 {{end}}
+
+    - name: kubernetes-io-node-label.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Label this kubernetes node with kubernetes.io labels.
+        Wants=kubelet.service
+        After=kubelet.service
+        Before=cfn-signal.service
+
+        [Service]
+        Type=oneshot
+        ExecStop=/bin/true
+        RemainAfterExit=true
+        ExecStart=/opt/bin/kubernetes-io-node-label
+
 {{if .Experimental.AwsNodeLabels.Enabled }}
     - name: kube-node-label.service
       enable: true
@@ -720,6 +743,31 @@ write_files:
 
       rkt rm --uuid-file=/var/run/coreos/${id}.uuid || :
 {{ end }}
+
+  - path: /opt/bin/kubernetes-io-node-label
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      set -ue
+
+       # FIXME: Remove dependency on the apiserver insecure port
+       until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done
+
+       # FIXME: Remove dependency on the apiserver insecure port
+       /usr/bin/curl \
+         --retry 5 \
+         --request PATCH \
+         -H 'Content-Type: application/strategic-merge-patch+json' \
+         -d '{
+              "metadata": {
+                "labels": {
+                  "kubernetes.io/role": "master",
+                  "node-role.kubernetes.io/master": ""
+                 }
+              }
+            }' \
+         http://localhost:8080/api/v1/nodes/$(hostname)
 
   {{if .Experimental.AwsNodeLabels.Enabled -}}
   - path: /opt/bin/kube-node-label
