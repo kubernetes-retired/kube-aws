@@ -315,6 +315,29 @@ coreos:
         [Service]
         EnvironmentFile=/etc/environment
         EnvironmentFile=-/etc/default/kubelet
+        Environment=KUBELET_IMAGE_TAG={{.K8sVer}}
+        Environment=KUBELET_IMAGE_URL={{ .HyperkubeImage.RktRepoWithoutTag }}
+        Environment="RKT_RUN_ARGS={{.HyperkubeImage.Options}}\
+        --volume dns,kind=host,source=/etc/resolv.conf \
+        --mount volume=dns,target=/etc/resolv.conf \
+        {{ if eq .ContainerRuntime "rkt" -}}
+        --volume rkt,kind=host,source=/opt/bin/host-rkt \
+        --mount volume=rkt,target=/usr/bin/rkt \
+        --volume var-lib-rkt,kind=host,source=/var/lib/rkt \
+        --mount volume=var-lib-rkt,target=/var/lib/rkt \
+        --volume stage,kind=host,source=/tmp \
+        --mount volume=stage,target=/tmp \
+        {{ end -}}
+        --volume var-lib-cni,kind=host,source=/var/lib/cni \
+        --mount volume=var-lib-cni,target=/var/lib/cni \
+        --volume var-run-calico,kind=host,source=/var/run/calico \
+        --mount volume=var-run-calico,target=/var/run/calico \
+        --volume var-lib-calico,kind=host,source=/var/lib/calico \
+        --mount volume=var-lib-calico,target=/var/lib/calico \
+        --volume var-log,kind=host,source=/var/log \
+        --mount volume=var-log,target=/var/log \
+        --volume cni-bin,kind=host,source=/opt/cni/bin \
+        --mount volume=cni-bin,target=/opt/cni/bin"
         ExecStartPre=/usr/bin/mkdir -p /var/lib/cni
         ExecStartPre=/usr/bin/mkdir -p /var/log/containers
         ExecStartPre=/usr/bin/mkdir -p /opt/cni/bin
@@ -322,38 +345,10 @@ coreos:
         ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/cni/net.d
         ExecStartPre=/usr/bin/mkdir -p /var/run/calico
         ExecStartPre=/usr/bin/mkdir -p /var/lib/calico
-        ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet
-        ExecStartPre=/usr/bin/mkdir -p /var/lib/docker
-        ExecStartPre=/bin/bash -c "if ! grep -q "/var/lib/kubelet" /proc/mounts; then mount --bind /var/lib/kubelet /var/lib/kubelet && mount --make-shared /var/lib/kubelet; fi"
         ExecStartPre=/bin/sed -e "s/COREOS_PRIVATE_IPV4/${COREOS_PRIVATE_IPV4}/g" -i /etc/kubernetes/config/kubelet.yaml
-        ExecStartPre=-/bin/docker rm -f kubelet
-        ExecStart=/bin/sh -c "docker run --name kubelet --privileged --net=host --pid=host \
-        -v /:/rootfs:ro \
-        -v /sys:/sys:ro \
-        -v /dev:/dev \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /etc/resolv.conf:/etc/resolv.conf:ro \
-        -v /var/lib/cni:/var/lib/cni:rw \
-        -v /var/run/calico:/var/run/calico:rw \
-        -v /var/lib/calico:/var/lib/calico:rw \
-        -v /var/log:/var/log:rw \
-        -v /opt/cni/bin:/opt/cni/bin:rw \
-        -v /etc/kubernetes:/etc/kubernetes:rw \
-        -v /var/lib/kubelet:/var/lib/kubelet:rshared \
-        -v /var/lib/docker:/var/lib/docker:rshared \
-        {{ if eq .ContainerRuntime "rkt" -}}
-        -v /opt/bin/host-rkt:/opt/bin/host-rkt:rw \
-        -v /usr/bin/rkt:/usr/bin/rkt:ro \
-        -v /var/lib/rkt:/usr/lib/rkt:rw \
-        -v /tmp:/tmp:rw \
-        {{- end }}
-        {{- if gt (len .Kubelet.Mounts) 0 }}
-          {{- range .Kubelet.Mounts }}
-        {{ .MountDockerRW }} \
-          {{- end }}
-        {{- end }}
-        {{ .HyperkubeImage.RepoWithTag }} /kubelet \
+        ExecStart=/bin/sh -c "exec /usr/lib/coreos/kubelet-wrapper \
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
+        {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
         --cni-bin-dir=/opt/cni/bin \
         --network-plugin={{.K8sNetworkPlugin}} \
         --container-runtime={{.ContainerRuntime}} \
@@ -363,11 +358,7 @@ coreos:
         {{- if .Taints }}
         --register-with-taints={{.Taints.String}} \
         {{- end }}
-        {{- if .Experimental.CloudControllerManager.Enabled }}
         --cloud-provider=external \
-        {{- else }}
-        --cloud-provider=aws \
-        {{- end }}
         --cert-dir=/etc/kubernetes/ssl \
         --bootstrap-kubeconfig=/etc/kubernetes/kubeconfig/worker-bootstrap.yaml \
         {{- if .Kubelet.Kubeconfig }}
@@ -387,7 +378,8 @@ coreos:
         {{- end }}
         $KUBELET_OPTS"
         Restart=always
-        RestartSec=10
+        RestartSec=10        
+
         [Install]
         WantedBy=multi-user.target
 
