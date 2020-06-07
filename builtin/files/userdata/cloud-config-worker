@@ -358,7 +358,11 @@ coreos:
         {{- if .Taints }}
         --register-with-taints={{.Taints.String}} \
         {{- end }}
+        {{- if .Experimental.CloudControllerManager.Enabled }}
         --cloud-provider=external \
+        {{- else }}
+        --cloud-provider=aws \
+        {{- end }}
         --cert-dir=/etc/kubernetes/ssl \
         --bootstrap-kubeconfig=/etc/kubernetes/kubeconfig/worker-bootstrap.yaml \
         {{- if .Kubelet.Kubeconfig }}
@@ -483,6 +487,23 @@ coreos:
         ExecStartPre=/usr/bin/bash -c "while sleep 1; do if /usr/bin/curl  --insecure -s -m 20 -f https://127.0.0.1:10250/healthz >/dev/null ; then break ; fi;  done"
         ExecStart=/opt/bin/cfn-signal
 {{end}}
+
+    - name: kubernetes-io-node-label.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Label this kubernetes node with kubernetes.io labels.
+        Wants=kubelet.service
+        After=kubelet.service
+        Before=cfn-signal.service
+
+        [Service]
+        Type=oneshot
+        ExecStop=/bin/true
+        RemainAfterExit=true
+        ExecStart=/opt/bin/kubernetes-io-node-label
 
 {{if .Experimental.AwsNodeLabels.Enabled }}
     - name: kube-node-label.service
@@ -725,6 +746,31 @@ write_files:
 
       rkt rm --uuid-file=/var/run/coreos/set-aws-environment.uuid || :
 {{end}}
+
+  - path: /opt/bin/kubernetes-io-node-label
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      set -ue
+
+       # FIXME: Remove dependency on the apiserver insecure port
+       until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done
+
+       # FIXME: Remove dependency on the apiserver insecure port
+       /usr/bin/curl \
+         --retry 5 \
+         --request PATCH \
+         -H 'Content-Type: application/strategic-merge-patch+json' \
+         -d '{
+              "metadata": {
+                "labels": {
+                  "kubernetes.io/role": "node",
+                  "node-role.kubernetes.io/node": ""
+                 }
+              }
+            }' \
+         http://localhost:8080/api/v1/nodes/$(hostname)
 
   {{if .Experimental.AwsNodeLabels.Enabled -}}
   - path: /opt/bin/kube-node-label
