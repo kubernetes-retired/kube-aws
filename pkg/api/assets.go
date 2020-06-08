@@ -2,8 +2,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/kubernetes-incubator/kube-aws/fingerprint"
 	"strings"
+
+	"github.com/kubernetes-incubator/kube-aws/fingerprint"
 )
 
 type AssetID struct {
@@ -35,7 +36,7 @@ func (l AssetLocation) URL() (string, error) {
 	if (l == AssetLocation{}) {
 		return "", fmt.Errorf("[bug] Empty asset location can't have URL")
 	}
-	return fmt.Sprintf("%s/%s/%s", l.Region.S3Endpoint(), l.Bucket, l.Key), nil
+	return fmt.Sprintf("%s/%s", l.Region.S3Endpoint(l.Bucket), l.Key), nil
 }
 
 func (l AssetLocation) S3URL() (string, error) {

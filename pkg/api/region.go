@@ -42,14 +42,15 @@ func (r Region) String() string {
 	return r.Name
 }
 
-func (r Region) S3Endpoint() string {
+func (r Region) S3Endpoint(bucket string) string {
+	domain := "s3"
 	if r.IsChina() {
-		return fmt.Sprintf("https://s3.%s.amazonaws.com.cn", r.Name)
+		domain = fmt.Sprintf("s3.%s", r.Name)
 	}
 	if r.IsGovcloud() {
-		return fmt.Sprintf("https://s3-%s.amazonaws.com", r.Name)
+		domain = fmt.Sprintf("s3-%s", r.Name)
 	}
-	return "https://s3.amazonaws.com"
+	return fmt.Sprintf("https://%s.%s.%s", bucket, domain, r.PublicDomainName())
 }
 
 func (r Region) Partition() string {
