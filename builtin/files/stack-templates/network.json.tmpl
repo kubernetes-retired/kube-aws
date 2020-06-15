@@ -211,6 +211,7 @@
         "GroupId": {
           "Ref": "SecurityGroupController"
         },
+        "Description": "controller to controller sg",
         "IpProtocol": "-1",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupWorker"
@@ -224,6 +225,7 @@
         "GroupId": {
           "Ref": "SecurityGroupController"
         },
+        "Description": "controller to calico",
         "IpProtocol": "udp",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupController"
@@ -238,6 +240,7 @@
         "GroupId": {
           "Ref": "SecurityGroupController"
         },
+        "Description": "worker to calico sg",
         "IpProtocol": "udp",
         "SourceSecurityGroupId": {
           "Ref": "SecurityGroupWorker"
