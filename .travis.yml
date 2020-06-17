@@ -4,7 +4,7 @@ go:
   - 1.13.x
 
 script:
-  - travis_wait 40 make test-with-cover
+  - travis_wait 50 make test-with-cover
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
