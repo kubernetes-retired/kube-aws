@@ -2181,7 +2181,9 @@ write_files:
                     command:
                     - /bin/calico-node
                     - -felix-live
+                    {{- if not .Kubernetes.Networking.SelfHosting.CalicoConfig.VxlanMode }}
                     - -bird-live
+                    {{- end }}
                   periodSeconds: 10
                   initialDelaySeconds: 10
                   failureThreshold: 6
