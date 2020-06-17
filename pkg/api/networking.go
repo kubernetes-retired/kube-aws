@@ -15,8 +15,13 @@ type SelfHosting struct {
 	FlannelCniImage Image            `yaml:"flannelCniImage"`
 	TyphaImage      Image            `yaml:"typhaImage"`
 	FlannelConfig   FlannelConfig    `yaml:"flannelConfig"`
+	CalicoConfig    CalicoConfig     `yaml:"calicoConfig"`
 }
 
 type FlannelConfig struct {
 	SubnetLen int32 `yaml:"subnetLen"`
+}
+
+type CalicoConfig struct {
+	VxlanMode bool `yaml:"vxlanMode"`
 }

@@ -1339,7 +1339,7 @@ write_files:
         typha_service_name: "{{- if .Kubernetes.Networking.SelfHosting.Typha }}calico-typha{{- else -}}none{{- end -}}"
         
         # Configure the backend to use.
-        calico_backend: "bird"
+        calico_backend: "{{- if .Kubernetes.Networking.SelfHosting.CalicoConfig.VxlanMode }}vxlan{{- else -}}bird{{- end -}}"
 
         # Configure the MTU to use
         veth_mtu: "1440"
@@ -2116,7 +2116,7 @@ write_files:
                         key: calico_backend
                   # Cluster type to identify the deployment type
                   - name: CLUSTER_TYPE
-                    value: "kops,bgp"
+                    value: "k8s,bgp"
                   # Auto-detect the BGP IP address.
                   - name: IP
                     value: "autodetect"
@@ -2125,8 +2125,13 @@ write_files:
                   - name: IP6_AUTODETECTION_METHOD
                     value: "first-found"
                   # Enable IPIP
+                  {{- if .Kubernetes.Networking.SelfHosting.CalicoConfig.VxlanMode }}
+                  - name: CALICO_IPV4POOL_VXLAN
+                    value: "Always"
+                  {{- else }}
                   - name: CALICO_IPV4POOL_IPIP
                     value: "Always"
+                  {{- end }}
                   # Set MTU for tunnel device used if ipip is enabled
                   - name: FELIX_IPINIPMTU
                     valueFrom:
@@ -2152,8 +2157,6 @@ write_files:
                     value: "info"
                   - name: FELIX_HEALTHENABLED
                     value: "true"
-
-                  # kops additions
                   # Set Felix iptables binary variant, Legacy or NFT
                   - name: FELIX_IPTABLESBACKEND
                     value: "Auto"
@@ -2188,7 +2191,9 @@ write_files:
                     command:
                     - /bin/calico-node
                     - -felix-ready
+                    {{- if not .Kubernetes.Networking.SelfHosting.CalicoConfig.VxlanMode }}
                     - -bird-ready
+                    {{- end }}
                   periodSeconds: 10
                 volumeMounts:
                   - mountPath: /lib/modules

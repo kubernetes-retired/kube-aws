@@ -1226,8 +1226,12 @@ kubernetes:
 #      # Be aware that network should be able to accomodate at least 4 subnets, and networks smaller than /28
 #      # will make flannel panic and exit.
 #      # Ref: https://github.com/coreos/flannel/blob/62a1314e51047e25606b4e4e30bd23d7a8d746bc/subnet/config.go#L69
-#      flannelConfig:
-#        subnetLen: 24
+#     flannelConfig:
+#       subnetLen: 24
+#     calicoConfig:
+#        # If false, we will run with bird in bgp/ip-in-ip mode.
+#        vxlanMode: true
+
 
 # Create MountTargets to subnets managed by kube-aws for a pre-existing Elastic File System (Amazon EFS),
 # and then mount to every node.
