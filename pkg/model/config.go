@@ -68,7 +68,7 @@ func (c *Config) IAMRoleARNs() []string {
 	}
 
 	for _, np := range c.NodePools {
-		arns = append(arns, fmt.Sprintf(`{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-%sIAMRoleWorkerArn"}}`, np.NodePoolName))
+		arns = append(arns, fmt.Sprintf(`{"Fn::ImportValue" : "%s-NodePool%sWorkerIAMRoleArn"}`, c.ClusterName, np.NodePoolLogicalName()))
 	}
 
 	return arns
