@@ -209,6 +209,7 @@ type KubeDns struct {
 	Autoscaler                   KubeDnsAutoscaler `yaml:"autoscaler"`
 	DnsDeploymentResources       ComputeResources  `yaml:"dnsDeploymentResources,omitempty"`
 	ExtraCoreDNSConfig           string            `yaml:"extraCoreDNSConfig"`
+	AdditionalZoneCoreDNSConfig  string            `yaml:"additionalZoneCoreDNSConfig"`
 }
 
 func (c *KubeDns) MergeIfEmpty(other KubeDns) {
