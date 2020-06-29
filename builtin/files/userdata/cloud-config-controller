@@ -1572,7 +1572,7 @@ write_files:
                     value: "kubernetes"
                   # Configure route aggregation based on pod CIDR.
                   - name: USE_POD_CIDR
-                    value: "true"                    
+                    value: "true"
                   # Enable felix logging.
                   - name: FELIX_LOGSEVERITYSYS
                     value: "Warning"
@@ -1605,7 +1605,7 @@ write_files:
                     valueFrom:
                       configMapKeyRef:
                         name: canal-config
-                        key: veth_mtu                    
+                        key: veth_mtu
                   - name: NODENAME
                     valueFrom:
                       fieldRef:
@@ -1660,7 +1660,7 @@ write_files:
                   privileged: true
                 env:
                   - name: FLANNELD_IPTABLES_FORWARD_RULES
-                    value: "false"                
+                    value: "false"
                   - name: POD_NAME
                     valueFrom:
                       fieldRef:
@@ -3387,7 +3387,7 @@ write_files:
           - --endpoint-reconciler-type=lease
           {{- else }}
           - --apiserver-count={{if .MinControllerCount}}{{ .MinControllerCount }}{{else}}{{ .Controller.Count }}{{end}}
-          {{- end }}        
+          {{- end }}
           - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,RuntimeClass,ResourceQuota,ExtendedResourceToleration,NodeRestriction,PodSecurityPolicy{{if .Experimental.Admission.AlwaysPullImages.Enabled}},AlwaysPullImages{{ end }}{{ if .Experimental.Admission.EventRateLimit.Enabled }},EventRateLimit{{end}}
           {{ if .Experimental.Admission.EventRateLimit.Enabled -}}
           - --admission-control-config-file=/etc/kubernetes/auth/admission-control-config.yaml
@@ -4365,6 +4365,9 @@ write_files:
               reload
               loadbalance
           }
+          {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 10 }}
+          {{- end }}
 {{- else }}
   - path: /srv/kubernetes/manifests/kube-dns-sa.yaml
     content: |
