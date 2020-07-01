@@ -57,15 +57,6 @@ spec:
             permissions: 0644
             source:
               path: ../../credentials/aws-iam-authenticator-server-key.pem
-            # This type-specification instructs kube-aws to transfer:
-            #   credentials/aws-iam-authenticator-server-key.pem.enc
-            # to:
-            #   /srv/kubernetes/aws-iam-authenticator/key.pem.enc
-            # The decrypt-assets systemd unit then kms-decrypt the enc file into:
-            #   /srv/kubernetes/aws-iam-authenticator/key.pem
-            # And chmod it to have the specified permissions `0644`
-            # See `/opt/bin/decrypt-assets` in `cloud-config-controller` for more details
-            type: credential
           - path: /srv/kubernetes/aws-iam-authenticator/cert.pem
             permissions: 0644
             source:
