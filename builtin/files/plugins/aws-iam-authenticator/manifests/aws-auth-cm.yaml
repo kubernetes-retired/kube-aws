@@ -9,7 +9,7 @@ data:
     server:
       mapRoles:
         {{ range $i, $role := .Config.IAMRoleARNs -}}
-        - rolearn: {{$role}}
+        - roleARN: {{$role}}
           username: system:node:{{`{{EC2PrivateDNSName}}`}}
           groups:
           - system:bootstrappers

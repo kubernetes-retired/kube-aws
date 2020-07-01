@@ -12,7 +12,7 @@ type AWSIAM struct {
 
 func (a AWSIAM) BinaryStorePathes() []string {
 	return []string{
-		"files/worker/opt/bin/heptio-authenticator-aws",
-		"files/controller/opt/bin/heptio-authenticator-aws",
+		"files/worker/opt/bin/aws-iam-authenticator",
+		"files/controller/opt/bin/aws-iam-authenticator",
 	}
 }
