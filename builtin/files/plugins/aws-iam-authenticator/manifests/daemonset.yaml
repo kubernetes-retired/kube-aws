@@ -44,6 +44,8 @@ spec:
             - --config=/etc/aws-iam-authenticator/config.yaml
             - --state-dir=/var/aws-iam-authenticator
             - --kubeconfig-pregenerated=true
+            # NOTE required for 0.5.0 to work, resolved in >= 0.5.1
+            - --backend-mode=ConfigMap,File
           resources:
             requests:
               memory: 20Mi
