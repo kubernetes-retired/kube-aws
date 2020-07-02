@@ -3905,7 +3905,7 @@ write_files:
                 loadbalance
             }
             {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
-            {{ .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
             {{- end }}
 {{- else }}
   - path: /srv/kubernetes/manifests/kube-dns-sa.yaml
