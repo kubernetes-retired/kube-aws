@@ -38,12 +38,14 @@ spec:
       # - output (output kubeconfig to plug into your apiserver configuration, mounted from the host)
       containers:
         - name: aws-iam-authenticator
-          image: gcr.io/heptio-images/authenticator:v0.3.0
+          image: 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-iam-authenticator:v0.5.0-alpine-3.7
           args:
             - server
             - --config=/etc/aws-iam-authenticator/config.yaml
             - --state-dir=/var/aws-iam-authenticator
             - --kubeconfig-pregenerated=true
+            # NOTE required for 0.5.0 to work, resolved in >= 0.5.1
+            - --backend-mode=ConfigMap,File
           resources:
             requests:
               memory: 20Mi

@@ -11,7 +11,7 @@ s3URI: {{.S3URI}}
 #releaseChannel: stable
 
 # To update this to the latest AMI run the following command with the appropriate region and channel then place the resulting ID here
-#   REGION=eu-west-1 CHANNEL=stable curl -s https://$CHANNEL.release.flatcar-linux.net/amd64-usr/current/flatcar_production_ami_all.json | jq  -r ".amis[] | select(.name==\"$REGION\") .hvm
+#   REGION=eu-west-1 CHANNEL=stable; curl -s https://$CHANNEL.release.flatcar-linux.net/amd64-usr/current/flatcar_production_ami_all.json | jq  -r ".amis[] | select(.name==\"$REGION\") .hvm"
 amiId: "{{.AmiId}}"
 
 # Flatcar has automatic updates https://docs.flatcar-linux.org/os/update-strategies/#disable-automatic-updates-daemon. This can be a risk in certain situations and this is why is disabled by default and you can enable it by setting this param to false.
