@@ -194,6 +194,61 @@
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },
+    "SecurityGroupControllerIngressFromControllerToController": {
+      "Properties": {
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupControllerIngressFromWorkerToControllelr": {
+      "Properties": {
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "Description": "controller to controller sg",
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupControllerIngressFromControllerToCalico": {
+      "Properties": {
+        "FromPort": 4789,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "Description": "controller to calico",
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 4789
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupControllerIngressFromWorkerToCalico": {
+      "Properties": {
+        "FromPort": 4789,
+        "GroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "Description": "worker to calico sg",
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 4789
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
     "SecurityGroupWorker": {
       "Properties": {
         "GroupDescription": {
@@ -328,6 +383,58 @@
           "Ref": "SecurityGroupWorker"
         },
         "ToPort": 10250
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromControllerToWorker": {
+      "Properties": {
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromWorkerToWorker": {
+      "Properties": {
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        }
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromControllerToCalico": {
+      "Properties": {
+        "FromPort": 4789,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupController"
+        },
+        "ToPort": 4789
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress"
+    },
+    "SecurityGroupWorkerIngressFromWorkerToCalico": {
+      "Properties": {
+        "FromPort": 4789,
+        "GroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "IpProtocol": "udp",
+        "SourceSecurityGroupId": {
+          "Ref": "SecurityGroupWorker"
+        },
+        "ToPort": 4789
       },
       "Type": "AWS::EC2::SecurityGroupIngress"
     },

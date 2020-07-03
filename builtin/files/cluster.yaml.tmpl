@@ -1206,10 +1206,10 @@ kubernetes:
 #          cpu: "250m"
 #          memory: "200Mi"
 #      calicoNodeImage:
-#        repo: quay.io/calico/node
+#        repo: calico/node
 #        tag: v3.9.1
 #      calicoCniImage:
-#        repo: quay.io/calico/cni
+#        repo: calico/cni
 #        tag: v3.9.1
 #      flannelImage:
 #        repo: quay.io/coreos/flannel
@@ -1218,7 +1218,7 @@ kubernetes:
 #        repo: quay.io/coreos/flannel-cni
 #        tag: v0.3.0
 #      typhaImage:
-#        repo: quay.io/calico/typha
+#        repo: calico/typha
 #        tag: v3.9.1
 #      # By default, flannel assigns a /24 per node for pod's ips, this is effectively limiting your cluster size
 #      # to 255 nodes since each lease will be preserved for 24h.
@@ -1226,8 +1226,12 @@ kubernetes:
 #      # Be aware that network should be able to accomodate at least 4 subnets, and networks smaller than /28
 #      # will make flannel panic and exit.
 #      # Ref: https://github.com/coreos/flannel/blob/62a1314e51047e25606b4e4e30bd23d7a8d746bc/subnet/config.go#L69
-#      flannelConfig:
-#        subnetLen: 24
+#     flannelConfig:
+#       subnetLen: 24
+#     calicoConfig:
+#        # If false, we will run with bird in bgp/ip-in-ip mode.
+#        vxlanMode: true
+
 
 # Create MountTargets to subnets managed by kube-aws for a pre-existing Elastic File System (Amazon EFS),
 # and then mount to every node.

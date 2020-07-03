@@ -20,11 +20,11 @@ var KUBERNETES_VERSION = "v99.99"
 
 const (
 	// Experimental SelfHosting feature default images.
-	kubeNetworkingSelfHostingDefaultCalicoNodeImageTag = "v3.11.1"
-	kubeNetworkingSelfHostingDefaultCalicoCniImageTag  = "v3.11.1"
+	kubeNetworkingSelfHostingDefaultCalicoNodeImageTag = "v3.13.3"
+	kubeNetworkingSelfHostingDefaultCalicoCniImageTag  = "v3.13.3"
 	kubeNetworkingSelfHostingDefaultFlannelImageTag    = "v0.11.0"
 	kubeNetworkingSelfHostingDefaultFlannelCniImageTag = "v0.3.0"
-	kubeNetworkingSelfHostingDefaultTyphaImageTag      = "v3.11.1"
+	kubeNetworkingSelfHostingDefaultTyphaImageTag      = "v3.13.3"
 
 	// Experimental CSI support default image tags...
 	CSIDefaultProvisionerImageTag     = "v1.3.1"
@@ -234,12 +234,13 @@ func NewDefaultCluster() *Cluster {
 								Memory: "200Mi",
 							},
 						},
-						CalicoNodeImage: Image{Repo: "quay.io/calico/node", Tag: kubeNetworkingSelfHostingDefaultCalicoNodeImageTag, RktPullDocker: false},
-						CalicoCniImage:  Image{Repo: "quay.io/calico/cni", Tag: kubeNetworkingSelfHostingDefaultCalicoCniImageTag, RktPullDocker: false},
+						CalicoNodeImage: Image{Repo: "calico/node", Tag: kubeNetworkingSelfHostingDefaultCalicoNodeImageTag, RktPullDocker: false},
+						CalicoCniImage:  Image{Repo: "calico/cni", Tag: kubeNetworkingSelfHostingDefaultCalicoCniImageTag, RktPullDocker: false},
 						FlannelImage:    Image{Repo: "quay.io/coreos/flannel", Tag: kubeNetworkingSelfHostingDefaultFlannelImageTag, RktPullDocker: false},
 						FlannelCniImage: Image{Repo: "quay.io/coreos/flannel-cni", Tag: kubeNetworkingSelfHostingDefaultFlannelCniImageTag, RktPullDocker: false},
-						TyphaImage:      Image{Repo: "quay.io/calico/typha", Tag: kubeNetworkingSelfHostingDefaultTyphaImageTag, RktPullDocker: false},
+						TyphaImage:      Image{Repo: "calico/typha", Tag: kubeNetworkingSelfHostingDefaultTyphaImageTag, RktPullDocker: false},
 						FlannelConfig:   FlannelConfig{SubnetLen: int32(0)},
+						CalicoConfig:    CalicoConfig{VxlanMode: true},
 					},
 				},
 			},
@@ -790,11 +791,11 @@ func (c Cluster) validate(cpStackName string) error {
 		}
 	}
 
-	if c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "flannel" {
-		return fmt.Errorf("networkingdaemonsets - style must be either 'canal' or 'flannel'")
+	if c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "flannel" && c.Kubernetes.Networking.SelfHosting.Type != "calico" {
+		return fmt.Errorf("networkingdaemonsets - style must be either 'canal' or 'flannel' or 'calico'")
 	}
-	if c.Kubernetes.Networking.SelfHosting.Typha && c.Kubernetes.Networking.SelfHosting.Type != "canal" {
-		return fmt.Errorf("networkingdaemonsets - you can only enable typha when deploying type 'canal'")
+	if c.Kubernetes.Networking.SelfHosting.Typha && c.Kubernetes.Networking.SelfHosting.Type != "canal" && c.Kubernetes.Networking.SelfHosting.Type != "calico" {
+		return fmt.Errorf("networkingdaemonsets - you can only enable typha when deploying type 'canal' or 'calico'")
 	}
 
 	return nil
