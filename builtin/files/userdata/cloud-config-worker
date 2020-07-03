@@ -303,6 +303,7 @@ coreos:
       command: start
       runtime: true
       content: |
+{{/* START of kubelet [Unit] */}}
         [Unit]
         Wants=rpc-statd.service
         Wants=decrypt-assets.service
@@ -311,7 +312,8 @@ coreos:
         Requires=nvidia-start.service
         After=nvidia-start.service
         {{- end }}
-
+{{/* END of kubelet [Unit] */}}
+{{/* START of kubelet [Service] */}}
         [Service]
         EnvironmentFile=/etc/environment
         EnvironmentFile=-/etc/default/kubelet
@@ -388,9 +390,11 @@ coreos:
         $KUBELET_OPTS"
         Restart=always
         RestartSec=10
-
+{{/* END of kubelet [Service] */}}
+{{/* START of kubelet [Install] */}}
         [Install]
         WantedBy=multi-user.target
+{{/* END of kubelet [Install] */}}
 
     - name: rpc-statd.service
       command: start

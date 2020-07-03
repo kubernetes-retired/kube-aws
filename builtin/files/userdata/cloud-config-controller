@@ -321,13 +321,15 @@ coreos:
       command: start
       runtime: true
       content: |
+{{/* START of kubelet [Unit] */}}
         [Unit]
         Wants=cfn-etcd-environment.service
         After=cfn-etcd-environment.service
         Wants=rpc-statd.service
         Wants=decrypt-assets.service
         After=decrypt-assets.service
-
+{{/* END of kubelet [Unit] */}}
+{{/* START of kubelet [Service] */}}
         [Service]
         # EnvironmentFile=/etc/environment allows the reading of COREOS_PRIVATE_IPV4
         EnvironmentFile=/etc/environment
@@ -402,9 +404,11 @@ coreos:
         ExecStop=/usr/bin/docker rm -f kubelet
         Restart=always
         RestartSec=10
-
+{{/* END of kubelet [Service] */}}
+{{/* START of kubelet [Install] */}}
         [Install]
         WantedBy=multi-user.target
+{{/* END of kubelet [Install] */}}
 
     - name: rpc-statd.service
       command: start
