@@ -1,5 +1,5 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   namespace: kube-system
@@ -28,12 +28,12 @@ spec:
 
       # run on each master node
       nodeSelector:
-        node-role.kubernetes.io/master: ""
+        node.kubernetes.io/role: master
       tolerations:
         - effect: NoSchedule
-          operator: Exists
-        - effect: NoExecute
-          operator: Exists
+          key: node.kubernetes.io/role
+          operator: Equal
+          value: master
         - key: CriticalAddonsOnly
           operator: Exists
 
