@@ -13,5 +13,5 @@ current-context: webhook
 contexts:
 - name: webhook
   context:
-    cluster: aws-iam-authenticator
+    cluster: {{.Config.AWSIAMAuthenticatorClusterIDRef}}
     user: apiserver
