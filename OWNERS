@@ -1,16 +1,11 @@
 # See the OWNERS file documentation:
 #  https://github.com/kubernetes/community/blob/master/contributors/devel/owners.md
 
-reviewers:
-- c-knowles
-- danielfm
-- davidmccormick
-- dominicgunn
-- mumoshu
-- redbaron
 approvers:
-- c-knowles
-- davidmccormick
-- dominicgunn
-- mumoshu
-- redbaron
+  - sig-cluster-lifecycle-leads
+  - kube-aws-admins
+  - kube-aws-maintainers
+
+reviewers:
+  - kube-aws-maintainers
+  - kube-aws-reviewers

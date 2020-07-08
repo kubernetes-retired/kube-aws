@@ -116,14 +116,6 @@ The following links can be useful for development:
 
 Please feel free to reach out to the kube-aws community on: [#kube-aws in the kubernetes slack](https://kubernetes.slack.com/messages/C5GP8LPEC/)
 
-## Kubernetes Incubator
-
-This is a [Kubernetes Incubator project](https://github.com/kubernetes/community/blob/master/incubator.md). The project was established 2017-03-15. The incubator team for the project is:
-
-- Sponsor: Tim Hockin (@thockin)
-- Champion: Mike Danese (@mikedanese)
-- SIG: sig-aws
-
 ### Code of conduct
 
 Participation in the Kubernetes community is governed by the [Kubernetes Code of Conduct](code-of-conduct.md).
