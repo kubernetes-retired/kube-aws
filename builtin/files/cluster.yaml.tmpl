@@ -1341,9 +1341,18 @@ kubeDns:
     nodesPerReplica: 16
     min: 2
 
-  # Allows to add extra configuration into CoreDNS config map
+  # Allows addition of extra configuration into CoreDNS config map's root zone.
   # extraCoreDNSConfig: |
   #   rewrite name substring demo.app.org app.default.svc.cluster.local
+  #
+  # This configuration is injected into the CoreDNS config map after the root
+  # zone (".") and can be used to add configuration for additional zones.
+  # additionalZoneCoreDNSConfig: |
+  #  global:53 {
+  #      errors
+  #      cache 30
+  #      forward . 1.2.3.4:53
+  #  }
 
 kubeProxy:
   # Use IPVS kube-proxy mode instead of [default] iptables one (requires Kubernetes 1.9.0+ to work reliably)
