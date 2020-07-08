@@ -346,7 +346,7 @@ coreos:
         {{ range $i, $m := .Kubelet.Mounts -}}
         {{ range $j, $a := $m.ToRktRunArgs -}}
         {{ $a }} \
-        {{- end }}
+        {{ end }}
         {{- end }}
         {{- end }}
         --mount volume=var-log,target=/var/log \
