@@ -126,7 +126,6 @@ Resources:
 ### Enable aws-iam-authenticator
 
 1. Merge these settings into your cluster.yaml
-
 ```yaml
 controller:
   iam:
@@ -137,13 +136,8 @@ kubeAwsPlugins:
   awsIamAuthenticator:
     enabled: true
 ```
-
-By controlling the name of the role associated with the controller you will find it easier to grant the necessary permissions. The name of the role will become CLUSTER_NAME-REGION-IAM_ROLE_NAME.
-
-**NOTE** Applying this update will delete the existing role for the controller, replacing it with a new one.
-
+By controlling the name of the role associated with the controller you will find it easier to grant the necessary permissions. The name of the role will become CLUSTER_NAME-REGION-IAM_ROLE_NAME.<br>**NOTE** Applying this update will delete the existing role for the controller, replacing it with a new one.
 1. The IAM role associated with controller nodes requires an IAM policy:
- 
   ```json
   {
     "Action": "sts:AssumeRole",
@@ -151,11 +145,10 @@ By controlling the name of the role associated with the controller you will find
     "Effect": "Allow"
   }
   ```
-
 1. `kube-aws render credentials`
     * The resulting cert and key will be signed by the default CA
 1. `kube-aws render stack`
-1. Consult the [aws-iam-aithentication docs](https://github.com/kubernetes-sigs/aws-iam-authenticator/#4-create-iam-roleuser-to-kubernetes-usergroup-mappings), to configure roles and the config map.
+1. Consult the [aws-iam-authenticator docs](https://github.com/kubernetes-sigs/aws-iam-authenticator/#4-create-iam-roleuser-to-kubernetes-usergroup-mappings), to configure roles and the config map.
     * the config map is in `plugins/aws-iam-authenticator/manifest/aws-auth-cm.yaml`
     * server command line arguments are in `plugins/aws-iam-authenticator/manifest/daemonset.yaml`
     * don't forget to update kubeconfig
