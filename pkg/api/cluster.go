@@ -211,7 +211,7 @@ func NewDefaultCluster() *Cluster {
 				Authentication: KubernetesAuthentication{
 					AWSIAM: AWSIAM{
 						Enabled:           false,
-						BinaryDownloadURL: `https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.0/aws-iam-authenticator_0.5.0_linux_amd64`,
+						BinaryDownloadURL: `https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.1/aws-iam-authenticator_0.5.1_linux_amd64`,
 					},
 				},
 				EncryptionAtRest: EncryptionAtRest{
