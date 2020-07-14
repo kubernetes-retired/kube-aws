@@ -1,6 +1,6 @@
 metadata:
   name: aws-iam-authenticator
-  version: 0.2
+  version: 0.3
 spec:
   cluster:
     pki:
@@ -21,6 +21,12 @@ spec:
           path: manifests/aws-auth-cm.yaml
       - source:
           path: manifests/daemonset.yaml
+      - source:
+          path: manifests/clusterrole.yaml
+      - source:
+          path: manifests/clusterrolebinding.yaml
+      - source:
+          path: manifests/serviceaccount.yaml
       apiserver:
         flags:
         - name: authentication-token-webhook-config-file
@@ -44,7 +50,7 @@ spec:
             type: binary
             source:
               path: "files/aws-iam-auth/opt/bin/aws-iam-authenticator"
-              url: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.0/aws-iam-authenticator_0.5.0_linux_amd64"
+              url: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.1/aws-iam-authenticator_0.5.1_linux_amd64"
           - path: /etc/kubernetes/kubeconfig/aws-iam-auth.yaml
             permissions: 0644
             source:
@@ -72,7 +78,7 @@ spec:
             type: binary
             source:
               path: "files/aws-iam-auth/opt/bin/aws-iam-authenticator"
-              url: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.0/aws-iam-authenticator_0.5.0_linux_amd64"
+              url: "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.1/aws-iam-authenticator_0.5.1_linux_amd64"
           - path: /etc/kubernetes/kubeconfig/aws-iam-auth.yaml
             permissions: 0644
             source:

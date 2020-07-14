@@ -217,9 +217,11 @@
             "FromPort": -1,
             "IpProtocol": "icmp",
             "ToPort": -1
-          },
+          }
           {{end -}}
-          {{ range $_, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {{ $icmp := eq .OpenICMP true -}}
+          {{ range $i, $r := $.SSHAccessAllowedSourceCIDRs -}}
+          {{ if or (gt $i 0) $icmp }},{{end}}
           {
             "CidrIp": "{{$r}}",
             "FromPort": 22,
