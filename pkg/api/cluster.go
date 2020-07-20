@@ -204,7 +204,8 @@ func NewDefaultCluster() *Cluster {
 						Cpu:    "200m",
 					},
 				},
-				ExtraCoreDNSConfig: "",
+				ExtraCoreDNSConfig:          "",
+				AdditionalZoneCoreDNSConfig: "",
 			},
 			KubeSystemNamespaceLabels: make(map[string]string),
 			Kubernetes: Kubernetes{
