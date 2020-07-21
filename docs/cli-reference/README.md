@@ -119,5 +119,5 @@ Destroy an existing Kubernetes cluster that was created by kube-aws.
 ### `destroy` example
 
 ```bash
-$ kube-aws destory
+$ kube-aws destroy
 ```
