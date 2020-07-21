@@ -913,7 +913,7 @@ write_files:
           done
       }
 
-      # Add's lists of objectType:referece to the delete by reference list
+      # Add's lists of objectType:reference to the delete by reference list
       # This is useful for removing deprecated objects by name where we don't want to
       # keep the old manifests hanging around, e.g. ClusterRole:calico or deploy:kube-system/heapster
       remove_object() {
@@ -1266,7 +1266,7 @@ write_files:
       # through this rkt wrapper. It essentially enters the host mount namespace
       # (which it is already in) only for the purpose of breaking out of the chroot
       # before calling rkt. It makes things like rkt gc work and avoids bind mounting
-      # in certain rkt filesystem dependancies into the kubelet rootfs. This can
+      # in certain rkt filesystem dependencies into the kubelet rootfs. This can
       # eventually be obviated when the write-api stuff gets upstream and rkt gc is
       # through the api-server. Related issue:
       # https://github.com/coreos/rkt/issues/2878
@@ -1464,7 +1464,7 @@ write_files:
                   host: 127.0.0.1
                 periodSeconds: 10
 {{- end }}
-      # Canal Daemonset targetting masters/controllers
+      # Canal Daemonset targeting masters/controllers
       # They will never use Typha to proxy the kube-apiserver.
       # Resolves Two bugs when Typha is enabled:
       # 1. Masters depend on Typha to start on the nodes for their networking.

@@ -845,7 +845,7 @@ write_files:
       # through this rkt wrapper. It essentially enters the host mount namespace
       # (which it is already in) only for the purpose of breaking out of the chroot
       # before calling rkt. It makes things like rkt gc work and avoids bind mounting
-      # in certain rkt filesystem dependancies into the kubelet rootfs. This can
+      # in certain rkt filesystem dependencies into the kubelet rootfs. This can
       # eventually be obviated when the write-api stuff gets upstream and rkt gc is
       # through the api-server. Related issue:
       # https://github.com/coreos/rkt/issues/2878
