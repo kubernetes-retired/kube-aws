@@ -381,7 +381,7 @@ func (r *RawAssetsOnMemory) WriteToDir(dirname string, includeCAKey bool) error 
 				// In advanced configurations, when certs are managed outside of kube-aws,
 				// these can be separate CAs to ensure that worker nodes have no certs which would let them
 				// access etcd directly. If worker-ca.pem != ca.pem, then ca.pem should include worker-ca.pem
-				// to let TLS bootstrapped workers acces APIServer.
+				// to let TLS bootstrapped workers access APIServer.
 				wd, err := os.Getwd()
 				if err != nil {
 					return err
