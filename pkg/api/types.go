@@ -219,6 +219,7 @@ type KubeDns struct {
 	Provider                     string            `yaml:"provider"`
 	NodeLocalResolver            bool              `yaml:"nodeLocalResolver"`
 	NodeLocalResolverOptions     []string          `yaml:"nodeLocalResolverOptions"`
+	CoreDNSLocal                 bool              `yaml:"coreDNSLocal"`
 	DeployToControllers          bool              `yaml:"deployToControllers"`
 	AntiAffinityAvailabilityZone bool              `yaml:"antiAffinityAvailabilityZone"`
 	TTL                          int               `yaml:"ttl"`

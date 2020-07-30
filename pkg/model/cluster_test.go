@@ -1121,6 +1121,7 @@ func TestKubeDns(t *testing.T) {
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
 				NodeLocalResolver:            false,
+				CoreDNSLocal:                 false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1145,11 +1146,13 @@ func TestKubeDns(t *testing.T) {
 			conf: `
 kubeDns:
   nodeLocalResolver: false
+  coreDNSLocall: false
   deployToControllers: false
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
 				NodeLocalResolver:            false,
+				CoreDNSLocal:                 false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1259,6 +1262,18 @@ kubeDns:
 						Cpu:    "200m",
 					},
 				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  nodeLocalResolver: true
+  coreDNSLocal: true
+`,
+			kubeDns: api.KubeDns{
+				Provider:          "coredns",
+				NodeLocalResolver: true,
+				CoreDNSLocal:      true,
 			},
 		},
 		{

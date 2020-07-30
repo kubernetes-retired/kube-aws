@@ -1359,6 +1359,9 @@ kubeDns:
   # nodeLocalResolverOptions:
   # - --neg-ttl=10
   # - --no-ping
+  # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
+  # configure the utility to use it for resolution.
+  # coreDNSLocal: false
 
   # When enabled, will modify the TTL of the coredns service.
   # ttl: 30
@@ -1381,6 +1384,8 @@ kubeDns:
   #
   # This configuration is injected into the CoreDNS config map after the root
   # zone (".") and can be used to add configuration for additional zones.
+  # If corednsLocal has been enabled, this configuration will additionally be injected
+  # into its ConfigMap.
   # additionalZoneCoreDNSConfig: |
   #  global:53 {
   #      errors
