@@ -3882,6 +3882,10 @@ write_files:
           namespace: kube-system
         data:
           Corefile: |
+            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
+            {{- end }}
+
             .:53 {
                 errors
                 health
@@ -3904,9 +3908,6 @@ write_files:
                 reload
                 loadbalance
             }
-            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
-{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
-            {{- end }}
 {{- else }}
   - path: /srv/kubernetes/manifests/kube-dns-sa.yaml
     content: |
@@ -4023,6 +4024,10 @@ write_files:
             application: coredns
         data:
           Corefile: |
+            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
+            {{- end }}
+
             cluster.local:9254 {{ .PodCIDR }}:9254 {{ .ServiceCIDR }}:9254 {
                 errors
                 kubernetes {
@@ -4032,10 +4037,6 @@ write_files:
                 log svc.svc.cluster.local.
                 prometheus :9153
             }
-
-            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
-{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
-            {{- end }}
 
             .:9254 {
                 errors
