@@ -209,6 +209,10 @@ type IPVSMode struct {
 	MinSyncPeriod string `yaml:"minSyncPeriod"`
 }
 
+type DnsMasq struct {
+	CoreDNSLocal bool `yaml:"coreDNSLocal"`
+}
+
 type KubeDnsAutoscaler struct {
 	CoresPerReplica int `yaml:"coresPerReplica"`
 	NodesPerReplica int `yaml:"nodesPerReplica"`
@@ -219,7 +223,7 @@ type KubeDns struct {
 	Provider                     string            `yaml:"provider"`
 	NodeLocalResolver            bool              `yaml:"nodeLocalResolver"`
 	NodeLocalResolverOptions     []string          `yaml:"nodeLocalResolverOptions"`
-	CoreDNSLocal                 bool              `yaml:"coreDNSLocal"`
+	DNSMasq                      DNSMasq           `yaml:"dnsmasq"`
 	DeployToControllers          bool              `yaml:"deployToControllers"`
 	AntiAffinityAvailabilityZone bool              `yaml:"antiAffinityAvailabilityZone"`
 	TTL                          int               `yaml:"ttl"`

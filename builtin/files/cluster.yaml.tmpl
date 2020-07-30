@@ -1359,9 +1359,13 @@ kubeDns:
   # nodeLocalResolverOptions:
   # - --neg-ttl=10
   # - --no-ping
-  # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
-  # configure the utility to use it for resolution.
-  # coreDNSLocal: false
+
+  # Settings for the dnsmasq-node DaemonSet which must be enabled by setting
+  # `kubeDns.nodeLocalResolver` to true.
+  dnsmasq:
+    # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
+    # configure the utility to use it for resolution.
+    coreDNSLocal: false
 
   # When enabled, will modify the TTL of the coredns service.
   # ttl: 30

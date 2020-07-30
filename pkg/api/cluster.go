@@ -161,9 +161,11 @@ func NewDefaultCluster() *Cluster {
 				IPVSMode: ipvsMode,
 			},
 			KubeDns: KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
-				CoreDNSLocal:                 false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: DNSMasq{
+					CoreDNSLocal: false,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
