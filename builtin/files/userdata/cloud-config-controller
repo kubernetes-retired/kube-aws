@@ -1058,6 +1058,9 @@ write_files:
         "${mfdir}/kube-dns-de.yaml"
       {{- end }}
       {{ if .KubeDns.NodeLocalResolver -}}
+      {{ if .KubeDns.dnsmasq.EnableCoreDNSLocal -}}
+      deploy "${mfdir}/dnsmasq-node-coredns-local.yaml"
+      {{ end -}}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{ end -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
