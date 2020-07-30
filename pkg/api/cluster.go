@@ -164,7 +164,10 @@ func NewDefaultCluster() *Cluster {
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: DNSMasq{
-					CoreDNSLocal: false,
+					EnableCoreDNSLocal: false,
+					CacheSize:          50000,
+					DNSForwardMax:      500,
+					NegTTL:             60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,

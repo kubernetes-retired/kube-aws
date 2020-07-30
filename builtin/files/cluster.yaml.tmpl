@@ -1365,7 +1365,17 @@ kubeDns:
   dnsmasq:
     # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
     # configure the utility to use it for resolution.
-    coreDNSLocal: false
+    enableCoreDNSLocal: false
+
+    # The size of dnsmasq's cache.
+    cacheSize: 50000
+
+    # The maximum number of concurrent DNS queries.
+    dnsForwardMax: 500
+
+    # This option gives a default value for time-to-live (in seconds) which dnsmasq
+    # uses to cache negative replies even in the absence of an SOA record.
+    # negTTL: 60
 
   # When enabled, will modify the TTL of the coredns service.
   # ttl: 30

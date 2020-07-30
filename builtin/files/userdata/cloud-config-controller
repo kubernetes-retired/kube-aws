@@ -3970,7 +3970,7 @@ write_files:
                   - --v=2
                   - --logtostderr
 
-{{ if and .KubeDns.NodeLocalResolver .KubeDns.DNSMasq.CoreDNSLocal }}
+{{ if and .KubeDns.NodeLocalResolver .KubeDns.DNSMasq.EnableCoreDNSLocal }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
     content: |
         apiVersion: v1
@@ -4085,7 +4085,7 @@ write_files:
                 configMap:
                   name: kube-dns
                   optional: true
-              {{ if .KubeDns.DNSMasq.CoreDNSLocal }}
+              {{ if .KubeDns.DNSMasq.EnableCoreDNSLocal }}
               - name: coredns-local-config
                 configMap:
                   name: coredns-local
@@ -4113,13 +4113,13 @@ write_files:
                 - -restartDnsmasq=true
                 - --
                 - -k
-                - --cache-size=50000
-                - --dns-forward-max=500
+                - --cache-size={{ .KubeDns.DNSMasq.CacheSize }}
+                - --dns-forward-max={{ .KubeDns.DNSMasq.DNSForwardMax }}
                 - --log-facility=-
-                {{ if .KubeDns.DNSMasq.CoreDNSLocal }}
+                {{ if .KubeDns.DNSMasq.EnableCoreDNSLocal }}
                 - --no-resolv
                 - --keep-in-foreground
-                - --neg-ttl=60
+                - --neg-ttl={{ .KubeDns.DNSMasq.NegTTL }}
                 # Send requests to the last server (coredns-local) first and only
                 # fallback to the previous one (global coredns) if it's unreachable.
                 - --strict-order
@@ -4167,7 +4167,7 @@ write_files:
                 args:
                 - --v=2
                 - --logtostderr
-                {{ if .KubeDns.DNSMasq.CoreDNSLocal }}
+                {{ if .KubeDns.DNSMasq.EnableCoreDNSLocal }}
                 - --probe=dnsmasq,127.0.0.1:9254,ec2.amazonaws.com,5,A
                 {{ else }}
                 - --probe=dnsmasq,127.0.0.1:53,ec2.amazonaws.com,5,A
@@ -4185,7 +4185,7 @@ write_files:
                     memory: 45Mi
                 terminationMessagePath: /dev/termination-log
                 terminationMessagePolicy: File
-              {{ if .KubeDns.DNSMasq.CoreDNSLocal }}
+              {{ if .KubeDns.DNSMasq.EnableCoreDNSLocal }}
               - name: coredns
                 image: {{ .CoreDnsImage.RepoWithTag }}
                 args: ["-conf", "/etc/coredns/Corefile"]
