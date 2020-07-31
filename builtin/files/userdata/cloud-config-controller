@@ -1060,6 +1060,8 @@ write_files:
       {{ if .KubeDns.NodeLocalResolver -}}
       {{ if .KubeDns.dnsmasq.CoreDNSLocal.Enabled -}}
       deploy "${mfdir}/dnsmasq-node-coredns-local.yaml"
+      {{- else }}
+      remove "${mfdir}/dnsmasq-node-coredns-local.yaml"
       {{ end -}}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{ end -}}
