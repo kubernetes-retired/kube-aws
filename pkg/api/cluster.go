@@ -166,9 +166,15 @@ func NewDefaultCluster() *Cluster {
 				DNSMasq: DNSMasq{
 					CoreDNSLocal: CoreDNSLocal{
 						Enabled: false,
-						Limits: CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: ComputeResources{
+							Requests: ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,

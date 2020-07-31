@@ -1368,11 +1368,16 @@ kubeDns:
       # configure the utility to use it for resolution.
       enabled: false
 
-      # Defines the resource limits for the coredns-local container. Either limit
-      # can be disabled by setting it to an empty string.
-      limits:
-        cpu: 50m
-        memory: 100Mi
+      # Defines the resource requests/limits for the coredns-local container.
+      # cpu and/or memory constraints can be removed by setting the appropriate value(s)
+      # to an empty string.
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 100Mi
 
     # The size of dnsmasq's cache.
     cacheSize: 50000

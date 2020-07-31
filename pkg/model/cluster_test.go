@@ -1124,9 +1124,15 @@ func TestKubeDns(t *testing.T) {
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1165,9 +1171,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1206,9 +1218,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1247,9 +1265,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1292,9 +1316,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1328,9 +1358,13 @@ kubeDns:
   dnsmasq:
     coreDNSLocal:
       enabled: true
-      limits:
-        cpu: ""
-        memory: ""
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "2000Mi"
+        limits:
+          cpu: ""
+          memory: ""
     cacheSize: 500
     dnsForwardMax: 100
     negTTL: 10
@@ -1341,9 +1375,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: true,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "",
-							Memory: "",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "100m",
+								Memory: "2000Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "",
+								Memory: "",
+							},
 						},
 					},
 					CacheSize:     500,
@@ -1381,9 +1421,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1428,9 +1474,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1468,9 +1520,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1509,9 +1567,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,
@@ -1551,9 +1615,15 @@ kubeDns:
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
 						Enabled: false,
-						Limits: api.CoreDNSLocalLimits{
-							CPU:    "50m",
-							Memory: "100Mi",
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
 						},
 					},
 					CacheSize:     50000,

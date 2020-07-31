@@ -4214,13 +4214,19 @@ write_files:
                 resources:
                   requests:
                     ephemeral-storage: 256Mi
-                  {{ if or .KubeDns.DNSMasq.CoreDNSLocal.Limits.CPU .KubeDns.DNSMasq.CoreDNSLocal.Limits.Memory }}
-                  limits:
-                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.Limits.CPU }}
-                    cpu: {{ .KubeDns.DNSMasq.CoreDNSLocal.Limits.CPU }}
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Cpu }}
+                    cpu: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Cpu }}
                     {{ end }}
-                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.Limits.Memory }}
-                    memory: {{ .KubeDns.DNSMasq.CoreDNSLocal.Limits.Memory }}
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Memory }}
+                    memory: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Memory }}
+                    {{ end }}
+                  {{ if or .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
+                  limits:
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu }}
+                    cpu: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu }}
+                    {{ end }}
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
+                    memory: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
                     {{ end }}
                   {{ end }}
               {{ end }}

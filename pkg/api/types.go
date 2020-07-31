@@ -209,14 +209,9 @@ type IPVSMode struct {
 	MinSyncPeriod string `yaml:"minSyncPeriod"`
 }
 
-type CoreDNSLocalLimits struct {
-	CPU    string `yaml:"cpu"`
-	Memory string `yaml:"memory"`
-}
-
 type CoreDNSLocal struct {
-	Enabled bool               `yaml:"enabled"`
-	Limits  CoreDNSLocalLimits `yaml:"limits"`
+	Enabled          bool             `yaml:"enabled"`
+	ComputeResources ComputeResources `yaml:"resources,omitempty"`
 }
 
 type DNSMasq struct {
