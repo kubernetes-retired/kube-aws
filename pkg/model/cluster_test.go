@@ -1122,10 +1122,16 @@ func TestKubeDns(t *testing.T) {
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1157,10 +1163,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1192,10 +1204,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: true,
@@ -1227,10 +1245,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: true,
@@ -1266,10 +1290,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: true,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: false,
@@ -1296,7 +1326,11 @@ kubeDns:
 kubeDns:
   nodeLocalResolver: true
   dnsmasq:
-    enableCoreDNSLocal: true
+    coreDNSLocal:
+      enabled: true
+      limits:
+        cpu: ""
+        memory: ""
     cacheSize: 500
     dnsForwardMax: 100
     negTTL: 10
@@ -1305,10 +1339,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: true,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: true,
-					CacheSize:          500,
-					DNSForwardMax:      100,
-					NegTTL:             10,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: true,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "",
+							Memory: "",
+						},
+					},
+					CacheSize:     500,
+					DNSForwardMax: 100,
+					NegTTL:        10,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1339,10 +1379,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1380,10 +1426,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers: false,
 				TTL:                 30,
@@ -1414,10 +1466,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1449,10 +1507,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1485,10 +1549,16 @@ kubeDns:
 				Provider:          "coredns",
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
-					EnableCoreDNSLocal: false,
-					CacheSize:          50000,
-					DNSForwardMax:      500,
-					NegTTL:             60,
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						Limits: api.CoreDNSLocalLimits{
+							CPU:    "50m",
+							Memory: "100Mi",
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
 				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,

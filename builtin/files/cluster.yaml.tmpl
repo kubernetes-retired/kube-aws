@@ -1363,9 +1363,16 @@ kubeDns:
   # Settings for the dnsmasq-node DaemonSet which must be enabled by setting
   # `kubeDns.nodeLocalResolver` to true.
   dnsmasq:
-    # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
-    # configure the utility to use it for resolution.
-    enableCoreDNSLocal: false
+    coreDNSLocal:
+      # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
+      # configure the utility to use it for resolution.
+      enabled: false
+
+      # Defines the resource limits for the coredns-local container. Either limit
+      # can be disabled by setting it to an empty string.
+      limits:
+        cpu: 50m
+        memory: 100Mi
 
     # The size of dnsmasq's cache.
     cacheSize: 50000

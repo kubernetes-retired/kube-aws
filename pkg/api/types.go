@@ -209,11 +209,21 @@ type IPVSMode struct {
 	MinSyncPeriod string `yaml:"minSyncPeriod"`
 }
 
+type CoreDNSLocalLimits struct {
+	CPU    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
+}
+
+type CoreDNSLocal struct {
+	Enabled bool               `yaml:"enabled"`
+	Limits  CoreDNSLocalLimits `yaml:"limits"`
+}
+
 type DNSMasq struct {
-	EnableCoreDNSLocal bool `yaml:"enableCoreDNSLocal"`
-	CacheSize          int  `yaml:"cacheSize"`
-	DNSForwardMax      int  `yaml:"dnsForwardMax"`
-	NegTTL             int  `yaml:"negTTL"`
+	CoreDNSLocal  CoreDNSLocal `yaml:"coreDNSLocal"`
+	CacheSize     int          `yaml:"cacheSize"`
+	DNSForwardMax int          `yaml:"dnsForwardMax"`
+	NegTTL        int          `yaml:"negTTL"`
 }
 
 type KubeDnsAutoscaler struct {
