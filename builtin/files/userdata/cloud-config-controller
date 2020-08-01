@@ -490,6 +490,21 @@ coreos:
         RemainAfterExit=true
         ExecStart=/opt/bin/kubernetes-io-node-label
 
+    - name: kubernetes-io-node-worker-labels.service
+      enable: true
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Label kubernetes worker nodes with kubernetes.io labels.
+
+        [Service]
+        Type=simple
+        Restart=on-failure
+        RestartSec=30
+        ExecStartPre=/usr/bin/systemctl is-active kubelet
+        ExecStart=/opt/bin/kubernetes-io-node-worker-labels
+
 {{if .Experimental.AwsNodeLabels.Enabled }}
     - name: kube-node-label.service
       enable: true
@@ -754,23 +769,43 @@ write_files:
       #!/bin/bash -e
       set -ue
 
-       # FIXME: Remove dependency on the apiserver insecure port
-       until /usr/bin/curl -s -f http://127.0.0.1:8080/version; do echo waiting until apiserver starts; sleep 1; done
+      vols="-v /srv/kubernetes:/srv/kubernetes:ro -v /etc/kubernetes:/etc/kubernetes:ro -v /srv/kube-aws:/srv/kube-aws:ro"
+      kubectl() {
+          /usr/bin/docker run -i --rm $vols --net=host {{.HyperkubeImage.RepoWithTag}} /kubectl --kubeconfig=/etc/kubernetes/kubeconfig/admin.yaml --request-timeout=1s "$@"
+      }
 
-       # FIXME: Remove dependency on the apiserver insecure port
-       /usr/bin/curl \
-         --retry 5 \
-         --request PATCH \
-         -H 'Content-Type: application/strategic-merge-patch+json' \
-         -d '{
-              "metadata": {
-                "labels": {
-                  "kubernetes.io/role": "master",
-                  "node-role.kubernetes.io/master": ""
-                 }
-              }
-            }' \
-         http://localhost:8080/api/v1/nodes/$(hostname)
+      while ! kubectl get ns kube-system; do
+        echo Waiting until kube-system created.
+        sleep 3
+      done
+
+      hostname=$(hostname)
+      kubectl label node $hostname kubernetes.io/role="master"
+      kubectl label node $hostname node-role.kubernetes.io/master=""
+
+  - path: /opt/bin/kubernetes-io-node-worker-labels
+    permissions: 0700
+    owner: root:root
+    content: |
+      #!/bin/bash -e
+      set -ue
+
+      vols="-v /srv/kubernetes:/srv/kubernetes:ro -v /etc/kubernetes:/etc/kubernetes:ro -v /srv/kube-aws:/srv/kube-aws:ro"
+      kubectl() {
+          /usr/bin/docker run -i --rm $vols --net=host {{.HyperkubeImage.RepoWithTag}} /kubectl --kubeconfig=/etc/kubernetes/kubeconfig/admin.yaml --request-timeout=1s "$@"
+      }
+
+      while true
+      do
+        for node in $(kubectl get nodes -l node.kubernetes.io/pending-node -oname); do
+            node_name=$(echo $node | cut -d '.' -f1).$(echo $node | cut -d '.' -f2).compute.internal
+            kubectl label "$node_name" node.kubernetes.io/pending-node-
+            kubectl label "$node_name" kubernetes.io/role="node"
+            kubectl label "$node_name" node-role.kubernetes.io/node=""
+        done
+
+        sleep 20
+      done
 
   {{if .Experimental.AwsNodeLabels.Enabled -}}
   - path: /opt/bin/kube-node-label
