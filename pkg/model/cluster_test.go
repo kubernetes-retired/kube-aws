@@ -1119,8 +1119,26 @@ func TestKubeDns(t *testing.T) {
 			conf: `
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1148,8 +1166,26 @@ kubeDns:
   deployToControllers: false
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1177,8 +1213,26 @@ kubeDns:
   antiAffinityAvailabilityZone: true
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: true,
 				TTL:                          30,
@@ -1206,8 +1260,26 @@ kubeDns:
   antiAffinityAvailabilityZone: true
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: true,
 				TTL:                          30,
@@ -1239,8 +1311,26 @@ kubeDns:
     min: 15
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            true,
+				Provider:          "coredns",
+				NodeLocalResolver: true,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1264,11 +1354,88 @@ kubeDns:
 		{
 			conf: `
 kubeDns:
+  nodeLocalResolver: true
+  dnsmasq:
+    coreDNSLocal:
+      enabled: true
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "2000Mi"
+        limits:
+          cpu: ""
+          memory: ""
+    cacheSize: 500
+    dnsForwardMax: 100
+    negTTL: 10
+`,
+			kubeDns: api.KubeDns{
+				Provider:          "coredns",
+				NodeLocalResolver: true,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: true,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "100m",
+								Memory: "2000Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "",
+								Memory: "",
+							},
+						},
+					},
+					CacheSize:     500,
+					DNSForwardMax: 100,
+					NegTTL:        10,
+				},
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
   provider: coredns
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1302,8 +1469,26 @@ kubeDns:
       memory: "250Mi"
 `,
 			kubeDns: api.KubeDns{
-				Provider:            "coredns",
-				NodeLocalResolver:   false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers: false,
 				TTL:                 30,
 				Autoscaler: api.KubeDnsAutoscaler{
@@ -1330,8 +1515,26 @@ kubeDns:
   ttl: 5
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          5,
@@ -1359,8 +1562,26 @@ kubeDns:
   extraCoreDNSConfig: rewrite name substring demo.app.org app.default.svc.cluster.local
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
@@ -1389,8 +1610,26 @@ kubeDns:
   additionalZoneCoreDNSConfig: global:53 { forward . 1.2.3.4 }
 `,
 			kubeDns: api.KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: api.DNSMasq{
+					CoreDNSLocal: api.CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: api.ComputeResources{
+							Requests: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: api.ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,

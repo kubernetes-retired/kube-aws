@@ -1058,6 +1058,11 @@ write_files:
         "${mfdir}/kube-dns-de.yaml"
       {{- end }}
       {{ if .KubeDns.NodeLocalResolver -}}
+      {{ if .KubeDns.dnsmasq.CoreDNSLocal.Enabled -}}
+      deploy "${mfdir}/dnsmasq-node-coredns-local.yaml"
+      {{- else }}
+      remove "${mfdir}/dnsmasq-node-coredns-local.yaml"
+      {{ end -}}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{ end -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
@@ -3882,6 +3887,10 @@ write_files:
           namespace: kube-system
         data:
           Corefile: |
+            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
+            {{- end }}
+
             .:53 {
                 errors
                 health
@@ -3904,9 +3913,6 @@ write_files:
                 reload
                 loadbalance
             }
-            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
-{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
-            {{- end }}
 {{- else }}
   - path: /srv/kubernetes/manifests/kube-dns-sa.yaml
     content: |
@@ -3969,6 +3975,85 @@ write_files:
                   - --v=2
                   - --logtostderr
 
+{{ if and .KubeDns.NodeLocalResolver .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
+  - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
+    content: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: dnsmasq
+          namespace: kube-system
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: dnsmasq
+        rules:
+          - apiGroups: [""]
+            resources: ["endpoints", "services", "pods", "namespaces"]
+            verbs: ["list", "watch"]
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: dnsmasq
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: dnsmasq
+        subjects:
+          - kind: ServiceAccount
+            name: dnsmasq
+            namespace: kube-system
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: dnsmasq-privileged-psp
+          namespace: kube-system
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: privileged-psp
+        subjects:
+          - kind: ServiceAccount
+            name: dnsmasq
+            namespace: kube-system
+        ---
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: coredns-local
+          namespace: kube-system
+          labels:
+            application: coredns
+        data:
+          Corefile: |
+            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
+            {{- end }}
+
+            cluster.local:9254 {{ .PodCIDR }}:9254 {{ .ServiceCIDR }}:9254 {
+                errors
+                kubernetes {
+                    pods insecure
+                }
+                cache 30
+                log svc.svc.cluster.local.
+                prometheus :9153
+            }
+
+            .:9254 {
+                errors
+                health :9154 # this is global for all servers
+                prometheus :9153
+                forward . /etc/resolv.conf
+                pprof 127.0.0.1:9156
+                cache 30
+                reload
+            }
+{{ end }}
+
 {{ if .KubeDns.NodeLocalResolver }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
     content: |
@@ -3980,9 +4065,12 @@ write_files:
           labels:
             k8s-app: dnsmasq-node
         spec:
+          selector:
+            matchLabels:
+              k8s-app: dnsmasq-node
           updateStrategy:
             rollingUpdate:
-              maxUnavailable: 100%
+              maxUnavailable: 10%
             type: RollingUpdate
           template:
             metadata:
@@ -3997,22 +4085,29 @@ write_files:
                 effect: NoSchedule
               - operator: Exists
                 effect: NoExecute
-              - operator: Exists
-                key: CriticalAddonsOnly
               volumes:
               - name: kube-dns-config
                 configMap:
                   name: kube-dns
                   optional: true
+              {{ if .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
+              - name: coredns-local-config
+                configMap:
+                  name: coredns-local
+                  items:
+                    - key: Corefile
+                      path: Corefile
+              {{ end }}
               containers:
               - name: dnsmasq
                 image: {{ .KubeDnsMasqImage.RepoWithTag }}
                 livenessProbe:
                   httpGet:
                     path: /healthcheck/dnsmasq
-                    port: 10054
+                    port: 9054
                     scheme: HTTP
                   initialDelaySeconds: 60
+                  periodSeconds: 10
                   timeoutSeconds: 5
                   successThreshold: 1
                   failureThreshold: 5
@@ -4023,13 +4118,24 @@ write_files:
                 - -restartDnsmasq=true
                 - --
                 - -k
-                - --min-port=1024
-                - --cache-size=1000
+                - --cache-size={{ .KubeDns.DNSMasq.CacheSize }}
+                - --dns-forward-max={{ .KubeDns.DNSMasq.DNSForwardMax }}
+                - --log-facility=-
+                {{ if .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
+                - --no-resolv
+                - --keep-in-foreground
+                - --neg-ttl={{ .KubeDns.DNSMasq.NegTTL }}
+                # Send requests to the last server (coredns-local) first and only
+                # fallback to the previous one (global coredns) if it's unreachable.
+                - --strict-order
+                - --server={{.DNSServiceIP}}#53
+                - --server=127.0.0.1#9254
+                {{ else }}
                 - --server=//{{.DNSServiceIP}}
                 - --server=/cluster.local/{{.DNSServiceIP}}
                 - --server=/in-addr.arpa/{{.DNSServiceIP}}
                 - --server=/ip6.arpa/{{.DNSServiceIP}}
-                - --log-facility=-
+                {{ end }}
                 {{- if ne (len .KubeDns.NodeLocalResolverOptions) 0 }}
                   {{- range .KubeDns.NodeLocalResolverOptions }}
                 - {{.}}
@@ -4044,9 +4150,11 @@ write_files:
                   protocol: TCP
                 # see: https://github.com/kubernetes/kubernetes/issues/29055 for details
                 resources:
+                  limits:
+                    cpu: 100m
+                    memory: 50Mi
                   requests:
-                    cpu: 150m
-                    memory: 20Mi
+                    ephemeral-storage: 256Mi
                 volumeMounts:
                 - name: kube-dns-config
                   mountPath: /etc/k8s/dns/dnsmasq-nanny
@@ -4055,7 +4163,7 @@ write_files:
                 livenessProbe:
                   httpGet:
                     path: /metrics
-                    port: 10054
+                    port: 9054
                     scheme: HTTP
                   initialDelaySeconds: 60
                   timeoutSeconds: 5
@@ -4064,17 +4172,70 @@ write_files:
                 args:
                 - --v=2
                 - --logtostderr
+                {{ if .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
+                - --probe=dnsmasq,127.0.0.1:9254,ec2.amazonaws.com,5,A
+                {{ else }}
                 - --probe=dnsmasq,127.0.0.1:53,ec2.amazonaws.com,5,A
+                {{ end }}
+                - --prometheus-port=9054
                 ports:
-                - containerPort: 10054
+                - containerPort: 9054
                   name: metrics
                   protocol: TCP
                 resources:
                   requests:
-                    memory: 20Mi
+                    ephemeral-storage: 256Mi
+                  limits:
+                    cpu: 10m
+                    memory: 45Mi
+                terminationMessagePath: /dev/termination-log
+                terminationMessagePolicy: File
+              {{ if .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
+              - name: coredns
+                image: {{ .CoreDnsImage.RepoWithTag }}
+                args: ["-conf", "/etc/coredns/Corefile"]
+                volumeMounts:
+                  - name: coredns-local-config
+                    mountPath: /etc/coredns
+                ports:
+                  - containerPort: 9254
+                    name: dns
+                    protocol: UDP
+                  - containerPort: 9254
+                    name: dns-tcp
+                    protocol: TCP
+                livenessProbe:
+                  httpGet:
+                    path: /health
+                    port: 9154
+                    scheme: HTTP
+                  initialDelaySeconds: 60
+                  timeoutSeconds: 5
+                  successThreshold: 1
+                  failureThreshold: 5
+                resources:
+                  requests:
+                    ephemeral-storage: 256Mi
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Cpu }}
+                    cpu: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Cpu }}
+                    {{ end }}
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Memory }}
+                    memory: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Requests.Memory }}
+                    {{ end }}
+                  {{ if or .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
+                  limits:
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu }}
+                    cpu: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Cpu }}
+                    {{ end }}
+                    {{ if .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
+                    memory: {{ .KubeDns.DNSMasq.CoreDNSLocal.ComputeResources.Limits.Memory }}
+                    {{ end }}
+                  {{ end }}
+              {{ end }}
               hostNetwork: true
               dnsPolicy: Default
-              automountServiceAccountToken: false
+              automountServiceAccountToken: true
+              serviceAccountName: dnsmasq
 {{ end }}
 
 {{- if eq .KubeDns.Provider "coredns" }}

@@ -1360,6 +1360,35 @@ kubeDns:
   # - --neg-ttl=10
   # - --no-ping
 
+  # Settings for the dnsmasq-node DaemonSet which must be enabled by setting
+  # `kubeDns.nodeLocalResolver` to true.
+  dnsmasq:
+    coreDNSLocal:
+      # When enabled, this will run a copy of CoreDNS within each DNS-masq pod and
+      # configure the utility to use it for resolution.
+      enabled: false
+
+      # Defines the resource requests/limits for the coredns-local container.
+      # cpu and/or memory constraints can be removed by setting the appropriate value(s)
+      # to an empty string.
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 100Mi
+
+    # The size of dnsmasq's cache.
+    cacheSize: 50000
+
+    # The maximum number of concurrent DNS queries.
+    dnsForwardMax: 500
+
+    # This option gives a default value for time-to-live (in seconds) which dnsmasq
+    # uses to cache negative replies even in the absence of an SOA record.
+    # negTTL: 60
+
   # When enabled, will modify the TTL of the coredns service.
   # ttl: 30
 
@@ -1381,6 +1410,8 @@ kubeDns:
   #
   # This configuration is injected into the CoreDNS config map after the root
   # zone (".") and can be used to add configuration for additional zones.
+  # If corednsLocal has been enabled, this configuration will additionally be injected
+  # into its ConfigMap.
   # additionalZoneCoreDNSConfig: |
   #  global:53 {
   #      errors
