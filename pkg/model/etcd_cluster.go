@@ -45,7 +45,7 @@ func (c EtcdCluster) DNSNames() []string {
 			dnsName = fmt.Sprintf("*.%s", c.region.PrivateDomainName())
 		}
 	}
-	return []string{dnsName}
+	return []string{dnsName, fmt.Sprintf("*.%s", c.region.PrivateDomainName())}
 }
 
 func (c EtcdCluster) LogicalName() string {
