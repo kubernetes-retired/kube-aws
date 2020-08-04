@@ -184,8 +184,26 @@ func NewDefaultCluster() *Cluster {
 				IPVSMode: ipvsMode,
 			},
 			KubeDns: KubeDns{
-				Provider:                     "coredns",
-				NodeLocalResolver:            false,
+				Provider:          "coredns",
+				NodeLocalResolver: false,
+				DNSMasq: DNSMasq{
+					CoreDNSLocal: CoreDNSLocal{
+						Enabled: false,
+						ComputeResources: ComputeResources{
+							Requests: ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+							Limits: ResourceQuota{
+								Cpu:    "50m",
+								Memory: "100Mi",
+							},
+						},
+					},
+					CacheSize:     50000,
+					DNSForwardMax: 500,
+					NegTTL:        60,
+				},
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
 				TTL:                          30,
