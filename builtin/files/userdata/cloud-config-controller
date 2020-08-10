@@ -1054,6 +1054,7 @@ write_files:
       {{- end }}
 
       # CLUSTER DNS
+      {{ if eq. KubeDns.Disable "false" -}}
       {{ if eq .KubeDns.Provider "coredns" -}}
       remove_object ConfigMap kube-system/kubedns-cm
       remove_object Deployment kube-system/kube-dns
@@ -1072,6 +1073,7 @@ write_files:
         "${mfdir}/kube-dns-svc.yaml" \
         "${mfdir}/kube-dns-autoscaler-de.yaml" \
         "${mfdir}/kube-dns-de.yaml"
+      {{- end }}
       {{- end }}
       {{ if .KubeDns.NodeLocalResolver -}}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
@@ -4276,6 +4278,7 @@ write_files:
         labels:
           kubernetes.io/cluster-service: "true"
 
+{{- if eq .KubeDns.Disable "false" }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-sa.yaml
     content: |
@@ -4432,6 +4435,7 @@ write_files:
                 - --default-params={"linear":{"coresPerReplica":{{ .KubeDns.Autoscaler.CoresPerReplica }},"nodesPerReplica":{{ .KubeDns.Autoscaler.NodesPerReplica }},"min":{{ .KubeDns.Autoscaler.Min}}}}
                 - --v=2
                 - --logtostderr
+{{- end }}
 
 {{ if .KubeDns.NodeLocalResolver }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
@@ -4544,6 +4548,7 @@ write_files:
             automountServiceAccountToken: false
 {{ end }}
 
+{{- if eq .KubeDns.Disable "false" }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-de.yaml
     content: |
@@ -4872,6 +4877,7 @@ write_files:
         selector:
           matchLabels:
             k8s-app: kube-dns
+{{- end }}
 
   - path: /srv/kubernetes/manifests/metrics-server-sa.yaml
     content: |

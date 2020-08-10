@@ -185,6 +185,7 @@ func NewDefaultCluster() *Cluster {
 			},
 			KubeDns: KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
