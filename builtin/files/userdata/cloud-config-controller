@@ -1054,7 +1054,7 @@ write_files:
       {{- end }}
 
       # CLUSTER DNS
-      {{ if eq. KubeDns.Disable "false" -}}
+      {{ if eq .KubeDns.Disable "false" -}}
       {{ if eq .KubeDns.Provider "coredns" -}}
       remove_object ConfigMap kube-system/kubedns-cm
       remove_object Deployment kube-system/kube-dns
