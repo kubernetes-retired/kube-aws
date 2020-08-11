@@ -1054,7 +1054,7 @@ write_files:
       {{- end }}
 
       # CLUSTER DNS
-      {{ if eq .KubeDns.Disable "false" -}}
+      {{ if not .KubeDns.Disable -}}
       {{ if eq .KubeDns.Provider "coredns" -}}
       remove_object ConfigMap kube-system/kubedns-cm
       remove_object Deployment kube-system/kube-dns
@@ -4278,7 +4278,7 @@ write_files:
         labels:
           kubernetes.io/cluster-service: "true"
 
-{{- if eq .KubeDns.Disable "false" }}
+{{- if not .KubeDns.Disable }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-sa.yaml
     content: |
@@ -4548,7 +4548,7 @@ write_files:
             automountServiceAccountToken: false
 {{ end }}
 
-{{- if eq .KubeDns.Disable "false" }}
+{{- if not .KubeDns.Disable }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-de.yaml
     content: |
