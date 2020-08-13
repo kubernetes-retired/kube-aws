@@ -430,7 +430,6 @@ coreos:
 
         # FIXME: Remove dependency on the apiserver insecure port
         ExecStartPre=/usr/bin/bash -c "until /usr/bin/curl -s -k https://127.0.0.1/version; do echo waiting until apiserver starts; sleep 10; done"
-
         ExecStart=/opt/bin/retry 10 /opt/bin/install-kube-system
 
 {{ if $.ElasticFileSystemID }}
