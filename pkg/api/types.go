@@ -229,6 +229,7 @@ type KubeDnsAutoscaler struct {
 
 type KubeDns struct {
 	Provider                     string            `yaml:"provider"`
+	Disable                      bool              `yaml:"disable"`
 	NodeLocalResolver            bool              `yaml:"nodeLocalResolver"`
 	NodeLocalResolverOptions     []string          `yaml:"nodeLocalResolverOptions"`
 	DNSMasq                      DNSMasq           `yaml:"dnsmasq"`

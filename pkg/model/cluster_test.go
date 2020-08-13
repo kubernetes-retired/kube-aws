@@ -1119,7 +1119,37 @@ func TestKubeDns(t *testing.T) {
 			conf: `
 `,
 			kubeDns: api.KubeDns{
+				Provider:                     "coredns",
+				Disable:                      false,
+				NodeLocalResolver:            false,
+				DeployToControllers:          false,
+				AntiAffinityAvailabilityZone: false,
+				TTL:                          30,
+				Autoscaler: api.KubeDnsAutoscaler{
+					CoresPerReplica: 256,
+					NodesPerReplica: 16,
+					Min:             2,
+				},
+				DnsDeploymentResources: api.ComputeResources{
+					Requests: api.ResourceQuota{
+						Memory: "70Mi",
+						Cpu:    "100m",
+					},
+					Limits: api.ResourceQuota{
+						Memory: "170Mi",
+						Cpu:    "200m",
+					},
+				},
+			},
+		},
+		{
+			conf: `
+kubeDns:
+  disable: true
+`,
+			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           true,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
