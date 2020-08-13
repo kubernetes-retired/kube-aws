@@ -1246,6 +1246,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1275,6 +1276,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: true,
@@ -1304,6 +1306,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: true,
@@ -1337,6 +1340,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            true,
 				DeployToControllers:          true,
 				AntiAffinityAvailabilityZone: false,
@@ -1365,6 +1369,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1400,6 +1405,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:            "coredns",
+				Disable:             false,
 				NodeLocalResolver:   false,
 				DeployToControllers: false,
 				TTL:                 30,
@@ -1428,6 +1434,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1457,6 +1464,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
@@ -1487,6 +1495,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:                     "coredns",
+				Disable:                      false,
 				NodeLocalResolver:            false,
 				DeployToControllers:          false,
 				AntiAffinityAvailabilityZone: false,
