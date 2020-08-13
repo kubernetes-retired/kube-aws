@@ -1197,6 +1197,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1244,6 +1245,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1291,6 +1293,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1342,6 +1345,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: true,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1401,6 +1405,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: true,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1447,6 +1452,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1500,6 +1506,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1546,6 +1553,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1593,6 +1601,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1641,6 +1650,7 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
+				Disable:           false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
