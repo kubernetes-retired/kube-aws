@@ -45,6 +45,11 @@ func (c EtcdCluster) DNSNames() []string {
 			dnsName = fmt.Sprintf("*.%s", c.region.PrivateDomainName())
 		}
 	}
+
+	privateDomainSan := fmt.Sprintf("*.%s", c.region.PrivateDomainName())
+	if dnsName != privateDomainSan && c.GetMemberIdentityProvider() == api.MemberIdentityProviderENI {
+		return []string{dnsName, privateDomainSan}
+	}
 	return []string{dnsName}
 }
 
