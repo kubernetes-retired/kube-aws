@@ -3978,6 +3978,42 @@ write_files:
   - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
     content: |
         apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: coredns-local
+          namespace: kube-system
+          labels:
+            application: coredns
+        data:
+          Corefile: |
+            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
+{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
+            {{- end }}
+
+            cluster.local:9254 {{ .PodCIDR }}:9254 {{ .ServiceCIDR }}:9254 {
+                errors
+                kubernetes {
+                    pods insecure
+                }
+                cache 30
+                log svc.svc.cluster.local.
+                prometheus :9153
+            }
+
+            .:9254 {
+                errors
+                health :9154 # this is global for all servers
+                prometheus :9153
+                forward . /etc/resolv.conf
+                pprof 127.0.0.1:9156
+                cache 30
+                reload
+            }
+
+{{ if .KubeDns.NodeLocalResolver }}
+  - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
+    content: |
+        apiVersion: v1
         kind: ServiceAccount
         metadata:
           name: dnsmasq
@@ -4019,42 +4055,6 @@ write_files:
             name: dnsmasq
             namespace: kube-system
         ---
-        apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: coredns-local
-          namespace: kube-system
-          labels:
-            application: coredns
-        data:
-          Corefile: |
-            {{- if and (eq .KubeDns.Provider "coredns") .KubeDns.AdditionalZoneCoreDNSConfig }}
-{{ .KubeDns.AdditionalZoneCoreDNSConfig | indent 12 }}
-            {{- end }}
-
-            cluster.local:9254 {{ .PodCIDR }}:9254 {{ .ServiceCIDR }}:9254 {
-                errors
-                kubernetes {
-                    pods insecure
-                }
-                cache 30
-                log svc.svc.cluster.local.
-                prometheus :9153
-            }
-
-            .:9254 {
-                errors
-                health :9154 # this is global for all servers
-                prometheus :9153
-                forward . /etc/resolv.conf
-                pprof 127.0.0.1:9156
-                cache 30
-                reload
-            }
-
-{{ if .KubeDns.NodeLocalResolver }}
-  - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
-    content: |
         apiVersion: extensions/v1beta1
         kind: DaemonSet
         metadata:
