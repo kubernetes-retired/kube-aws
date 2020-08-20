@@ -3975,7 +3975,6 @@ write_files:
                   - --v=2
                   - --logtostderr
 
-{{ if and .KubeDns.NodeLocalResolver .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
     content: |
         apiVersion: v1
@@ -4052,7 +4051,6 @@ write_files:
                 cache 30
                 reload
             }
-{{ end }}
 
 {{ if .KubeDns.NodeLocalResolver }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
