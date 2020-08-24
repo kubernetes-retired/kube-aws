@@ -5479,51 +5479,8 @@ write_files:
                 - --v=2
                 - --logtostderr
 
-{{ if and .KubeDns.NodeLocalResolver .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
     content: |
-        apiVersion: v1
-        kind: ServiceAccount
-        metadata:
-          name: dnsmasq
-          namespace: kube-system
-        ---
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRole
-        metadata:
-          name: dnsmasq
-        rules:
-          - apiGroups: [""]
-            resources: ["endpoints", "services", "pods", "namespaces"]
-            verbs: ["list", "watch"]
-        ---
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRoleBinding
-        metadata:
-          name: dnsmasq
-        roleRef:
-          apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: dnsmasq
-        subjects:
-          - kind: ServiceAccount
-            name: dnsmasq
-            namespace: kube-system
-        ---
-        apiVersion: rbac.authorization.k8s.io/v1
-        kind: RoleBinding
-        metadata:
-          name: dnsmasq-privileged-psp
-          namespace: kube-system
-        roleRef:
-          apiGroup: rbac.authorization.k8s.io
-          kind: ClusterRole
-          name: privileged-psp
-        subjects:
-          - kind: ServiceAccount
-            name: dnsmasq
-            namespace: kube-system
-        ---
         apiVersion: v1
         kind: ConfigMap
         metadata:
@@ -5556,11 +5513,52 @@ write_files:
                 cache 30
                 reload
             }
-{{ end }}
 
 {{ if .KubeDns.NodeLocalResolver }}
   - path: /srv/kubernetes/manifests/dnsmasq-node-ds.yaml
     content: |
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: dnsmasq
+        namespace: kube-system
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dnsmasq
+      rules:
+        - apiGroups: [""]
+          resources: ["endpoints", "services", "pods", "namespaces"]
+          verbs: ["list", "watch"]
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: dnsmasq
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: dnsmasq
+      subjects:
+        - kind: ServiceAccount
+          name: dnsmasq
+          namespace: kube-system
+      ---
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dnsmasq-privileged-psp
+        namespace: kube-system
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: privileged-psp
+      subjects:
+        - kind: ServiceAccount
+          name: dnsmasq
+          namespace: kube-system
+      ---
       apiVersion: apps/v1
       kind: DaemonSet
       metadata:
