@@ -495,7 +495,7 @@ coreos:
       runtime: true
       content: |
         [Unit]
-        Description=Label kubernetes worker nodes with kubernetes.io labels.
+        Description=Label kubernetes worker nodes with kubernetes.io labels
 
         [Service]
         Type=simple
