@@ -50,10 +50,13 @@ spec:
             {{ end -}}
             - --json-log
             - --bind=0.0.0.0:443
-            - --cert=/etc/kiam/tls/tls.crt
-            - --key=/etc/kiam/tls/tls.key
-            - --ca=/etc/kiam/tls/ca.crt
+            - --cert=/etc/kiam/tls/server.pem
+            - --key=/etc/kiam/tls/server-key.pem
+            - --ca=/etc/kiam/tls/ca.pem
             - --role-base-arn-autodetect
+            {{- if .Values.assumeRoleArn }}
+            - --assume-role-arn={{ .Values.assumeRoleArn }}
+            {{- end }}
             - --sync=1m
             - --prometheus-listen-addr=0.0.0.0:9620
             - --prometheus-sync-interval=5s
@@ -74,9 +77,9 @@ spec:
               - /health
               - --server-address-refresh=2s
               {{ end -}}
-              - --cert=/etc/kiam/tls/tls.crt
-              - --key=/etc/kiam/tls/tls.key
-              - --ca=/etc/kiam/tls/ca.crt
+              - --cert=/etc/kiam/tls/server.pem
+              - --key=/etc/kiam/tls/server-key.pem
+              - --ca=/etc/kiam/tls/ca.pem
               - --server-address={{ .Values.server.address }}
               - --timeout=5s
             initialDelaySeconds: 10
@@ -93,9 +96,9 @@ spec:
               - /health
               - --server-address-refresh=2s
               {{ end -}}
-              - --cert=/etc/kiam/tls/tls.crt
-              - --key=/etc/kiam/tls/tls.key
-              - --ca=/etc/kiam/tls/ca.crt
+              - --cert=/etc/kiam/tls/server.pem
+              - --key=/etc/kiam/tls/server-key.pem
+              - --ca=/etc/kiam/tls/ca.pem
               - --server-address={{ .Values.server.address }}
               - --timeout=5s
             initialDelaySeconds: 3
