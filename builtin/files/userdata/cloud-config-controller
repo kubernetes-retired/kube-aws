@@ -4131,7 +4131,9 @@ write_files:
                 # Send requests to the last server (coredns-local) first and only
                 # fallback to the previous one (global coredns) if it's unreachable.
                 - --strict-order
+                {{- if not .KubeDns.Disable }}
                 - --server={{.DNSServiceIP}}#53
+                {{- end }}
                 - --server=127.0.0.1#9254
                 {{ else }}
                 - --server=//{{.DNSServiceIP}}
