@@ -22,7 +22,7 @@ func TestEtcdClusterDNSNames(t *testing.T) {
 				actual := cluster.DNSNames()
 				expected := []string{"*.ec2.internal"}
 				if !reflect.DeepEqual(actual, expected) {
-					t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+					t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 				}
 			})
 			t.Run("us-west-1", func(t *testing.T) {
@@ -30,7 +30,7 @@ func TestEtcdClusterDNSNames(t *testing.T) {
 				actual := cluster.DNSNames()
 				expected := []string{"*.us-west-1.compute.internal"}
 				if !reflect.DeepEqual(actual, expected) {
-					t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+					t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 				}
 			})
 		})
@@ -42,17 +42,17 @@ func TestEtcdClusterDNSNames(t *testing.T) {
 			t.Run("us-east-1", func(t *testing.T) {
 				cluster := NewEtcdCluster(config, usEast1, etcdNet, etcdCount)
 				actual := cluster.DNSNames()
-				expected := []string{"*.internal.example.com"}
+				expected := []string{"*.internal.example.com", "*.ec2.internal"}
 				if !reflect.DeepEqual(actual, expected) {
-					t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+					t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 				}
 			})
 			t.Run("us-west-1", func(t *testing.T) {
 				cluster := NewEtcdCluster(config, usWest1, etcdNet, etcdCount)
 				actual := cluster.DNSNames()
-				expected := []string{"*.internal.example.com"}
+				expected := []string{"*.internal.example.com", "*.us-west-1.compute.internal"}
 				if !reflect.DeepEqual(actual, expected) {
-					t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+					t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 				}
 			})
 		})
@@ -67,7 +67,7 @@ func TestEtcdClusterDNSNames(t *testing.T) {
 			actual := cluster.DNSNames()
 			expected := []string{"*.compute-1.amazonaws.com"}
 			if !reflect.DeepEqual(actual, expected) {
-				t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+				t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 			}
 		})
 		t.Run("us-west-1", func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestEtcdClusterDNSNames(t *testing.T) {
 			actual := cluster.DNSNames()
 			expected := []string{"*.us-west-1.compute.amazonaws.com"}
 			if !reflect.DeepEqual(actual, expected) {
-				t.Errorf("invalid dns names: expecetd=%v, got=%v", expected, actual)
+				t.Errorf("invalid dns names: expected=%v, got=%v", expected, actual)
 			}
 		})
 	})

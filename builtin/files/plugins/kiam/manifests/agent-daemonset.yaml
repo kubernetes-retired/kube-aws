@@ -4,14 +4,12 @@ metadata:
   namespace: kube-system
   name: kiam-agent
 spec:
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 100%
-    type: RollingUpdate
   selector:
     matchLabels:
       app: kiam
       role: agent
+  updateStrategy:
+    type: OnDelete
   template:
     metadata:
       annotations:
@@ -21,28 +19,17 @@ spec:
         app: kiam
         role: agent
     spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - operator: Exists
-        effect: NoSchedule
-      - operator: Exists
-        effect: NoExecute
-      - operator: Exists
-        key: CriticalAddonsOnly
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node.kubernetes.io/role
-                operator: NotIn
-                values:
-                - master
+      nodeSelector:
+        kubernetes.io/role: node
       volumes:
         - name: ssl-certs
           hostPath:
+            # for AWS linux or RHEL distros
+            # path: /etc/pki/ca-trust/extracted/pem/
+            # debian or ubuntu distros
+            # path: /etc/ssl/certs
             path: /usr/share/ca-certificates
         - name: tls
           secret:
@@ -50,12 +37,14 @@ spec:
         - name: xtables
           hostPath:
             path: /run/xtables.lock
+            type: FileOrCreate
       containers:
         - name: kiam
           securityContext:
             capabilities:
               add: ["NET_ADMIN"]
           image: {{ .Values.image }}:{{ .Values.tag }}
+          imagePullPolicy: Always
           command:
             - {{ if checkVersion ">= 3.0" .Values.tag }}/kiam{{ else }}/agent{{ end }}
           args:
@@ -65,18 +54,20 @@ spec:
             - --gateway-timeout-creation=1s
             {{ end -}}
             - --iptables
-      {{- if .Config.Cluster.Kubernetes.Networking.AmazonVPC.Enabled }}
+            {{- if .Config.Cluster.Kubernetes.Networking.AmazonVPC.Enabled }}
             - --host-interface=!eni0
-      {{- else if eq .Config.Cluster.Kubernetes.Networking.SelfHosting.Type "canal" }}
+            {{- else if eq .Config.Cluster.Kubernetes.Networking.SelfHosting.Type "canal" }}
             - --host-interface=cali+
-      {{- else}}
+            {{- else if eq .Config.Cluster.Kubernetes.Networking.SelfHosting.Type "calico" }}
+            - --host-interface=cali+
+            {{- else}}
             - --host-interface=cni0
-      {{- end }}
+            {{- end }}
             - --json-log
             - --port=8181
-            - --cert=/etc/kiam/tls/tls.crt
-            - --key=/etc/kiam/tls/tls.key
-            - --ca=/etc/kiam/tls/ca.crt
+            - --cert=/etc/kiam/tls/agent.pem
+            - --key=/etc/kiam/tls/agent-key.pem
+            - --ca=/etc/kiam/tls/ca.pem
             - --server-address={{ .Values.agent.address }}
             - --prometheus-listen-addr=0.0.0.0:9620
             - --prometheus-sync-interval=5s

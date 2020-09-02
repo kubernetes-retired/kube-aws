@@ -7,6 +7,7 @@ spec:
       image: quay.io/uswitch/kiam
       tag: v3.2
       sessionDuration: 30m
+      assumeRoleArn: ""
       server:
         portName: grpclb
         address: localhost:443
@@ -40,11 +41,7 @@ spec:
       - source:
           path: manifests/service.yaml
       - source:
-          path: manifests/service-account.yaml
-      - source:
-          path: manifests/server-cluster-role.yaml
-      - source:
-          path: manifests/server-cluster-role-binding.yaml
+          path: manifests/rbac.yaml
 
     pki:
       keypairs:
@@ -58,11 +55,9 @@ spec:
         commonName: kiam-server
         organization: kube-aws-kiam
         dnsNames:
-        - kiam-server
-        - kiam-server:443
         - localhost
-        - localhost:443
-        - localhost:9610
+        - 127.0.0.1
+        - kiam-server
         duration: 8760h
         usages:
         - server
