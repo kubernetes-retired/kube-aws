@@ -1068,7 +1068,9 @@ write_files:
       {{- end }}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{- end }}
+      {{ if not .KubeDns.Disable -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
+      {{- end }}
 
       {{ if .Addons.MetricsServer.Enabled -}}
       # METRICS SERVER
