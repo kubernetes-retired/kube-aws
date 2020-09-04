@@ -1063,6 +1063,7 @@ write_files:
       remove_object Deployment kube-system/kube-dns
       remove_object ConfigMap kube-system/coredns-cm
       remove_object Deployment kube-system/coredns
+      remove_object Deployment kube-system/kube-dns-autoscaler
       {{- end }}
       
       {{- if .KubeDns.NodeLocalResolver }}
