@@ -1038,7 +1038,7 @@ write_files:
       {{- end }}
 
       # CLUSTER DNS
-      {{ if not .KubeDns.Disable -}}
+      {{ if not .KubeDns.DNSMasq.CoreDNSLocal.Enabled -}}
       {{ if eq .KubeDns.Provider "coredns" -}}
       remove_object ConfigMap kube-system/kubedns-cm
       remove_object Deployment kube-system/kube-dns
@@ -1073,7 +1073,7 @@ write_files:
       {{- end }}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{- end }}
-      {{ if not .KubeDns.Disable -}}
+      {{ if not .KubeDns.DNSMasq.CoreDNSLocal.Enabled -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
       {{- else }}
       remove "${mfdir}/kube-dns-pdb.yaml"
@@ -4138,9 +4138,6 @@ write_files:
                 # Send requests to the last server (coredns-local) first and only
                 # fallback to the previous one (global coredns) if it's unreachable.
                 - --strict-order
-                {{- if not .KubeDns.Disable }}
-                - --server={{.DNSServiceIP}}#53
-                {{- end }}
                 - --server=127.0.0.1#9254
                 {{ else }}
                 - --server=//{{.DNSServiceIP}}
