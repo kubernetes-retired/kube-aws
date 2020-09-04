@@ -1058,6 +1058,11 @@ write_files:
         "${mfdir}/kube-dns-autoscaler-de.yaml" \
         "${mfdir}/kube-dns-de.yaml"
       {{- end }}
+      {{- else }}
+      remove_object ConfigMap kube-system/kubedns-cm
+      remove_object Deployment kube-system/kube-dns
+      remove_object ConfigMap kube-system/coredns-cm
+      remove_object Deployment kube-system/coredns
       {{- end }}
       
       {{- if .KubeDns.NodeLocalResolver }}
@@ -1070,6 +1075,8 @@ write_files:
       {{- end }}
       {{ if not .KubeDns.Disable -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
+      {{- else }}
+      remove "${mfdir}/kube-dns-pdb.yaml"
       {{- end }}
 
       {{ if .Addons.MetricsServer.Enabled -}}
