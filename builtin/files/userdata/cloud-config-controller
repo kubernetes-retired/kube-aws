@@ -1141,6 +1141,7 @@ write_files:
       {{- end }}
 
       # CLUSTER DNS
+      {{ if not .KubeDns.DNSMasq.CoreDNSLocal.Enabled -}}
       {{ if eq .KubeDns.Provider "coredns" -}}
       remove_object ConfigMap kube-system/kubedns-cm
       remove_object Deployment kube-system/kube-dns
@@ -1160,6 +1161,13 @@ write_files:
         "${mfdir}/kube-dns-autoscaler-de.yaml" \
         "${mfdir}/kube-dns-de.yaml"
       {{- end }}
+      {{- else }}
+      remove_object ConfigMap kube-system/kubedns-cm
+      remove_object Deployment kube-system/kube-dns
+      remove_object ConfigMap kube-system/coredns-cm
+      remove_object Deployment kube-system/coredns
+      remove_object Deployment kube-system/kube-dns-autoscaler
+      {{- end }}
       {{- if .KubeDns.NodeLocalResolver }}
       {{- if .KubeDns.DNSMasq.CoreDNSLocal.Enabled }}
       deploy "${mfdir}/dnsmasq-node-coredns-local.yaml"
@@ -1168,7 +1176,11 @@ write_files:
       {{- end }}
       deploy "${mfdir}/dnsmasq-node-ds.yaml"
       {{- end }}
+      {{ if not .KubeDns.DNSMasq.CoreDNSLocal.Enabled -}}
       forceapply "${mfdir}/kube-dns-pdb.yaml"
+      {{- else }}
+      remove "${mfdir}/kube-dns-pdb.yaml"
+      {{- end }}
 
       {{ if .Addons.MetricsServer.Enabled -}}
       # METRICS SERVER
@@ -5632,10 +5644,7 @@ write_files:
               - --no-resolv
               - --keep-in-foreground
               - --neg-ttl={{ .KubeDns.DNSMasq.NegTTL }}
-              # Send requests to the last server (coredns-local) first and only
-              # fallback to the previous one (global coredns) if it's unreachable.
               - --strict-order
-              - --server={{.DNSServiceIP}}#53
               - --server=127.0.0.1#9254
               {{ else }}
               - --server=//{{.DNSServiceIP}}
