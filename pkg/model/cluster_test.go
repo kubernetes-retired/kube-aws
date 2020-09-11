@@ -1187,54 +1187,6 @@ func TestKubeDns(t *testing.T) {
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-				Disable:           false,
-				NodeLocalResolver: false,
-				DNSMasq: api.DNSMasq{
-					CoreDNSLocal: api.CoreDNSLocal{
-						Enabled: false,
-						ComputeResources: api.ComputeResources{
-							Requests: api.ResourceQuota{
-								Cpu:    "50m",
-								Memory: "100Mi",
-							},
-							Limits: api.ResourceQuota{
-								Cpu:    "50m",
-								Memory: "100Mi",
-							},
-						},
-					},
-					CacheSize:     50000,
-					DNSForwardMax: 500,
-					NegTTL:        60,
-				},
-				DeployToControllers:          false,
-				AntiAffinityAvailabilityZone: false,
-				TTL:                          30,
-				Autoscaler: api.KubeDnsAutoscaler{
-					CoresPerReplica: 256,
-					NodesPerReplica: 16,
-					Min:             2,
-				},
-				DnsDeploymentResources: api.ComputeResources{
-					Requests: api.ResourceQuota{
-						Memory: "70Mi",
-						Cpu:    "100m",
-					},
-					Limits: api.ResourceQuota{
-						Memory: "170Mi",
-						Cpu:    "200m",
-					},
-				},
-			},
-		},
-		{
-			conf: `
-kubeDns:
-  disable: true
-`,
-			kubeDns: api.KubeDns{
-				Provider:          "coredns",
-				Disable:           true,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1282,7 +1234,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1330,7 +1281,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1378,7 +1328,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1430,7 +1379,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: true,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1536,7 +1484,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1590,7 +1537,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:             false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1637,7 +1583,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1685,7 +1630,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
@@ -1734,7 +1678,6 @@ kubeDns:
 `,
 			kubeDns: api.KubeDns{
 				Provider:          "coredns",
-        Disable:                      false,
 				NodeLocalResolver: false,
 				DNSMasq: api.DNSMasq{
 					CoreDNSLocal: api.CoreDNSLocal{
