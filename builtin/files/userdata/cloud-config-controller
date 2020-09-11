@@ -4293,7 +4293,6 @@ write_files:
         labels:
           kubernetes.io/cluster-service: "true"
 
-{{- if not .KubeDns.Disable }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-sa.yaml
     content: |
@@ -4452,7 +4451,6 @@ write_files:
                 - --default-params={"linear":{"coresPerReplica":{{ .KubeDns.Autoscaler.CoresPerReplica }},"nodesPerReplica":{{ .KubeDns.Autoscaler.NodesPerReplica }},"min":{{ .KubeDns.Autoscaler.Min}}}}
                 - --v=2
                 - --logtostderr
-{{- end }}
 
   - path: /srv/kubernetes/manifests/dnsmasq-node-coredns-local.yaml
     content: |
@@ -4714,7 +4712,6 @@ write_files:
             serviceAccountName: dnsmasq
 {{ end }}
 
-{{- if not .KubeDns.Disable }}
 {{- if eq .KubeDns.Provider "coredns" }}
   - path: /srv/kubernetes/manifests/coredns-de.yaml
     content: |
@@ -5043,7 +5040,6 @@ write_files:
         selector:
           matchLabels:
             k8s-app: kube-dns
-{{- end }}
 
   - path: /srv/kubernetes/manifests/metrics-server-sa.yaml
     content: |
