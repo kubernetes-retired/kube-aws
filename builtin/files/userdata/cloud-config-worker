@@ -341,7 +341,7 @@ coreos:
         -v /etc/kubernetes:/etc/kubernetes:rw \
         -v /var/lib/kubelet:/var/lib/kubelet:rshared \
         -v /var/lib/docker:/var/lib/docker:rshared \
-        {{ if eq .ContainerRuntime "rkt" -}}
+        {{- if eq .ContainerRuntime "rkt" }}
         -v /opt/bin/host-rkt:/opt/bin/host-rkt:rw \
         -v /usr/bin/rkt:/usr/bin/rkt:ro \
         -v /var/lib/rkt:/usr/lib/rkt:rw \
