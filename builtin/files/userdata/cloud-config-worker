@@ -42,13 +42,10 @@ coreos:
     reboot-strategy: "off"
   units:
 {{if .DisableContainerLinuxAutomaticUpdates}}
-    - name: disable-automatic-update.service
-      command: start
-      content: |
-        [Unit]
-        Description=Disable Container Linux automatic update. Work around to be removed on Ignition migration.
-        [Service]
-        ExecStart=/usr/bin/sh -c 'for u in update-engine locksmithd; do systemctl stop $${u}.service; systemctl mask $${u}.service; systemctl disable $${u}.service; done; systemctl reset-failed'
+    - name: update-engine.service
+      mask: true
+    - name: locksmithd.service
+      mask: true
 {{end}}
 {{- range $u := .CustomSystemdUnits}}
     - name: {{$u.Name}}
@@ -341,7 +338,7 @@ coreos:
         -v /etc/kubernetes:/etc/kubernetes:rw \
         -v /var/lib/kubelet:/var/lib/kubelet:rshared \
         -v /var/lib/docker:/var/lib/docker:rshared \
-        {{ if eq .ContainerRuntime "rkt" -}}
+        {{- if eq .ContainerRuntime "rkt" }}
         -v /opt/bin/host-rkt:/opt/bin/host-rkt:rw \
         -v /usr/bin/rkt:/usr/bin/rkt:ro \
         -v /var/lib/rkt:/usr/lib/rkt:rw \
