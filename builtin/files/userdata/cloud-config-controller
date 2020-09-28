@@ -371,12 +371,12 @@ coreos:
         {{- end }}
         {{ if .Kubelet.Kubeconfig -}}
         --kubeconfig={{ .Kubelet.Kubeconfig }} \
-        {{- else }}
+        {{ else -}}
         --kubeconfig=/etc/kubernetes/kubeconfig/kubelet.yaml \
-        {{- end }}
-        {{- if checkVersion "<1.10" .K8sVer }}
+        {{ end -}}
+        {{if checkVersion "<1.10" .K8sVer -}}
         --require-kubeconfig \
-        {{- end }}
+        {{ end -}}
         --cni-conf-dir=/etc/kubernetes/cni/net.d \
         {{/* Work-around until https://github.com/kubernetes/kubernetes/issues/43967 is fixed via https://github.com/kubernetes/kubernetes/pull/43995 */ -}}
         --cni-bin-dir=/opt/cni/bin \
