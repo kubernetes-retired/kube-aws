@@ -1,0 +1,11 @@
+pull_request_rules:
+  - name: Automatic merge on approval
+    conditions:
+      - "#approved-reviews-by>=1"
+      # See https://doc.mergify.io/conditions.html#about-status-checks
+      - "status-success=continuous-integration/travis-ci/pr"
+      # See https://colineberhardt.github.io/cla-bot/#what-is-a-cla
+      - "status-success=verification/cla-signed"
+    actions:
+      merge:
+        method: merge
